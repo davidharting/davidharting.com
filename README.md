@@ -1,6 +1,6 @@
-# Welcome to Remix!
+# My personal site
 
-- [Remix Docs](https://remix.run/docs)
+My personal site, built using [Remix](https://remix.run/docs) and deployed with Cloudflare workers.
 
 ## Development
 
