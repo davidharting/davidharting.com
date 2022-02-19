@@ -10,10 +10,6 @@ You will be running two processes during development:
 - The Remix development server
 
 ```sh
-# in one tab, start the remix dev server
-$ npm run dev
-
-# in another, start the miniflare server
 $ npm start
 ```
 
