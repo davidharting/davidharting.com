@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "remix-app-template",
+  "name": "davids-site",
   "description": "",
   "license": "",
   "dependencies": {
@@ -30,8 +30,10 @@
   "sideEffects": false,
   "scripts": {
     "postinstall": "remix setup cloudflare-workers",
-    "build": "cross-env NODE_ENV=production remix build",
-    "build:tailwind": "tailwindcss -o ./app/tailwind.css",
+    "build": "run-s clean build:tailwind build:remix",
+    "build:remix": "cross-env NODE_ENV=production remix build",
+    "build:tailwind": "tailwindcss --output ./app/tailwind.css --minify",
+    "clean": "rm -rf build && rm -rf public/build && rm app/tailwind.css",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
     "dev:miniflare": "cross-env NODE_ENV=development miniflare ./build/index.js --watch",
     "dev:tailwind": "tailwindcss -o ./app/tailwind.css --watch",
