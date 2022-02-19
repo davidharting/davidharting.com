@@ -39,6 +39,6 @@ export function links() {
     { rel: "stylesheet", href: styles },
     { rel: 'preconnect', href: 'https://fonts.googleapis.com'},
     { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: true },
-    { rel: 'stylesheet', href: "https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600&family=Source+Serif+Pro&display=swap" }
+    { rel: 'stylesheet', href: "https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600&family=Source+Serif+Pro:wght@400;600&display=swap" }
   ];
 }
