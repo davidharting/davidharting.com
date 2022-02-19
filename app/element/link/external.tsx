@@ -10,7 +10,7 @@ const ExternalLink: FC<Props> = ({ children, href }) => {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="font-semibold text-teal-700 hover:underline decoration-2 hover:animate-pulse hover:shadow-lg"
+      className="font-semibold text-teal-700 dark:text-teal-400 hover:underline decoration-2 hover:animate-pulse hover:shadow-lg"
     >
       {children}
     </a>
