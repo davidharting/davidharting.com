@@ -8,10 +8,11 @@ export default function Index() {
       </h1>
       <p className="text-lg mt-2">and it's a great day to build software ☀️</p>
 
-      <div className="mt-8 w-full flex justify-center">
+      <div className="mt-8 w-full flex justify-center ">
         <img
           src="images/david-headshot.jpg"
-          className="w-72 rounded-lg shadow-lg"
+          className="rounded-lg shadow-lg"
+          style={{ width: "288px", height: "415.8px" }}
         />
       </div>
 
