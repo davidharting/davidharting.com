@@ -1,10 +1,12 @@
 // import crypto from "crypto";
 import type { FC } from "react";
-import { useTransition, useActionData, Form, redirect } from "remix";
+import { useActionData, Form, redirect } from "remix";
 import type { ActionFunction } from "remix";
 import Layout from "~/layouts/OneTimeLinksLayout";
 
 const OneTimeLinks: FC = () => {
+  // const actionData = useActionData();
+  // console.log({ actionData });
   return (
     <Layout>
       <h1 className="text-3xl font-semibold font-serif">One-Time Links</h1>
@@ -15,7 +17,7 @@ const OneTimeLinks: FC = () => {
       </p>
       <hr className="mt-4" />
       <div className="mt-8">
-        <Form method="post">
+        <Form method="post" reloadDocument>
           <fieldset>
             <div className="flex flex-col">
               <label htmlFor="message" className="">
@@ -24,6 +26,8 @@ const OneTimeLinks: FC = () => {
               <textarea
                 name="message"
                 rows={3}
+                maxLength={500}
+                required
                 className="mt-1 p-2 roundeed ring-1 ring-slate-900/10 shadow-sm rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 caret-teal-500 dark:bg-slate-700 dark:focus:ring-teal-800 dark:caret-teal-800 dark:focus:bg-slate-900"
               />
             </div>
@@ -43,9 +47,13 @@ const OneTimeLinks: FC = () => {
 
 export default OneTimeLinks;
 
+interface ActionData {
+  errors: string[];
+}
+
 export const action: ActionFunction = async ({ request }) => {
-  const formData = request.formData();
-  console.log({ formData });
+  const formData = await request.formData();
+  const message = formData.get("message");
   // @ts-ignore
   const id = crypto.randomUUID(); // This is available in the Web Worker API, but TS does not know that here
   const oneTimeLink = `${request.url}/${id}`;
