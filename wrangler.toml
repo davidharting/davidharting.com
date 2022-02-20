@@ -6,6 +6,10 @@ account_id = ""
 route = ""
 workers_dev = true
 
+kv_namespaces = [ 
+  { binding = "SECRET_MESSAGES", id = "377b42faf5df4671922ff025f0dc64e1" }
+]
+
 [site]
 bucket = "./public"
 entry-point = "."

@@ -1,12 +1,9 @@
-// import crypto from "crypto";
 import type { FC } from "react";
-import { useActionData, Form, redirect } from "remix";
+import { Form, redirect } from "remix";
 import type { ActionFunction } from "remix";
 import Layout from "~/layouts/OneTimeLinksLayout";
 
 const OneTimeLinks: FC = () => {
-  // const actionData = useActionData();
-  // console.log({ actionData });
   return (
     <Layout>
       <h1 className="text-3xl font-semibold font-serif">One-Time Links</h1>
@@ -56,6 +53,10 @@ export const action: ActionFunction = async ({ request }) => {
   const message = formData.get("message");
   // @ts-ignore
   const id = crypto.randomUUID(); // This is available in the Web Worker API, but TS does not know that here
+
+  await (global.SECRET_MESSAGES as KVNamespace).put(id, message as string, {
+    expirationTtl: 60 * 60,
+  });
   const oneTimeLink = `${request.url}/${id}`;
   return redirect(oneTimeLink);
 };
