@@ -1,7 +1,7 @@
+// import crypto from "crypto";
 import type { FC } from "react";
 import { useTransition, useActionData, Form, redirect } from "remix";
 import type { ActionFunction } from "remix";
-import { nanoid } from "nanoid";
 import Layout from "~/layouts/OneTimeLinksLayout";
 
 const OneTimeLinks: FC = () => {
@@ -46,7 +46,8 @@ export default OneTimeLinks;
 export const action: ActionFunction = async ({ request }) => {
   const formData = request.formData();
   console.log({ formData });
-  const id = nanoid();
-  const oneTimeLink = `${request.url}/link/${id}`;
-  return redirect(`/one-time-links/complete`);
+  // @ts-ignore
+  const id = crypto.randomUUID(); // This is available in the Web Worker API, but TS does not know that here
+  const oneTimeLink = `${request.url}/${id}`;
+  return redirect(oneTimeLink);
 };
