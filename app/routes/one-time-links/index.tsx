@@ -1,5 +1,7 @@
 import type { FC } from "react";
-import { useTransition, useActionData, Form } from "remix";
+import { useTransition, useActionData, Form, redirect } from "remix";
+import type { ActionFunction } from "remix";
+import { nanoid } from "nanoid";
 import Layout from "~/layouts/OneTimeLinksLayout";
 
 const OneTimeLinks: FC = () => {
@@ -40,3 +42,11 @@ const OneTimeLinks: FC = () => {
 };
 
 export default OneTimeLinks;
+
+export const action: ActionFunction = async ({ request }) => {
+  const formData = request.formData();
+  console.log({ formData });
+  const id = nanoid();
+  const oneTimeLink = `${request.url}/link/${id}`;
+  return redirect(`/one-time-links/complete`);
+};
