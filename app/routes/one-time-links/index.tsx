@@ -57,6 +57,6 @@ export const action: ActionFunction = async ({ request }) => {
   await (global.SECRET_MESSAGES as KVNamespace).put(id, message as string, {
     expirationTtl: 60 * 60,
   });
-  const oneTimeLink = `${request.url}/${id}/share`;
+  const oneTimeLink = `${request.url}/share/${id}/`;
   return redirect(oneTimeLink);
 };

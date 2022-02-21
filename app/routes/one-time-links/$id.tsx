@@ -1,7 +1,10 @@
+import { redirect, useLoaderData } from "remix";
+import type { LoaderFunction } from "remix";
 import type { FC } from "react";
 import Layout from "~/layouts/OneTimeLinksLayout";
 
 const Complete: FC = () => {
+  const data = useLoaderData<string>();
   return (
     <Layout>
       <div className="space-y-8">
@@ -15,7 +18,7 @@ const Complete: FC = () => {
           &nbsp; When you reload the page it will be gone.
         </p>
         <div className="space-y-4 p-8 shadow-md rounded-md  dark:bg-slate-700">
-          <pre>Loader data goes here</pre>
+          <pre>{data}</pre>
           <div className="flex w-full justify-end">
             <button>Copy</button>
           </div>
@@ -26,3 +29,16 @@ const Complete: FC = () => {
 };
 
 export default Complete;
+
+export const loader: LoaderFunction = async ({ params }) => {
+  console.log({ params });
+  const id = params.id;
+  if (!id) {
+    return redirect("/404");
+  }
+  const message = await (global.SECRET_MESSAGES as KVNamespace).get(id);
+  if (!message) {
+    return redirect("/404");
+  }
+  return message;
+};
