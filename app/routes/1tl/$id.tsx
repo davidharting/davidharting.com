@@ -36,7 +36,7 @@ export const loader: LoaderFunction = async ({ params }) => {
   if (!id) {
     return redirect("/404");
   }
-  const message = await (global.SECRET_MESSAGES as KVNamespace).get(id);
+  const message = await SECRET_MESSAGES.get(id);
   if (!message) {
     return redirect("/404");
   }

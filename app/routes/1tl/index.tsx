@@ -54,7 +54,7 @@ export const action: ActionFunction = async ({ request }) => {
   // @ts-ignore
   const id = crypto.randomUUID(); // This is available in the Web Worker API, but TS does not know that here
 
-  await (global.SECRET_MESSAGES as KVNamespace).put(id, message as string, {
+  await SECRET_MESSAGES.put(id, message as string, {
     expirationTtl: 60 * 60,
   });
   const oneTimeLink = `${request.url}/share/${id}/`;
