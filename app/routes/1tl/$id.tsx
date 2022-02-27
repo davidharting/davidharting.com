@@ -2,6 +2,7 @@ import { redirect, useLoaderData } from "remix";
 import type { LoaderFunction } from "remix";
 import type { FC } from "react";
 import Layout from "~/layouts/OneTimeLinksLayout";
+import { CopyBlock } from "~/components/CopyBlock";
 
 const Complete: FC = () => {
   const data = useLoaderData<string>();
@@ -17,12 +18,7 @@ const Complete: FC = () => {
           </span>
           &nbsp; When you reload the page it will be gone.
         </p>
-        <div className="space-y-4 p-8 shadow-md rounded-md  dark:bg-slate-700">
-          <pre>{data}</pre>
-          <div className="flex w-full justify-end">
-            <button>Copy</button>
-          </div>
-        </div>
+        <CopyBlock text={data} />
       </div>
     </Layout>
   );
