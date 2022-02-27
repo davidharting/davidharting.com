@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { useLoaderData } from "remix";
 import type { LoaderFunction } from "remix";
 import Layout from "~/layouts/OneTimeLinksLayout";
+import { CopyBlock } from "~/components/CopyBlock";
 
 const Complete: FC = () => {
   const data = useLoaderData<Data>();
@@ -15,10 +16,7 @@ const Complete: FC = () => {
           Copy the link below and share it with your recipient. The link can be
           used exactly once, and will only work for an hour.
         </p>
-        <div>
-          <p>{data.link}</p>
-          <button>Copy</button>
-        </div>
+        <CopyBlock text={data.link} />
       </div>
     </Layout>
   );

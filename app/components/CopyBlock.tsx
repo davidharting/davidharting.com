@@ -16,7 +16,7 @@ export const CopyBlock: FC<Props> = ({ text }) => {
     }, 3000);
   };
   return (
-    <div className="space-y-4 p-8 shadow-md rounded-md  dark:bg-slate-700">
+    <div className="space-y-4 p-8 shadow-md rounded-md  dark:bg-slate-700 overflow-x-scroll">
       <pre>{text}</pre>
       <div className="flex w-full justify-end">
         <div
