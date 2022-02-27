@@ -1,9 +1,24 @@
+import { useEffect, useState } from "react";
 import type { FC } from "react";
 import { Form, redirect } from "remix";
 import type { ActionFunction } from "remix";
 import Layout from "~/layouts/OneTimeLinksLayout";
+import { createKey, encrypt } from "~/crypto/aes";
 
 const OneTimeLinks: FC = () => {
+  const [key, setKey] = useState<CryptoKey | null>(null);
+  const [exportedKey, setExportedKey] = useState<string | null>(null);
+  const [encryptedMessage, setEncryptedMessage] = useState<string>("");
+  const [iv, setIv] = useState<string | null>(null);
+  useEffect(() => {
+    const setupKey = async () => {
+      const { key, exported } = await createKey();
+      setKey(key);
+      setExportedKey(exported);
+    };
+    setupKey();
+  }, []);
+
   return (
     <Layout>
       <h1 className="text-3xl font-semibold font-serif">One-Time Links</h1>
@@ -21,12 +36,30 @@ const OneTimeLinks: FC = () => {
                 Secret Message
               </label>
               <textarea
-                name="message"
+                onChange={async (e) => {
+                  if (key) {
+                    const { ciphertext, iv } = await encrypt(
+                      key,
+                      e.target.value
+                    );
+                    setEncryptedMessage(ciphertext);
+                    setIv(iv);
+                  }
+                }}
+                id="plaintextMessage"
+                disabled={key === null ?? true}
                 rows={3}
                 maxLength={500}
                 required
                 className="mt-1 p-2 roundeed ring-1 ring-slate-900/10 shadow-sm rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 caret-teal-500 dark:bg-slate-700 dark:focus:ring-teal-800 dark:caret-teal-800 dark:focus:bg-slate-900"
               />
+              <input
+                name="encryptedMessage"
+                type="hidden"
+                value={encryptedMessage}
+              />
+              <input name="key" type="hidden" value={exportedKey ?? ""} />
+              <input name="iv" type="hidden" value={iv ?? ""} />
             </div>
 
             <br />
@@ -46,13 +79,17 @@ export default OneTimeLinks;
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
-  const message = formData.get("message");
+  const encryptedMessage = formData.get("encryptedMessage");
+  const key = formData.get("key");
+  const iv = formData.get("iv");
   // @ts-ignore
   const id = crypto.randomUUID(); // This is available in the Web Worker API, but TS does not know that here
 
-  await SECRET_MESSAGES.put(id, message as string, {
+  await SECRET_MESSAGES.put(id, encryptedMessage as string, {
     expirationTtl: 60 * 60,
   });
-  const oneTimeLink = `${request.url}/share/${id}/`;
+  const oneTimeLink = `${request.url}/share/${id}/?key=${encodeURIComponent(
+    key as string
+  )}&iv=${encodeURIComponent(iv as string)}`;
   return redirect(oneTimeLink);
 };
