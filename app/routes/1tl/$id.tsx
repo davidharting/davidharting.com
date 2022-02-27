@@ -5,7 +5,23 @@ import Layout from "~/layouts/OneTimeLinksLayout";
 import { CopyBlock } from "~/components/CopyBlock";
 
 const Complete: FC = () => {
-  const data = useLoaderData<string>();
+  const data = useLoaderData<string | null>();
+  if (data === null) {
+    return (
+      <Layout>
+        <div className="space-y-8">
+          <h1 className="text-3xl font-semibold font-serif">
+            Message not found
+          </h1>
+          <p>
+            This looks like a link to a message, but this particular message
+            does not exist.
+          </p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -34,7 +50,7 @@ export const loader: LoaderFunction = async ({ params }) => {
   }
   const message = await SECRET_MESSAGES.get(id);
   if (!message) {
-    return redirect("/404");
+    return null;
   }
   await SECRET_MESSAGES.delete(id);
   return message;
