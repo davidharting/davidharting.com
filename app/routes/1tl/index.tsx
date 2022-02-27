@@ -44,10 +44,6 @@ const OneTimeLinks: FC = () => {
 
 export default OneTimeLinks;
 
-interface ActionData {
-  errors: string[];
-}
-
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const message = formData.get("message");
