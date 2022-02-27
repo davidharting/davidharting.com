@@ -36,5 +36,6 @@ export const loader: LoaderFunction = async ({ params }) => {
   if (!message) {
     return redirect("/404");
   }
+  await SECRET_MESSAGES.delete(id);
   return message;
 };
