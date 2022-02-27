@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FC } from "react";
 import cn from "classnames";
+import { TextButton } from "~/element/button/TextButton";
 
 interface Props {
   text: string;
@@ -28,12 +29,7 @@ export const CopyBlock: FC<Props> = ({ text }) => {
         >
           Text copied to clipboard
         </div>
-        <button
-          onClick={copy}
-          className="p-2 rounded-md hover:opacity-80 active:shadow-inner"
-        >
-          Copy
-        </button>
+        <TextButton onClick={copy}>Copy</TextButton>
       </div>
     </div>
   );
