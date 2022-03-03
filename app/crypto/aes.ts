@@ -1,5 +1,9 @@
-const decoder = new TextDecoder();
-const encoder = new TextEncoder();
+import { Encode, Decode } from "arraybuffer-encoding/base64/url";
+
+const bytesToUrlFriendlyString = (bytes: ArrayBuffer): string => Encode(bytes);
+const textToBytes = (text: string): ArrayBuffer => {
+  return new TextEncoder().encode(text);
+};
 
 const ALGORITHM = "AES-GCM";
 const KEY_OPTIONS: [AesKeyGenParams, boolean, ["encrypt", "decrypt"]] = [
@@ -16,7 +20,7 @@ export const createKey: CreateKey = async () => {
   const key = await crypto.subtle.generateKey(...KEY_OPTIONS);
   const exportedKeyBytes = await crypto.subtle.exportKey("raw", key);
   console.log({ exportedKeyBytes });
-  const exportedKey = decoder.decode(exportedKeyBytes);
+  const exportedKey = Encode(exportedKeyBytes);
   console.log({ exportedKey });
   return {
     key,
@@ -36,9 +40,12 @@ export const encrypt: Encrypt = async (key, plaintext) => {
   const encryptedBytes: ArrayBuffer = await crypto.subtle.encrypt(
     { name: ALGORITHM, iv },
     key,
-    encoder.encode(plaintext)
+    textToBytes(plaintext)
   );
-  return { ciphertext: decoder.decode(encryptedBytes), iv: decoder.decode(iv) };
+  return {
+    ciphertext: new TextDecoder().decode(encryptedBytes),
+    iv: bytesToUrlFriendlyString(iv),
+  };
 };
 
 interface Decrypt {
@@ -47,13 +54,13 @@ interface Decrypt {
 
 export const decrypt: Decrypt = async (serializedKey, iv, ciphertext) => {
   console.log("Decrypt called", { serializedKey, iv, ciphertext });
-  const encodedKey = encoder.encode(serializedKey);
+  const encodedKey = new TextEncoder().encode(serializedKey);
   console.log({ encodedKey });
-  const encodedIv = encoder.encode(iv);
+  const encodedIv = Decode(iv);
   console.log({ encodedIv });
   const key = await crypto.subtle.importKey("raw", encodedKey, ...KEY_OPTIONS);
   console.log("Imported key", { key });
-  const encodedCiphertext = encoder.encode(ciphertext);
+  const encodedCiphertext = new TextEncoder().encode(ciphertext);
   console.log({ encodedCiphertext });
   const plaintextBytes: ArrayBuffer = await crypto.subtle.decrypt(
     { name: "AES-GCM", iv: encodedIv },
@@ -61,5 +68,5 @@ export const decrypt: Decrypt = async (serializedKey, iv, ciphertext) => {
     encodedCiphertext
   );
   console.log({ plaintextBytes });
-  return decoder.decode(plaintextBytes);
+  return new TextDecoder().decode(plaintextBytes);
 };
