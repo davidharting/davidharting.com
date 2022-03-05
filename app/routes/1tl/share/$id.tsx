@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useLoaderData } from "remix";
-import type { LoaderFunction } from "remix";
+import type { LoaderFunction } from "custom.remix";
 import Layout from "~/layouts/OneTimeLinksLayout";
 import { CopyBlock } from "~/components/CopyBlock";
 

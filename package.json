@@ -38,7 +38,7 @@
     "build:tailwind": "tailwindcss --output ./app/tailwind.css --minify",
     "clean": "rm -rf build && rm -rf public/build && rm app/tailwind.css",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
-    "dev:wrangler": "cross-env NODE_ENV=development wrangler pages dev ./public",
+    "dev:wrangler": "cross-env NODE_ENV=development wrangler pages dev ./public --kv SECRET_MESSAGES",
     "dev:tailwind": "tailwindcss -o ./app/tailwind.css --watch",
     "dev": "npm run build:tailwind && cross-env NODE_ENV=development remix build && run-p dev:*",
     "start": "npm run dev",
