@@ -1,5 +1,4 @@
-import { serialize } from "cookie";
-import { objectToBase64 } from "~/serialize";
+import { base64ToObject, objectToBase64 } from "~/serialize";
 
 const exampleObjects = [
   { first: "Tom", last: "Bombadil" },
@@ -25,6 +24,16 @@ describe("serialize", () => {
         const serialized = objectToBase64(obj);
         expect(serialized).not.toContain("+");
         expect(serialized).not.toContain("=");
+      }
+    );
+
+    test.each(exampleObjects)(
+      "serialized objects should deserialize back into their original form (%o)",
+      (obj) => {
+        const serialized = objectToBase64(obj);
+        const deserialized = base64ToObject(serialized);
+        expect(deserialized).not.toBe(obj);
+        expect(deserialized).toEqual(obj);
       }
     );
   });
