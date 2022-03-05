@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FC } from "react";
 import { Form, redirect } from "remix";
-import type { ActionFunction } from "remix";
+import type { ActionFunction } from "custom.remix";
 import Layout from "~/layouts/OneTimeLinksLayout";
 
 const OneTimeLinks: FC = () => {
@@ -47,13 +47,14 @@ const OneTimeLinks: FC = () => {
 
 export default OneTimeLinks;
 
-export const action: ActionFunction = async ({ request }) => {
+export const action: ActionFunction = async ({ request, context }) => {
+  console.log("form action context", { context });
   const formData = await request.formData();
   const message = formData.get("message");
   // @ts-ignore
   const id = crypto.randomUUID(); // This is available in the Web Worker API, but TS does not know that here
 
-  await SECRET_MESSAGES.put(id, message as string, {
+  await context.SECRET_MESSAGES.put(id, message as string, {
     expirationTtl: 60 * 60,
   });
   const messageShareUrl = `${request.url}/share/${id}/`;

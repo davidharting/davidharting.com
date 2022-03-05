@@ -1,5 +1,5 @@
-import { redirect, useLoaderData } from "remix";
-import type { LoaderFunction } from "remix";
+import { useLoaderData } from "remix";
+import type { LoaderFunction } from "custom.remix";
 import type { FC } from "react";
 import { useState } from "react";
 import cn from "classnames";
@@ -70,16 +70,16 @@ interface Data {
   message: string;
 }
 
-export const loader: LoaderFunction = async ({ request, params }) => {
+export const loader: LoaderFunction = async ({ context, request, params }) => {
   const id = params.id;
-  if (!id) {
+  if (!id || Array.isArray(id)) {
     return null;
   }
-  const message = await SECRET_MESSAGES.get(id);
+  const message = await context.SECRET_MESSAGES.get(id);
   if (!message) {
     return null;
   }
-  await SECRET_MESSAGES.delete(id);
+  await context.SECRET_MESSAGES.delete(id);
   const url = new URL(request.url);
 
   return {

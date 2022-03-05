@@ -4,46 +4,44 @@
   "description": "",
   "license": "",
   "dependencies": {
-    "@remix-run/cloudflare-workers": "^1.2.1",
-    "@remix-run/react": "^1.2.1",
+    "@remix-run/cloudflare-pages": "^1.2.3",
+    "@remix-run/react": "^1.2.3",
     "classnames": "^2.3.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "remix": "^1.2.1"
+    "remix": "^1.2.3"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^2.2.2",
-    "@cloudflare/wrangler": "^1.19.8",
-    "@remix-run/dev": "^1.2.1",
+    "@cloudflare/workers-types": "^3.4.0",
+    "@remix-run/dev": "^1.2.3",
     "@types/jest": "^27.4.1",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
     "concurrently": "^7.0.0",
     "cross-env": "^7.0.3",
     "jest": "^27.5.1",
-    "miniflare": "^2.3.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.5.1",
     "tailwindcss": "^3.0.23",
     "ts-jest": "^27.1.3",
-    "typescript": "^4.1.2"
+    "typescript": "^4.1.2",
+    "wrangler": "beta"
   },
   "engines": {
     "node": ">=14"
   },
   "sideEffects": false,
   "scripts": {
-    "postinstall": "remix setup cloudflare-workers",
-    "build": "run-s clean build:tailwind build:remix",
+    "postinstall": "remix setup cloudflare-pages",
+    "build": "run-s build:tailwind build:remix",
     "build:remix": "cross-env NODE_ENV=production remix build",
     "build:tailwind": "tailwindcss --output ./app/tailwind.css --minify",
     "clean": "rm -rf build && rm -rf public/build && rm app/tailwind.css",
     "dev:remix": "cross-env NODE_ENV=development remix watch",
-    "dev:miniflare": "cross-env NODE_ENV=development miniflare ./build/index.js --watch",
+    "dev:wrangler": "cross-env NODE_ENV=development wrangler pages dev ./public --kv SECRET_MESSAGES",
     "dev:tailwind": "tailwindcss -o ./app/tailwind.css --watch",
-    "dev": "cross-env NODE_ENV=development remix build && run-p dev:*",
+    "dev": "npm run build:tailwind && cross-env NODE_ENV=development remix build && run-p dev:*",
     "start": "npm run dev",
-    "deploy": "npm run build && wrangler publish",
     "test": "jest"
   },
   "main": "build/index.js"
