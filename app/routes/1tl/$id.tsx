@@ -6,7 +6,6 @@ import cn from "classnames";
 import Layout from "~/layouts/OneTimeLinksLayout";
 import { CopyBlock } from "~/components/CopyBlock";
 import { TextButton } from "~/element/button/TextButton";
-import { decrypt } from "~/crypto/aes";
 
 const Complete: FC = () => {
   const data = useLoaderData<Data | null>();
@@ -14,8 +13,7 @@ const Complete: FC = () => {
 
   const onRevealClick = async () => {
     if (data) {
-      const result = await decrypt(data.key, data.iv, data.ciphertext);
-      setPlaintext(result);
+      setPlaintext(data.message);
     }
   };
 
@@ -50,7 +48,7 @@ const Complete: FC = () => {
         </p>
         <div className="relative">
           <div className={cn({ blur: plaintext === null })}>
-            <CopyBlock text={plaintext ?? data.ciphertext} />
+            <CopyBlock text={plaintext ?? "..."} />
           </div>
           <div
             className={cn(
@@ -69,27 +67,22 @@ const Complete: FC = () => {
 export default Complete;
 
 interface Data {
-  ciphertext: string;
-  key: string;
-  iv: string;
+  message: string;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-  console.log({ params });
   const id = params.id;
   if (!id) {
-    return redirect("/404");
+    return null;
   }
   const message = await SECRET_MESSAGES.get(id);
   if (!message) {
     return null;
   }
-  // await SECRET_MESSAGES.delete(id);
+  await SECRET_MESSAGES.delete(id);
   const url = new URL(request.url);
 
   return {
-    ciphertext: message,
-    key: url.searchParams.get("key"),
-    iv: url.searchParams.get("iv"),
+    message,
   };
 };
