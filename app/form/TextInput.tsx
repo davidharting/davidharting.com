@@ -1,6 +1,7 @@
 import type { FC } from "react";
 
 interface Props {
+  error?: string;
   label: string;
   name: string;
   onChange: (newValue: string) => void;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const TextInput: FC<Props> = ({
+  error,
   label,
   name,
   onChange,
@@ -25,6 +27,7 @@ export const TextInput: FC<Props> = ({
         placeholder={placeholder}
         value={value}
       />
+      {<p className="text-sm text-red-700 dark:text-red-500">{error}</p>}
     </div>
   );
 };

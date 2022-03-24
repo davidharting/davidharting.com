@@ -5,7 +5,7 @@ const HintSchema = z.array(z.number());
 
 export type Hint = z.infer<typeof HintSchema>;
 
-export const parseHint = (input: string): Result<Hint> => {
+export const parseHint = (input: string): Result<Hint, string> => {
   const casted = input
     .trim()
     .split(" ")
@@ -19,8 +19,6 @@ export const parseHint = (input: string): Result<Hint> => {
   }
   return {
     success: false,
-    error: ["Only integers and spaces are permitted in the input."],
+    error: "Only integers and spaces are permitted in the input.",
   };
 };
-
-// const digitsAndSpacesRegex = /^[\d\s]+$/;
