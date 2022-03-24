@@ -2,11 +2,13 @@ import type { FC } from "react";
 import Heading from "~/element/typography/heading";
 import { TextInput } from "~/form/TextInput";
 import { atom, useAtom } from "jotai";
+import { parseHint } from "~/picross/hint";
 
 const patternInputAtom = atom("");
 
 const PicrossPage: FC = () => {
   const [patternValue, setPatternValue] = useAtom(patternInputAtom);
+  const pattern = parseHint(patternValue);
   return (
     <div className="m-auto max-w-2xl mt-12 font-sans px-2 md:px-0">
       <div className="space-y-4">
@@ -21,6 +23,7 @@ const PicrossPage: FC = () => {
       <div className="mt-8">
         <form>
           <TextInput
+            error={pattern.success === true ? undefined : pattern.error}
             label="Pattern"
             name="pattern"
             onChange={(newValue) => setPatternValue(newValue)}
