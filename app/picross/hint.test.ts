@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parseHint } from "./hint";
+import { doesRowSatisfyHint, parseHint } from "./hint";
+import { Row } from "./models";
 
 describe("parseHint", () => {
   const valid: [string, number[]][] = [
@@ -18,6 +19,15 @@ describe("parseHint", () => {
 });
 
 describe("doesRowSatisfyHint", () => {
-  it.todo("should return true if the row satisfies the hint", () => {});
-  it.todo("should return false if the row statisfies the hint", () => {});
+  it("should return false if the row does not statisfy the hint", () => {
+    const hint = [1, 2, 3];
+    const row = new Row(["Y", "Y", "n", "Y", "Y", "n", "n", "Y", "n", "n"]);
+    expect(doesRowSatisfyHint(row, hint)).toBe(false);
+  });
+
+  it("should return true if the row satisfies the hint", () => {
+    const hint = [1, 3, 1];
+    const row = new Row(["Y", "n", "Y", "Y", "Y", "n", "Y"]);
+    expect(doesRowSatisfyHint(row, hint)).toBe(true);
+  });
 });
