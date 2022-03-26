@@ -1,5 +1,6 @@
 import { Result } from "~/fn/result";
 import { z } from "zod";
+import { Row } from "./models";
 
 const HintSchema = z.array(z.number());
 
@@ -21,4 +22,8 @@ export const parseHint = (input: string): Result<Hint, string> => {
     success: false,
     error: "Only integers and spaces are permitted in the input.",
   };
+};
+
+export const doesRowSatisfyHint = (row: Row, hint: Hint): boolean => {
+  return false;
 };

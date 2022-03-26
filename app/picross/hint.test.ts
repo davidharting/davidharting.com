@@ -11,8 +11,13 @@ describe("parseHint", () => {
   it.each(valid)('should parse "%s" as a valid hint', (input, expected) => {
     const result = parseHint(input);
     if (!result.success) {
-      throw new Error(`Expected hint to parse. ${result.error.join(". ")}`);
+      throw new Error(`Expected hint to parse. ${result.error}`);
     }
     expect(result.payload).toEqual(expected);
   });
+});
+
+describe("doesRowSatisfyHint", () => {
+  it.todo("should return true if the row satisfies the hint", () => {});
+  it.todo("should return false if the row statisfies the hint", () => {});
 });
