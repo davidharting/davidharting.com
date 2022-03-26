@@ -9,7 +9,7 @@ export type Piece = {
 
 export class Row {
   private readonly cells: CellState[];
-  private readonly filledTo: number;
+  private filledTo: number;
   private readonly size: number;
 
   constructor(size: number);
@@ -36,6 +36,7 @@ export class Row {
     }
     for (let i = 0; i < piece.size; i++) {
       this.cells.push(piece.state);
+      this.filledTo++;
     }
     return true;
   }
@@ -46,6 +47,10 @@ export class Row {
    */
   toUniqueString(): string {
     return this.cells.join("");
+  }
+
+  isEqual(other: Row): boolean {
+    return this.toUniqueString() === other.toUniqueString();
   }
 
   private isFull(): boolean {

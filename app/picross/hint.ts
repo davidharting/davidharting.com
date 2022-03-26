@@ -1,6 +1,7 @@
-import { Result } from "~/fn/result";
 import { z } from "zod";
+import { Result } from "~/fn/result";
 import { Row } from "./models";
+import type { Piece } from "./models";
 
 const HintSchema = z.array(z.number());
 
@@ -34,11 +35,30 @@ export const parseHint = (input: string): Result<Hint, string> => {
  * We take advantages the string representation of cells to easily check for piece sizes.
  */
 export const doesRowSatisfyHint = (row: Row, hint: Hint): boolean => {
-  const filledPieces = row.toUniqueString().split("n");
+  const filledPieces = row
+    .toUniqueString()
+    .split("n")
+    .filter((str) => str !== "");
   const pieceSizes = filledPieces.map((cellStates) => cellStates.length);
   const matches = pieceSizes.map(
     (pieceSize, index) => pieceSize === hint[index]
   );
-  const doAllMatch = matches.reduce((a, b) => a && b);
+  const doAllMatch = matches.reduce((a, b) => a && b, true);
   return doAllMatch;
+};
+
+export const getPiecesForHint = (hint: Hint, rowSize: number): Piece[] => {
+  const filledPieces: Piece[] = hint.map<Piece>((size) => {
+    return { state: "Y", size };
+  });
+
+  const filledCellCount = hint.reduce((a, b) => a + b, 0);
+  const emptyCellCount = rowSize - filledCellCount;
+
+  const emptyPieces: Piece[] = [];
+  for (let i = 0; i < emptyCellCount; i++) {
+    emptyPieces.push({ state: "n", size: 1 });
+  }
+
+  return [...filledPieces, ...emptyPieces];
 };
