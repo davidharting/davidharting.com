@@ -1,18 +1,17 @@
 import type { FC } from "react";
+import { Link } from "remix";
 
 interface Props {
-  href: string;
+  to: string;
 }
 
-export const ExternalLink: FC<Props> = ({ children, href }) => {
+export const InternalLink: FC<Props> = ({ children, to }) => {
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+    <Link
+      to={to}
       className="font-semibold text-teal-700 dark:text-teal-400 hover:underline decoration-2 hover:animate-pulse hover:shadow-lg"
     >
       {children}
-    </a>
+    </Link>
   );
 };

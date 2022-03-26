@@ -1,8 +1,9 @@
-import Link from "~/element/link/external";
+import { ExternalLink } from "~/element/link/external";
+import { InternalLink } from "~/element/link/internal";
 
 export default function Index() {
   return (
-    <div className="antialiased m-auto max-w-2xl mt-16 font-sans px-2">
+    <div className="antialiased m-auto max-w-2xl my-16 font-sans px-2">
       <h1 className="text-3xl font-serif font-semibold">
         Hi! I'm David Harting,
       </h1>
@@ -40,14 +41,41 @@ export default function Index() {
       <div>
         <p>
           ✍️ I{" "}
-          <Link href="https://world.hey.com/david.harting">
+          <ExternalLink href="https://world.hey.com/david.harting">
             write on Hey World
-          </Link>
+          </ExternalLink>
           . Or, you can find me on{" "}
-          <Link href="https://github.com/davidharting">GitHub</Link>,{" "}
-          <Link href="https://www.twitter.com/davehrtng">Twitter</Link>, and{" "}
-          <Link href="https://www.linkedin.com/in/davidharting">LinkedIn</Link>.
+          <ExternalLink href="https://github.com/davidharting">
+            GitHub
+          </ExternalLink>
+          ,{" "}
+          <ExternalLink href="https://www.twitter.com/davehrtng">
+            Twitter
+          </ExternalLink>
+          , and{" "}
+          <ExternalLink href="https://www.linkedin.com/in/davidharting">
+            LinkedIn
+          </ExternalLink>
+          .
         </p>
+      </div>
+
+      <h2 className="text-2xl mt-8 font-serif font-semibold">Lil' Apps</h2>
+      <div>
+        <p>
+          I've got a couple little projects on this site, because it's fun to
+          tinker. This site is built with Remix and hosted on Cloudflare Pages.
+          Server rendering happens in Cloudflare Workers, and I use their KV
+          store.
+        </p>
+        <ul className="mt-4 px-4">
+          <li>
+            <InternalLink to="/1tl">One-Time Links</InternalLink>
+          </li>
+          <li>
+            <InternalLink to="/picross">Picross Permutations</InternalLink>
+          </li>
+        </ul>
       </div>
     </div>
   );
