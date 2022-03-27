@@ -1,22 +1,12 @@
-import type { AppData } from "remix";
-
 /**
  * A function that loads data for a route.
  */
-export interface LoaderFunction {
-  (args: DataFunctionArgs):
-    | Promise<Response>
-    | Response
-    | Promise<AppData>
-    | AppData;
+export interface LoaderFunction<T> {
+  (args: DataFunctionArgs): Promise<Response> | Response | Promise<T> | T;
 }
 
-export interface ActionFunction {
-  (args: DataFunctionArgs):
-    | Promise<Response>
-    | Response
-    | Promise<AppData>
-    | AppData;
+export interface ActionFunction<T> {
+  (args: DataFunctionArgs): Promise<Response> | Response | Promise<T> | T;
 }
 
 interface DataFunctionArgs {

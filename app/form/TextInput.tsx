@@ -6,6 +6,7 @@ interface Props {
   name: string;
   onChange: (newValue: string) => void;
   placeholder: string;
+  required: boolean;
   value: string;
 }
 
@@ -15,6 +16,7 @@ export const TextInput: FC<Props> = ({
   name,
   onChange,
   placeholder,
+  required,
   value,
 }) => {
   return (
@@ -26,6 +28,7 @@ export const TextInput: FC<Props> = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         value={value}
+        required={required}
       />
       {<p className="text-sm text-red-700 dark:text-red-500">{error}</p>}
     </div>

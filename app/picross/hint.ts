@@ -2,8 +2,9 @@ import { z } from "zod";
 import { Result } from "~/fn/result";
 import { Row } from "./models";
 import type { Piece } from "./models";
+import { flattenZodError } from "~/parse/zodUtils";
 
-const HintSchema = z.array(z.number());
+const HintSchema = z.array(z.number().int().min(1).max(20));
 
 export type Hint = z.infer<typeof HintSchema>;
 
@@ -21,7 +22,7 @@ export const parseHint = (input: string): Result<Hint, string> => {
   }
   return {
     success: false,
-    error: "Only integers and spaces are permitted in the input.",
+    error: flattenZodError(result.error),
   };
 };
 
