@@ -1,4 +1,4 @@
-import { Form, useActionData } from "remix";
+import { Form, useActionData, useTransition } from "remix";
 import { z } from "zod";
 import type { FC } from "react";
 import Heading from "~/element/typography/heading";
@@ -20,6 +20,7 @@ const PicrossPage: FC = () => {
   const [rowSize, setRowSize] = useAtom(rowSizeInputAtom);
   const [hintValue, setHintValue] = useAtom(hintInputAtom);
   const actionData = useActionData<ActionData>();
+  const transition = useTransition();
 
   const formErrors =
     actionData?.success === false ? actionData.error : undefined;
@@ -44,34 +45,44 @@ const PicrossPage: FC = () => {
       </div>
       <div className="mt-8">
         <Form method="post" className="space-y-4">
-          <div className="flex flex-col space-y-1">
-            <label htmlFor="rowSize">Row Size</label>
-            <select
-              name="rowSize"
-              value={rowSize}
-              onChange={(e) => setRowSize(Number(e.target.value))}
-              className="ring-1 p-2 ring-slate-900/10 shadow-sm rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500  dark:bg-slate-700 dark:focus:ring-teal-800 dark:focus:bg-slate-900"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={15}>15</option>
-              <option value={20}>20</option>
-            </select>
-          </div>
-          <TextInput
-            error={formErrors?.hint.join(" ")}
-            required
-            label="Hint"
-            name="hint"
-            onChange={(newValue) => setHintValue(newValue)}
-            placeholder="1 3 1"
-            value={hintValue}
-          />
+          <fieldset disabled={transition.state !== "idle"}>
+            <div className="flex flex-col space-y-1">
+              <label htmlFor="rowSize">Row Size</label>
+              <select
+                name="rowSize"
+                value={rowSize}
+                onChange={(e) => setRowSize(Number(e.target.value))}
+                className="ring-1 p-2 ring-slate-900/10 shadow-sm rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500  dark:bg-slate-700 dark:focus:ring-teal-800 dark:focus:bg-slate-900"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={20}>20</option>
+              </select>
+            </div>
+            <TextInput
+              error={formErrors?.hint.join(" ")}
+              required
+              label="Hint"
+              name="hint"
+              onChange={(newValue) => setHintValue(newValue)}
+              placeholder="1 3 1"
+              value={hintValue}
+            />
+          </fieldset>
           <div className="mt-4">
-            <Submit label="Submit" />
+            <Submit
+              disabled={transition.state !== "idle"}
+              label={transition.state === "idle" ? "Submit" : "Calculating..."}
+            />
           </div>
         </Form>
       </div>
+      {transition.state !== "idle" ? (
+        <div className="mt-8 w-100 flex flex-row justify-center">
+          <div className="animate-spin w-4 h-4 bg-teal-700" />
+        </div>
+      ) : null}
       {rows ? (
         <div className="flex flex-col space-y-2 mt-8">
           {overlap.size === 0 ? (
