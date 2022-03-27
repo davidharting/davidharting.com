@@ -53,7 +53,26 @@ export class Row {
     return this.toUniqueString() === other.toUniqueString();
   }
 
+  getSize(): number {
+    return this.size;
+  }
+
   private isFull(): boolean {
     return this.filledTo >= this.size;
+  }
+
+  /**
+   * Return the "slot numbers" for all the filled cells.
+   * Slot numbers start at 0 (0-indexed).
+   * So for final presentation to a user, this likely needs adjusted.
+   */
+  filledCells(): Set<number> {
+    const set = new Set<number>();
+    this.cells.forEach((state, index) => {
+      if (state === "Y") {
+        set.add(index);
+      }
+    });
+    return set;
   }
 }

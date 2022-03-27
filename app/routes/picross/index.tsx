@@ -6,7 +6,7 @@ import { TextInput } from "~/form/TextInput";
 import { atom, useAtom } from "jotai";
 import { Hint, parseHint } from "~/picross/hint";
 import { Row } from "~/picross/models";
-import { findAllPermutations } from "~/picross/permutations";
+import { findAllPermutations, findOverlap } from "~/picross/permutations";
 import { Row as RowComponent } from "~/picross/components/row";
 import { ActionFunction } from "custom.remix";
 import { Result } from "~/fn/result";
@@ -27,6 +27,8 @@ const PicrossPage: FC = () => {
   const rows = permutations
     ? permutations.map((permutation) => new Row(permutation.cells))
     : null;
+
+  const overlap: Set<number> = rows ? findOverlap(rows) : new Set<number>();
 
   return (
     <div className="m-auto max-w-2xl mt-12 font-sans px-2 md:px-0">
@@ -67,13 +69,28 @@ const PicrossPage: FC = () => {
           <input type="submit" value="Submit" />
         </Form>
       </div>
-      <div className="flex flex-col space-y-2">
-        {rows
-          ? rows.map((row) => (
-              <RowComponent key={row.toUniqueString()} cells={row.getCells()} />
-            ))
-          : null}
-      </div>
+      {rows ? (
+        <div className="flex flex-col space-y-2 mt-8">
+          {overlap.size === 0 ? (
+            <p>None of the permutations have overlapping cells.</p>
+          ) : (
+            <p>
+              The following cells to overlap across all permutations:&nbsp;
+              {Array.from(overlap)
+                .map((cellNumber) => cellNumber + 1)
+                .join(", ")}
+              .
+            </p>
+          )}
+          {rows.map((row) => (
+            <RowComponent
+              key={row.toUniqueString()}
+              cells={row.getCells()}
+              highlight={overlap}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 };

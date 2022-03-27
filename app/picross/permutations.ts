@@ -47,3 +47,24 @@ const isUnique = (permutations: Row[], row: Row): boolean => {
   }
   return true;
 };
+
+export const findOverlap = (rows: Row[]): Set<number> => {
+  if (rows.length < 1) {
+    return new Set<number>();
+  }
+  const rowSize = rows[0].getSize();
+
+  const finalSet = new Set<number>();
+
+  const sets = rows.map((row) => row.filledCells());
+  for (let i = 0; i < rowSize; i++) {
+    const satisfiesAll = sets
+      .map((set) => set.has(i))
+      .reduce((a, b) => a && b, true);
+    if (satisfiesAll) {
+      finalSet.add(i);
+    }
+  }
+
+  return finalSet;
+};
