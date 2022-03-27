@@ -12,7 +12,7 @@ import { Result } from "~/fn/result";
 
 const hintInputAtom = atom("");
 
-const rowSizeInputAtom = atom(5);
+const rowSizeInputAtom = atom<number>(10);
 
 const PicrossPage: FC = () => {
   const [rowSize, setRowSize] = useAtom(rowSizeInputAtom);
@@ -40,16 +40,20 @@ const PicrossPage: FC = () => {
       </div>
       <div className="mt-8">
         <Form method="post" className="space-y-4">
-          <input
-            required
-            name="rowSize"
-            type="number"
-            value={rowSize}
-            step={5}
-            min={5}
-            max={20}
-            onChange={(e) => setRowSize(parseInt(e.target.value))}
-          />
+          <div className="flex flex-col space-y-1">
+            <label htmlFor="rowSize">Row Size</label>
+            <select
+              name="rowSize"
+              value={rowSize}
+              onChange={(e) => setRowSize(Number(e.target.value))}
+              className="ring-1 p-2 ring-slate-900/10 shadow-sm rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500  dark:bg-slate-700 dark:focus:ring-teal-800 dark:focus:bg-slate-900"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={15}>15</option>
+              <option value={20}>20</option>
+            </select>
+          </div>
           <TextInput
             error={formErrors?.hint.join(" ")}
             required
@@ -108,6 +112,10 @@ const parameters = async (
   const formData = await request.formData();
   const rowSizeInputValue = formData.get("rowSize");
   const hintInputValue = formData.get("hint");
+  console.log({
+    rowSizeInputValue,
+    hintInputValue,
+  });
 
   const rowSizeIssues: string[] = [];
   const hintIssues: string[] = [];
