@@ -25,9 +25,6 @@ const PicrossPage: FC = () => {
 
   const permutations = actionData?.success ? actionData.payload : undefined;
 
-  console.log({ formErrors, permutations });
-  // formErrors?.hint?.join(". ") ?? undefined
-
   return (
     <div className="m-auto max-w-2xl mt-12 font-sans px-2 md:px-0">
       <div className="space-y-4">
