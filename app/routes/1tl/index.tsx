@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import type { FC } from "react";
 import { Form, redirect } from "remix";
 import type { ActionFunction } from "custom.remix";
@@ -47,7 +46,7 @@ const OneTimeLinks: FC = () => {
 
 export default OneTimeLinks;
 
-export const action: ActionFunction = async ({ request, context }) => {
+export const action: ActionFunction<null> = async ({ request, context }) => {
   console.log("form action context", { context });
   const formData = await request.formData();
   const message = formData.get("message");

@@ -10,6 +10,7 @@ import { findAllPermutations, findOverlap } from "~/picross/permutations";
 import { Row as RowComponent } from "~/picross/components/row";
 import { ActionFunction } from "custom.remix";
 import { Result } from "~/fn/result";
+import { Submit } from "~/form/Submit";
 
 const hintInputAtom = atom("");
 
@@ -66,7 +67,9 @@ const PicrossPage: FC = () => {
             placeholder="1 3 1"
             value={hintValue}
           />
-          <input type="submit" value="Submit" />
+          <div className="mt-4">
+            <Submit label="Submit" />
+          </div>
         </Form>
       </div>
       {rows ? (
