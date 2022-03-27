@@ -86,7 +86,7 @@ const PicrossPage: FC = () => {
       {rows ? (
         <div className="flex flex-col space-y-2 mt-8">
           {overlap.size === 0 ? (
-            <p>None of the permutations have overlapping cells.</p>
+            <p>No cell is filled in every permutation.</p>
           ) : (
             <p>
               The following cells to overlap across all permutations:&nbsp;
