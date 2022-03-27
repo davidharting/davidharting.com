@@ -5,7 +5,7 @@ import Heading from "~/element/typography/heading";
 import { TextInput } from "~/form/TextInput";
 import { atom, useAtom } from "jotai";
 import { Hint, parseHint } from "~/picross/hint";
-import type { Row } from "~/picross/models";
+import { Row } from "~/picross/models";
 import { findAllPermutations } from "~/picross/permutations";
 import { Row as RowComponent } from "~/picross/components/row";
 import { ActionFunction } from "custom.remix";
@@ -24,6 +24,9 @@ const PicrossPage: FC = () => {
     actionData?.success === false ? actionData.error : undefined;
 
   const permutations = actionData?.success ? actionData.payload : undefined;
+  const rows = permutations
+    ? permutations.map((permutation) => new Row(permutation.cells))
+    : null;
 
   return (
     <div className="m-auto max-w-2xl mt-12 font-sans px-2 md:px-0">
@@ -65,9 +68,9 @@ const PicrossPage: FC = () => {
         </Form>
       </div>
       <div className="flex flex-col space-y-2">
-        {permutations
-          ? permutations.map((permutation, i) => (
-              <RowComponent key={i} cells={permutation.cells} />
+        {rows
+          ? rows.map((row) => (
+              <RowComponent key={row.toUniqueString()} cells={row.getCells()} />
             ))
           : null}
       </div>
