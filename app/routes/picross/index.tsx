@@ -7,6 +7,7 @@ import { atom, useAtom } from "jotai";
 import { Hint, parseHint } from "~/picross/hint";
 import type { Row } from "~/picross/models";
 import { findAllPermutations } from "~/picross/permutations";
+import { Row as RowComponent } from "~/picross/components/row";
 import { ActionFunction } from "custom.remix";
 import { Result } from "~/fn/result";
 
@@ -66,8 +67,12 @@ const PicrossPage: FC = () => {
           <input type="submit" value="Submit" />
         </Form>
       </div>
-      <div>
-        <pre>{permutations ? JSON.stringify(permutations, null, 2) : ""}</pre>
+      <div className="flex flex-col space-y-2">
+        {permutations
+          ? permutations.map((permutation, i) => (
+              <RowComponent key={i} cells={permutation.cells} />
+            ))
+          : null}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 type FilledState = "Y";
 type CrossedOutState = "n";
-type CellState = FilledState | CrossedOutState;
+export type CellState = FilledState | CrossedOutState;
 
 export type Piece = {
   size: number;
@@ -8,7 +8,7 @@ export type Piece = {
 };
 
 export class Row {
-  private readonly cells: CellState[];
+  readonly cells: CellState[];
   private filledTo: number;
   private readonly size: number;
 
