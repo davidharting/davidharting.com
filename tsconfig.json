@@ -1,19 +1,26 @@
 {
-  "include": ["global.d.ts", "remix.env.d.ts", "**/*.ts", "**/*.tsx"],
+  "extends": "adonis-preset-ts/tsconfig.json",
+  "include": ["**/*"],
+  "exclude": ["node_modules", "build"],
   "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2019"],
-    "isolatedModules": true,
-    "esModuleInterop": true,
     "jsx": "react-jsx",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "target": "ES2019",
-    "strict": true,
-    "baseUrl": ".",
+    "jsxImportSource": "preact",
+    "outDir": "build",
+    "rootDir": "./",
+    "sourceMap": true,
     "paths": {
-      "~/*": ["./app/*"]
+      "App/*": ["./app/*"],
+      "Config/*": ["./config/*"],
+      "Contracts/*": ["./contracts/*"],
+      "Database/*": ["./database/*"]
     },
-    "skipLibCheck": true,
-    "noEmit": true
+    "types": [
+      "@adonisjs/core",
+      "@adonisjs/repl",
+      "@adonisjs/session",
+      "@adonisjs/view",
+      "@adonisjs/shield",
+      "@japa/preset-adonis/build/adonis-typings"
+    ]
   }
 }
