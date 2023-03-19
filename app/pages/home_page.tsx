@@ -6,7 +6,7 @@ export const HomePage: FunctionComponent = () => {
       <div className="flex justify-between w-full space-x-4">
         <div className="avatar">
           <div className="w-24 rounded-xl ring ring-primary ring-offset-base-100 ring-offset-2">
-            <img src="assets/headshot.jpg" />
+            <img src="headshot.jpg" />
           </div>
         </div>
         <div className="space-y-2">
