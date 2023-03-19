@@ -2,9 +2,9 @@ import type { FunctionComponent } from 'preact'
 
 export const HomePage: FunctionComponent = () => {
   return (
-    <div className="antialiased m-auto max-w-2xl my-16">
-      <div className="flex justify-between w-full space-x-4">
-        <div className="avatar">
+    <div className="antialiased  mx-4 sm:mx-auto max-w-2xl my-16">
+      <div className="flex flex-col sm:flex-row  justify-between w-full sm:space-x-4">
+        <div className="avatar mb-4 sm:mb-0 flex justify-center">
           <div className="w-24 rounded-xl ring ring-primary ring-offset-base-100 ring-offset-2">
             <img src="headshot.jpg" />
           </div>
