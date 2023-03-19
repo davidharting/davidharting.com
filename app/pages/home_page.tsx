@@ -2,13 +2,20 @@ import type { FunctionComponent } from 'preact'
 
 export const HomePage: FunctionComponent = () => {
   return (
-    <div className="antialiased m-auto max-w-2xl my-16 px-2">
-      <div className="py-2">
-        <h1 className="text-5xl font-extrabold font-serif">Hi! I am David Harting,</h1>
-        <p className="text-lg">and it's a great day to build software ☀️</p>
+    <div className="antialiased m-auto max-w-2xl my-16">
+      <div className="flex justify-between w-full space-x-4">
+        <div className="avatar">
+          <div className="w-24 rounded-xl ring ring-primary ring-offset-base-100 ring-offset-2">
+            <img src="assets/headshot.jpg" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-5xl font-extrabold font-serif">Hi! I am David Harting,</h1>
+          <p className="text-lg">and it's a great day to build software ☀️</p>
+        </div>
       </div>
 
-      <div className="prose mt-10">
+      <div className="prose mt-14">
         <h2 className="font-serif">About me</h2>
         <p>
           I am an experienced, full-stack software engineer from Westfield, Indiana. My focus in my
