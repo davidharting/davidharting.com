@@ -21,3 +21,5 @@
 import Route from '@ioc:Adonis/Core/Route'
 
 Route.get('/', 'HomeController.show')
+Route.get('/1tl/new', 'OneTimeLinksController.new')
+Route.post('/1tl/create', 'OnetimeLinksController.create')
