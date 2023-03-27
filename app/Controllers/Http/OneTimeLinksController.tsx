@@ -1,6 +1,7 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Logger from '@ioc:Adonis/Core/Logger'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
+import OneTimeLink from 'App/Models/OneTimeLink'
 
 import { render } from 'App/pages'
 import { OneTimeLinkConfirmationPage } from 'App/pages/one_time_links/confirmation'
@@ -28,8 +29,13 @@ export default class OneTimeLinksController {
       },
     })
 
+    const oneTimeLink = await OneTimeLink.create({
+      signedUrl: 'www.cool.gov',
+      encryptedMessage: data.message,
+    })
+
     Logger.info({ data }, 'received message')
 
-    return render(ctx, <OneTimeLinkConfirmationPage url="www.bing.com" />)
+    return render(ctx, <OneTimeLinkConfirmationPage url={oneTimeLink.signedUrl} />)
   }
 }
