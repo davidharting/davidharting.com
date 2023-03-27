@@ -7,6 +7,7 @@
     "build": "node ace build --production",
     "start": "node server.js",
     "test": "node ace test",
+    "test:debug": "node ace test -- --node-args=\"inspect\"",
     "lint": "eslint . --ext=.ts",
     "format": "prettier --write ."
   },

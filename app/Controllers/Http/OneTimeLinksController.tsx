@@ -12,20 +12,24 @@ export default class OneTimeLinksController {
   }
 
   public async create(ctx: HttpContextContract) {
+    const maxMessageLength = 1000
     const validationSchema = schema.create({
       message: schema.string({ trim: true }, [
         rules.required(),
         rules.minLength(1),
-        rules.maxLength(1000),
+        rules.maxLength(maxMessageLength),
       ]),
     })
 
     const data = await ctx.request.validate({
       schema: validationSchema,
+      messages: {
+        'message.maxLength': `Must be less than ${maxMessageLength} characters.`,
+      },
     })
 
-    Logger.info({ data }, 'Recieved some data!')
-    ctx.response.status(201)
-    return render(ctx, <OneTimeLinkConfirmationPage url="https://www.davidharting.com" />)
+    Logger.info({ data }, 'received message')
+
+    return render(ctx, <OneTimeLinkConfirmationPage url="www.bing.com" />)
   }
 }

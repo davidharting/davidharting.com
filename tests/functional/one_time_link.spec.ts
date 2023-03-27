@@ -31,7 +31,11 @@ test.group('One time links: Create', () => {
     response.assertStatus(403)
   })
 
-  test('refuse to create a link if it is missing a message', () => {})
+  test('refuse to create a link if it is missing a message', async ({ client }) => {
+    const response = await client.post('/1tl/create').form({ message: null }).withCsrfToken()
+
+    response.assertStatus(400)
+  })
 
   test('refuse to create a link if the message exceeds the max length', () => {})
 })

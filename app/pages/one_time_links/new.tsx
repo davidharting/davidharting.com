@@ -1,8 +1,9 @@
 import { FunctionComponent } from 'preact'
 import { AppLayout } from 'App/pages/app_layout'
 import { CsrfInput } from 'App/components/forms/csrf'
+import { ComponentContext } from '..'
 
-export const NewOneTimeLinkPage: FunctionComponent = () => {
+export const NewOneTimeLinkPage: FunctionComponent = (_props, ctx: ComponentContext) => {
   return (
     <AppLayout>
       <div className="prose">
@@ -12,7 +13,7 @@ export const NewOneTimeLinkPage: FunctionComponent = () => {
           will only be valid for 30 minutes. The message will be destroyed after reading.
         </p>
 
-        <form className="space-y-4" method="post">
+        <form className="space-y-4" action="/1tl/new" method="post">
           <CsrfInput />
           <div className="form-control">
             <label className="label" htmlFor="message">
@@ -23,7 +24,11 @@ export const NewOneTimeLinkPage: FunctionComponent = () => {
               name="message"
               placeholder="Secret information"
               required
+              value={ctx.flash.get('message', '')}
             ></textarea>
+            {ctx.flash.has('errors.message') && (
+              <div className="mt-2 text-sm text-error">{ctx.flash.get('errors.message')}</div>
+            )}
           </div>
           <div className="form-control">
             <input type="submit" className="btn btn-primary" value="Create" />

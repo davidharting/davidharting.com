@@ -1,3 +1,4 @@
+import { StoreContract } from '@ioc:Adonis/Addons/Session'
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import type { VNode } from 'preact'
 import { render as preactRenderToString } from 'preact-render-to-string'
@@ -7,12 +8,13 @@ import { render as preactRenderToString } from 'preact-render-to-string'
  */
 export interface ComponentContext {
   csrfToken: string
+  flash: StoreContract
 }
 
 export const render = (ctx: HttpContextContract, component: VNode) => {
   const preactCtx: ComponentContext = {
     csrfToken: ctx.request.csrfToken,
+    flash: ctx.session.flashMessages,
   }
-  console.log('csrfToken', ctx.request.csrfToken)
   return ctx.view.render('layouts/app', { contents: preactRenderToString(component, preactCtx) })
 }
