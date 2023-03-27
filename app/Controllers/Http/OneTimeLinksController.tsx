@@ -1,13 +1,30 @@
+import crypto from 'node:crypto'
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import Logger from '@ioc:Adonis/Core/Logger'
+import Route from '@ioc:Adonis/Core/Route'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import OneTimeLink from 'App/Models/OneTimeLink'
-
 import { render } from 'App/pages'
 import { OneTimeLinkConfirmationPage } from 'App/pages/one_time_links/confirmation'
 import { NewOneTimeLinkPage } from 'App/pages/one_time_links/new'
+import { ShowOneTimeLinkPage } from 'App/pages/one_time_links/show'
 
 export default class OneTimeLinksController {
+  public async show(ctx: HttpContextContract) {
+    if (!ctx.request.hasValidSignature()) {
+      return ctx.view.render('errors/not-found.edge')
+    }
+
+    const id = ctx.params.id
+    const oneTimeLink = await OneTimeLink.findBy('id', id)
+    if (!oneTimeLink) {
+      return ctx.view.render('errors/not-found.edge')
+    }
+    const message = oneTimeLink.encryptedMessage
+    await oneTimeLink.delete()
+
+    return render(ctx, <ShowOneTimeLinkPage message={message} />)
+  }
+
   public async new(ctx: HttpContextContract) {
     return render(ctx, <NewOneTimeLinkPage />)
   }
@@ -29,12 +46,19 @@ export default class OneTimeLinksController {
       },
     })
 
+    // TODO: Can i use APP_URL to make absolute URLs easier?
+
+    const id = crypto.randomUUID()
+    const signedUrl = Route.makeSignedUrl(
+      'showOneTimeLink',
+      { id },
+      { prefixUrl: `${ctx.request.protocol()}://${ctx.request.hostname()}`, expiresIn: '30m' }
+    )
     const oneTimeLink = await OneTimeLink.create({
-      signedUrl: 'www.cool.gov',
+      id,
+      signedUrl,
       encryptedMessage: data.message,
     })
-
-    Logger.info({ data }, 'received message')
 
     return render(ctx, <OneTimeLinkConfirmationPage url={oneTimeLink.signedUrl} />)
   }

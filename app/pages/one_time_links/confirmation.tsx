@@ -19,7 +19,11 @@ export const OneTimeLinkConfirmationPage: FunctionalComponent<Props> = ({ url })
           able to use it.
         </p>
 
-        <pre>{url}</pre>
+        <div className="card bg-base-100 shadow-xl w-full">
+          <div className="card-body">
+            <p>{url}</p>
+          </div>
+        </div>
       </div>
     </AppLayout>
   )

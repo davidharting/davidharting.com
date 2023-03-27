@@ -6,8 +6,8 @@ export default class extends BaseSchema {
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.uuid('id').primary()
-      table.string('encrypted_message').notNullable()
-      table.string('signed_url').unique().notNullable()
+      table.string('encrypted_message', 10000).notNullable()
+      table.string('signed_url', 1000).unique().notNullable()
       table.timestamp('created_at', { useTz: true }).notNullable()
       table.timestamp('updated_at', { useTz: true }).notNullable()
     })

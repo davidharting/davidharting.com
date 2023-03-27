@@ -20,6 +20,8 @@ export default class OneTimeLink extends BaseModel {
 
   @beforeCreate()
   public static assignUuid(oneTimeLink: OneTimeLink) {
-    oneTimeLink.id = crypto.randomUUID()
+    if (!oneTimeLink.id) {
+      oneTimeLink.id = crypto.randomUUID()
+    }
   }
 }
