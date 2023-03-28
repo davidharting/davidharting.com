@@ -7,6 +7,7 @@ import { render } from 'App/pages'
 import { OneTimeLinkConfirmationPage } from 'App/pages/one_time_links/confirmation'
 import { NewOneTimeLinkPage } from 'App/pages/one_time_links/new'
 import { ShowOneTimeLinkPage } from 'App/pages/one_time_links/show'
+import Encryption from '@ioc:Adonis/Core/Encryption'
 
 export default class OneTimeLinksController {
   public async show(ctx: HttpContextContract) {
@@ -19,7 +20,11 @@ export default class OneTimeLinksController {
     if (!oneTimeLink) {
       return ctx.view.render('errors/not-found.edge')
     }
-    const message = oneTimeLink.encryptedMessage
+    const message = Encryption.decrypt(oneTimeLink.encryptedMessage)
+    if (typeof message !== 'string') {
+      throw Error('decryption bad')
+    }
+
     await oneTimeLink.delete()
 
     return render(ctx, <ShowOneTimeLinkPage message={message} />)
@@ -49,6 +54,7 @@ export default class OneTimeLinksController {
     // TODO: Can i use APP_URL to make absolute URLs easier?
 
     const id = crypto.randomUUID()
+    const encryptedMessage = Encryption.encrypt(data.message, '30m')
     const signedUrl = Route.makeSignedUrl(
       'showOneTimeLink',
       { id },
@@ -57,7 +63,7 @@ export default class OneTimeLinksController {
     const oneTimeLink = await OneTimeLink.create({
       id,
       signedUrl,
-      encryptedMessage: data.message,
+      encryptedMessage,
     })
 
     return render(ctx, <OneTimeLinkConfirmationPage url={oneTimeLink.signedUrl} />)
