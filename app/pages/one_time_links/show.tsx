@@ -15,8 +15,12 @@ export const ShowOneTimeLinkPage: FunctionComponent<Props> = ({ message }) => {
         URL only works one time. The message will be deleted off of our servers.
       </p>
 
-      <div className="card bg-base-100 shadow-xl">
-        <div className="card-body">{message}</div>
+      <div className="card bg-base-300 shadow-xl">
+        <div className="card-body break-words">
+          {message.split('\r\n').map((line) => (
+            <p>{line}</p>
+          ))}
+        </div>
       </div>
     </Layout>
   )
