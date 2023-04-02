@@ -19,9 +19,32 @@ export const OneTimeLinkConfirmationPage: FunctionalComponent<Props> = ({ url })
           able to use it.
         </p>
 
-        <div className="card bg-base-100 shadow-xl w-full">
-          <div className="card-body">
-            <p>{url}</p>
+        <div
+          className="space-y-4"
+          x-data={`{
+            url: "${url}",
+            showConfirmation: false,
+            copy() {
+              navigator.clipboard.writeText(this.url);
+              this.showConfirmation = true;
+              setTimeout(() => {
+                this.showConfirmation = false;
+              }, 3000)
+            }
+        }`}
+        >
+          <div className="card bg-base-300 shadow-xl w-full">
+            <div className="card-body overflow-scroll">{url}</div>
+          </div>
+
+          <button className="btn btn-primary w-full" x-on:click="copy()">
+            Copy Link
+          </button>
+
+          <div x-show="showConfirmation" x-transition class="alert alert-success shadow-lg">
+            <div>
+              <span>📋 Copied to clipboard</span>
+            </div>
           </div>
         </div>
       </div>
