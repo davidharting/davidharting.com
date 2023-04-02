@@ -1,6 +1,5 @@
 import Database from '@ioc:Adonis/Lucid/Database'
 import { test } from '@japa/runner'
-import OneTimeLink from 'App/Models/OneTimeLink'
 
 test.group('One time links: New', () => {
   test('show a form to make a new link', async ({ client }) => {
