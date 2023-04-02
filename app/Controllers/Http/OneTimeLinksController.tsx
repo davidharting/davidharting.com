@@ -9,17 +9,18 @@ import { OneTimeLinkConfirmationPage } from 'App/pages/one_time_links/confirmati
 import { NewOneTimeLinkPage } from 'App/pages/one_time_links/new'
 import { ShowOneTimeLinkPage } from 'App/pages/one_time_links/show'
 import Encryption from '@ioc:Adonis/Core/Encryption'
+import { NotFoundPage } from 'App/pages/one_time_links/not_found'
 
 export default class OneTimeLinksController {
   public async show(ctx: HttpContextContract) {
     if (!ctx.request.hasValidSignature()) {
-      return ctx.view.render('errors/not-found.edge')
+      return render(ctx, <NotFoundPage />)
     }
 
     const id = ctx.params.id
     const oneTimeLink = await OneTimeLink.findBy('id', id)
     if (!oneTimeLink) {
-      return ctx.view.render('errors/not-found.edge')
+      return render(ctx, <NotFoundPage />)
     }
     const message = Encryption.decrypt(oneTimeLink.encryptedMessage)
     if (typeof message !== 'string') {
