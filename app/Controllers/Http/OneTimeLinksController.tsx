@@ -4,6 +4,7 @@ import Route from '@ioc:Adonis/Core/Route'
 import { schema, rules } from '@ioc:Adonis/Core/Validator'
 import OneTimeLink from 'App/Models/OneTimeLink'
 import { render } from 'App/pages'
+import Env from '@ioc:Adonis/Core/Env'
 import { OneTimeLinkConfirmationPage } from 'App/pages/one_time_links/confirmation'
 import { NewOneTimeLinkPage } from 'App/pages/one_time_links/new'
 import { ShowOneTimeLinkPage } from 'App/pages/one_time_links/show'
@@ -51,14 +52,12 @@ export default class OneTimeLinksController {
       },
     })
 
-    // TODO: Can i use APP_URL to make absolute URLs easier?
-
     const id = crypto.randomUUID()
     const encryptedMessage = Encryption.encrypt(data.message, '30m')
     const signedUrl = Route.makeSignedUrl(
       'showOneTimeLink',
       { id },
-      { prefixUrl: `${ctx.request.protocol()}://${ctx.request.hostname()}`, expiresIn: '30m' }
+      { prefixUrl: Env.get('APP_URL'), expiresIn: '30m' }
     )
     const oneTimeLink = await OneTimeLink.create({
       id,
