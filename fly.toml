@@ -13,6 +13,8 @@ processes = []
   DRIVE_DISK = "local"
   SESSION_DRIVER = "cookie"
   CACHE_VIEWS = "true"
+  APP_URL="https://www.davidharting.com"
+  DB_CONNECTION="pg"
 
 [experimental]
   auto_rollback = true
