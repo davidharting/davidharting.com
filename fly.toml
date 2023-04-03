@@ -6,6 +6,9 @@ kill_timeout = 5
 primary_region = "den"
 processes = []  
 
+[deploy]
+release_command = "node ace migration:run --force"
+
 [env]
   PORT = "8080"
   HOST = "0.0.0.0"
