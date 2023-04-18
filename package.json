@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node ace serve --watch",
+    "deploy": "flyctl deploy",
     "build": "node ace build --production",
     "start": "node server.js",
     "test": "node ace test",
