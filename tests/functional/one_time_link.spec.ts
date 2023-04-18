@@ -29,6 +29,19 @@ test.group('One time links: Create', (group) => {
     response.assertTextIncludes('to share')
   })
 
+  test('validation failure', async ({ client, route }) => {
+    const response = await client
+      .post(route('createOneTimeLink'))
+      .form({
+        message: ' ',
+      })
+      .withCsrfToken()
+      .header('referrer', route('newOneTimeLink'))
+
+    response.assertStatus(200)
+    response.assertTextIncludes('Cannot be only whitespace.')
+  })
+
   test('refuse to create a link if it is missing csrf token', async ({ client }) => {
     const response = await client
       .post('/1tl/new')
