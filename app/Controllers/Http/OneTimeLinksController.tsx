@@ -10,6 +10,7 @@ import { NewOneTimeLinkPage } from 'App/pages/one_time_links/new'
 import { ShowOneTimeLinkPage } from 'App/pages/one_time_links/show'
 import Encryption from '@ioc:Adonis/Core/Encryption'
 import { NotFoundPage } from 'App/pages/one_time_links/not_found'
+import { cuid } from '@ioc:Adonis/Core/Helpers'
 
 export default class OneTimeLinksController {
   public async show(ctx: HttpContextContract) {
@@ -17,8 +18,8 @@ export default class OneTimeLinksController {
       return render(ctx, <NotFoundPage />)
     }
 
-    const id = ctx.params.id
-    const oneTimeLink = await OneTimeLink.findBy('id', id)
+    const publicId = ctx.params.publicId
+    const oneTimeLink = await OneTimeLink.findBy('publicId', publicId)
     if (!oneTimeLink) {
       return render(ctx, <NotFoundPage />)
     }
@@ -56,14 +57,16 @@ export default class OneTimeLinksController {
     })
 
     const id = crypto.randomUUID()
+    const publicId = cuid()
     const encryptedMessage = Encryption.encrypt(data.message, '30m')
     const signedUrl = Route.makeSignedUrl(
       'showOneTimeLink',
-      { id },
+      { publicId },
       { prefixUrl: Env.get('APP_URL'), expiresIn: '30m' }
     )
     const oneTimeLink = await OneTimeLink.create({
       id,
+      publicId,
       signedUrl,
       encryptedMessage,
     })
