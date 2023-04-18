@@ -49,6 +49,8 @@ export default class OneTimeLinksController {
     const data = await ctx.request.validate({
       schema: validationSchema,
       messages: {
+        'message.required': 'Required. Cannot be only whitespace.',
+        'message.minLength': 'Must be at least 1 character long.',
         'message.maxLength': `Must be less than ${maxMessageLength} characters.`,
       },
     })
