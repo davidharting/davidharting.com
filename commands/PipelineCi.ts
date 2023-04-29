@@ -26,6 +26,7 @@ export default class PipelineCi extends BaseCommand {
   }
 
   public async run() {
+    this.logger.info('Starting dagger pipeline.')
     // Adonisjs ace commands only support common JS.
     // TypeScript refuses to keep dynamic imports and always compiels them down to require when targeting commonjs.
     // Because of this, we must use eval to get the esm version of dagger via dynamic import.
@@ -40,16 +41,22 @@ export default class PipelineCi extends BaseCommand {
     await dagger.connect(
       async (client) => {
         // get version
-        const node = client.container().from('node:19.8-bullseye').withExec(['node', '-v'])
+        const repository = client
+          .container()
+          .from('node:19.8-bullseye')
+          .withMountedDirectory(
+            './',
+            client
+              .host()
+              .directory('/repository', { exclude: ['node_modules/', 'build/', '.vscode/'] })
+          )
 
-        // execute
-        const version = await node.stdout()
-
-        // print output
-        console.log('Hello from Dagger and Node ' + version)
+        const runner = repository.withWorkdir('/repository').withExec(['npm', 'install']) // Why do I have to call withWorkDir if I am calling exec on the repository itself?
+        const out = await runner.withExec(['node', 'ace', 'test']).stderr()
+        console.log(out) // Does the `.stderr` not actually get anything out? Why would I not want this to go to stdout and automatically be logged?
       },
       { LogOutput: process.stdout }
     )
-    this.logger.info('Hello world!')
+    this.logger.info('Dagger pipeline has finished.')
   }
 }
