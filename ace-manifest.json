@@ -12,6 +12,24 @@
       "aliases": [],
       "flags": []
     },
+    "pipeline:deploy": {
+      "settings": {
+        "loadApp": false,
+        "stayAlive": false
+      },
+      "commandPath": "./commands/PipelineDeploy",
+      "commandName": "pipeline:deploy",
+      "description": "",
+      "args": [],
+      "aliases": [],
+      "flags": [
+        {
+          "name": "fly-access-token",
+          "propertyName": "flyAccessToken",
+          "type": "string"
+        }
+      ]
+    },
     "dump:rcfile": {
       "settings": {},
       "commandPath": "@adonisjs/core/build/commands/DumpRc",
