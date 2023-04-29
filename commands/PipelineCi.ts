@@ -37,23 +37,37 @@ export default class PipelineCi extends BaseCommand {
       typeof import('@dagger.io/dagger')
     >)
 
-    console.log(dagger.connect)
     await dagger.connect(
       async (client) => {
-        // get version
+        const postgres = client
+          .container()
+          .from('postgres:15.2')
+          .withExposedPort(5432)
+          .withEnvVariable('POSTGRES_PASSWORD', 'password')
+          .withEnvVariable('POSTGRES_USER', 'ciuser')
+          .withEnvVariable('POSTGRES_DB', 'test')
+          .withExec([])
+
         const repository = client
           .container()
           .from('node:19.8-bullseye')
+          .withServiceBinding('database', postgres)
           .withMountedDirectory(
-            './',
-            client
-              .host()
-              .directory('/repository', { exclude: ['node_modules/', 'build/', '.vscode/'] })
+            '/repository',
+            client.host().directory('.', {
+              exclude: ['node_modules/', 'build/', '.vscode/', '.env.test', '.env'],
+            })
           )
 
-        const runner = repository.withWorkdir('/repository').withExec(['npm', 'install']) // Why do I have to call withWorkDir if I am calling exec on the repository itself?
-        const out = await runner.withExec(['node', 'ace', 'test']).stderr()
-        console.log(out) // Does the `.stderr` not actually get anything out? Why would I not want this to go to stdout and automatically be logged?
+        const runner = repository
+          .withWorkdir('/repository')
+          .withExec(['mv', '.env.ci', '.env.test'])
+          .withExec(['npm', 'install']) // Why do I have to call withWorkDir if I am calling exec on the repository itself?
+
+        const out = await runner.withExec(['node', 'ace', 'test']).stderr() // Should I just chain this with the above exec? Why do I have to call withExec again?
+        // Does the `.stderr` not actually get anything out? Why would I not want this to go to stdout and automatically be logged?
+        // Also, what if I would rather this stream out as it runs, so that way I can see the output as it happens? i.e., watching a pipeline live.
+        console.log(out)
       },
       { LogOutput: process.stdout }
     )
