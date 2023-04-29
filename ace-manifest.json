@@ -1,5 +1,17 @@
 {
   "commands": {
+    "pipeline:ci": {
+      "settings": {
+        "loadApp": false,
+        "stayAlive": false
+      },
+      "commandPath": "./commands/PipelineCi",
+      "commandName": "pipeline:ci",
+      "description": "Run the CI pipeline using Dagger",
+      "args": [],
+      "aliases": [],
+      "flags": []
+    },
     "dump:rcfile": {
       "settings": {},
       "commandPath": "@adonisjs/core/build/commands/DumpRc",
