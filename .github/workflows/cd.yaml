@@ -18,5 +18,5 @@ jobs:
           cache: npm
       - name: Install npm dependencies
         run: npm install
-      - name: Run CI with Dagger
+      - name: Deploy with Dagger
         run: node ace pipeline:deploy
