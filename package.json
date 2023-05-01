@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "node ace serve --watch",
+    "dev:debug": "node ace serve --watch --node-args=\"--inspect\"",
     "deploy": "flyctl deploy",
     "build": "node ace build --production",
     "start": "node server.js",
     "test": "node ace test",
-    "test:debug": "node ace test -- --node-args=\"inspect\"",
+    "test:debug": "node ace test --node-args=\"--inspect\"",
+    "test:debug:file": "node ace test --node-args=\"--inspect\" --files",
     "lint": "eslint . --ext=.ts",
     "format": "prettier --write ."
   },
