@@ -1,6 +1,0 @@
-node_modules
-build
-coverage
-.DS_STORE
-.env
-tmp
