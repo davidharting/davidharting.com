@@ -1,5 +1,5 @@
 <x-app-layout>
-    <h1 class='font-serif text-6xl'>Sign up</h1>
+    <x-type.page-title>Sign up</x-type.page-title>
 
     <form method="POST" class='mt-8 space-y-8' action="{{ route('register') }}">
         @csrf
@@ -13,7 +13,7 @@
         <div class="flex items-center justify-end mt-4">
             <a class="link" href="{{ route('login') }}">Already registered?</a>
 
-            <input type='submit' class="btn btn-primary" value='Register' />
+            <input type='submit' class="ml-4 btn btn-primary" value='Register' />
         </div>
     </form>
 </x-app-layout>
