@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layout.app>
     <x-type.page-title>Sign up</x-type.page-title>
 
     <form method="POST" class='mt-8 space-y-8' action="{{ route('register') }}">
@@ -16,4 +16,4 @@
             <input type='submit' class="ml-4 btn btn-primary" value='Register' />
         </div>
     </form>
-</x-app-layout>
+</x-layout.app>

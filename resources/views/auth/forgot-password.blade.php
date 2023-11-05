@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layout.app>
     <x-type.page-title>Forgot your password?</x-type.page-title>
     <div class='space-y-8'>
 
@@ -16,4 +16,4 @@
         </div>
     </form>
     </div>
-</x-app-layout>
+</x-layout.app>

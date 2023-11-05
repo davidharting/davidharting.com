@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layout.app>
     <p>
         This is a secure area of the application. Please confirm your password before continuing.
     </p>
@@ -10,4 +10,4 @@
             <input type='submit' value='Confirm' class='btn btn-primary' />
         </div>
     </form>
-</x-app-layout>
+</x-layout.app>

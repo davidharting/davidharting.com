@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layout.app>
     <x-type.page-title class>Verify Email</x-type.page-title>
 
     <div class='mt-8 space-y-8'>
@@ -34,4 +34,4 @@
 
 
 
-</x-app-layout>
+</x-layout.app>

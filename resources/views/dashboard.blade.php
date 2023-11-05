@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layout.app>
     <x-type.page-title class='mb-8'>Dashboard</x-type.page-title>
 
     <ul>
@@ -11,4 +11,4 @@
     </li>
     </ul>
 
-</x-app-layout>
+</x-layout.app>

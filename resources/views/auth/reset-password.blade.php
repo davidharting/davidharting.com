@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layout.app>
     <x-type.page-title>Reset Password</x-type.page-title>
 
     <form method="POST" class='mt-8' action="{{ route('password.store') }}">
@@ -11,4 +11,4 @@
         <x-form.input name='password_confirmation' label='Confirm Password' type='password' required />
         <input type='submit' value='Reset password' class='btn btn-primary' />
     </form>
-</x-app-layout>
+</x-layout.app>

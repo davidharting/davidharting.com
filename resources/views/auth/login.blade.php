@@ -1,4 +1,4 @@
-<x-app-layout> 
+<x-layout.app> 
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
@@ -18,4 +18,4 @@
             <input type='submit' class="btn btn-primary ml-3" value='Log in' />
         </div>
     </form>
-</x-app-layout>
+</x-layout.app>

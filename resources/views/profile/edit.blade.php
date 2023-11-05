@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layout.app>
     <x-type.page-title>Profile</x-type.page-title>
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -15,4 +15,4 @@
             </x-card>
         </div>
     </div>
-</x-app-layout>
+</x-layout.app>
