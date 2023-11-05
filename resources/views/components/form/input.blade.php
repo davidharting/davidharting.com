@@ -1,5 +1,5 @@
 @props([
-    'name', 'label', 'model'
+    'name', 'label', 'model' => null
 ])
 
 <div>

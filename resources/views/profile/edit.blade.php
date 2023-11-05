@@ -7,7 +7,7 @@
             </x-card>
 
             <x-card title='Update Password'>
-                @include('profile.partials.update-password-form')
+                <x-profile.update-password />
             </x-card>
 
             <x-card title='Delete Your Account'>
