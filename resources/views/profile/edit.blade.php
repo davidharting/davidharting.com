@@ -11,7 +11,7 @@
             </x-card>
 
             <x-card title='Delete Your Account'>
-                @include('profile.partials.delete-user-form')
+                <x-profile.delete-user />
             </x-card>
         </div>
     </div>
