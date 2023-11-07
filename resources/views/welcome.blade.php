@@ -14,8 +14,29 @@
         </div>
         <div class='space-y-6'>
             <h2 class='font-serif font-semibold text-3xl'>Let's connect</h2>
-            <p>You can email me at
-                <span class='link link-primary'>connect@davidharting.com</span>.
+            <p
+                x-data="{
+                        email: 'connect@davidharting.com',
+                        showFeedback: false,
+                        tooltipText: 'Copy 📋',
+                        copy() {
+                            navigator.clipboard.writeText(this.email)
+                            
+                            this.showFeedback = true
+                            setTimeout(() => this.showFeedback = false, 1500)
+                        }
+                }">
+                You can email me at
+                <span
+                    class='tooltip tooltip-primary'
+                    x-bind:class="showFeedback && 'tooltip-open'"
+                    x-bind:data-tip="showFeedback ? 'Copied ✅' : 'Copy 📋'"
+                >   
+                    <span class='link link-primary' x-on:click="copy()">
+                        connect@davidharting.com
+                    </span>
+                </span>
+                
                 You can also find me on
                     <a href='https://github.com/davidharting' class='link link-primary'>GitHub</a>,
                     <a href='https://twitter.com/davehrtng' class='link link-primary'>Twitter</a>,
