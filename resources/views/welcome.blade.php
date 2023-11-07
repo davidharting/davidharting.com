@@ -1,4 +1,5 @@
 <x-layout.app>
+    <div class='m-auto max-w-3xl'>
     <h1 class='text-5xl font-extrabold font-serif mt-10'>
         Hi! I am David Harting,
     </h1>
@@ -45,6 +46,6 @@
             </p>
         </div>
     </div>
-
+    </div>
 
 </x-layout.app>
