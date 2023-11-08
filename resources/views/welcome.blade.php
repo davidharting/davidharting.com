@@ -1,9 +1,19 @@
 <x-layout.app>
-    <div class='m-auto max-w-3xl'>
-    <h1 class='text-5xl font-extrabold font-serif mt-10'>
-        Hi! I am David Harting,
-    </h1>
-    <p class='text-lg'>and it's a great day to build software ☀️</p>
+    <div class='m-auto mx-4 sm:mx-auto max-w-2xl my-16'>
+
+
+
+    <div class="flex flex-col sm:flex-row  justify-between w-full sm:space-x-4">
+        <div class="avatar mb-4 sm:mb-0 flex justify-center">
+            <div class="w-24 rounded-xl ring ring-primary ring-offset-base-100 ring-offset-2">
+                <img src="headshot.jpg" />
+            </div>
+        </div>
+        <div class="space-y-2">
+            <h1 class="text-5xl font-extrabold font-serif">Hi! I am David Harting,</h1>
+            <p class="text-lg">and it's a great day to build software ☀️</p>
+        </div>
+    </div>
 
 
     <div class='space-y-12 mt-8'>
