@@ -16,15 +16,18 @@
     </div>
 
 
-    <div class='space-y-12 mt-8'>
+    <div class='space-y-16 mt-14'>
         <div class='space-y-6'>
-            <h2 class='font-serif font-semibold text-3xl'>About me</h2>
+            <h2 class='font-serif font-semibold text-3xl mb-7'>About me</h2>
+            <div class='space-y-12'>
             <p>I am an experienced, full-stack software engineer from Westfield, Indiana. My focus in my career has been web apps that enable people to work with data. I am now working as an engineering manager at dbt Labs, building a web-based IDE for analytics engineers.</p>
             <p>At work, I am happiest working closely with product and design to navigate tradeoffs and to ship quickly. I am passionate about code review and testing.</p>
             <p>I believe in working hard and living slow. I enjoy life with my wife and my dog. I am fortunate enough to enjoy leisure time, which is filled with walks, wine, books, and games.</p>
+            </div>
         </div>
-        <div class='space-y-6'>
-            <h2 class='font-serif font-semibold text-3xl'>Let's connect</h2>
+        <div class='mt-14'>
+            <h2 class='font-serif font-semibold text-3xl mb-7'>Let's connect</h2>
+            <div class='space-y-12'>
             <p
                 x-data="{
                         email: 'connect@davidharting.com',
@@ -54,6 +57,7 @@
                     and
                     <a href='https://www.linkedin.com/in/davidharting/' class='link link-primary'>LinkedIn</a>.
             </p>
+            </div>
         </div>
     </div>
     </div>
