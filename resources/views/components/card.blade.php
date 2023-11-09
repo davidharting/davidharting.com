@@ -3,6 +3,6 @@
         <header class='card-title'>
             {{ $title }}
         </header>
-            {{ $slot }}
+        {{ $slot }}
     </div>
 </section>

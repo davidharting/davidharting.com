@@ -1,4 +1,4 @@
-<x-layout.app> 
+<x-layout.app>
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
@@ -8,7 +8,7 @@
         @csrf
         <x-form.input name='email' type='email' label='Email' required autofocus autocomplete />
         <x-form.input name='password' type='password' label='Password' required autocomplete='current-password' />
-        <x-form.checkbox name='remember_me' label='Remember me'/>
+        <x-form.checkbox name='remember_me' label='Remember me' />
 
         <div class="flex items-center justify-end mt-4">
             @if (Route::has('password.request'))
