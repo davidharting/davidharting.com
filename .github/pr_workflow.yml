@@ -1,0 +1,33 @@
+name: Pull Request CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  app-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@@v2
+
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example');"
+
+      - name: Install node modules
+        run: npm install
+
+      - name: Prettier
+        run: npm run format:check
+
+      - name: Install composer dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist
+
+      - name: Pint
+        run: ./vendor/bin/pint --test
+
+      - name: Generate key
+        run: php artisan key:generate
+
+      - name: Execute tests
+        run: php artisan test
