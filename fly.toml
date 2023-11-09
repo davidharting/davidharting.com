@@ -1,0 +1,32 @@
+# fly.toml app configuration file generated for david-site on 2023-11-09T15:23:29-05:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "david-site"
+primary_region = "ord"
+console_command = "php /var/www/html/artisan tinker"
+
+[build]
+[build.args]
+NODE_VERSION = "18"
+PHP_VERSION = "8.2"
+
+[env]
+APP_ENV = "production"
+LOG_CHANNEL = "stderr"
+LOG_LEVEL = "info"
+LOG_STDERR_FORMATTER = "Monolog\\Formatter\\JsonFormatter"
+SESSION_DRIVER = "cookie"
+SESSION_SECURE_COOKIE = "true"
+
+[http_service]
+internal_port = 8080
+force_https = true
+auto_stop_machines = true
+auto_start_machines = true
+min_machines_running = 0
+processes = ["app"]
+
+[deploy]
+release_command = "php /var/www/html/artisan migrate --force"
