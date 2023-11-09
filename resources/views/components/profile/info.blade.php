@@ -9,16 +9,16 @@
         @csrf
         @method('patch')
 
-        <x-form.input name='name'  :model='$user->name' required autofocus />
+        <x-form.input name='name' :model='$user->name' required autofocus />
         <x-form.input name='email' :model='$user->email' required />
 
         <div>
-            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
+            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !$user->hasVerifiedEmail())
                 <div>
                     <p class="text-sm mt-2 text-gray-800">
                         {{ __('Your email address is unverified.') }}
 
-                        <button form="send-verification" class="link link-secondary"> 
+                        <button form="send-verification" class="link link-secondary">
                             Click here to re-send the verification email.
                         </button>
                     </p>
@@ -36,13 +36,8 @@
             <input type='submit' value='Save' class='btn btn-primary' />
 
             @if (session('status') === 'profile-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600"
-                >{{ __('Saved.') }}</p>
+                <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2000)"
+                    class="text-sm text-gray-600">{{ __('Saved.') }}</p>
             @endif
         </div>
     </form>
