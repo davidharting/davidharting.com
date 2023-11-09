@@ -3,13 +3,16 @@ name: Pull Request CI
 on:
   pull_request:
     branches:
-      - "*"
+      - main
+  workflow_dispatch: # Allows you to run this workflow manually from the Actions tab
 
 jobs:
   ci:
+    name: "CI"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@@v2
+      - name: Checkout repo
+        uses: actions/checkout@@v2
 
       - name: Copy .env
         run: php -r "file_exists('.env') || copy('.env.example');"
