@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "amiralizadeh9480.laravel-extra-intellisense",
+        "bmewburn.vscode-intelephense-client",
+        "bradlc.vscode-tailwindcss",
+        "chiefmyron.phpunit-test-workbench",
+        "MehediDracula.php-namespace-resolver",
+        "xdebug.php-debug"
+    ]
+}
