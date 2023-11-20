@@ -14,11 +14,14 @@ PHP_VERSION = "8.2"
 
 [env]
 APP_ENV = "production"
+APP_NAME = "David Harting"
 LOG_CHANNEL = "stderr"
 LOG_LEVEL = "info"
 LOG_STDERR_FORMATTER = "Monolog\\Formatter\\JsonFormatter"
 SESSION_DRIVER = "cookie"
 SESSION_SECURE_COOKIE = "true"
+DB_CONNECTION = 'sqlite'
+
 
 [http_service]
 internal_port = 8080
