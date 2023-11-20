@@ -1,18 +1,14 @@
-const defaultTheme = require('tailwindcss/defaultTheme')
+import daisyui from "daisyui";
 
 /** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: ['./app/pages/**/*.tsx', './resources/views/**/*.edge'],
-  theme: {
-    extend: {
-      fontFamily: {
-        sans: ['Source Sans Pro', ...defaultTheme.fontFamily.sans],
-        serif: ['Source Serif Pro', ...defaultTheme.fontFamily.serif],
-      },
+export default {
+    content: [
+        "./vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php",
+        "./storage/framework/views/*.php",
+        "./resources/views/**/*.blade.php",
+    ],
+    plugins: [daisyui],
+    daisyui: {
+        themes: ["night"],
     },
-  },
-  plugins: [require('@tailwindcss/typography'), require('daisyui')],
-  daisyui: {
-    themes: ['night'],
-  },
-}
+};
