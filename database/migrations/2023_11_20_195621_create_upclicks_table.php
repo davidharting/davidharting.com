@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('upclicks', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+            $table->foreignId('user_id')->nullable()->constrained();
+
+            $table->index(['user_id']);
         });
     }
 
