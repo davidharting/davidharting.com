@@ -5,6 +5,9 @@ namespace Database\Seeders;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
+use App\Models\User;
+use App\Models\Upclick;
+
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -12,11 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
+        $frodo = User::factory()->create([
+            'name' => 'Frodo Baggins',
+            'email' => 'frodo@example.com'
+        ]);
 
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        User::factory(10)->create();
+
+        // Anonymous clicks
+        Upclick::factory(500)->create();
+        // Frodos clicks
+        Upclick::factory(200)->create(['user_id' => $frodo->id]);
     }
 }
