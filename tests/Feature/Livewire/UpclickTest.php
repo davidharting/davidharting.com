@@ -24,12 +24,12 @@ class UpclickTest extends TestCase
 
     public function test_authenticated_user()
     {
-        $user = User::factory()->create();
-        $stranger = User::factory()->create();
-
         UpclickModel::factory()->count(25)->create(); // Anonymous clicks
-        UpclickModel::factory()->count(5)->create(['user_id' => $stranger->id]); // Other user's clicks
-        UpclickModel::factory()->count(20)->create(['user_id' => $user->id]); // Test user's clicks
+        User::factory()->has(UpclickModel::factory()->count(5))->create(); // Distractor: Another user also has clicks
+
+        $user = User::factory()->has(UpclickModel::factory()->count(20))->create();
+
+
 
 
         Livewire::actingAs($user)
