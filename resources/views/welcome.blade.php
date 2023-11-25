@@ -57,6 +57,10 @@
                 </div>
             </div>
         </div>
+
+        <div class='mt-12'>
+            <livewire:upclick />
+        </div>
     </div>
 
 </x-layout.app>

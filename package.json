@@ -9,9 +9,7 @@
     },
     "devDependencies": {
         "@shufo/prettier-plugin-blade": "^1.13.4",
-        "alpinejs": "^3.4.2",
         "autoprefixer": "^10.4.2",
-        "axios": "^1.1.2",
         "daisyui": "^3.9.4",
         "laravel-vite-plugin": "^0.8.0",
         "postcss": "^8.4.6",
