@@ -18,7 +18,7 @@ class Upclick extends Component
     #[Locked]
     public function total_count(): int
     {
-        return UpclickModel::max('id');
+        return UpclickModel::max('id') ?? 0;
     }
 
     #[Computed]
@@ -29,7 +29,7 @@ class Upclick extends Component
             return null;
         }
 
-        return UpclickModel::where('user_id', Auth::id())->count();
+        return UpclickModel::where('user_id', Auth::id())->count() ?? 0;
     }
 
     public function click()
