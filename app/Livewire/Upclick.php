@@ -25,7 +25,7 @@ class Upclick extends Component
             return null;
         }
 
-        return UpclickModel::where('user_id', Auth::id())->count() ?? 0;
+        return UpclickModel::where('user_id', Auth::id())->count();
     }
 
     public function click()
