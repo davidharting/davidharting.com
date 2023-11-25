@@ -3,12 +3,11 @@
 namespace Tests\Feature\Livewire;
 
 use App\Livewire\Upclick;
+use App\Models\Upclick as UpclickModel;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
-
-use App\Models\User;
-use App\Models\Upclick as UpclickModel;
 
 class UpclickTest extends TestCase
 {
@@ -28,9 +27,6 @@ class UpclickTest extends TestCase
         User::factory()->has(UpclickModel::factory()->count(5))->create(); // Distractor: Another user also has clicks
 
         $user = User::factory()->has(UpclickModel::factory()->count(20))->create();
-
-
-
 
         Livewire::actingAs($user)
             ->test(Upclick::class)

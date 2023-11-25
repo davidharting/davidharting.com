@@ -3,10 +3,9 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-
-use App\Models\User;
 use App\Models\Upclick;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,7 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $frodo = User::factory()->create([
             'name' => 'Frodo Baggins',
-            'email' => 'frodo@example.com'
+            'email' => 'frodo@example.com',
         ]);
 
         User::factory(10)->create();

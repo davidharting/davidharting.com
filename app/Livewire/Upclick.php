@@ -2,15 +2,11 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
+use App\Models\Upclick as UpclickModel;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
-
-use App\Models\Upclick as UpclickModel;
-
-
-use Illuminate\Support\Facades\Auth;
-
+use Livewire\Component;
 
 class Upclick extends Component
 {
@@ -23,7 +19,7 @@ class Upclick extends Component
 
     #[Computed]
     #[Locked]
-    public function user_count(): int | null
+    public function user_count(): ?int
     {
         if (Auth::guest()) {
             return null;
