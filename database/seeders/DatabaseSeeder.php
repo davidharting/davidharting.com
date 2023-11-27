@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Models\Player;
 use App\Models\Scorecard;
 use App\Models\Upclick;
 use App\Models\User;
@@ -29,6 +30,6 @@ class DatabaseSeeder extends Seeder
         Upclick::factory(200)->create(['user_id' => $frodo->id]);
 
 
-        Scorecard::factory(20)->create();
+        Scorecard::factory(20)->addPlayers()->create();
     }
 }
