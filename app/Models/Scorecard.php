@@ -12,6 +12,8 @@ class Scorecard extends Model
     use HasFactory;
     use HasUlids;
 
+    protected $guarded = [];
+
     public function players(): HasMany
     {
         return $this->hasMany(Player::class);
