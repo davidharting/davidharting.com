@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use App\Models\Scorecard;
 use App\Models\Upclick;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -25,5 +27,8 @@ class DatabaseSeeder extends Seeder
         Upclick::factory(500)->create();
         // Frodos clicks
         Upclick::factory(200)->create(['user_id' => $frodo->id]);
+
+
+        Scorecard::factory(20)->create();
     }
 }
