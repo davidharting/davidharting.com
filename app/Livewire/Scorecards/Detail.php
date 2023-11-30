@@ -56,4 +56,14 @@ class Detail extends Component
 
         return $data;
     }
+
+    #[Computed]
+    public function totals(): array
+    {
+        $totals = Score::whereIn('player_id', function (Builder $query) {
+            $query->select('player_id')->from('scorecards')->where('id', $this->scorecard->id);
+        })->orderBy('player_id')->groupBy('player_id')->select('player_id', DB::raw('sum(score) as total'))->get()->toArray();
+
+        return array_merge(['Total'], array_column($totals, 'total'));
+    }
 }
