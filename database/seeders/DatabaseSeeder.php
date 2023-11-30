@@ -4,10 +4,12 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Models\Score;
 use App\Models\Player;
 use App\Models\Scorecard;
 use App\Models\Upclick;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -39,6 +41,9 @@ class DatabaseSeeder extends Seeder
 
         $conkers->save();
 
+
+
+
         $conkers->players()->saveMany([
             Player::factory()->makeOne([
                 'name' => 'Frodo Baggins',
@@ -53,5 +58,15 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Meriadoc Brandybuck',
             ]),
         ]);
+
+        for ($round = 1; $round <= 10; $round++) {
+            $conkers->players->each(function (Player $player) use ($round) {
+                $player->scores()->save(
+                    Score::factory()->makeOne([
+                        'round' => $round,
+                    ])
+                );
+            });
+        }
     }
 }
