@@ -31,5 +31,27 @@ class DatabaseSeeder extends Seeder
 
 
         Scorecard::factory(20)->addPlayers()->create();
+
+
+        $conkers = Scorecard::factory()->makeOne([
+            'title' => 'Conkers',
+        ]);
+
+        $conkers->save();
+
+        $conkers->players()->saveMany([
+            Player::factory()->makeOne([
+                'name' => 'Frodo Baggins',
+            ]),
+            Player::factory()->makeOne([
+                'name' => 'Samwise Gamgee',
+            ]),
+            Player::factory()->makeOne([
+                'name' => 'Peregrin Took',
+            ]),
+            Player::factory()->makeOne([
+                'name' => 'Meriadoc Brandybuck',
+            ]),
+        ]);
     }
 }
