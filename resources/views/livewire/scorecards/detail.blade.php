@@ -51,14 +51,19 @@
         <label for="the-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
         <div class='min-h-full bg-base-200 p-4 text-base-content opacity-100'>
             <h2 class='font-serif mt-4 text-3xl'>Record new round</h2>
-            <form class='mt-4 space-y-4'>
+            <form class='mt-4 space-y-4' wire:submit="recordNewRound">
                 @foreach ($this->playerNames as $name)
-                    <x-form.input name='player.{{ $loop->index }}' :label='$name' />
+                    <x-form.input name='newRoundScores.{{ $loop->index }}' :label='$name' type='number'
+                        min='-100000' max='100000' wire:model="newRoundScores.{{ $loop->index }}" />
                 @endforeach
                 <div class='flex justify-end'>
                     <button type='submit' class='btn btn-primary w-3/4 mt-4'>Add</button>
                 </div>
             </form>
+
+            @foreach ($newRoundScores as $score)
+                <p>{{ $score }}</p>
+            @endforeach
         </div>
     </div>
 </div>

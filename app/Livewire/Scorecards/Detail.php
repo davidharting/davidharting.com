@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 
 class Detail extends Component
@@ -16,9 +17,19 @@ class Detail extends Component
     #[Locked]
     public Scorecard $scorecard;
 
+    /**
+     * Used for the "record new round" form
+     */
+    #[Validate([
+        'newRoundScores' => 'array|required',
+        'newRoundScores.*' => 'integer|required|min:-100000|max:100000'
+    ])]
+    public $newRoundScores;
+
     public function mount(Scorecard $scorecard)
     {
         $this->scorecard = $scorecard;
+        $this->newRoundScores = [];
     }
 
     public function render()
@@ -27,6 +38,10 @@ class Detail extends Component
     }
 
 
+    /**
+     * Get the names of the players in order of their id ascending. 
+     * Returns an array of strings
+     */
     #[Computed]
     public function playerNames(): array
     {
@@ -65,5 +80,24 @@ class Detail extends Component
         })->orderBy('player_id')->groupBy('player_id')->select('player_id', DB::raw('sum(score) as total'))->get()->toArray();
 
         return array_merge(['Total'], array_column($totals, 'total'));
+    }
+
+    public function recordNewRound()
+    {
+        $this->validate();
+
+        $player_ids = $this->scorecard->players()->orderBy('id', 'asc')->pluck('id')->toArray();
+        $round = Score::whereIn('player_id', $player_ids)->max('round') + 1;
+
+
+        $toInsert = collect($player_ids)->map(function ($player_id, $index) use ($round) {
+            return [
+                'player_id' => $player_id,
+                'round' => $round,
+                'score' => $this->newRoundScores[$index]
+            ];
+        });
+
+        DB::table('scores')->insert($toInsert->toArray());
     }
 }
