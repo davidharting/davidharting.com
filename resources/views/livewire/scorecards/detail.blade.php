@@ -2,7 +2,9 @@
     <input id="the-drawer" type="checkbox" class="drawer-toggle" />
     <div class='drawer-content'>
         <x-card>
-            <label for="the-drawer" class="btn btn-primary drawer-button">Record new round</label>
+            <div class='flex justify-end'>
+                <label for="the-drawer" class="btn btn-primary drawer-button w-auto">Record new round</label>
+            </div>
             <div class='overflow-x-auto'>
                 <table class='table'>
                     <thead>
