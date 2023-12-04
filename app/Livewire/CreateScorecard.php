@@ -31,7 +31,9 @@ class CreateScorecard extends Component
 
         $scorecard = Scorecard::create([
             'title' => 'todo: title',
-        ])->players()->createMany(collect($this->names)->map(function ($name) {
+        ]);
+
+        $scorecard->players()->createMany(collect($this->names)->map(function ($name) {
             return ['name' => $name];
         })->toArray());
 
