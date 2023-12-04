@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('scores', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->timestampsTz();
 
             $table->integer('round');
             $table->integer('score');
