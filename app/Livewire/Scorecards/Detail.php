@@ -66,8 +66,9 @@ class Detail extends Component
     #[Computed]
     public function rounds(): Collection
     {
-        $collection =  Score::whereIn('player_id', function (Builder $query) {
-            $query->select('player_id')->from('scorecards')->where('id', $this->scorecard->id);
+        $scorecard = $this->scorecard;
+        $collection =  Score::whereIn('player_id', function (Builder $query) use ($scorecard) {
+            $query->select('id')->from('players')->where('scorecard_id', $scorecard->id);
         })
             ->groupBy('round')
             ->orderBy('round', 'asc')
@@ -87,8 +88,9 @@ class Detail extends Component
     #[Computed]
     public function totals(): array
     {
-        $totals = Score::whereIn('player_id', function (Builder $query) {
-            $query->select('player_id')->from('scorecards')->where('id', $this->scorecard->id);
+        $scorecard = $this->scorecard;
+        $totals = Score::whereIn('player_id', function (Builder $query) use ($scorecard) {
+            $query->select('id')->from('players')->where('scorecard_id', $scorecard->id);
         })->orderBy('player_id')->groupBy('player_id')->select('player_id', DB::raw('sum(score) as total'))->get()->toArray();
 
         return array_merge(['Total'], array_column($totals, 'total'));
@@ -122,12 +124,11 @@ class Detail extends Component
     {
         $this->drawer = true;
         $this->selectedRound = $round;
+        $scorecard = $this->scorecard;
         // TODO: Rename newRoundScores to roundScores or something like that
-        $this->newRoundScores = Score::where('round', $round)->orderBy('player_id', 'asc')->select('score')->get()->map(
-            function ($item) {
-                return $item->score;
-            }
-        )->toArray();
+        $this->newRoundScores = Score::where('round', $round)->whereIn('player_id', function (Builder $query) use ($scorecard) {
+            $query->select('id')->from('players')->where('scorecard_id', $scorecard->id);
+        })->orderBy('player_id', 'asc')->select('score')->get()->pluck('score')->toArray();
     }
 
     public function closeDrawer()
@@ -135,5 +136,22 @@ class Detail extends Component
         $this->drawer = false;
         $this->newRoundScores = [];
         $this->selectedRound = null;
+    }
+
+    #[Computed]
+    public function debug()
+    {
+        $scoresQuery = Score::whereIn('player_id', function (Builder $query) {
+            $query->select('player_id')->from('scorecards')->where('id', $this->scorecard->id);
+        })
+            ->groupBy('round')
+            ->orderBy('round', 'asc')
+            ->orderBy('player_id', 'asc')
+            ->select('round as round_number')->addSelect(DB::raw('json_group_array(score) as round_scores'))
+            ->toSql();
+
+        $playersQuery = DB::table('scorecards')->select(['player_id'])->where('id', $this->scorecard->id)->toSql();
+
+        return ['scores' => $scoresQuery, 'players' => $playersQuery, 'scorecardId' => $this->scorecard->id];
     }
 }
