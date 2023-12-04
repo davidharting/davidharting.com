@@ -14,6 +14,8 @@ use Livewire\Component;
 
 class Detail extends Component
 {
+    public bool $drawer;
+
     #[Locked]
     public Scorecard $scorecard;
 
@@ -26,15 +28,25 @@ class Detail extends Component
     ])]
     public $newRoundScores;
 
+    public int | null $selectedRound;
+
     public function mount(Scorecard $scorecard)
     {
+        $this->drawer = false;
         $this->scorecard = $scorecard;
         $this->newRoundScores = [];
+        $this->selectedRound = null;
     }
 
     public function render()
     {
         return view('livewire.scorecards.detail');
+    }
+
+    public function openNewRoundForm()
+    {
+        $this->selectedRound = null;
+        $this->drawer = true;
     }
 
 
@@ -82,12 +94,15 @@ class Detail extends Component
         return array_merge(['Total'], array_column($totals, 'total'));
     }
 
-    public function recordNewRound()
+    public function submit()
     {
         $this->validate();
 
-        $player_ids = $this->scorecard->players()->orderBy('id', 'asc')->pluck('id')->toArray();
-        $round = Score::whereIn('player_id', $player_ids)->max('round') + 1;
+        $player_ids = $this->scorecard->players()->orderBy('id', 'asc')->select('id')->pluck('id')->toArray();
+
+
+        $round = $this->selectedRound ?? Score::whereIn('player_id', $player_ids)->max('round') + 1;
+
 
 
         $toInsert = collect($player_ids)->map(function ($player_id, $index) use ($round) {
@@ -98,6 +113,27 @@ class Detail extends Component
             ];
         });
 
-        DB::table('scores')->insert($toInsert->toArray());
+        Score::upsert($toInsert->toArray(), ['player_id', 'round'], ['score']);
+
+        $this->closeDrawer();
+    }
+
+    public function openEditForm(int $round)
+    {
+        $this->drawer = true;
+        $this->selectedRound = $round;
+        // TODO: Rename newRoundScores to roundScores or something like that
+        $this->newRoundScores = Score::where('round', $round)->orderBy('player_id', 'asc')->select('score')->get()->map(
+            function ($item) {
+                return $item->score;
+            }
+        )->toArray();
+    }
+
+    public function closeDrawer()
+    {
+        $this->drawer = false;
+        $this->newRoundScores = [];
+        $this->selectedRound = null;
     }
 }
