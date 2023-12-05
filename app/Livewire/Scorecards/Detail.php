@@ -24,11 +24,11 @@ class Detail extends Component
      */
     #[Validate([
         'newRoundScores' => 'array|required',
-        'newRoundScores.*' => 'integer|required|min:-100000|max:100000'
+        'newRoundScores.*' => 'integer|required|min:-100000|max:100000',
     ])]
     public $newRoundScores;
 
-    public int | null $selectedRound;
+    public ?int $selectedRound;
 
     public function mount(Scorecard $scorecard)
     {
@@ -49,9 +49,8 @@ class Detail extends Component
         $this->drawer = true;
     }
 
-
     /**
-     * Get the names of the players in order of their id ascending. 
+     * Get the names of the players in order of their id ascending.
      * Returns an array of strings
      */
     #[Computed]
@@ -67,7 +66,7 @@ class Detail extends Component
     public function rounds(): Collection
     {
         $scorecard = $this->scorecard;
-        $collection =  Score::whereIn('player_id', function (Builder $query) use ($scorecard) {
+        $collection = Score::whereIn('player_id', function (Builder $query) use ($scorecard) {
             $query->select('id')->from('players')->where('scorecard_id', $scorecard->id);
         })
             ->groupBy('round')
@@ -75,8 +74,6 @@ class Detail extends Component
             ->orderBy('player_id', 'asc')
             ->select('round as round_number')->addSelect(DB::raw('json_group_array(score) as round_scores'))
             ->get();
-
-
 
         $data = $collection->map(function ($item) {
             return array_merge([$item->round_number], json_decode($item->round_scores));
@@ -102,16 +99,13 @@ class Detail extends Component
 
         $player_ids = $this->scorecard->players()->orderBy('id', 'asc')->select('id')->pluck('id')->toArray();
 
-
         $round = $this->selectedRound ?? Score::whereIn('player_id', $player_ids)->max('round') + 1;
-
-
 
         $toInsert = collect($player_ids)->map(function ($player_id, $index) use ($round) {
             return [
                 'player_id' => $player_id,
                 'round' => $round,
-                'score' => $this->newRoundScores[$index]
+                'score' => $this->newRoundScores[$index],
             ];
         });
 

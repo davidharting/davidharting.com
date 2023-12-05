@@ -3,14 +3,12 @@
 namespace App\Livewire;
 
 use App\Models\Scorecard;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Illuminate\Support\Str;
-
 
 class CreateScorecard extends Component
 {
-
     #[Validate('required|string|max:300')]
     public string $title;
 
@@ -19,7 +17,7 @@ class CreateScorecard extends Component
 
     #[Validate([
         'names' => 'array|required|min:1|max:10',
-        'names.*' => 'string|required|min:1|max:50'
+        'names.*' => 'string|required|min:1|max:50',
     ])]
     public $names;
 
@@ -35,7 +33,7 @@ class CreateScorecard extends Component
         $this->validate();
 
         $scorecard = Scorecard::create([
-            'title' => $this->getTitle()
+            'title' => $this->getTitle(),
         ]);
 
         $scorecard->players()->createMany(collect($this->names)->map(function ($name) {
@@ -56,6 +54,7 @@ class CreateScorecard extends Component
         if ($title->isEmpty()) {
             return 'Scorecard';
         }
+
         return $title;
     }
 }

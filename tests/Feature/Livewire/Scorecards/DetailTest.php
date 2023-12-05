@@ -8,7 +8,6 @@ use App\Models\Score;
 use App\Models\Scorecard;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -40,13 +39,11 @@ class DetailTest extends TestCase
             ['round' => 3, 'score' => 666],
         ]);
 
-
         $scores = Score::whereIn('player_id', function (Builder $query) use ($scorecard) {
             $query->select('player_id')->from('scorecards')->where('id', '=', $scorecard->id);
         });
 
         $player_ids = Player::where('scorecard_id', $scorecard->id)->select('id')->get();
-
 
         Livewire::test(Detail::class, ['scorecard' => $scorecard])
             ->assertSeeHtmlInOrder(['Frodo', 'Sam', 111, 222, 333, 444, 555, 666]);

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Player extends Model
 {
     use HasFactory;
+
     protected $guarded = [];
 
     public function scorecard(): BelongsTo

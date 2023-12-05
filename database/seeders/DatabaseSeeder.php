@@ -4,12 +4,11 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use App\Models\Score;
 use App\Models\Player;
+use App\Models\Score;
 use App\Models\Scorecard;
 use App\Models\Upclick;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -31,18 +30,13 @@ class DatabaseSeeder extends Seeder
         // Frodos clicks
         Upclick::factory(200)->create(['user_id' => $frodo->id]);
 
-
         Scorecard::factory(20)->addPlayers()->create();
-
 
         $conkers = Scorecard::factory()->makeOne([
             'title' => 'Conkers',
         ]);
 
         $conkers->save();
-
-
-
 
         $conkers->players()->saveMany([
             Player::factory()->makeOne([

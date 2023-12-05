@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
-use App\Livewire\CreateScorecard;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,7 +23,6 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-
 Route::get('/scorecards/create', [ScorecardController::class, 'create'])->name('scorecards.create');
 Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->name('scorecards.show');
 
@@ -34,4 +32,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
