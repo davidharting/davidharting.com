@@ -76,6 +76,7 @@ class Detail extends Component
             ->get();
 
         $data = $collection->map(function ($item) {
+            // @phpstan-ignore-next-line 
             return array_merge([$item->round_number], json_decode($item->round_scores));
         });
 
@@ -122,7 +123,7 @@ class Detail extends Component
         // TODO: Rename newRoundScores to roundScores or something like that
         $this->newRoundScores = Score::where('round', $round)->whereIn('player_id', function (Builder $query) use ($scorecard) {
             $query->select('id')->from('players')->where('scorecard_id', $scorecard->id);
-        })->orderBy('player_id', 'asc')->select('score')->get()->pluck('score')->toArray();
+        })->orderBy('player_id', 'asc')->pluck('score')->toArray();
     }
 
     public function closeDrawer()
