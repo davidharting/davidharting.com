@@ -2,17 +2,21 @@
 
 namespace Tests\Feature\Http\Controllers;
 
+use App\Models\Scorecard;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ScorecardControllerTest extends TestCase
 {
-    /**
-     * A basic feature test example.
-     */
-    public function test_example(): void
-    {
-        $response = $this->get('/');
+    use RefreshDatabase;
 
-        $response->assertStatus(200);
+    public function testSmokeTestRoutes(): void
+    {
+        $response = $this->get('/scorecards/create');
+        $response->assertOk();
+
+        $scorecard = Scorecard::factory()->createOne();
+        $response = $this->get("/scorecards/{$scorecard->id}");
+        $response->assertOk();
     }
 }
