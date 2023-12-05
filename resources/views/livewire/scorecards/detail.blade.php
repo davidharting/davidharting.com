@@ -51,7 +51,7 @@
 
     <div class='drawer-side'>
         <label for="the-drawer" aria-label="close sidebar" class="drawer-overlay" wire:click='closeDrawer'></label>
-        <div class='min-h-full bg-base-200 p-4 text-base-content opacity-100'>
+        <div class='min-h-full bg-base-200 p-4 text-base-content opacity-100 sm:min-w-[350px] min-w-[90%]'>
             <h2 class='font-serif mt-4 text-3xl'>
                 @if ($selectedRound)
                     Edit round
