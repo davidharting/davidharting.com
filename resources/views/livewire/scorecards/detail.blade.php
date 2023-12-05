@@ -52,28 +52,30 @@
     <div class='drawer-side'>
         <label for="the-drawer" aria-label="close sidebar" class="drawer-overlay" wire:click='closeDrawer'></label>
         <div class='min-h-full bg-base-200 p-4 text-base-content opacity-100 sm:min-w-[350px] min-w-[90%]'>
-            <h2 class='font-serif mt-4 text-3xl'>
-                @if ($selectedRound)
-                    Edit round
-                @else
-                    Record new round
-                @endif
-            </h2>
-            <form class='mt-4 space-y-4' wire:submit="submit">
-                @foreach ($this->playerNames as $name)
-                    <x-form.input name='newRoundScores.{{ $loop->index }}' :label='$name' type='number'
-                        min='-100000' max='100000' wire:model="newRoundScores.{{ $loop->index }}" />
-                @endforeach
-                <div class='flex justify-end'>
-                    <button type='submit' class='btn btn-primary w-3/4 mt-4'>
-                        @if ($selectedRound)
-                            Edit
-                        @else
-                            Add
-                        @endif
-                    </button>
-                </div>
-            </form>
+            @if ($drawer)
+                <h2 class='font-serif mt-4 text-3xl'>
+                    @if ($selectedRound)
+                        Edit round
+                    @else
+                        Record new round
+                    @endif
+                </h2>
+                <form class='mt-4 space-y-4' wire:submit="submit">
+                    @foreach ($this->playerNames as $name)
+                        <x-form.input name='newRoundScores.{{ $loop->index }}' :label='$name' type='number'
+                            min='-100000' max='100000' wire:model="newRoundScores.{{ $loop->index }}" />
+                    @endforeach
+                    <div class='flex justify-end'>
+                        <button type='submit' class='btn btn-primary w-3/4 mt-4'>
+                            @if ($selectedRound)
+                                Edit
+                            @else
+                                Add
+                            @endif
+                        </button>
+                    </div>
+                </form>
+            @endif
         </div>
     </div>
 </div>
