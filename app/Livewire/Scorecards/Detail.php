@@ -76,7 +76,7 @@ class Detail extends Component
             ->get();
 
         $data = $collection->map(function ($item) {
-            // @phpstan-ignore-next-line 
+            // @phpstan-ignore-next-line
             return array_merge([$item->round_number], json_decode($item->round_scores));
         });
 
