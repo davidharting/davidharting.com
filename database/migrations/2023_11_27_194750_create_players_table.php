@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestampsTz();
             $table->string('name', 50);
 
-            $table->foreignId('scorecard_id')
+            $table->foreignUlid('scorecard_id')
                 ->constrained();
 
             $table->index('scorecard_id');
