@@ -20,7 +20,7 @@ LOG_LEVEL = "info"
 LOG_STDERR_FORMATTER = "Monolog\\Formatter\\JsonFormatter"
 SESSION_DRIVER = "cookie"
 SESSION_SECURE_COOKIE = "true"
-DB_CONNECTION = 'sqlite'
+DB_CONNECTION = 'pgsql'
 
 
 [http_service]

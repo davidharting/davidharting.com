@@ -10,6 +10,7 @@ use App\Models\Scorecard;
 use App\Models\Upclick;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\App;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,49 +19,51 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $frodo = User::factory()->create([
-            'name' => 'Frodo Baggins',
-            'email' => 'frodo@example.com',
-        ]);
-
-        User::factory(10)->create();
-
-        // Anonymous clicks
-        Upclick::factory(500)->create();
-        // Frodos clicks
-        Upclick::factory(200)->create(['user_id' => $frodo->id]);
-
-        Scorecard::factory(20)->addPlayers()->create();
-
-        $conkers = Scorecard::factory()->makeOne([
-            'title' => 'Conkers',
-        ]);
-
-        $conkers->save();
-
-        $conkers->players()->saveMany([
-            Player::factory()->makeOne([
+        if (App::environment('local')) {
+            $frodo = User::factory()->create([
                 'name' => 'Frodo Baggins',
-            ]),
-            Player::factory()->makeOne([
-                'name' => 'Samwise Gamgee',
-            ]),
-            Player::factory()->makeOne([
-                'name' => 'Peregrin Took',
-            ]),
-            Player::factory()->makeOne([
-                'name' => 'Meriadoc Brandybuck',
-            ]),
-        ]);
+                'email' => 'frodo@example.com',
+            ]);
 
-        for ($round = 1; $round <= 10; $round++) {
-            $conkers->players->each(function (Player $player) use ($round) {
-                $player->scores()->save(
-                    Score::factory()->makeOne([
-                        'round' => $round,
-                    ])
-                );
-            });
+            User::factory(10)->create();
+
+            // Anonymous clicks
+            Upclick::factory(500)->create();
+            // Frodos clicks
+            Upclick::factory(200)->create(['user_id' => $frodo->id]);
+
+            Scorecard::factory(20)->addPlayers()->create();
+
+            $conkers = Scorecard::factory()->makeOne([
+                'title' => 'Conkers',
+            ]);
+
+            $conkers->save();
+
+            $conkers->players()->saveMany([
+                Player::factory()->makeOne([
+                    'name' => 'Frodo Baggins',
+                ]),
+                Player::factory()->makeOne([
+                    'name' => 'Samwise Gamgee',
+                ]),
+                Player::factory()->makeOne([
+                    'name' => 'Peregrin Took',
+                ]),
+                Player::factory()->makeOne([
+                    'name' => 'Meriadoc Brandybuck',
+                ]),
+            ]);
+
+            for ($round = 1; $round <= 10; $round++) {
+                $conkers->players->each(function (Player $player) use ($round) {
+                    $player->scores()->save(
+                        Score::factory()->makeOne([
+                            'round' => $round,
+                        ])
+                    );
+                });
+            }
         }
     }
 }
