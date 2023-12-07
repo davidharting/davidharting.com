@@ -59,7 +59,7 @@
         </div>
 
         <div class='mt-12'>
-            <livewire:upclick />
+            <livewire:upclick lazy />
         </div>
     </div>
 
