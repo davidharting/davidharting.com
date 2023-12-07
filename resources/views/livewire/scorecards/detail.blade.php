@@ -18,7 +18,7 @@
                     </thead>
 
                     @foreach ($this->rounds as $round)
-                        <tr class='hover:bg-slate-800 cursor-pointer' aria-label='edit row'
+                        <tr class='hover:bg-accent hover:bg-opacity-30 cursor-pointer' aria-label='edit row'
                             wire:click='openEditForm({{ $round[0] }})'>
                             @foreach ($round as $cell)
                                 @if ($loop->first)
