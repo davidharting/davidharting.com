@@ -71,8 +71,7 @@ class Detail extends Component
         })
             ->groupBy('round')
             ->orderBy('round', 'asc')
-            ->orderBy('player_id', 'asc')
-            ->select('round as round_number')->addSelect(DB::raw('json_group_array(score) as round_scores'))
+            ->select('round as round_number')->addSelect(DB::raw('json_agg(score order by player_id asc) as round_scores'))
             ->get();
 
         $data = $collection->map(function ($item) {
