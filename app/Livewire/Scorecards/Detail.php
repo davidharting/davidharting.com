@@ -132,21 +132,4 @@ class Detail extends Component
         $this->newRoundScores = [];
         $this->selectedRound = null;
     }
-
-    #[Computed]
-    public function debug()
-    {
-        $scoresQuery = Score::whereIn('player_id', function (Builder $query) {
-            $query->select('player_id')->from('scorecards')->where('id', $this->scorecard->id);
-        })
-            ->groupBy('round')
-            ->orderBy('round', 'asc')
-            ->orderBy('player_id', 'asc')
-            ->select('round as round_number')->addSelect(DB::raw('json_group_array(score) as round_scores'))
-            ->toSql();
-
-        $playersQuery = DB::table('scorecards')->select(['player_id'])->where('id', $this->scorecard->id)->toSql();
-
-        return ['scores' => $scoresQuery, 'players' => $playersQuery, 'scorecardId' => $this->scorecard->id];
-    }
 }
