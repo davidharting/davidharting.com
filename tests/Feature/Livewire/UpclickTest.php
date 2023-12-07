@@ -15,10 +15,11 @@ class UpclickTest extends TestCase
 
     public function test_clicking_updates_total_count()
     {
+        $this->assertEquals(UpclickModel::count(), 0);
         Livewire::test(Upclick::class)
-            ->assertSeeHtmlInOrder(['Total Clicks', '0'])
+            ->assertSeeInOrder(['Total Clicks', '0'])
             ->call('click')
-            ->assertSeeHtmlInOrder(['Total Clicks', '1']);
+            ->assertSeeInOrder(['Total Clicks', '1']);
     }
 
     public function test_authenticated_user()
@@ -30,8 +31,8 @@ class UpclickTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(Upclick::class)
-            ->assertSeeHtmlInOrder(['Total Clicks', '50', 'Your Clicks', '20'])
+            ->assertSeeInOrder(['Total Clicks', '50', 'Your Clicks', '20'])
             ->call('click')
-            ->assertSeeHtmlInOrder(['Total Clicks', '51', 'Your Clicks', '21']);
+            ->assertSeeInOrder(['Total Clicks', '51', 'Your Clicks', '21']);
     }
 }
