@@ -21,6 +21,8 @@ LOG_STDERR_FORMATTER = "Monolog\\Formatter\\JsonFormatter"
 SESSION_DRIVER = "cookie"
 SESSION_SECURE_COOKIE = "true"
 DB_CONNECTION = 'pgsql'
+QUEUE_CONNECTION = 'database'
+MAIL_MAILER = 'ses'
 
 
 [http_service]
