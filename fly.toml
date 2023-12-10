@@ -35,3 +35,7 @@ processes = ["app"]
 
 [deploy]
 release_command = "php /var/www/html/artisan migrate --force"
+
+[processes]
+app = ""
+worker = "php artisan queue:work -v"
