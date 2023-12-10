@@ -23,6 +23,8 @@ SESSION_SECURE_COOKIE = "true"
 DB_CONNECTION = 'pgsql'
 QUEUE_CONNECTION = 'database'
 MAIL_MAILER = 'ses'
+MAIL_FROM_ADDRESS = 'hello@davidharting.com'
+MAIL_FROM_NAME = "${APP_NAME}"
 
 
 [http_service]
