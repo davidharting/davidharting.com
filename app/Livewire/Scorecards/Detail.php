@@ -30,12 +30,16 @@ class Detail extends Component
 
     public ?int $selectedRound;
 
+    #[Validate('email')]
+    public ?string $email;
+
     public function mount(Scorecard $scorecard)
     {
         $this->drawer = false;
         $this->scorecard = $scorecard;
         $this->newRoundScores = [];
         $this->selectedRound = null;
+        $this->email = null;
     }
 
     public function render()
@@ -95,7 +99,7 @@ class Detail extends Component
 
     public function submit()
     {
-        $this->validate();
+        $this->validateOnly('newRoundScores');
 
         $player_ids = $this->scorecard->players()->orderBy('id', 'asc')->select('id')->pluck('id')->toArray();
 
@@ -130,5 +134,10 @@ class Detail extends Component
         $this->drawer = false;
         $this->newRoundScores = [];
         $this->selectedRound = null;
+    }
+
+    public function emailLink()
+    {
+        $this->validateOnly('email');
     }
 }

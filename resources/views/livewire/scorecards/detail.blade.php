@@ -47,6 +47,24 @@
                 </table>
             </div>
         </x-card>
+
+        <div class='mt-12'>
+            <details>
+                <summary class='cursor-pointer'>
+                    Email yourself a link to this scorecard
+                </summary>
+                <form wire:submit='emailLink'>
+                    <div class='flex flex-row items-end'>
+                        <div class='w-1/2'>
+                            <x-form.input name='email' type='email' wire:model='email' placeholder='me@example.com'
+                                required />
+                        </div>
+                        <button type='submit' class='btn btn-secondary btn-ghost'>Send</button>
+                    </div>
+                </form>
+            </details>
+
+        </div>
     </div>
 
     <div class='drawer-side'>
