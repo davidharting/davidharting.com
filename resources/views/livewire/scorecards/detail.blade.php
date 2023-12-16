@@ -59,7 +59,7 @@
                             <x-form.input name='email' type='email' wire:model='email' placeholder='me@example.com'
                                 required />
                         </div>
-                        <button type='submit' class='btn btn-secondary btn-ghost'>Send</button>
+                        <button type='submit' class='btn btn-secondary btn-ghost ml-2'>Send</button>
                     </div>
                 </form>
             </details>

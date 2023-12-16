@@ -7,6 +7,7 @@ use App\Models\Scorecard;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
@@ -139,5 +140,7 @@ class Detail extends Component
     public function emailLink()
     {
         $this->validateOnly('email');
+
+        Mail::to($this->email)->queue(new \App\Mail\ScorecardLink($this->scorecard));
     }
 }
