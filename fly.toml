@@ -13,6 +13,7 @@ NODE_VERSION = "18"
 PHP_VERSION = "8.2"
 
 [env]
+AWS_DEFAULT_REGION = "us-east-2"
 APP_ENV = "production"
 APP_NAME = "David Harting"
 LOG_CHANNEL = "stderr"
@@ -25,8 +26,6 @@ QUEUE_CONNECTION = 'database'
 MAIL_MAILER = 'ses'
 MAIL_FROM_ADDRESS = 'hello@davidharting.com'
 MAIL_FROM_NAME = "${APP_NAME}"
-
-
 [http_service]
 internal_port = 8080
 force_https = true
