@@ -34,6 +34,8 @@ class Detail extends Component
     #[Validate('email')]
     public ?string $email;
 
+    public bool $linkRequested = false;
+
     public function mount(Scorecard $scorecard)
     {
         $this->drawer = false;
@@ -142,5 +144,6 @@ class Detail extends Component
         $this->validateOnly('email');
 
         Mail::to($this->email)->queue(new \App\Mail\ScorecardLink($this->scorecard));
+        $this->linkRequested = true;
     }
 }
