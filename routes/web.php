@@ -33,11 +33,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
 if (env('APP_ENV') == 'local') {
     Route::get('/mail/scorecard/{scorecard}', function (Scorecard $scorecard) {
         return new App\Mail\ScorecardLink($scorecard);
     });
 }
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
