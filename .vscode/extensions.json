@@ -5,6 +5,7 @@
         "bradlc.vscode-tailwindcss",
         "chiefmyron.phpunit-test-workbench",
         "MehediDracula.php-namespace-resolver",
+        "open-southeners.laravel-pint",
         "xdebug.php-debug"
     ]
 }

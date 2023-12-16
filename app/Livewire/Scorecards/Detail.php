@@ -7,6 +7,7 @@ use App\Models\Scorecard;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
@@ -30,12 +31,18 @@ class Detail extends Component
 
     public ?int $selectedRound;
 
+    #[Validate('email')]
+    public ?string $email;
+
+    public bool $linkRequested = false;
+
     public function mount(Scorecard $scorecard)
     {
         $this->drawer = false;
         $this->scorecard = $scorecard;
         $this->newRoundScores = [];
         $this->selectedRound = null;
+        $this->email = null;
     }
 
     public function render()
@@ -95,7 +102,7 @@ class Detail extends Component
 
     public function submit()
     {
-        $this->validate();
+        $this->validateOnly('newRoundScores');
 
         $player_ids = $this->scorecard->players()->orderBy('id', 'asc')->select('id')->pluck('id')->toArray();
 
@@ -130,5 +137,13 @@ class Detail extends Component
         $this->drawer = false;
         $this->newRoundScores = [];
         $this->selectedRound = null;
+    }
+
+    public function emailLink()
+    {
+        $this->validateOnly('email');
+
+        Mail::to($this->email)->queue(new \App\Mail\ScorecardLink($this->scorecard));
+        $this->linkRequested = true;
     }
 }

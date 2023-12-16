@@ -1,2 +1,4 @@
 package-lock.json
 composer.lock
+
+resources/views/emails
