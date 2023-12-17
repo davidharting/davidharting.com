@@ -15,7 +15,8 @@ PHP_VERSION = "8.2"
 [env]
 AWS_DEFAULT_REGION = "us-east-2"
 APP_ENV = "production"
-APP_NAME = "David Harting"
+APP_NAME = "davidharting.com"
+APP_URL = "https://www.davidharting.com"
 LOG_CHANNEL = "stderr"
 LOG_LEVEL = "info"
 LOG_STDERR_FORMATTER = "Monolog\\Formatter\\JsonFormatter"
@@ -25,7 +26,7 @@ DB_CONNECTION = 'pgsql'
 QUEUE_CONNECTION = 'database'
 MAIL_MAILER = "mailersend"
 MAIL_FROM_ADDRESS = 'hello@davidharting.com'
-MAIL_FROM_NAME = "${APP_NAME}"
+MAIL_FROM_NAME = "David Harting"
 
 
 [http_service]
