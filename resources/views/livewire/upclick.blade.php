@@ -12,7 +12,7 @@
         @auth
             <div class='stat'>
                 <div class='stat-title'>Your Clicks</div>
-                <div class='stat-value'>{{ $this->user_count }}</div>
+                <div class='stat-value'>{{ $this->userCount }}</div>
                 <div class="stat-desc">Only your clicks</div>
             </div>
         @endauth

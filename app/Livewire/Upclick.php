@@ -19,7 +19,7 @@ class Upclick extends Component
 
     #[Computed]
     #[Locked]
-    public function user_count(): ?int
+    public function userCount(): ?int
     {
         if (Auth::guest()) {
             return null;
