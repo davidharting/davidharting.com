@@ -1,9 +1,9 @@
 <div>
-    <x-breadcrumbs.container>
-        <x-breadcrumbs.crumb :url="route('intervals.show')">
+    <x-crumb.container>
+        <x-crumb.item :url="route('intervals.show')">
             Intervals
-        </x-breadcrumbs.crumb>
-    </x-breadcrumbs.container>
+        </x-crumb.item>
+    </x-crumb.container>
 
     <x-type.page-title>Interval timer</x-type.page-title>
 
