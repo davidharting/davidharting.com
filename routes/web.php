@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
+use App\Livewire\Intervals\IntervalsPage;
 use App\Models\Scorecard;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,8 @@ Route::get('/dashboard', function () {
 
 Route::get('/scorecards/create', [ScorecardController::class, 'create'])->name('scorecards.create');
 Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->name('scorecards.show');
+
+Route::get('/intervals', IntervalsPage::class)->name('intervals.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

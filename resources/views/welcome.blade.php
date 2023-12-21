@@ -63,4 +63,8 @@
         </div>
     </div>
 
+    <div>
+        <a href='{{ route('intervals.show') }}' wire:navigate class='link link-primary'>Interval Timer</a>
+    </div>
+
 </x-layout.app>
