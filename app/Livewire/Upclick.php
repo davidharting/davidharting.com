@@ -12,14 +12,14 @@ class Upclick extends Component
 {
     #[Computed]
     #[Locked]
-    public function total_count(): int
+    public function totalCount(): int
     {
         return UpclickModel::count();
     }
 
     #[Computed]
     #[Locked]
-    public function user_count(): ?int
+    public function userCount(): ?int
     {
         if (Auth::guest()) {
             return null;

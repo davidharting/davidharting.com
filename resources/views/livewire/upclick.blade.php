@@ -4,7 +4,7 @@
         <div class="stat">
             <div class="stat-title">Total Clicks</div>
             <div class='stat-value'>
-                {{ $this->total_count }}
+                {{ $this->totalCount }}
             </div>
             <div class="stat-desc">All clicks from everyone</div>
         </div>
@@ -12,7 +12,7 @@
         @auth
             <div class='stat'>
                 <div class='stat-title'>Your Clicks</div>
-                <div class='stat-value'>{{ $this->user_count }}</div>
+                <div class='stat-value'>{{ $this->userCount }}</div>
                 <div class="stat-desc">Only your clicks</div>
             </div>
         @endauth
