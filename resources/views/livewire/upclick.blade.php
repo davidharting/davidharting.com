@@ -4,7 +4,7 @@
         <div class="stat">
             <div class="stat-title">Total Clicks</div>
             <div class='stat-value'>
-                {{ $this->total_count }}
+                {{ $this->totalCount }}
             </div>
             <div class="stat-desc">All clicks from everyone</div>
         </div>
