@@ -1,4 +1,10 @@
 <div>
+    <x-breadcrumbs.container>
+        <x-breadcrumbs.crumb :url="route('intervals.show')">
+            Intervals
+        </x-breadcrumbs.crumb>
+    </x-breadcrumbs.container>
+
     <x-type.page-title>Interval timer</x-type.page-title>
 
     <div class='mt-12 w-full flex justify-center'>
