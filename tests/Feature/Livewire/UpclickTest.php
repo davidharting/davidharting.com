@@ -15,7 +15,7 @@ class UpclickTest extends TestCase
 
     public function test_clicking_updates_total_count()
     {
-        $this->assertEquals(UpclickModel::count(), 0);
+        $this->assertEquals(0, UpclickModel::count());
         Livewire::test(Upclick::class)
             ->assertSeeInOrder(['Total Clicks', '0'])
             ->call('click')
