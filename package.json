@@ -4,8 +4,8 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "format": "prettier --write .",
-        "format:check": "prettier --check ."
+        "format": "npx prettier --write .",
+        "format:check": "npx prettier --check ."
     },
     "devDependencies": {
         "autoprefixer": "^10.4.2",
