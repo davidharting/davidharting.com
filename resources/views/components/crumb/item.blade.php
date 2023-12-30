@@ -1,5 +1,7 @@
-@props(['url'])
+@props([
+    "url",
+])
 
 <li>
-    <a href='{{ $url }}' wire:navigate>{{ $slot }}</a>
+    <a href="{{ $url }}" wire:navigate>{{ $slot }}</a>
 </li>
