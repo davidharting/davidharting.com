@@ -1,3 +1,4 @@
 {
-    "php.suggest.basic": false
+    "php.suggest.basic": false,
+    "prettier.documentSelectors": ["**/*.blade.php"]
 }
