@@ -10,7 +10,6 @@ use App\Models\Score;
 use App\Models\Scorecard;
 use App\Models\Upclick;
 use App\Models\User;
-use Database\Factories\NoteFactory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\App;
 
@@ -22,6 +21,11 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         if (App::environment('local')) {
+            $admin = User::factory()->create([
+                'name' => 'Adam Min',
+                'email' => 'admin@example.com',
+            ]);
+
             $frodo = User::factory()->create([
                 'name' => 'Frodo Baggins',
                 'email' => 'frodo@example.com',
@@ -67,7 +71,7 @@ class DatabaseSeeder extends Seeder
                 });
             }
 
-            Note::factory(100)->create();
+            Note::factory(375)->create();
         }
     }
 }
