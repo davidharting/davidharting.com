@@ -19,7 +19,7 @@ class NoteFactory extends Factory
         return [
             'content' => $this->faker->text(),
             'visible' => $this->faker->boolean(80),
-            'created_at' => $this->faker->dateTimeThisYear()
+            'created_at' => $this->faker->dateTimeThisYear(),
         ];
     }
 }

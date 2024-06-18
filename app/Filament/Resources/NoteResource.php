@@ -26,8 +26,8 @@ class NoteResource extends Resource
     {
         return $form->columns(1)
             ->schema([
-                Forms\Components\MarkdownEditor::make("content")->required()->disableToolbarButtons(['attachFiles']),
-                Forms\Components\Checkbox::make("visible")->default(true),
+                Forms\Components\MarkdownEditor::make('content')->required()->disableToolbarButtons(['attachFiles']),
+                Forms\Components\Checkbox::make('visible')->default(true),
             ]);
     }
 
@@ -35,8 +35,8 @@ class NoteResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make("content"),
-                CheckboxColumn::make("visible")
+                TextColumn::make('content'),
+                CheckboxColumn::make('visible'),
             ])
             ->filters([
                 //
