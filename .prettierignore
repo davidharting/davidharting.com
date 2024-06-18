@@ -2,3 +2,6 @@ package-lock.json
 composer.lock
 
 resources/views/emails
+
+public/js/filament
+public/css/filament
