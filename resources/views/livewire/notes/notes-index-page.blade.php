@@ -8,7 +8,7 @@
     <div class="mt-12 w-full space-y-4">
         @foreach ($notes as $note)
             <x-card>
-                <div class='prose'>
+                <div class="prose">
                     {!! $note->html() !!}
                 </div>
                 <div class="text-sm text-gray-600">
@@ -20,7 +20,7 @@
 
     <div class="my-8 flex justify-center">
         <div>
-            @if (!$notes->onFirstPage())
+            @if (! $notes->onFirstPage())
                 <button class="join-item btn">
                     <a href="{{ $notes->previousPageUrl() }}">Newer</a>
                 </button>
