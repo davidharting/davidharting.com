@@ -1,4 +1,5 @@
 import daisyui from "daisyui";
+import typography from "@tailwindcss/typography";
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -7,7 +8,7 @@ export default {
         "./storage/framework/views/*.php",
         "./resources/views/**/*.blade.php",
     ],
-    plugins: [daisyui],
+    plugins: [typography, daisyui],
     daisyui: {
         themes: ["cmyk", "business"],
         darkTheme: "business",
