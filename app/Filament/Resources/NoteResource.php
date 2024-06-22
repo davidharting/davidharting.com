@@ -26,7 +26,7 @@ class NoteResource extends Resource
     {
         return $form->columns(1)
             ->schema([
-                Forms\Components\MarkdownEditor::make('content')->required()->disableToolbarButtons(['attachFiles']),
+                Forms\Components\MarkdownEditor::make('content')->required()->disableToolbarButtons(['attachFiles', 'heading']),
                 Forms\Components\Checkbox::make('visible')->default(true),
             ]);
     }
