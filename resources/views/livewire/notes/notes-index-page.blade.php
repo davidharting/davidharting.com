@@ -16,7 +16,7 @@
 
     <div class="my-8 flex justify-center">
         <div>
-            @if (!$notes->onFirstPage())
+            @if (! $notes->onFirstPage())
                 <button class="join-item btn">
                     <a href="{{ $notes->previousPageUrl() }}">Newer</a>
                 </button>
