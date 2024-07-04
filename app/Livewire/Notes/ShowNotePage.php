@@ -19,8 +19,7 @@ class ShowNotePage extends Component
     {
         if ($note->visible) {
             $this->note = $note;
-        }
-        else {
+        } else {
             $this->note = null;
         }
     }

@@ -10,19 +10,18 @@ test('404 if note not found', function () {
     $response->assertNotFound();
 });
 
-test('404 if note not visible', function() {
+test('404 if note not visible', function () {
     /** @var TestCase $this */
-    $note = Note::factory()->createOne([ 'visible' => false ]);
-    $response = $this->get('/notes/' . $note->id);
+    $note = Note::factory()->createOne(['visible' => false]);
+    $response = $this->get('/notes/'.$note->id);
     $response->assertNotFound();
 });
 
-
-test('shows a note', function() {
+test('shows a note', function () {
     /** @var TestCase $this */
     $note = Note::factory()->createOne(['visible' => true, 'content' => 'hello there',
         'created_at' => Carbon::create(2000, 02, 01)]);
-    $response = $this->get('/notes/' . $note->id);
+    $response = $this->get('/notes/'.$note->id);
     $response->assertSuccessful();
     $response->assertSeeInOrder(['hello there', '2000', 'February']);
 });

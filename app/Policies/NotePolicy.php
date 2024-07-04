@@ -22,9 +22,8 @@ class NotePolicy
     public function view(?User $user, Note $note): Response
     {
         if ($note->visible) {
-            return Response::allow();           
-        }
-        else {
+            return Response::allow();
+        } else {
             return Response::denyWithStatus(404);
         }
     }
