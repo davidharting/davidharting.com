@@ -33,7 +33,7 @@ Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->nam
 Route::get('/intervals', IntervalsPage::class)->name('intervals.show');
 
 Route::get('/notes', NotesIndexPage::class)->name('notes.index');
-Route::get('/notes/{note}', ShowNotePage::class)->name('notes.show');
+Route::get('/notes/{note}', ShowNotePage::class)->name('notes.show')->can('view','note');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
