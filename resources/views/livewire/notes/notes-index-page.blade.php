@@ -4,6 +4,9 @@
     </x-crumb.container>
 
     <x-type.page-title>Notes</x-type.page-title>
+    @if ($notes->isEmpty())
+        No notes yet
+    @endif
 
     <div class="mt-12 w-full space-y-4">
         @foreach ($notes as $note)
