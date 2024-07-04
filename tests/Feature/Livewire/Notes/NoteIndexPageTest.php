@@ -14,16 +14,20 @@ test('renders an empty list', function () {
 test('displays visible notes with most recently updated first', function () {
     Note::factory()->createMany(
         [
-            ['content' => 'oldest note', 'updated_at' => Carbon::create(2000, 01, 01), 'visible' => true],
-            ['content' => 'middle note', 'updated_at' => Carbon::create(2008, 05, 07), 'visible' => true],
-            ['content' => 'newest note', 'updated_at' => Carbon::create(2020, 07, 10), 'visible' => true],
-            ['content' => 'SHOULD NOT SEE', 'visible' => true],
+            ['content' => 'oldest note', 'created_at' => Carbon::create(2000, 01, 01), 'visible' => true],
+            ['content' => 'middle note', 'created_at' => Carbon::create(2008, 05, 07), 'visible' => true],
+            ['content' => 'newest note', 'created_at' => Carbon::create(2020, 07, 10), 'visible' => true],
+            ['content' => 'SHOULD NOT SEE', 'visible' => false],
         ]
     );
 
     expect(Note::all()->count())->toBe(4);
-    Livewire::test(NotesIndexPage::class)->assertSeeInOrder([
+
+    expect(Note::where('visible', true)->count())->toBe(3);
+
+    $response = Livewire::test(NotesIndexPage::class);
+    $response->assertDontSee('SHOULD NOT SEE');
+    $response->assertSeeInOrder([
         'newest note', 'middle note', 'oldest note',
     ]);
-
 });
