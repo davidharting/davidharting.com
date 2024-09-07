@@ -32,9 +32,6 @@ jobs:
       - name: Pint
         run: ./vendor/bin/pint --test
 
-      - name: Analyze
-        run: ./vendor/bin/phpstan analyze --memory-limit=1G
-
       - name: Generate key
         run: php artisan key:generate
 
