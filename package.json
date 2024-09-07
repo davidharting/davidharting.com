@@ -8,6 +8,7 @@
         "format:check": "npx prettier --check ."
     },
     "devDependencies": {
+        "@tailwindcss/typography": "^0.5.13",
         "autoprefixer": "^10.4.2",
         "daisyui": "^4.12.2",
         "laravel-vite-plugin": "^1.0.4",

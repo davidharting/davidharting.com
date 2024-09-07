@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Models\Note;
 use App\Models\Player;
 use App\Models\Score;
 use App\Models\Scorecard;
@@ -20,6 +21,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         if (App::environment('local')) {
+            $admin = User::factory()->create([
+                'name' => 'Adam Min',
+                'email' => 'admin@example.com',
+                'is_admin' => true,
+            ]);
+
             $frodo = User::factory()->create([
                 'name' => 'Frodo Baggins',
                 'email' => 'frodo@example.com',
@@ -64,6 +71,8 @@ class DatabaseSeeder extends Seeder
                     );
                 });
             }
+
+            Note::factory(375)->create();
         }
     }
 }

@@ -1,4 +1,4 @@
-<section class="card bg-base-200">
+<section class="card shadow">
     <div class="card-body">
         @isset($title)
             <header class="card-title">
