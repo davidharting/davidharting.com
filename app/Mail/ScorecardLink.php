@@ -18,8 +18,7 @@ class ScorecardLink extends Mailable
      */
     public function __construct(
         public Scorecard $scorecard,
-    ) {
-    }
+    ) {}
 
     /**
      * Get the message envelope.
