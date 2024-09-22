@@ -20,3 +20,7 @@ yarn-error.log
 /.idea
 
 todo.md
+
+/caddy
+frankenphp
+frankenphp-worker.php
