@@ -1,3 +1,42 @@
+x-laravel-config: &laravel-config
+    build:
+        context: .
+        dockerfile: Dockerfile.dev
+    environment:
+        DB_CONNECTION: pgsql
+        DB_HOST: database
+        DB_PORT: 5432
+        DB_DATABASE: laravel
+        DB_USERNAME: laravel
+        DB_PASSWORD: secret
+        APP_NAME: davidharting.com
+        APP_ENV: local
+        APP_KEY: base64:JtK97g427FycGm5Z61vKEPddFMTkh3O/rVYONnGo7fs=
+        APP_DEBUG: "true"
+        APP_URL: http://localhost:8000
+        LOG_CHANNEL: stderr
+        LOG_DEPRECATIONS_CHANNEL: null
+        LOG_LEVEL: debug
+        BROADCAST_DRIVER: log
+        CACHE_DRIVER: file
+        FILESYSTEM_DISK: local
+        QUEUE_CONNECTION: database
+        SESSION_DRIVER: file
+        SESSION_LIFETIME: 120
+        MAIL_MAILER: log
+        MAIL_LOG_CHANNEL: stderr
+        MAIL_FROM_ADDRESS: "hello@davidharting.com"
+        MAIL_FROM_NAME: "${APP_NAME}"
+        VITE_APP_NAME: "${APP_NAME}"
+        OCTANE_SERVER: frankenphp
+
+    depends_on:
+        database:
+            condition: service_healthy
+    restart: no
+    stdin_open: true
+    tty: true
+
 services:
     database:
         image: postgres:latest
@@ -7,82 +46,38 @@ services:
             POSTGRES_DB: laravel
         stdin_open: true
         tty: true
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U laravel"]
+            interval: 1s
+            timeout: 5s
+            retries: 15
+            #
 
-    # TODO: Add services for corn and
-    laravel-web:
-        build:
-            context: .
-            dockerfile: Dockerfile.dev
-        environment:
-            DB_CONNECTION: pgsql # TODO: Bundle up env and share with all services
-            DB_HOST: database
-            DB_PORT: 5432
-            DB_DATABASE: laravel
-            DB_USERNAME: laravel
-            DB_PASSWORD: secret
-            APP_NAME: davidharting.com
-            APP_ENV: local
-            APP_KEY: base64:JtK97g427FycGm5Z61vKEPddFMTkh3O/rVYONnGo7fs=
-            APP_DEBUG: "true"
-            APP_URL: http://localhost:8000
-            LOG_CHANNEL: stderr
-            LOG_DEPRECATIONS_CHANNEL: null
-            LOG_LEVEL: debug
-            BROADCAST_DRIVER: log
-            CACHE_DRIVER: database
-            FILESYSTEM_DISK: local
-            QUEUE_CONNECTION: database
-            SESSION_DRIVER: file
-            SESSION_LIFETIME: 120
-            MAIL_MAILER: log
-            MAIL_LOG_CHANNEL: stderr
-            MAIL_FROM_ADDRESS: "hello@davidharting.com"
-            MAIL_FROM_NAME: "${APP_NAME}"
-            VITE_APP_NAME: "${APP_NAME}"
-            OCTANE_SERVER: frankenphp
+    migrations:
+        <<: *laravel-config
+        entrypoint: ["sh", "-c", "php artisan migrate && php artisan db:seed"]
 
-        depends_on:
-            - database
+    web:
+        <<: *laravel-config
         ports:
             - "8000:8000"
-        restart: always
-        stdin_open: true
-        tty: true
-
-    laravel-migrations:
-        build:
-            context: .
-            dockerfile: Dockerfile.dev
-        environment:
-            DB_CONNECTION: pgsql
-            DB_HOST: database
-            DB_PORT: 5432
-            DB_DATABASE: laravel
-            DB_USERNAME: laravel
-            DB_PASSWORD: secret
-            APP_NAME: davidharting.com
-            APP_ENV: local
-            APP_KEY: base64:JtK97g427FycGm5Z61vKEPddFMTkh3O/rVYONnGo7fs=
-            APP_DEBUG: "true"
-            APP_URL: http://localhost:8000
-            LOG_CHANNEL: stderr
-            LOG_DEPRECATIONS_CHANNEL: null
-            LOG_LEVEL: debug
-            BROADCAST_DRIVER: log
-            CACHE_DRIVER: database
-            FILESYSTEM_DISK: local
-            QUEUE_CONNECTION: database
-            SESSION_DRIVER: file
-            SESSION_LIFETIME: 120
-            MAIL_MAILER: log
-            MAIL_LOG_CHANNEL: stderr
-            MAIL_FROM_ADDRESS: "hello@davidharting.com"
-            MAIL_FROM_NAME: "${APP_NAME}"
-            VITE_APP_NAME: "${APP_NAME}"
-            OCTANE_SERVER: frankenphp
         depends_on:
-            - database
-        entrypoint: ["sh", "-c", "php artisan migrate && php artisan db:seed"]
+            migrations:
+                condition: service_completed_successfully
+
+    cron:
+        <<: *laravel-config
+        entrypoint: ["php", "artisan", "schedule:work"]
+        depends_on:
+            migrations:
+                condition: service_completed_successfully
+
+    worker:
+        <<: *laravel-config
+        entrypoint: ["php", "artisan", "queue:work"]
+        depends_on:
+            migrations:
+                condition: service_completed_successfully
 
 volumes:
     db_data:
