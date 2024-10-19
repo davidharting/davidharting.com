@@ -12,7 +12,7 @@ RUN npm run build
 FROM dunglas/frankenphp:php8.2-bookworm 
 
 RUN apt-get update && \
-    apt-get install -y unzip && \
+    apt-get install -y unzip libnss3-tools && \
     rm -rf /var/lib/apt/lists/*
 
 RUN install-php-extensions \
@@ -29,9 +29,8 @@ COPY --from=frontend_builder /app/public/build/ /app/public/build/
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer 
 COPY . /app
 
-RUN composer install --optimize-autoloader --no-dev \
+RUN composer install --optimize-autoloader \
     && php artisan optimize:clear
 
 
-EXPOSE 8000
-ENTRYPOINT ["php", "artisan", "octane:frankenphp"]
+ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--host", "localhost", "--https", "--http-redirect"]
