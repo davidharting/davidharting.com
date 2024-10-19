@@ -37,5 +37,5 @@ RUN composer install --optimize-autoloader \
     && php artisan optimize:clear
 
 
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["bash", "/entrypoint.sh"]
 CMD ["php", "artisan", "octane:frankenphp", "--host", "localhost", "--https", "--http-redirect"]

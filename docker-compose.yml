@@ -1,34 +1,45 @@
+volumes:
+    db_data:
+
+secrets:
+    DB_PASSWORD:
+        file: ./secrets/DB_PASSWORD.txt
+    APP_KEY:
+        file: ./secrets/APP_KEY.txt
+
 x-laravel-config: &laravel-config
-    build:
-        context: .
-        dockerfile: Dockerfile.dev
+    image: davidhartingdotcom:latest
+    secrets:
+        - DB_PASSWORD
+        - APP_KEY
     environment:
-        DB_CONNECTION: pgsql
-        DB_HOST: database
-        DB_PORT: 5432
-        DB_DATABASE: laravel
-        DB_USERNAME: laravel
-        DB_PASSWORD: secret
-        APP_NAME: davidharting.com
-        APP_ENV: local
-        APP_KEY: base64:JtK97g427FycGm5Z61vKEPddFMTkh3O/rVYONnGo7fs=
         APP_DEBUG: "true"
-        APP_URL: http://localhost:8000
+        APP_ENV: local
+        # APP_KEY: Injected into /run/secrets/APP_KEY
+        APP_NAME: davidharting.com
+        APP_URL: https://localhost
+        BROADCAST_DRIVER: log
+        CACHE_DRIVER: file
+        DB_CONNECTION: pgsql
+        DB_DATABASE: laravel
+        DB_HOST: database
+        # DB_PASSWORD: Injected into /run/secrets/DB_PASSWORD
+        DB_PORT: 5432
+        DB_USERNAME: laravel
+        FILESYSTEM_DISK: local
         LOG_CHANNEL: stderr
         LOG_DEPRECATIONS_CHANNEL: null
         LOG_LEVEL: debug
-        BROADCAST_DRIVER: log
-        CACHE_DRIVER: file
-        FILESYSTEM_DISK: local
-        QUEUE_CONNECTION: database
-        SESSION_DRIVER: file
-        SESSION_LIFETIME: 120
-        MAIL_MAILER: log
-        MAIL_LOG_CHANNEL: stderr
         MAIL_FROM_ADDRESS: "hello@davidharting.com"
         MAIL_FROM_NAME: "${APP_NAME}"
-        VITE_APP_NAME: "${APP_NAME}"
+        MAIL_LOG_CHANNEL: stderr
+        MAIL_MAILER: log # TODO: Re-send mailer for prod
+        OCTANE_HTTPS: true
         OCTANE_SERVER: frankenphp
+        QUEUE_CONNECTION: database
+        SESSION_DRIVER: file # TODO: database driver
+        SESSION_LIFETIME: 120
+        VITE_APP_NAME: "${APP_NAME}"
 
     depends_on:
         database:
@@ -40,9 +51,11 @@ x-laravel-config: &laravel-config
 services:
     database:
         image: postgres:latest
+        secrets:
+            - DB_PASSWORD
         environment:
             POSTGRES_USER: laravel
-            POSTGRES_PASSWORD: secret # TODO: Secret
+            POSTGRES_PASSWORD_FILE: /run/secrets/DB_PASSWORD
             POSTGRES_DB: laravel
         stdin_open: true
         tty: true
@@ -51,33 +64,42 @@ services:
             interval: 1s
             timeout: 5s
             retries: 15
-            #
 
     migrations:
         <<: *laravel-config
-        entrypoint: ["sh", "-c", "php artisan migrate && php artisan db:seed"]
+        # TODO: seed in dev
+        command: ["sh", "-c", "php artisan migrate"]
 
     web:
         <<: *laravel-config
         ports:
-            - "8000:8000"
+            - 8000:8000
+            - 443:443
+            - 443:443/udp
+        command:
+            [
+                "php",
+                "artisan",
+                "octane:frankenphp",
+                "--host",
+                "localhost",
+                "--https",
+                "--http-redirect",
+            ]
         depends_on:
             migrations:
                 condition: service_completed_successfully
 
-    cron:
-        <<: *laravel-config
-        entrypoint: ["php", "artisan", "schedule:work"]
-        depends_on:
-            migrations:
-                condition: service_completed_successfully
+    # cron:
+    #     <<: *laravel-config
+    #     command: ["php", "artisan", "schedule:work"]
+    #     depends_on:
+    #         migrations:
+    #             condition: service_completed_successfully
 
     worker:
         <<: *laravel-config
-        entrypoint: ["php", "artisan", "queue:work"]
+        command: ["php", "artisan", "queue:work"]
         depends_on:
             migrations:
                 condition: service_completed_successfully
-
-volumes:
-    db_data:
