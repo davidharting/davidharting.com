@@ -22,6 +22,10 @@ RUN install-php-extensions \
     pdo_pgsql \
     zip
 
+
+COPY docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 RUN mkdir -p /app/public/build
 COPY --from=frontend_builder /app/public/build/ /app/public/build/
 
@@ -33,4 +37,5 @@ RUN composer install --optimize-autoloader \
     && php artisan optimize:clear
 
 
-ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--host", "localhost", "--https", "--http-redirect"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["php", "artisan", "octane:frankenphp", "--host", "localhost", "--https", "--http-redirect"]
