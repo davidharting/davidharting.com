@@ -99,7 +99,13 @@ services:
 
     worker:
         <<: *laravel-config
-        command: ["php", "artisan", "queue:work"]
+        command: ["php", "artisan", "queue:work", "-v"]
         depends_on:
             migrations:
                 condition: service_completed_successfully
+
+        healthcheck:
+            test: ["CMD-SHELL", 'pgrep -fl "php artisan queue:work"']
+            interval: 1s
+            timeout: 5s
+            retries: 5

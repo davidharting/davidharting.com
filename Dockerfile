@@ -12,7 +12,7 @@ RUN npm run build
 FROM dunglas/frankenphp:php8.2-bookworm 
 
 RUN apt-get update && \
-    apt-get install -y unzip libnss3-tools && \
+    apt-get install -y unzip libnss3-tools procps && \
     rm -rf /var/lib/apt/lists/*
 
 RUN install-php-extensions \
