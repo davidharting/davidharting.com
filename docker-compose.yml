@@ -1,5 +1,6 @@
 volumes:
     db_data:
+    caddy_data:
 
 secrets:
     DB_PASSWORD:
@@ -31,7 +32,7 @@ x-laravel-config: &laravel-config
         LOG_DEPRECATIONS_CHANNEL: null
         LOG_LEVEL: debug
         MAIL_FROM_ADDRESS: "hello@davidharting.com"
-        MAIL_FROM_NAME: "${APP_NAME}"
+        MAIL_FROM_NAME: davidharting.com
         MAIL_LOG_CHANNEL: stderr
         MAIL_MAILER: log # TODO: Re-send mailer for prod
         OCTANE_HTTPS: true
@@ -39,7 +40,7 @@ x-laravel-config: &laravel-config
         QUEUE_CONNECTION: database
         SESSION_DRIVER: file # TODO: database driver
         SESSION_LIFETIME: 120
-        VITE_APP_NAME: "${APP_NAME}"
+        VITE_APP_NAME: davidharting.com
 
     depends_on:
         database:
@@ -64,6 +65,8 @@ services:
             interval: 1s
             timeout: 5s
             retries: 15
+        volumes:
+          - db_data:/var/lib/postgresql/data
 
     migrations:
         <<: *laravel-config
@@ -73,22 +76,27 @@ services:
     web:
         <<: *laravel-config
         ports:
-            - 8000:8000
-            - 443:443
-            - 443:443/udp
+            - "80:80"
+            - "443:443"
+            - "443:443/udp"
         command:
             [
                 "php",
                 "artisan",
                 "octane:frankenphp",
-                "--host",
-                "localhost",
+                "--caddyfile",
+                "Caddyfile",
                 "--https",
                 "--http-redirect",
+                "--host",
+                "davidharting.com"
             ]
         depends_on:
             migrations:
                 condition: service_completed_successfully
+
+        volumes:
+          - caddy_data:/data
 
     # cron:
     #     <<: *laravel-config

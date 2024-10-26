@@ -1,4 +1,4 @@
-FROM node:22 as frontend_builder
+FROM node:22 AS frontend_builder
 
 COPY . /app
 WORKDIR /app
@@ -38,4 +38,4 @@ RUN composer install --optimize-autoloader \
 
 
 ENTRYPOINT ["bash", "/entrypoint.sh"]
-CMD ["php", "artisan", "octane:frankenphp", "--host", "localhost", "--https", "--http-redirect"]
+CMD ["php", "artisan", "octane:frankenphp", "--caddyfile", "Caddyfile", "--https", "--http-redirect"]
