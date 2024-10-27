@@ -74,7 +74,7 @@ services:
     migrations:
         <<: *laravel-config
         # TODO: seed in dev
-        command: ["sh", "-c", "php artisan migrate"]
+        command: ["php", "artisan", "migrate", "--force"]
         restart: no
 
     web:
