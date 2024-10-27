@@ -18,7 +18,7 @@ x-laravel-config: &laravel-config
         - MAILERSEND_API_KEY
     environment:
         APP_DEBUG: "true"
-        APP_ENV: local
+        APP_ENV: production
         # APP_KEY: Injected into /run/secrets/APP_KEY
         APP_NAME: davidharting.com
         APP_URL: https://davidharting.com
