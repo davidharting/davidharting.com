@@ -45,7 +45,7 @@ x-laravel-config: &laravel-config
     depends_on:
         database:
             condition: service_healthy
-    restart: no
+    restart: unless-stopped
     stdin_open: true
     tty: true
 
@@ -72,6 +72,7 @@ services:
         <<: *laravel-config
         # TODO: seed in dev
         command: ["sh", "-c", "php artisan migrate"]
+        restart: no
 
     web:
         <<: *laravel-config
