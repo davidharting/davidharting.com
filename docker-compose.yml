@@ -7,18 +7,21 @@ secrets:
         file: ./secrets/DB_PASSWORD.txt
     APP_KEY:
         file: ./secrets/APP_KEY.txt
+    MAILERSEND_API_KEY:
+        file: ./secrets/MAILERSEND_API_KEY.txt
 
 x-laravel-config: &laravel-config
     image: davidhartingdotcom:latest
     secrets:
         - DB_PASSWORD
         - APP_KEY
+        - MAILERSEND_API_KEY
     environment:
         APP_DEBUG: "true"
         APP_ENV: local
         # APP_KEY: Injected into /run/secrets/APP_KEY
         APP_NAME: davidharting.com
-        APP_URL: https://localhost
+        APP_URL: https://davidharting.com
         BROADCAST_DRIVER: log
         CACHE_DRIVER: file
         DB_CONNECTION: pgsql
@@ -34,7 +37,7 @@ x-laravel-config: &laravel-config
         MAIL_FROM_ADDRESS: "hello@davidharting.com"
         MAIL_FROM_NAME: davidharting.com
         MAIL_LOG_CHANNEL: stderr
-        MAIL_MAILER: log # TODO: Re-send mailer for prod
+        MAIL_MAILER: mailersend
         OCTANE_HTTPS: true
         OCTANE_SERVER: frankenphp
         QUEUE_CONNECTION: database
