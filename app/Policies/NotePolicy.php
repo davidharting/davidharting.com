@@ -8,6 +8,11 @@ use Illuminate\Auth\Access\Response;
 
 class NotePolicy
 {
+    public function before(User $user): bool
+    {
+        return $user->is_admin;
+    }
+
     /**
      * Determine whether the user can view any models.
      */
