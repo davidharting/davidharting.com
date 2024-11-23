@@ -10,7 +10,7 @@ export default {
     ],
     plugins: [typography, daisyui],
     daisyui: {
-        themes: ["cmyk", "business"],
-        darkTheme: "business",
+        themes: ["cmyk", "night"],
+        darkTheme: "night",
     },
 };
