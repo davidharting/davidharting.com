@@ -105,21 +105,4 @@
             <livewire:upclick lazy />
         </div>
     </div>
-
-    <div class="flex justify-start space-x-8">
-        <a
-            href="{{ route("intervals.show") }}"
-            wire:navigate
-            class="link link-primary"
-        >
-            Interval Timer
-        </a>
-        <a
-            href="{{ route("scorecards.create") }}"
-            wire:navigate
-            class="link link-primary"
-        >
-            Scorecards
-        </a>
-    </div>
 </x-layout.app>

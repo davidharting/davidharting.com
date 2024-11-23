@@ -13,6 +13,29 @@
     <body class="font-sans antialiased">
         <div class="container mx-auto">
             <main class="mt-8">
+                <div class="flex justify-start space-x-8 mb-8">
+                    <a
+                        href="{{ route("home") }}"
+                        wire:navigate
+                        class="link link-primary"
+                    >
+                        Home
+                    </a>
+                    <a
+                        href="{{ route("notes.index") }}"
+                        wire:navigate
+                        class="link link-primary"
+                    >
+                        Notes
+                    </a>
+                    <a
+                        href="{{ route("scorecards.create") }}"
+                        wire:navigate
+                        class="link link-primary"
+                    >
+                        Scorecards
+                    </a>
+                </div>
                 {{ $slot }}
             </main>
         </div>
