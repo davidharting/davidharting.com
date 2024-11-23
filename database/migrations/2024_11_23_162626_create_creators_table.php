@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('media_type', function (Blueprint $table) {
-            $table->smallIncrements('id')->primary();
+        Schema::create('creators', function (Blueprint $table) {
+            $table->id();
             $table->timestamps();
             $table->string('name', 255);
         });
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('media_type');
+        Schema::dropIfExists('creator');
     }
 };
