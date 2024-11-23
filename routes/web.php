@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
-use App\Livewire\Intervals\IntervalsPage;
 use App\Livewire\Notes\NotesIndexPage;
 use App\Livewire\Notes\ShowNotePage;
 use App\Models\Scorecard;
@@ -29,8 +28,6 @@ Route::get('/dashboard', function () {
 
 Route::get('/scorecards/create', [ScorecardController::class, 'create'])->name('scorecards.create');
 Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->name('scorecards.show');
-
-Route::get('/intervals', IntervalsPage::class)->name('intervals.show');
 
 Route::get('/notes', NotesIndexPage::class)->name('notes.index');
 Route::get('/notes/{note}', ShowNotePage::class)->name('notes.show')->can('view', 'note');
