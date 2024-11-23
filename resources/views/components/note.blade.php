@@ -7,7 +7,13 @@
             {{ $note->created_at->format('Y F j \a\t g:ia') }}
         </div>
         <div>
-            <a class="link" href="{{ route("notes.show", $note) }}">View</a>
+            <a
+                class="link"
+                wire:navigate
+                href="{{ route("notes.show", $note) }}"
+            >
+                View
+            </a>
         </div>
     </div>
 </x-card>

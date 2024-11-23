@@ -20,14 +20,12 @@
 
         <div class="space-y-16 mt-14">
             <div class="space-y-6">
-                <h2 class="font-serif font-semibold text-3xl mb-7">About me</h2>
                 <div class="space-y-12">
                     <p>
                         I am an experienced, full-stack software engineer from
                         Westfield, Indiana. My focus in my career has been web
-                        apps that enable people to work with data. I am now
-                        working as an engineering manager at dbt Labs, building
-                        a web-based IDE for analytics engineers.
+                        apps that enable people to work with data. For the past
+                        4 years, I've worked on a Cloud IDE at dbt Labs.
                     </p>
                     <p>
                         At work, I am happiest working closely with product and
@@ -35,18 +33,11 @@
                         passionate about code review and testing.
                     </p>
                     <p>
-                        I believe in working hard and living slow. I enjoy life
-                        with my wife and my dog. I am fortunate enough to enjoy
-                        leisure time, which is filled with walks, wine, books,
-                        and games.
+                        I believe in working hard and living slow. I share life
+                        with my wife Katie, my son AJ, and our dog Andi. I am
+                        fortunate enough to enjoy leisure time, which is filled
+                        with walks, wine, books, and games.
                     </p>
-                </div>
-            </div>
-            <div class="mt-14">
-                <h2 class="font-serif font-semibold text-3xl mb-7">
-                    Let's connect
-                </h2>
-                <div class="space-y-12">
                     <p
                         x-data="{
                             email: 'connect@davidharting.com',
@@ -74,7 +65,7 @@
                             </span>
                         </span>
 
-                        You can also find me on
+                        Or, find me on
                         <a
                             href="https://github.com/davidharting"
                             class="link link-primary"
@@ -83,10 +74,10 @@
                         </a>
                         ,
                         <a
-                            href="https://twitter.com/davehrtng"
+                            href="https://bsky.app/profile/davidharting.com"
                             class="link link-primary"
                         >
-                            Twitter
+                            Bluesky
                         </a>
                         , and
                         <a
@@ -97,29 +88,12 @@
                         </a>
                         .
                     </p>
+                    <p>While you're here, why not click the button?</p>
                 </div>
             </div>
         </div>
-
         <div class="mt-12">
             <livewire:upclick lazy />
         </div>
-    </div>
-
-    <div class="flex justify-start space-x-8">
-        <a
-            href="{{ route("intervals.show") }}"
-            wire:navigate
-            class="link link-primary"
-        >
-            Interval Timer
-        </a>
-        <a
-            href="{{ route("scorecards.create") }}"
-            wire:navigate
-            class="link link-primary"
-        >
-            Scorecards
-        </a>
     </div>
 </x-layout.app>

@@ -1,8 +1,4 @@
 <div>
-    <x-crumb.container>
-        <x-crumb.item :url="route('notes.index')">Notes</x-crumb.item>
-    </x-crumb.container>
-
     <x-type.page-title>Notes</x-type.page-title>
     @if ($notes->isEmpty())
         No notes yet
