@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('creator_id')->constrained();
             $table->foreignId('media_id')->constrained();
-            $table->timestamps();
+            $table->timestampsTz();
         });
     }
 
