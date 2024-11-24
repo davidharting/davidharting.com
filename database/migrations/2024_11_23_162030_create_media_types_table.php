@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('media_types', function (Blueprint $table) {
             $table->smallIncrements('id')->primary();
-            $table->timestampsTz();
             $table->string('name', 255);
+            $table->timestampsTz();
         });
     }
 
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('media_type');
+        Schema::dropIfExists('media_types');
     }
 };

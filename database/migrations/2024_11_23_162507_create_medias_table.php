@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('title', 255);
             $table->text('description')->nullable();
 
-            $table->foreign('media_type_id')->references('id')->on('media_type');
+            $table->foreign('media_type_id')->references('id')->on('media_types');
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('media');
+        Schema::dropIfExists('medias');
     }
 };
