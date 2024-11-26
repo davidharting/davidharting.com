@@ -12,7 +12,7 @@ class Creator extends Model
 
     protected $fillable = ['name'];
 
-    public function medias(): BelongsToMany
+    public function media(): BelongsToMany
     {
         return $this->belongsToMany(Media::class);
     }
