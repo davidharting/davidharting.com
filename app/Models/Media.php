@@ -14,7 +14,7 @@ class Media extends Model
     protected $table = 'medias'; // TODO: I think media is already plural 🤦‍♂️
 
     // TODO: Rename description to private_note or similar
-    protected $fillable = ['year', 'title', 'description'];
+    protected $fillable = ['year', 'title', 'description', 'media_type_id'];
 
     public function mediaType(): BelongsTo
     {
