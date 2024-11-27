@@ -6,10 +6,8 @@ use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaType;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use League\Csv\Reader;
-
-use function Laravel\Prompts\progress;
-use function Laravel\Prompts\table;
 
 class ImportMedia extends Command
 {
@@ -20,7 +18,7 @@ class ImportMedia extends Command
      */
     protected $signature = 'media:import
         {file : The CSV file to import}
-        {--force=false : Actually do the import. By default, it is a dry run}
+        {--force : Actually do the import. By default, it is a dry run}
     ';
 
     /**
@@ -35,6 +33,8 @@ class ImportMedia extends Command
      */
     public function handle()
     {
+        $force = $this->option('force');
+
         $csv = Reader::createFromPath($this->argument('file'));
         $csv->setHeaderOffset(0);
         $header = $csv->getHeader();
@@ -44,20 +44,21 @@ class ImportMedia extends Command
             $this->fail('Invalid CSV file. Header must be: '.implode(', ', $expectedHeader));
         }
 
-        $records = $csv->getRecords($expectedHeader);
+        $this->info($force ? 'Starting import' : 'Starting dry run');
+
+        $records = collect($csv->getRecords($expectedHeader));
 
         // TODO: Constants / enum for MediaType names
         $bookMediaType = MediaType::where('name', 'book')->first();
-
-        $progress = progress(label: 'Importing records...', steps: $csv->count());
 
         $foundCreators = 0;
         $newCreators = 0;
         $foundMedia = 0;
         $newMedia = 0;
 
-        foreach ($records as $offset => $row) {
+        DB::beginTransaction();
 
+        $this->withProgressBar($records, function ($row) use ($bookMediaType, &$foundCreators, &$newCreators, &$foundMedia, &$newMedia) {
             $creator = Creator::firstOrNew(['name' => $row['creator']]);
             if ($creator->exists) {
                 $foundCreators++;
@@ -65,35 +66,43 @@ class ImportMedia extends Command
                 $newCreators++;
             }
 
-            if ($this->option('force')) {
-                $creator->save();
-            }
+            // if ($this->option('force')) {
+            $creator->save();
+            // }
 
             $media = Media::firstOrNew(['title' => $row['title']]);
-            $media->fill(['year' => $row['year'], 'note' => $row['note'], 'media_type_id' => $bookMediaType->id]);
+            $media->fill([
+                'year' => $row['year'] ?: null,
+                'note' => $row['note'] ?: null,
+                'media_type_id' => $bookMediaType->id,
+            ]);
             $media->creator()->associate($creator);
             if ($media->exists) {
                 $foundMedia++;
             } else {
                 $newMedia++;
             }
-            if ($this->option('force')) {
-                $media->save();
-            }
+            // if ($this->option('force')) {
+            $media->save();
+            // }
+        });
 
-            $progress->advance();
-        }
+        $this->info('✔︎');
+        $this->info($force ? 'Import results' : 'Dry run results');
 
-        $progress->finish();
-
-        $this->info('Imported:');
-
-        table(
+        $this->table(
             headers: ['Type', 'Found', 'Imported'],
             rows: [
                 ['Creators', $foundCreators, $newCreators],
                 ['Media', $foundMedia, $newMedia],
             ]
+
         );
+
+        if ($force) {
+            DB::commit();
+        } else {
+            DB::rollback();
+        }
     }
 }
