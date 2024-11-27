@@ -33,6 +33,7 @@ class MediaResource extends Resource
                 Forms\Components\Select::make('creator_id')
                     ->relationship(name: 'creator', titleAttribute: 'name')
                     ->searchable()
+                    ->preload()
                     ->createOptionForm([
                         Forms\Components\TextInput::make('name')
                             ->required(),
@@ -62,7 +63,9 @@ class MediaResource extends Resource
                     ->searchable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('media_type_id')
+                    ->relationship('mediaType', 'name')
+                    ->label(__('Media Type')),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
