@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MediaResource\Pages;
-use App\Filament\Resources\MediaResource\RelationManagers\CreatorsRelationManager;
 use App\Models\Media;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -29,8 +28,15 @@ class MediaResource extends Resource
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('description')
+                Forms\Components\Textarea::make('note')
                     ->columnSpanFull(),
+                Forms\Components\Select::make('creator_id')
+                    ->relationship(name: 'creator', titleAttribute: 'name')
+                    ->searchable()
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('name')
+                            ->required(),
+                    ]),
             ]);
     }
 
@@ -72,7 +78,7 @@ class MediaResource extends Resource
     public static function getRelations(): array
     {
         return [
-            CreatorsRelationManager::class,
+            //
         ];
     }
 

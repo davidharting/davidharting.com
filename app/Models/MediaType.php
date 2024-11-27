@@ -12,7 +12,7 @@ class MediaType extends Model
 
     protected $fillable = ['name'];
 
-    public function medias(): HasMany
+    public function media(): HasMany
     {
         return $this->hasMany(Media::class);
     }

@@ -5,24 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Media extends Model
 {
     use HasFactory;
 
-    protected $table = 'medias'; // TODO: I think media is already plural 🤦‍♂️
-
-    // TODO: Rename description to private_note or similar
-    protected $fillable = ['year', 'title', 'description', 'media_type_id'];
+    protected $fillable = ['year', 'title', 'note', 'media_type_id', 'creator_id'];
 
     public function mediaType(): BelongsTo
     {
         return $this->belongsTo(MediaType::class);
     }
 
-    public function creators(): BelongsToMany
+    public function creator(): BelongsTo
     {
-        return $this->belongsToMany(Creator::class);
+        return $this->belongsTo(Creator::class);
     }
 }

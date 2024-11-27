@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Creator;
 use App\Models\MediaType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -22,12 +23,13 @@ class MediaFactory extends Factory
         return [
             'year' => $this->faker->year,
             'title' => $this->faker->words($this->faker->numberBetween(1, 5), true),
-            'description' => $this->faker->randomElement([
+            'note' => $this->faker->randomElement([
                 null,
                 '',
                 $this->faker->paragraph($this->faker->numberBetween(1, 5)),
             ]),
             'media_type_id' => $this->faker->randomElement($mediaTypes)->id,
+            'creator_id' => Creator::factory(),
         ];
     }
 }

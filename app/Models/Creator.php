@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Creator extends Model
 {
@@ -12,8 +12,8 @@ class Creator extends Model
 
     protected $fillable = ['name'];
 
-    public function media(): BelongsToMany
+    public function media(): HasMany
     {
-        return $this->belongsToMany(Media::class);
+        return $this->hasMany(Media::class);
     }
 }
