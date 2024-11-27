@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedSmallInteger('media_type_id');
             $table->foreign('media_type_id')->references('id')->on('media_types');
 
-            $table->foreignId('creator_id')->nullable()->constrained();
+            $table->foreignId('creator_id')->nullable()->constrained()->cascadeOnDelete();
 
             $table->year('year')->nullable();
             $table->string('title', 255);
