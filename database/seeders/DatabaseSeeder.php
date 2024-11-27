@@ -13,6 +13,7 @@ use App\Models\Score;
 use App\Models\Scorecard;
 use App\Models\Upclick;
 use App\Models\User;
+use Exception;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\App;
 
@@ -24,7 +25,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         if (! App::environment('local')) {
-            throw Exception('This seeder can only be run in the local environment');
+            throw new Exception('This seeder can only be run in the local environment');
         }
         $admin = User::factory()->create([
             'name' => 'Adam Min',
