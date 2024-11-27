@@ -16,6 +16,7 @@
         "laravel/octane": "^2.5",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
+        "league/csv": "^9.18.0",
         "livewire/livewire": "^3.5",
         "mailersend/laravel-driver": "^2.6"
     },
