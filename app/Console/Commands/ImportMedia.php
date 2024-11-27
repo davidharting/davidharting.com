@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use League\Csv\Reader;
 
 use function Laravel\Prompts\progress;
+use function Laravel\Prompts\table;
 
 class ImportMedia extends Command
 {
@@ -56,7 +57,6 @@ class ImportMedia extends Command
         $newMedia = 0;
 
         foreach ($records as $offset => $row) {
-            echo $offset;
 
             $creator = Creator::firstOrNew(['name' => $row['creator']]);
             if ($creator->exists) {
@@ -87,7 +87,13 @@ class ImportMedia extends Command
         $progress->finish();
 
         $this->info('Imported:');
-        $this->info("Creators: $newCreators new, $foundCreators found");
-        $this->info("Media: $newMedia new, $foundMedia found");
+
+        table(
+            headers: ['Type', 'Found', 'Imported'],
+            rows: [
+                ['Creators', $foundCreators, $newCreators],
+                ['Media', $foundMedia, $newMedia],
+            ]
+        );
     }
 }
