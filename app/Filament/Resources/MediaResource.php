@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MediaResource\Pages;
+use App\Filament\Resources\MediaResource\RelationManagers\EventsRelationManager;
 use App\Models\Media;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -81,7 +82,7 @@ class MediaResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            EventsRelationManager::class,
         ];
     }
 
