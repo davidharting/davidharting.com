@@ -13,6 +13,8 @@ class Media extends Model
 
     protected $fillable = ['year', 'title', 'note', 'media_type_id', 'creator_id'];
 
+    // TODO: Add enum and cast for MediaType
+
     public function mediaType(): BelongsTo
     {
         return $this->belongsTo(MediaType::class);
