@@ -20,7 +20,7 @@ class NoteFactory extends Factory
             'title' => $this->faker->sentence(),
             'lead' => $this->faker->sentences(asText: true),
             'content' => $this->faker->paragraphs(asText: true),
-            'hidden' => $this->faker->boolean(15),
+            'visible' => $this->faker->boolean(85),
             'published_at' => $this->faker->dateTimeBetween('-10 year', 'now', $timezone = 'EST'),
         ];
     }

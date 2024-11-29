@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('lead')->nullable();
             $table->text('content')->nullable();
 
-            $table->boolean('hidden')->default(false);
+            $table->boolean('visible')->default(true);
 
             $table->timestampTz('published_at')->useCurrent();
 
