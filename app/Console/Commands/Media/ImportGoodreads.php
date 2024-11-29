@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use League\Csv\Reader;
 
-use function Laravel\Prompts\progress;
-
 class ImportGoodreads extends Command
 {
     /**
@@ -55,8 +53,8 @@ class ImportGoodreads extends Command
         }
 
         DB::beginTransaction();
-        
-        $progress = ;
+
+        // $progress = ;
 
         if ($shouldSave) {
             DB::commit();
