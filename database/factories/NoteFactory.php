@@ -17,9 +17,11 @@ class NoteFactory extends Factory
     public function definition(): array
     {
         return [
-            'content' => $this->faker->text(),
-            'visible' => $this->faker->boolean(80),
-            'created_at' => $this->faker->dateTimeThisYear(),
+            'title' => $this->faker->sentence(),
+            'lead' => $this->faker->sentences(asText: true),
+            'content' => $this->faker->paragraphs(asText: true),
+            'hidden' => $this->faker->boolean(15),
+            'published_at' => $this->faker->dateTimeBetween('-10 year', 'now', $timezone = 'EST'),
         ];
     }
 }

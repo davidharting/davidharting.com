@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use App\Models\Note;
 use App\Models\Player;
 use App\Models\Score;
 use App\Models\Scorecard;
@@ -72,7 +71,6 @@ class DatabaseSeeder extends Seeder
                 });
             }
 
-            Note::factory(375)->create();
         }
     }
 }
