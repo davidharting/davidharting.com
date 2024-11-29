@@ -28,5 +28,5 @@ test('show', function () {
     ]);
     $response = $this->get('/notes/'.$note->slug);
     $response->assertSuccessful();
-    $response->assertSeeInOrder(['A cool post', 'You should read this', 'Captivating content', '2000', 'February']);
+    $response->assertSeeInOrder(['A cool post', 'You should read this', '2000', 'February', 'Captivating content']);
 });
