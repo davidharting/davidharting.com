@@ -4,13 +4,9 @@
         No notes yet
     @endif
 
-    <div class="mt-12 w-full space-y-4">
+    <div class="mt-12 w-full space-y-6">
         @foreach ($notes as $note)
             <x-note-index-item :note='$note' />
-
-            @unless ($loop->last)
-                <hr />
-            @endunless
         @endforeach
     </div>
 
