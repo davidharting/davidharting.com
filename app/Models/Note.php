@@ -39,4 +39,9 @@ class Note extends Model
 
         return Str::lower(Str::ulid($this->published_at));
     }
+
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
 }
