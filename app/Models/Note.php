@@ -37,6 +37,6 @@ class Note extends Model
             return Str::slug($this->title);
         }
 
-        return Str::ulid($this->published_at);
+        return Str::lower(Str::ulid($this->published_at));
     }
 }
