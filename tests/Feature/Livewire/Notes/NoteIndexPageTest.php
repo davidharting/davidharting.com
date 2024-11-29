@@ -14,10 +14,10 @@ test('renders an empty list', function () {
 test('displays visible notes with most recently updated first', function () {
     Note::factory()->createMany(
         [
-            ['content' => 'oldest note', 'created_at' => Carbon::create(2000, 01, 01), 'visible' => true],
-            ['content' => 'middle note', 'created_at' => Carbon::create(2008, 05, 07), 'visible' => true],
-            ['content' => 'newest note', 'created_at' => Carbon::create(2020, 07, 10), 'visible' => true],
-            ['content' => 'SHOULD NOT SEE', 'visible' => false],
+            ['title' => 'oldest note', 'published_at' => Carbon::create(2000, 01, 01), 'visible' => true],
+            ['lead' => 'middle note', 'published_at' => Carbon::create(2008, 05, 07), 'visible' => true],
+            ['title' => 'newest note', 'published_at' => Carbon::create(2020, 07, 10), 'visible' => true],
+            ['title' => 'SHOULD NOT SEE', 'visible' => false],
         ]
     );
 

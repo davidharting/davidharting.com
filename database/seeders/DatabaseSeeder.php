@@ -78,13 +78,16 @@ class DatabaseSeeder extends Seeder
             });
         }
 
-        Note::factory(375)->create();
-
         $bookMediaType = MediaType::where('name', 'book')->first();
 
         $authors = Creator::factory(500)->create();
         $authors->each(fn (Creator $author) => Media::factory(random_int(1, 6))->hasEvents(2)->create(
             ['creator_id' => $author, 'media_type_id' => $bookMediaType]
         ));
+
+        Note::factory(20)->create();
+        Note::factory(25)->leadOnly()->create();
+        Note::factory(15)->noLead()->create();
+        Note::factory(5)->contentOnly()->create();
     }
 }
