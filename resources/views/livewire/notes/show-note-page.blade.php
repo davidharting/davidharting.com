@@ -4,8 +4,12 @@
     @endif
 
     @if ($note->lead)
-        <p class="text-3xl mt-1">{{ $note->lead }}</p>
+        <p class="text-2xl mt-2">{{ $note->lead }}</p>
     @endif
+
+    <p class="mt-2 text-gray-600">
+        {{ $note->publicationDate() }}
+    </p>
 
     @if ($note->content)
         <div class="mt-4 prose">

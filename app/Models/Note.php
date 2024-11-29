@@ -19,6 +19,10 @@ class Note extends Model
         'published_at',
     ];
 
+    protected $casts = [
+        'published_at' => 'datetime:Y-m-d H:i:s.uO',
+    ];
+
     protected static function boot()
     {
         parent::boot();
@@ -43,5 +47,10 @@ class Note extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    public function publicationDate(): string
+    {
+        return $this->published_at->format('Y F j');
     }
 }

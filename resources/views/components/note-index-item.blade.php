@@ -19,6 +19,6 @@
         @endif
     </article>
     <div class="text-sm text-gray-600">
-        {{ \Carbon\Carbon::parse($note->published_at)->format("Y F j") }}
+        {{ $note->publicationDate() }}
     </div>
 </div>

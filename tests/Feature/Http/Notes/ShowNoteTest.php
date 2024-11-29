@@ -6,22 +6,27 @@ use Tests\TestCase;
 
 test('404 if note not found', function () {
     /** @var TestCase $this */
-    $response = $this->get('/notes/1');
+    $response = $this->get('/notes/some-fake-slug');
     $response->assertNotFound();
 });
 
 test('404 if note not visible', function () {
     /** @var TestCase $this */
     $note = Note::factory()->createOne(['visible' => false]);
-    $response = $this->get('/notes/'.$note->id);
+    $response = $this->get('/notes/'.$note->slug);
     $response->assertNotFound();
 });
 
-test('shows a note', function () {
+test('show', function () {
     /** @var TestCase $this */
-    $note = Note::factory()->createOne(['visible' => true, 'content' => 'hello there',
-        'created_at' => Carbon::create(2000, 02, 01)]);
-    $response = $this->get('/notes/'.$note->id);
+    $note = Note::factory()->create([
+        'visible' => true,
+        'title' => 'A cool post',
+        'lead' => 'You should read this',
+        'content' => 'Captivating content',
+        'published_at' => Carbon::create(2000, 02, 01),
+    ]);
+    $response = $this->get('/notes/'.$note->slug);
     $response->assertSuccessful();
-    $response->assertSeeInOrder(['hello there', '2000', 'February']);
+    $response->assertSeeInOrder(['A cool post', 'You should read this', 'Captivating content', '2000', 'February']);
 });

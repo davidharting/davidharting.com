@@ -42,3 +42,19 @@ describe('title, lead, or content must be provided', function () {
         expect(Note::factory()->create(['title' => null, 'lead' => null, 'content' => null]));
     })->throws('Illuminate\Database\QueryException');
 });
+
+describe('published_at', function () {
+    it('is cast to Carbon', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create(['published_at' => '2021-01-01']);
+        expect($note->published_at)->toBeInstanceOf(Carbon::class);
+    });
+});
+
+describe('publicationDate', function () {
+    it('returns the Y M D', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create(['published_at' => Carbon::create(2000, 02, 01)]);
+        expect($note->publicationDate())->toBe('2000 February 1');
+    });
+});
