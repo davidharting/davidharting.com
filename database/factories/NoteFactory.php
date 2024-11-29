@@ -24,4 +24,27 @@ class NoteFactory extends Factory
             'published_at' => $this->faker->dateTimeBetween('-10 year', 'now', $timezone = 'EST'),
         ];
     }
+
+    public function leadOnly(): self
+    {
+        return $this->state([
+            'title' => null,
+            'content' => null,
+        ]);
+    }
+
+    public function noLead(): self
+    {
+        return $this->state([
+            'lead' => null,
+        ]);
+    }
+
+    public function contentOnly(): self
+    {
+        return $this->state([
+            'title' => null,
+            'lead' => null,
+        ]);
+    }
 }
