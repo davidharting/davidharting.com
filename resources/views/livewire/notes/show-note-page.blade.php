@@ -1,18 +1,25 @@
 <div>
-    <x-type.page-title>Notes</x-type.page-title>
+    @if ($note->title)
+        <x-type.page-title>{{ $note->title }}</x-type.page-title>
+    @endif
 
-    <div class="mt-8">
-        <a
-            href="{{ route("notes.index") }}"
-            class="link link-primary"
-            wire:navigate
-        >
-            < Back to all notes
-        </a>
-        <div>
-            <div class="mt-12 w-full space-y-4">
-                <x-note :note='$this->note' />
-            </div>
+    @if ($note->lead)
+        <p class="text-2xl mt-2">{{ $note->lead }}</p>
+    @endif
+
+    <p class="mt-2 text-gray-600">
+        {{ $note->publicationDate() }}
+    </p>
+
+    @if ($note->content)
+        <div class="mt-4 prose">
+            {!! $note->content !!}
         </div>
+    @endif
+
+    <div class="mt-6">
+        <a href="{{ route("notes.index") }}" class="link" wire:navigate>
+            Back to all notes
+        </a>
     </div>
 </div>

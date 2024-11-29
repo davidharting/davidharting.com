@@ -3,18 +3,13 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\NoteResource\Pages;
-// use App\Filament\Resources\NoteResource\RelationManagers;
 use App\Models\Note;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\CheckboxColumn;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-
-// use Illuminate\Database\Eloquent\Builder;
-// use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class NoteResource extends Resource
 {
@@ -24,10 +19,17 @@ class NoteResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form->columns(1)
+        return $form
             ->schema([
-                Forms\Components\MarkdownEditor::make('content')->required()->disableToolbarButtons(['attachFiles', 'heading']),
-                Forms\Components\Checkbox::make('visible')->default(true),
+                Forms\Components\TextInput::make('slug'),
+                Forms\Components\DatePicker::make('published_at')->default(Carbon::now())->label('Publish Date'),
+                Forms\Components\TextInput::make('title')
+                    ->columnSpanFull(),
+                Forms\Components\Textarea::make('lead')
+                    ->columnSpanFull(),
+                Forms\Components\RichEditor::make('content')->columnSpanFull(),
+                Forms\Components\Toggle::make('visible')->default(true)
+                    ->required(),
             ]);
     }
 
@@ -35,8 +37,22 @@ class NoteResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('content'),
-                CheckboxColumn::make('visible'),
+                Tables\Columns\TextColumn::make('slug'),
+                Tables\Columns\TextColumn::make('title')->lineClamp(50),
+                Tables\Columns\TextColumn::make('lead')->lineClamp(50),
+                Tables\Columns\IconColumn::make('visible')
+                    ->boolean(),
+                Tables\Columns\TextColumn::make('published_at')
+                    ->dateTime()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //

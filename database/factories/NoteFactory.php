@@ -17,9 +17,34 @@ class NoteFactory extends Factory
     public function definition(): array
     {
         return [
-            'content' => $this->faker->text(),
-            'visible' => $this->faker->boolean(80),
-            'created_at' => $this->faker->dateTimeThisYear(),
+            'title' => $this->faker->sentence(),
+            'lead' => $this->faker->sentences(asText: true),
+            'content' => $this->faker->paragraphs(asText: true),
+            'visible' => $this->faker->boolean(85),
+            'published_at' => $this->faker->dateTimeBetween('-10 year', 'now', $timezone = 'EST'),
         ];
+    }
+
+    public function leadOnly(): self
+    {
+        return $this->state([
+            'title' => null,
+            'content' => null,
+        ]);
+    }
+
+    public function noLead(): self
+    {
+        return $this->state([
+            'lead' => null,
+        ]);
+    }
+
+    public function contentOnly(): self
+    {
+        return $this->state([
+            'title' => null,
+            'lead' => null,
+        ]);
     }
 }

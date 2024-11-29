@@ -72,7 +72,11 @@ class DatabaseSeeder extends Seeder
                 });
             }
 
-            Note::factory(375)->create();
         }
+
+        Note::factory(20)->create();
+        Note::factory(25)->leadOnly()->create();
+        Note::factory(15)->noLead()->create();
+        Note::factory(5)->contentOnly()->create();
     }
 }
