@@ -15,7 +15,7 @@ class NotesIndexPage extends Component
     public function render(): View|Factory
     {
         return view('livewire.notes.notes-index-page', [
-            'notes' => Note::where('visible', true)->orderBy('created_at', 'desc')->simplePaginate(100),
+            'notes' => Note::where('visible', true)->orderBy('published_at', 'desc')->simplePaginate(100),
         ]);
     }
 }
