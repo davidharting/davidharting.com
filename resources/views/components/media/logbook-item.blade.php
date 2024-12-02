@@ -1,7 +1,10 @@
 <div>
-    <span>{{ $icon() }}</span>
-    <span>{{ $getFinishedAt() }}</span>
-    <span class="font-bold">{{ $item->title }}</span>
-    by
-    <span>{{ $item->creator }}</span>
+    <div class="text-gray-600">{{ $getFinishedAt() }}</div>
+    <div>
+        <span>{{ $icon() }}</span>
+        <span class="font-semibold">{{ $item->title }}</span>
+    </div>
+    <div class="text-sm">
+        {{ $item->creator }}
+    </div>
 </div>
