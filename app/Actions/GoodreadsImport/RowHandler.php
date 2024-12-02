@@ -17,8 +17,23 @@ class RowHandler
 {
     public function __construct(public readonly Row $row) {}
 
-    public function handle(): void
+    /**
+     * Handles the Goodreads import row.
+     *
+     * @return array{
+     *     media: int,
+     *     creator: int,
+     *     events: int
+     * }
+     */
+    public function handle(): array
     {
+        $report = [
+            'media' => 0,
+            'creator' => 0,
+            'events' => 0,
+        ];
+
         $bookMediaType = MediaType::where('name', 'book')->first();
         $finishedEventType = MediaEventType::where('name', MediaEventTypeName::FINISHED)->first();
         $cleanTitle = Str::of($this->row->title)->trim()->replace('  ', ' ');
@@ -28,6 +43,9 @@ class RowHandler
             $creator = Creator::firstOrCreate([
                 'name' => $this->row->author,
             ]);
+            if ($creator->wasRecentlyCreated) {
+                $report['creator'] = 1;
+            }
         }
 
         // Find or create a book
@@ -36,12 +54,16 @@ class RowHandler
             'media_type_id' => $bookMediaType->id,
             'year' => $this->row->publicationYear,
         ]);
+        if (! $book->exists) {
+            $report['media'] = 1;
+        }
         $book->year = $this->row->publicationYear;
         $book->created_at = $this->row->dateAdded;
         $book->updated_at = $this->row->dateAdded;
         if ($creator !== null) {
             $book->creator()->associate($creator);
         }
+
         $book->save();
 
         if ($this->row->dateRead) {
@@ -49,8 +71,14 @@ class RowHandler
                 'media_id' => $book->id,
                 'media_event_type_id' => $finishedEventType->id,
             ]);
+            if (! $finishedEvent->exists) {
+                $report['events'] = 1;
+            }
             $finishedEvent->occurred_at = $this->row->dateRead;
+
             $finishedEvent->save();
         }
+
+        return $report;
     }
 }

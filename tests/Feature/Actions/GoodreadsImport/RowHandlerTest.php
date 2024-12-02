@@ -36,7 +36,12 @@ test('just the book', function () {
     $row = createRow(title: 'The Hobbit', shelf: Shelf::Read, dateAdded: new DateTimeImmutable('2021-01-01'));
 
     $handler = new RowHandler($row);
-    $handler->handle();
+    $report = $handler->handle();
+    expect($report)->toBe([
+        'media' => 1,
+        'creator' => 0,
+        'events' => 0,
+    ]);
 
     $hobbit = Media::where('title', 'The Hobbit')->firstOrFail();
 
@@ -57,7 +62,13 @@ test('book and author', function () {
     );
 
     $handler = new RowHandler($row);
-    $handler->handle();
+    $report = $handler->handle();
+
+    expect($report)->toBe([
+        'media' => 1,
+        'creator' => 1,
+        'events' => 0,
+    ]);
 
     $hobbit = Media::where('title', 'The Hobbit')->firstOrFail();
     expect($hobbit->year)->toBe(1937);
@@ -82,7 +93,12 @@ test('book, author, and date read', function () {
     );
 
     $handler = new RowHandler($row);
-    $handler->handle();
+    $report = $handler->handle();
+    expect($report)->toBe([
+        'media' => 1,
+        'creator' => 1,
+        'events' => 1,
+    ]);
 
     $hobbit = Media::where('title', 'The Hobbit')->firstOrFail();
 
@@ -115,8 +131,19 @@ test('idempotency', function () {
     );
 
     $handler = new RowHandler($row);
-    $handler->handle();
-    $handler->handle();
+    $report1 = $handler->handle();
+    expect($report1)->toBe([
+        'media' => 1,
+        'creator' => 1,
+        'events' => 1,
+    ]);
+
+    $report2 = $handler->handle();
+    expect($report2)->toBe([
+        'media' => 0,
+        'creator' => 0,
+        'events' => 0,
+    ]);
 
     expect(MediaEvent::count())->toBe(1);
     expect(Creator::count())->toBe(1);
