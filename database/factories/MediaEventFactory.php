@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enum\MediaEventTypeName;
 use App\Models\Media;
 use App\Models\MediaEventType;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -27,5 +28,12 @@ class MediaEventFactory extends Factory
                 ->winner(fn () => $this->faker->sentence(random_int(1, 5)))
                 ->loser(null),
         ];
+    }
+
+    public function finished(): MediaEventFactory
+    {
+        return $this->state([
+            'media_event_type_id' => MediaEventType::where('name', MediaEventTypeName::FINISHED)->first()->id,
+        ]);
     }
 }

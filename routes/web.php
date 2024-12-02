@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
+use App\Livewire\Media\Logbook;
 use App\Livewire\Notes\NotesIndexPage;
 use App\Livewire\Notes\ShowNotePage;
 use App\Models\Scorecard;
@@ -31,6 +32,8 @@ Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->nam
 
 Route::get('/notes', NotesIndexPage::class)->name('notes.index');
 Route::get('/notes/{note}', ShowNotePage::class)->name('notes.show')->can('view', 'note');
+
+Route::get('/media/log', Logbook::class)->name('logbook.index');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -25,7 +25,7 @@ class Importer
      *
      * @return array{media: int, creator: int, events: int} An associative array containing the import report.
      */
-    public function import(callable $callback): array
+    public function import(?callable $callback): array
     {
         $reader = Reader::createFromPath($this->filePath);
         $reader->setHeaderOffset(0);
@@ -35,7 +35,9 @@ class Importer
         foreach ($rows as $row) {
             $handler = new RowHandler($row);
             $report = $handler->handle();
-            $callback();
+            if ($callback !== null) {
+                $callback();
+            }
             $this->tally($report);
         }
 

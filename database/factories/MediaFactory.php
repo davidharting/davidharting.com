@@ -33,4 +33,11 @@ class MediaFactory extends Factory
             'creator_id' => Creator::factory(),
         ];
     }
+
+    public function book(): MediaFactory
+    {
+        return $this->state([
+            'media_type_id' => MediaType::where('name', 'book')->first()->id,
+        ]);
+    }
 }

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
+use App\Actions\GoodreadsImport\Importer;
 use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaType;
@@ -78,12 +79,15 @@ class DatabaseSeeder extends Seeder
             });
         }
 
-        $bookMediaType = MediaType::where('name', 'book')->first();
+        // $bookMediaType = MediaType::where('name', 'book')->first();
 
-        $authors = Creator::factory(500)->create();
-        $authors->each(fn (Creator $author) => Media::factory(random_int(1, 6))->hasEvents(2)->create(
-            ['creator_id' => $author, 'media_type_id' => $bookMediaType]
-        ));
+        // $authors = Creator::factory(500)->create();
+        // $authors->each(fn (Creator $author) => Media::factory(random_int(1, 6))->hasEvents(2)->create(
+        //     ['creator_id' => $author, 'media_type_id' => $bookMediaType]
+        // ));
+        //
+
+        (new Importer(app_path('Actions/GoodreadsImport/data/goodreads-export-20241129.csv')))->import(null);
 
         Note::factory(20)->create();
         Note::factory(25)->leadOnly()->create();
