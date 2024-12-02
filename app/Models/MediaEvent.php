@@ -17,6 +17,10 @@ class MediaEvent extends Model
         'comment',
     ];
 
+    protected $casts = [
+        'occurred_at' => 'datetime:Y-m-d H:i:s.uO',
+    ];
+
     public function media(): BelongsTo
     {
         return $this->belongsTo(Media::class);

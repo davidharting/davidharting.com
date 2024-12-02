@@ -8,4 +8,5 @@ enum Shelf: string
     case Read = 'read';
     case Abandoned = 'abandoned';
     case Reading = 'currently-reading';
+    case Paused = 'paused';
 }

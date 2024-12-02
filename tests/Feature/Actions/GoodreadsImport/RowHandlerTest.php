@@ -31,54 +31,47 @@ function createRow(
 
 }
 
-test('just the book', function () {
+test('skips if not read', function () {
     /** @var TestCase $this */
-    $row = createRow(title: 'The Hobbit', shelf: Shelf::Read, dateAdded: new DateTimeImmutable('2021-01-01'));
+    $row = createRow(title: 'The Hobbit', shelf: Shelf::Backlog, dateAdded: new DateTimeImmutable('2021-01-01'));
+
+    $handler = new RowHandler($row);
+    $report = $handler->handle();
+    expect($report)->toBe([
+        'media' => 0,
+        'creator' => 0,
+        'events' => 0,
+    ]);
+});
+
+test('book, no author', function () {
+    /** @var TestCase $this */
+    $row = createRow(
+        title: 'The Hobbit',
+        shelf: Shelf::Read,
+        dateAdded: new DateTimeImmutable('2021-01-01'),
+        dateRead: new DateTimeImmutable('2021-07-21')
+    );
 
     $handler = new RowHandler($row);
     $report = $handler->handle();
     expect($report)->toBe([
         'media' => 1,
         'creator' => 0,
-        'events' => 0,
+        'events' => 1,
     ]);
 
     $hobbit = Media::where('title', 'The Hobbit')->firstOrFail();
 
     expect($hobbit->created_at->toDateString())->toBe('2021-01-01');
 
-    expect(MediaEvent::count())->toBe(0);
+    expect(MediaEvent::count())->toBe(1);
     expect(Creator::count())->toBe(0);
-});
 
-test('book and author', function () {
-    /** @var TestCase $this */
-    $row = createRow(
-        title: 'The Hobbit',
-        shelf: Shelf::Abandoned,
-        author: 'J.R.R. Tolkien',
-        dateAdded: new DateTimeImmutable('2018-10-17'),
-        publicationYear: 1937
-    );
+    $finishedEvent = $hobbit->events->first();
+    expect($finishedEvent->mediaEventType->name)->toBe(MediaEventTypeName::FINISHED);
+    expect($finishedEvent->occurred_at->toDateString())->toBe('2021-07-21');
 
-    $handler = new RowHandler($row);
-    $report = $handler->handle();
-
-    expect($report)->toBe([
-        'media' => 1,
-        'creator' => 1,
-        'events' => 0,
-    ]);
-
-    $hobbit = Media::where('title', 'The Hobbit')->firstOrFail();
-    expect($hobbit->year)->toBe(1937);
-    expect($hobbit->created_at->toDateString())->toBe('2018-10-17');
-    expect($hobbit->creator->name)->toBe('J.R.R. Tolkien');
-    expect($hobbit->title)->toBe('The Hobbit');
-
-    expect(MediaEvent::count())->toBe(0);
-    expect(Creator::count())->toBe(1);
-    expect(Media::count())->toBe(1);
 });
 
 test('book, author, and date read', function () {

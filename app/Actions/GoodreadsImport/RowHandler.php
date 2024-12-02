@@ -34,6 +34,10 @@ class RowHandler
             'events' => 0,
         ];
 
+        if ($this->row->dateRead === null) {
+            return $report;
+        }
+
         $bookMediaType = MediaType::where('name', 'book')->first();
         $finishedEventType = MediaEventType::where('name', MediaEventTypeName::FINISHED)->first();
         $cleanTitle = Str::of($this->row->title)->trim()->replace('  ', ' ');

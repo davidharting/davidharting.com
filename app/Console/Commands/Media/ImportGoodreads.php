@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands\Media;
 
+use App\Actions\GoodreadsImport\Importer;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use League\Csv\Reader;
 
 class ImportGoodreads extends Command
 {
@@ -27,17 +26,12 @@ class ImportGoodreads extends Command
     protected $description = 'Import a Goodreads export CSV file into the media tracker';
 
     /**
-     * The header format of Goodread CSV exports
-     */
-    private $header = ['Title', 'Author', 'Year', 'Rating', 'Status', 'Read At', 'Added At', 'Read Count', 'ISBN', 'ISBN13', 'My Review', 'Spoiler', 'Private Notes', 'Read Count', 'Recommended For', 'Recommended By', 'Owned', 'Original Purchase Date', 'Original Purchase Location', 'Condition', 'Condition Description', 'BCID', 'Bookshelves', 'Date Added', 'Date Updated', 'Read Date', 'Started Date', 'Date Read', 'Date Started'];
-
-    /**
      * Execute the console command.
      */
     public function handle()
     {
         $shouldSave = $this->option('force');
-        $csv = $this->getCsv($this->argument('file'));
+        $path = $this->argument('file');
 
         if ($shouldSave) {
             $confirmation = $this->confirm('You used the --force option to actually import data. Are you sure?');
@@ -54,31 +48,24 @@ class ImportGoodreads extends Command
 
         DB::beginTransaction();
 
-        // $progress = ;
+        $importer = new Importer($path);
+        $rowsProcessed = 0;
+        $report = $importer->import(function () use (&$rowsProcessed) {
+            $this->output->write('.');
+            $rowsProcessed++;
+        });
+
+        $this->output->newLine();
+        $this->info('Processed '.$rowsProcessed.' rows.');
+        $this->info('Created:');
+        $this->table(array_keys($report), [array_values($report)]);
 
         if ($shouldSave) {
             DB::commit();
+            $this->info('Import completed. Committed transaction.');
         } else {
+            $this->info('Dry run completed. Rolling back transaction.');
             DB::rollBack();
         }
-    }
-
-    private function getCsv(string $path): Reader
-    {
-        if (! file_exists($path)) {
-            $msg = Str::of('File ')->append($path)->append(' not found');
-            $this->fail($msg);
-        }
-
-        $csv = Reader::createFromPath($path);
-        $csv->setHeaderOffset(0);
-        $header = $csv->getHeader();
-
-        if ($header !== $this->header) {
-            $msg = Str::of('Invalid CSV file. Header must be: ')->append(implode(', ', $this->header));
-            $this->fail($msg);
-        }
-
-        return $csv;
     }
 }
