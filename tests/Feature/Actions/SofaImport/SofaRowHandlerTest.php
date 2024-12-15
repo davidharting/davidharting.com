@@ -115,3 +115,31 @@ test('Started albumn with note', function () {
     expect($event->mediaEventType->name)->toBe(MediaEventTypeName::STARTED);
     expect($event->occurred_at->toDateString())->toBe('2025-01-12');
 });
+
+test('Video games work', function () {
+    $row = createRow(
+        'Jusant',
+        Category::VideoGame,
+        SofaList::Logbook,
+        ListGroup::Main,
+        new DateTimeImmutable('2023-03-13 11:34:35'),
+        new DateTimeImmutable('2023-04-12 11:34:35'),
+        null
+    );
+
+    $handler = new SofaRowHandler($row);
+    $report = $handler->handle();
+    expect($report)->toBe([
+        'creators' => 0,
+        'media' => 1,
+        'events' => 1,
+    ]);
+
+    $jusant = Media::where('title', 'Jusant')->first();
+    expect($jusant)->not->toBeNull();
+
+    expect($jusant->events->count())->toBe(1);
+    $event = $jusant->events->first();
+    expect($event->mediaEventType->name)->toBe(MediaEventTypeName::FINISHED);
+    expect($event->occurred_at->toDateString())->toBe('2023-03-13');
+});

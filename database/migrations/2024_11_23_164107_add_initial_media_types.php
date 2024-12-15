@@ -15,6 +15,7 @@ return new class extends Migration
             ['name' => 'movie', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'album', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'tv show', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'video game', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 
