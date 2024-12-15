@@ -143,3 +143,40 @@ test('Video games work', function () {
     expect($event->mediaEventType->name)->toBe(MediaEventTypeName::FINISHED);
     expect($event->occurred_at->toDateString())->toBe('2023-03-13');
 });
+
+test('idempotency', function () {
+    $row = createRow(
+        'The Matrix',
+        Category::Movie,
+        SofaList::Logbook,
+        ListGroup::Main,
+        new DateTimeImmutable('2024-12-15 11:34:35'),
+        new DateTimeImmutable('2024-12-15 11:34:35'),
+        null
+    );
+
+    $handler = new SofaRowHandler($row);
+    $report = $handler->handle();
+    expect($report)->toBe([
+        'creators' => 0,
+        'media' => 1,
+        'events' => 1,
+    ]);
+
+    $matrix = Media::where('title', 'The Matrix')->first();
+    expect($matrix)->not->toBeNull();
+    expect($matrix->events->count())->toBe(1);
+
+    // Re-import the same row
+    $handler = new SofaRowHandler($row);
+    $report = $handler->handle();
+    expect($report)->toBe([
+        'creators' => 0,
+        'media' => 0,
+        'events' => 0,
+    ]);
+
+    $matrix = Media::where('title', 'The Matrix')->first();
+    expect($matrix)->not->toBeNull();
+    expect($matrix->events->count())->toBe(1);
+});
