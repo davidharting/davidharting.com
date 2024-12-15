@@ -69,8 +69,8 @@ class SofaRow
     #[MapCell(
         column: 'Notes',
         cast: CastToString::class,
-        convertEmptyStringToNull: false,
+        convertEmptyStringToNull: true,
         trimFieldValueBeforeCasting: true,
     )]
-    public string $notes;
+    public ?string $notes;
 }
