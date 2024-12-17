@@ -47,6 +47,7 @@ class SofaRowHandler
         ]);
 
         $this->media->creator()->associate($creator);
+        $this->media->save();
 
         return $creator->wasRecentlyCreated ? 1 : 0;
     }
