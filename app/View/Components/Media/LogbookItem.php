@@ -18,6 +18,8 @@ class LogbookItem extends Component
             'book' => '📕',
             'movie' => '🍿',
             'album' => '📀',
+            'tv show' => '📺',
+            'video game' => '🎮',
             default => '',
         };
     }
