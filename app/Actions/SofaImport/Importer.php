@@ -17,7 +17,7 @@ class Importer
         $rows = $reader->getRecordsAsObject(SofaRow::class);
 
         foreach ($rows as $row) {
-            echo $row->title;
+            (new SofaRowHandler($row))->handle();
         }
     }
 }

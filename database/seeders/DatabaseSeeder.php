@@ -4,7 +4,8 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use App\Actions\GoodreadsImport\Importer;
+use App\Actions\GoodreadsImport\Importer as GoodreadsImporter;
+use App\Actions\SofaImport\Importer as SofaImporter;
 use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaType;
@@ -87,7 +88,8 @@ class DatabaseSeeder extends Seeder
         // ));
         //
 
-        (new Importer(app_path('Actions/GoodreadsImport/data/goodreads-export-20241129.csv')))->import(null);
+        (new GoodreadsImporter(app_path('Actions/GoodreadsImport/data/goodreads-export-20241129.csv')))->import(null);
+        (new SofaImporter)->import();
 
         Note::factory(20)->create();
         Note::factory(25)->leadOnly()->create();
