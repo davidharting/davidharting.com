@@ -3,6 +3,7 @@
 namespace App\Actions\SofaImport;
 
 use App\Enum\MediaEventTypeName;
+use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaEvent;
 use App\Models\MediaEventType;
@@ -30,9 +31,24 @@ class SofaRowHandler
             'media_type_id' => $mediaType->id,
         ], ['note' => $this->row->notes]);
 
-        // TODO: Add Note
+        // TODO: Add a note if the item already exists
 
         return $this->media->wasRecentlyCreated ? 1 : 0;
+    }
+
+    private function handleCreator(): int
+    {
+        if (is_null($this->row->creator)) {
+            return 0;
+        }
+
+        $creator = Creator::firstOrCreate([
+            'name' => $this->row->creator,
+        ]);
+
+        $this->media->creator()->associate($creator);
+
+        return $creator->wasRecentlyCreated ? 1 : 0;
     }
 
     private function handleEvents(): int
@@ -75,7 +91,7 @@ class SofaRowHandler
     }
 
     /**
-     * Handle the row and return an array of key-value pairs.
+     * function the row and return an array of key-value pairs.
      *
      * @return array{
      *     creators: int,
@@ -87,9 +103,10 @@ class SofaRowHandler
     {
         $media = $this->handleMedia();
         $events = $this->handleEvents();
+        $creators = $this->handleCreator();
 
         return [
-            'creators' => 0,
+            'creators' => $creators,
             'media' => $media,
             'events' => $events,
         ];

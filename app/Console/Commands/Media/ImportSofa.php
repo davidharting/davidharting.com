@@ -4,6 +4,7 @@ namespace App\Console\Commands\Media;
 
 use App\Actions\SofaImport\Importer;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class ImportSofa extends Command
 {
@@ -43,7 +44,18 @@ class ImportSofa extends Command
             $this->info('Starting dry run');
         }
 
+        DB::beginTransaction();
+
         $importer = new Importer;
         $report = $importer->import();
+        $this->table(array_keys($report), [array_values($report)]);
+
+        if ($shouldSave) {
+            DB::commit();
+            $this->info('Import complete');
+        } else {
+            DB::rollBack();
+            $this->info('Dry run complete');
+        }
     }
 }

@@ -27,6 +27,14 @@ class SofaRow
     public string $title;
 
     #[MapCell(
+        column: 'Author',
+        cast: CastToString::class,
+        convertEmptyStringToNull: true,
+        trimFieldValueBeforeCasting: true,
+    )]
+    public ?string $creator;
+
+    #[MapCell(
         column: 'List Name',
         cast: CastToEnum::class,
         convertEmptyStringToNull: true,
