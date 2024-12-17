@@ -31,7 +31,8 @@ class SofaRowHandler
             'media_type_id' => $mediaType->id,
         ], ['note' => $this->row->notes]);
 
-        // TODO: Add a note if the item already exists
+        // TODO: Fake the created_at / updated_at date based on column values
+        // TODO: Add a note if the item already exists (i.e., was imported from goodreads without a note)
 
         return $this->media->wasRecentlyCreated ? 1 : 0;
     }
