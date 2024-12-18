@@ -40,4 +40,25 @@ class MediaFactory extends Factory
             'media_type_id' => MediaType::where('name', 'book')->first()->id,
         ]);
     }
+
+    public function album(): MediaFactory
+    {
+        return $this->state([
+            'media_type_id' => MediaType::where('name', 'album')->first()->id,
+        ]);
+    }
+
+    public function game(): MediaFactory
+    {
+        return $this->state([
+            'media_type_id' => MediaType::where('name', 'video game')->first()->id,
+        ]);
+    }
+
+    public function movie(): MediaFactory
+    {
+        return $this->state([
+            'media_type_id' => MediaType::where('name', 'movie')->first()->id,
+        ]);
+    }
 }
