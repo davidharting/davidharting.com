@@ -2,6 +2,7 @@
 
 namespace App\Queries\Media;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class BacklogQuery
@@ -14,7 +15,7 @@ class BacklogQuery
         //
     }
 
-    public function execute()
+    public function execute(): Collection
     {
         return DB::table('media')
             ->join('media_types', 'media.media_type_id', '=', 'media_types.id')
