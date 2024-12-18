@@ -29,12 +29,21 @@ class SofaRowHandler
         $this->media = Media::firstOrCreate([
             'title' => $this->row->title,
             'media_type_id' => $mediaType->id,
-        ], ['note' => $this->row->notes]);
+        ], [
+            'note' => $this->row->notes,
+            'created_at' => $this->row->dateAdded,
+            'updated_at' => $this->row->dateAdded,
+        ]);
 
-        // TODO: Fake the created_at / updated_at date based on column values
+        $isNew = $this->media->wasRecentlyCreated;
+
         // TODO: Add a note if the item already exists (i.e., was imported from goodreads without a note)
+        if (! $isNew && ! is_null($this->row->notes)) {
+            $this->media->note = $this->row->notes;
+            $this->media->save();
+        }
 
-        return $this->media->wasRecentlyCreated ? 1 : 0;
+        return $isNew ? 1 : 0;
     }
 
     private function handleCreator(): int
