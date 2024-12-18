@@ -31,7 +31,7 @@ class LogbookTest extends TestCase
     {
         Livewire::test(Logbook::class)
             ->assertStatus(200)
-            ->assertSeeText('Nothing logged yet');
+            ->assertSeeText('No items');
     }
 
     /** @test */

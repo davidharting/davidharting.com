@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Actions\SofaImport;
+
 use App\Actions\SofaImport\Category;
 use App\Actions\SofaImport\ListGroup;
 use App\Actions\SofaImport\SofaList;
@@ -7,6 +9,7 @@ use App\Actions\SofaImport\SofaRow;
 use App\Actions\SofaImport\SofaRowHandler;
 use App\Enum\MediaEventTypeName;
 use App\Models\Media;
+use DateTimeImmutable;
 
 function createRow(
     string $title,
@@ -26,6 +29,7 @@ function createRow(
     $row->dateAdded = $dateAdded;
     $row->dateEdited = $dateEdited;
     $row->notes = $notes;
+    $row->creator = null;
 
     return $row;
 }

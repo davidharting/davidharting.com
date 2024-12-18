@@ -5,10 +5,10 @@ use App\Models\Media;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 
-it('smoke test', function () {
+it('No data', function () {
     Livewire::test(Backlog::class)
         ->assertStatus(200)
-        ->assertSee('No backlog items');
+        ->assertSee('No items');
 });
 
 it('renders one', function () {
