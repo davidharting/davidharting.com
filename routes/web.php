@@ -34,8 +34,8 @@ Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->nam
 Route::get('/notes', NotesIndexPage::class)->name('notes.index');
 Route::get('/notes/{note}', ShowNotePage::class)->name('notes.show')->can('view', 'note');
 
-Route::get('/media/log', Logbook::class)->name('logbook.index');
-Route::get('/media/backlog', Backlog::class)->name('backlog.index'); // TODO: Add can() check
+Route::get('/media/log', Logbook::class)->name('media.logbook.show');
+Route::get('/media/backlog', Backlog::class)->name('media.backlog.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
