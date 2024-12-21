@@ -7,7 +7,6 @@ use App\Livewire\Media\Logbook;
 use App\Livewire\Notes\NotesIndexPage;
 use App\Livewire\Notes\ShowNotePage;
 use App\Models\Scorecard;
-
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -50,4 +49,4 @@ if (env('APP_ENV') == 'local') {
     });
 }
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

@@ -61,7 +61,6 @@ class LogbookTest extends TestCase
             ]);
     }
 
-
     /** @test */
     public function admin_can_see_note_but_normal_user_cannot()
     {
@@ -75,12 +74,10 @@ class LogbookTest extends TestCase
             note: 'Recommended to me by Logan',
         );
 
-
         Livewire::actingAs($admin)
             ->test(Logbook::class)
             ->assertStatus(200)
             ->assertSeeText('Recommended to me by Logan');
-
 
         Livewire::actingAs($user)
             ->test(Logbook::class)

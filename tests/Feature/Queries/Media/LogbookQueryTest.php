@@ -14,7 +14,7 @@ test('1 item', function () {
         ->has(MediaEvent::factory()->finished()->state(['occurred_at' => '2023-02-07']), 'events')
         ->create([
             'title' => 'The Hobbit',
-            'note' => 'Classic!'
+            'note' => 'Classic!',
         ]);
 
     $result = (new LogbookQuery)->execute();
