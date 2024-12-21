@@ -29,6 +29,13 @@
                         Notes
                     </a>
                     <a
+                        href="{{ route("media.logbook.show") }}"
+                        wire:navigate
+                        class="link link-primary"
+                    >
+                        Media Log
+                    </a>
+                    <a
                         href="{{ route("scorecards.create") }}"
                         wire:navigate
                         class="link link-primary"
