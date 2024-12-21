@@ -1,6 +1,7 @@
 <div>
     <x-type.page-title>{{ $title }}</x-type.page-title>
 
+        @can("view-backlog")
     <ul class="tabs tabs-boxed mt-2 max-w-96" role="tablist">
         <a
             wire:navigate
@@ -17,7 +18,11 @@
         >
             Backlog
         </a>
+
+
+
     </ul>
+        @endcan
 
     <div class="my-6">
         @if ($items->isEmpty())
