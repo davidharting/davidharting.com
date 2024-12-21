@@ -37,6 +37,15 @@ class SofaRowHandler
 
         $isNew = $this->media->wasRecentlyCreated;
 
+        // created_at and updated_at were not fillable before I ran this the first time.
+        // So update that so that media timestamps reflect when I added them to lists rather than current time
+        if (! $isNew) {
+            $this->media->update([
+                'updated_at' => $this->row->dateAdded,
+                'created_at' => $this->row->dateAdded,
+            ]);
+        }
+
         // TODO: Add a note if the item already exists (i.e., was imported from goodreads without a note)
         if (! $isNew && ! is_null($this->row->notes)) {
             $this->media->note = $this->row->notes;

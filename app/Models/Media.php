@@ -11,7 +11,7 @@ class Media extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['year', 'title', 'note', 'media_type_id', 'creator_id'];
+    protected $fillable = ['year', 'title', 'note', 'media_type_id', 'creator_id', 'created_at', 'updated_at'];
 
     // TODO: Add enum and cast for MediaType
 
