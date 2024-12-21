@@ -7,4 +7,5 @@
     <div class="text-sm">
         {{ $item->creator }}
     </div>
+    <x-media.note :item="$item" />
 </div>

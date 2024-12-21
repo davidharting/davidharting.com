@@ -6,6 +6,7 @@ use App\Livewire\Media\Logbook;
 use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaEvent;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -18,12 +19,13 @@ class LogbookTest extends TestCase
         string $title,
         string $author,
         string $finishedAt,
+        ?string $note = null
     ) {
         Media::factory()
             ->book()
             ->for(Creator::factory(['name' => $author]))
             ->has(MediaEvent::factory()->finished()->state(['occurred_at' => $finishedAt]), 'events')
-            ->create(['title' => $title]);
+            ->create(['title' => $title, 'note' => $note]);
     }
 
     /** @test */
@@ -57,5 +59,32 @@ class LogbookTest extends TestCase
                 'The Alchemist',
                 'Paulo Coelho',
             ]);
+    }
+
+
+    /** @test */
+    public function admin_can_see_note_but_normal_user_cannot()
+    {
+        $admin = User::factory()->admin()->create();
+        $user = User::factory()->create(['is_admin' => false]);
+
+        $this->createBook(
+            title: "One Flew over the Cuckoo's Nest",
+            author: 'Ken Kesey',
+            finishedAt: '2023-02-07',
+            note: 'Recommended to me by Logan',
+        );
+
+
+        Livewire::actingAs($admin)
+            ->test(Logbook::class)
+            ->assertStatus(200)
+            ->assertSeeText('Recommended to me by Logan');
+
+
+        Livewire::actingAs($user)
+            ->test(Logbook::class)
+            ->assertStatus(200)
+            ->assertDontSeeText('Recommended to me by Logan');
     }
 }

@@ -14,6 +14,7 @@ test('1 item', function () {
         ->has(MediaEvent::factory()->finished()->state(['occurred_at' => '2023-02-07']), 'events')
         ->create([
             'title' => 'The Hobbit',
+            'note' => 'Classic!'
         ]);
 
     $result = (new LogbookQuery)->execute();
@@ -23,5 +24,6 @@ test('1 item', function () {
     expect($first->title)->toBe('The Hobbit');
     expect($first->creator)->toBe('J.R.R. Tolkien');
     expect($first->type)->toBe('book');
+    expect($first->note)->toBe('Classic!');
     $this->stringStartsWith($first->finished_at, '2023-02-07');
 });

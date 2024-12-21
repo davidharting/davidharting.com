@@ -67,4 +67,12 @@ class MediaPolicy
     {
         return false;
     }
+
+    /**
+     * Determine whether the user can see $media->note
+     */
+    public function seeNote(User $user): bool
+    {
+        return false;
+    }
 }

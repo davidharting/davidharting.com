@@ -27,6 +27,7 @@ class BacklogQuery
                 'creators.name as creator',
                 'media_types.name as type',
                 'media.created_at as added_at',
+                'media.note as note'
             )
 
             ->whereNull('media_events.id')

@@ -32,6 +32,7 @@ class LogbookQuery
                 'creators.name as creator',
                 'media_types.name as type',
                 'media_events.occurred_at as finished_at',
+                'media.note as note'
             )
 
             ->orderBy('media_events.occurred_at', 'desc')
