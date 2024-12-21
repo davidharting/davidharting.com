@@ -46,7 +46,6 @@ class SofaRowHandler
             ]);
         }
 
-
         // TODO: Add a note if the item already exists (i.e., was imported from goodreads without a note)
         if (! $isNew && ! is_null($this->row->notes)) {
             $this->media->note = $this->row->notes;
