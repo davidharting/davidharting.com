@@ -8,13 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class LogbookQuery
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
-    {
-        //
-    }
+    public function __construct() {}
 
     /**
      * Get the logbook items.
@@ -32,6 +26,7 @@ class LogbookQuery
                 'creators.name as creator',
                 'media_types.name as type',
                 'media_events.occurred_at as finished_at',
+                DB::raw('extract(year from media_events.occurred_at) as finished_at_year'),
                 'media.note as note'
             )
 

@@ -33,7 +33,8 @@ class LogbookTest extends TestCase
     {
         Livewire::test(Logbook::class)
             ->assertStatus(200)
-            ->assertSeeText('No items');
+            ->assertSeeText('No items')
+            ->assertSet('years', []);
     }
 
     /** @test */
@@ -58,7 +59,8 @@ class LogbookTest extends TestCase
                 '2021 December 25',
                 'The Alchemist',
                 'Paulo Coelho',
-            ]);
+            ])
+            ->assertSet('years', [2023, 2022, 2021]);
     }
 
     /** @test */

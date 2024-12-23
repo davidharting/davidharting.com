@@ -2,6 +2,7 @@
 
 namespace App\View\Components\Media;
 
+use App\Enum\MediaTypeName;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
@@ -14,11 +15,11 @@ class Item extends Component
     public function icon(): string
     {
         return match ($this->item->type) {
-            'book' => '📕',
-            'movie' => '🍿',
-            'album' => '📀',
-            'tv show' => '📺',
-            'video game' => '🎮',
+            MediaTypeName::Book => '📕',
+            MediaTypeName::Movie => '🍿',
+            MediaTypeName::Album => '📀',
+            MediaTypeName::TvShow => '📺',
+            MediaTypeName::VideoGame => '🎮',
             default => '',
         };
     }

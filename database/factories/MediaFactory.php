@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enum\MediaTypeName;
 use App\Models\Creator;
 use App\Models\MediaType;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -37,28 +38,28 @@ class MediaFactory extends Factory
     public function book(): MediaFactory
     {
         return $this->state([
-            'media_type_id' => MediaType::where('name', 'book')->first()->id,
+            'media_type_id' => MediaType::where('name', MediaTypeName::Book)->first()->id,
         ]);
     }
 
     public function album(): MediaFactory
     {
         return $this->state([
-            'media_type_id' => MediaType::where('name', 'album')->first()->id,
+            'media_type_id' => MediaType::where('name', MediaTypeName::Album)->first()->id,
         ]);
     }
 
     public function game(): MediaFactory
     {
         return $this->state([
-            'media_type_id' => MediaType::where('name', 'video game')->first()->id,
+            'media_type_id' => MediaType::where('name', MediaTypeName::VideoGame)->first()->id,
         ]);
     }
 
     public function movie(): MediaFactory
     {
         return $this->state([
-            'media_type_id' => MediaType::where('name', 'movie')->first()->id,
+            'media_type_id' => MediaType::where('name', MediaTypeName::Movie)->first()->id,
         ]);
     }
 }
