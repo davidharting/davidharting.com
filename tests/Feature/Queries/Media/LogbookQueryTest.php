@@ -27,12 +27,3 @@ test('1 item', function () {
     expect($first->note)->toBe('Classic!');
     $this->stringStartsWith($first->finished_at, '2023-02-07');
 });
-
-test('years', function () {
-    /** @var TestCase $this */
-    MediaEvent::factory()->finished()->state(['occurred_at' => '2023-02-07'])->create();
-    MediaEvent::factory()->finished()->state(['occurred_at' => '2022-02-07'])->create();
-    MediaEvent::factory()->finished()->state(['occurred_at' => '2021-02-07'])->create();
-    MediaEvent::factory()->started()->state(['occurred_at' => '2020-01-01'])->create();
-    MediaEvent::factory()->abandoned()->state(['occurred_at' => '2019-01-01'])->create();
-});

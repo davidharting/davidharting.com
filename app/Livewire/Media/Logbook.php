@@ -11,13 +11,8 @@ use Livewire\Component;
 
 class Logbook extends Component
 {
-    public Collection $items;
-
-    #[Url]
-    public ?int $year;
-
-    #[Url]
-    public ?MediaTypeName $type;
+    #[Url(except: '')]
+    public string $year = '';
 
     /**
      * @return int[]
@@ -25,18 +20,34 @@ class Logbook extends Component
     #[Computed]
     public function years(): array
     {
-        return $this->items
-            ->pluck('finished_at_year')
-            ->unique()
-            ->sortDesc()
-            ->values()
-            ->toArray();
+        return (new LogbookQuery)->years();
     }
 
-    public function mount()
+    /**
+     * @returns {
+     *   'year': ?int,
+     *   'type': ?MediaTypeName
+     * }
+     */
+    private function getQueryFilters(): array
     {
-        $this->items = (new LogbookQuery)->execute();
+
+        return [
+            'year' => empty($this->year) ? null : (int) $this->year,
+        ];
     }
+
+    #[Computed]
+    public function items(): Collection
+    {
+        $filters = $this->getQueryFilters();
+
+        return (new LogbookQuery(
+            $filters['year'],
+        ))->execute();
+    }
+
+    public function mount() {}
 
     public function render()
     {
