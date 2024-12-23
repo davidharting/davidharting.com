@@ -2,18 +2,52 @@
 
 namespace App\Livewire\Media;
 
+use App\Enum\MediaTypeName;
 use App\Queries\Media\LogbookQuery;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class Logbook extends Component
 {
-    public Collection $items;
+    #[Url(except: '')]
+    public string $year = '';
 
-    public function mount()
+    /**
+     * @return int[]
+     */
+    #[Computed]
+    public function years(): array
     {
-        $this->items = (new LogbookQuery)->execute();
+        return (new LogbookQuery)->years();
     }
+
+    /**
+     * @returns {
+     *   'year': ?int,
+     *   'type': ?MediaTypeName
+     * }
+     */
+    private function getQueryFilters(): array
+    {
+
+        return [
+            'year' => empty($this->year) ? null : (int) $this->year,
+        ];
+    }
+
+    #[Computed]
+    public function items(): Collection
+    {
+        $filters = $this->getQueryFilters();
+
+        return (new LogbookQuery(
+            $filters['year'],
+        ))->execute();
+    }
+
+    public function mount() {}
 
     public function render()
     {

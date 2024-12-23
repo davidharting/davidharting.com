@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enum\MediaTypeName;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,7 @@ class MediaTypeFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->word,
+            'name' => $this->faker->randomElement(MediaTypeName::cases()),
         ];
     }
 }

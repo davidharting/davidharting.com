@@ -33,7 +33,8 @@ class LogbookTest extends TestCase
     {
         Livewire::test(Logbook::class)
             ->assertStatus(200)
-            ->assertSeeText('No items');
+            ->assertSeeText('No items')
+            ->assertSet('years', []);
     }
 
     /** @test */
@@ -42,6 +43,7 @@ class LogbookTest extends TestCase
         $this->createBook('The Hobbit', 'J.R.R. Tolkien', '2023-02-07');
         $this->createBook('The Da Vinci Code', 'Dan Brown', '2022-06-17');
         $this->createBook('The Alchemist', 'Paulo Coelho', '2021-12-25');
+
         Livewire::test(Logbook::class)
             ->assertStatus(200)
             ->assertSeeHtmlInOrder([
@@ -58,7 +60,13 @@ class LogbookTest extends TestCase
                 '2021 December 25',
                 'The Alchemist',
                 'Paulo Coelho',
-            ]);
+            ])
+            ->assertSet('years', [2023, 2022, 2021]);
+
+        Livewire::withQueryParams(['year' => 2022])
+            ->test(Logbook::class)
+            ->assertSee('The Da Vinci Code')
+            ->assertDontSee(['The Hobbit', 'The Alchemist']);
     }
 
     /** @test */
