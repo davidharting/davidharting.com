@@ -58,7 +58,6 @@ class MediaResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('mediaType.name')
-                    ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('year')
                     ->numeric(thousandsSeparator: false)
