@@ -22,7 +22,8 @@ class MediaResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('media_type_id')
-                    ->relationship('mediaType', 'name')
+                    ->relationship('mediaType')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name->getLabel())
                     ->required(),
                 Forms\Components\TextInput::make('year')
                     ->numeric(),

@@ -2,7 +2,9 @@
 
 namespace App\Enum;
 
-enum MediaTypeName: string
+use Filament\Support\Contracts\HasLabel;
+
+enum MediaTypeName: string implements HasLabel
 {
     case Album = 'album';
     case Book = 'book';
@@ -22,6 +24,11 @@ enum MediaTypeName: string
             self::TvShow => 'TV Show',
             self::VideoGame => 'Video Game',
         };
+    }
+
+    public function getLabel(): ?string
+    {
+        return $this->displayName();
     }
 
     /**
