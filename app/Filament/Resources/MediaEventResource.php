@@ -40,6 +40,8 @@ class MediaEventResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('occurred_at', 'desc')
+            ->defaultPaginationPageOption(50)
             ->columns([
                 Tables\Columns\TextColumn::make('mediaEventType.name')
                     ->sortable(),
