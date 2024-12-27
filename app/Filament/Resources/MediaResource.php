@@ -67,9 +67,7 @@ class MediaResource extends Resource
                     ->searchable(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('media_type_id')
-                    ->relationship('mediaType', 'name')
-                    ->label(__('Media Type')),
+                //
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
