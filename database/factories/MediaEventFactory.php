@@ -6,6 +6,7 @@ use App\Enum\MediaEventTypeName;
 use App\Models\Media;
 use App\Models\MediaEventType;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Lottery;
 
 /**
@@ -28,6 +29,11 @@ class MediaEventFactory extends Factory
                 ->winner(fn () => $this->faker->sentence(random_int(1, 5)))
                 ->loser(null),
         ];
+    }
+
+    public function at(Carbon $occurred_at): MediaEventFactory
+    {
+        return $this->state(['occurred_at' => $occurred_at]);
     }
 
     public function finished(): MediaEventFactory
