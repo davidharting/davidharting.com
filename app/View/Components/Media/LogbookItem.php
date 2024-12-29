@@ -24,9 +24,9 @@ class LogbookItem extends Component
         };
     }
 
-    public function getFinishedAt(): string
+    public function getDate(): string
     {
-        return Carbon::parse($this->item->finished_at)->format('Y F d');
+        return Carbon::parse($this->item->occurred_at)->format('Y F d');
     }
 
     /**

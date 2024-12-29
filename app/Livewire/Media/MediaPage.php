@@ -3,32 +3,22 @@
 namespace App\Livewire\Media;
 
 use App\Enum\MediaTypeName;
-use App\MediaList;
+use App\Queries\Media\BacklogQuery;
 use App\Queries\Media\LogbookQuery;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class MediaPage extends Component
 {
-    #[Url(except: 'logbook')]
-    public string $list = 'logbook';
+    #[Url(except: 'activity')]
+    public string $list = 'activity';
 
     #[Url(except: '')]
     public string $year = '';
 
     #[Url(except: '')]
     public string $type = '';
-
-    public function rules()
-    {
-        return [
-            'list' => Rule::enum(MediaList::class),
-            'year' => 'integer',
-            'type' => Rule::enum(MediaTypeName::class),
-        ];
-    }
 
     private function mediaTypes(): array
     {
@@ -40,10 +30,30 @@ class MediaPage extends Component
         return (new LogbookQuery)->years();
     }
 
+    private function getYear(): ?int
+    {
+        return $this->year ? (int) $this->year : null;
+    }
+
+    private function getType(): ?MediaTypeName
+    {
+        return $this->type ? MediaTypeName::from($this->type) : null;
+    }
+
+    private function query(): Collection
+    {
+
+        return match ($this->list) {
+            'backlog' => (new BacklogQuery($this->getYear(), $this->getType()))->execute(),
+            'in-progress' => Collection::empty(),
+            default => (new LogbookQuery($this->getYear(), $this->getType()))->execute(),
+        };
+    }
+
     public function render()
     {
         return view('livewire.media.media-page', [
-            'items' => Collection::make([]),
+            'items' => $this->query(),
             'years' => $this->years(),
             'mediaTypes' => $this->mediaTypes(),
         ]);
