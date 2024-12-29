@@ -2,9 +2,9 @@
 
 namespace App\Queries\Media;
 
+use App\Enum\MediaTypeName;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Enum\MediaTypeName;
 
 class BacklogQuery
 {
@@ -31,7 +31,6 @@ class BacklogQuery
             ->whereNull('media_events.id')
 
             ->orderBy('media.created_at', 'desc');
-
 
         if ($this->year !== null) {
             $query->whereYear('media.created_at', $this->year);

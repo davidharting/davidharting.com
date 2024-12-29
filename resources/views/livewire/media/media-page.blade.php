@@ -2,7 +2,11 @@
     <x-type.page-title>Media Log</x-type.page-title>
 
     <form class="flex flex-row space-x-2 m-2">
-        <select name='list' wire:model.live="list" class="select select-sm select-ghost">
+        <select
+            name="list"
+            wire:model.live="list"
+            class="select select-sm select-ghost"
+        >
             <option value="activity">Activity</option>
             <option value="backlog">Backlog</option>
             <option value="in-progress">In Progress</option>
