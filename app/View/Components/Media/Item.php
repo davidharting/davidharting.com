@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
+use App\Enum\MediaTypeName;
 use stdClass;
 
 class Item extends Component
@@ -14,7 +15,12 @@ class Item extends Component
 
     public function icon(): string
     {
-        return match ($this->item->type) {
+        return match (MediaTypeName::from($this->item->type)) {
+            MediaTypeName::Book => '📕',
+            MediaTypeName::Movie => '🍿',
+            MediaTypeName::Album => '📀',
+            MediaTypeName::TvShow => '📺',
+            MediaTypeName::VideoGame => '🎮',
             default => '',
         };
     }
