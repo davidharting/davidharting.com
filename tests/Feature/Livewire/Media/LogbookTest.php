@@ -1,6 +1,7 @@
 <?php
 
 namespace Tests\Feature\Livewire\Media;
+
 // This test could be moved.
 // It used to test a full-page livewire component.
 // Now the route just redirects
@@ -11,7 +12,6 @@ use Tests\TestCase;
 class LogbookTest extends TestCase
 {
     use RefreshDatabase;
-
 
     /** @test */
     public function redirects()

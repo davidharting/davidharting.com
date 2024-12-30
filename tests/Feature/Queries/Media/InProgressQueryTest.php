@@ -27,7 +27,7 @@ test('example', function () {
         ->game()
         ->create(['title' => 'Backlogged Game']);
 
-    $result = (new InProgressQuery())->execute();
+    $result = (new InProgressQuery)->execute();
     $this->assertCount(1, $result);
     $this->assertEquals('In Progress Book', $result->first()->title);
 });

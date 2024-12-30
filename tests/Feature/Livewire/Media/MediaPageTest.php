@@ -6,7 +6,6 @@ use App\Models\Media;
 use App\Models\MediaEvent;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
-use Tests\TestCase;
 
 test('empty state', function () {
     Livewire::test(MediaPage::class)

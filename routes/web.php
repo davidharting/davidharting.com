@@ -2,8 +2,6 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
-use App\Livewire\Media\Backlog;
-use App\Livewire\Media\Logbook;
 use App\Livewire\Media\MediaPage;
 use App\Livewire\Notes\NotesIndexPage;
 use App\Livewire\Notes\ShowNotePage;
@@ -35,7 +33,6 @@ Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->nam
 Route::get('/notes', NotesIndexPage::class)->name('notes.index');
 Route::get('/notes/{note}', ShowNotePage::class)->name('notes.show')->can('view', 'note');
 
-
 Route::get('/media', MediaPage::class)->name('media.index');
 Route::get('/media/log', function () {
     return redirect()->route('media.index', request()->query());
@@ -53,4 +50,4 @@ if (env('APP_ENV') == 'local') {
     });
 }
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
