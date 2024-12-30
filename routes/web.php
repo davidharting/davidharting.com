@@ -2,8 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
-use App\Livewire\Media\Backlog;
-use App\Livewire\Media\Logbook;
+use App\Livewire\Media\MediaPage;
 use App\Livewire\Notes\NotesIndexPage;
 use App\Livewire\Notes\ShowNotePage;
 use App\Models\Scorecard;
@@ -34,8 +33,10 @@ Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->nam
 Route::get('/notes', NotesIndexPage::class)->name('notes.index');
 Route::get('/notes/{note}', ShowNotePage::class)->name('notes.show')->can('view', 'note');
 
-Route::get('/media/log', Logbook::class)->name('media.logbook.show');
-Route::get('/media/backlog', Backlog::class)->name('media.backlog.show')->middleware('can:view-backlog');
+Route::get('/media', MediaPage::class)->name('media.index');
+Route::get('/media/log', function () {
+    return redirect()->route('media.index', request()->query());
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

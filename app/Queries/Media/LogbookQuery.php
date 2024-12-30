@@ -3,6 +3,7 @@
 namespace App\Queries\Media;
 
 use App\Enum\MediaEventTypeName;
+use App\Enum\MediaTypeName;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -10,7 +11,7 @@ class LogbookQuery
 {
     public function __construct(
         public ?int $year = null,
-        public ?MediaEventTypeName $type = null
+        public ?MediaTypeName $type = null
     ) {}
 
     /**
@@ -28,8 +29,7 @@ class LogbookQuery
                 'media.title as title',
                 'creators.name as creator',
                 'media_types.name as type',
-                'media_events.occurred_at as finished_at',
-                DB::raw('extract(year from media_events.occurred_at) as finished_at_year'),
+                'media_events.occurred_at as occurred_at',
                 'media.note as note'
             )
 

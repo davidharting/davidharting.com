@@ -29,7 +29,7 @@
                         Notes
                     </a>
                     <a
-                        href="{{ route("media.logbook.show") }}"
+                        href="{{ route("media.index") }}"
                         wire:navigate
                         class="link link-primary"
                     >

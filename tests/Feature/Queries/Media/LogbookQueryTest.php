@@ -25,5 +25,5 @@ test('1 item', function () {
     expect($first->creator)->toBe('J.R.R. Tolkien');
     expect($first->type)->toBe('book');
     expect($first->note)->toBe('Classic!');
-    $this->stringStartsWith($first->finished_at, '2023-02-07');
+    $this->stringStartsWith($first->occurred_at, '2023-02-07');
 });
