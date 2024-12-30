@@ -17,7 +17,7 @@ class InProgressQuery
             ->join('media_types', 'media.media_type_id', '=', 'media_types.id')
             ->join('media_events as started_events', 'media.id', '=', 'started_events.media_id')
             ->join('media_event_types', 'started_events.media_event_type_id', '=', 'media_event_types.id')
-            ->join('creators', 'creators.id', '=', 'media.creator_id')
+            ->leftJoin('creators', 'creators.id', '=', 'media.creator_id')
             ->where('media_event_types.name', MediaEventTypeName::STARTED);
 
         $query->whereNotExists(function ($subQuery) {

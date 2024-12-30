@@ -6,11 +6,11 @@ use App\Queries\Media\InProgressQuery;
 use Illuminate\Support\Carbon;
 
 test('example', function () {
-
     Media::factory()
         ->book()
         ->has(MediaEvent::factory()->started()->at(Carbon::parse('2024-12-29')), 'events')
-        ->create(['title' => 'In Progress Book']);
+        // Leave Creator ID null to validate left join from media to creators
+        ->create(['title' => 'In Progress Book', 'creator_id' => null]);
 
     Media::factory()
         ->album()
