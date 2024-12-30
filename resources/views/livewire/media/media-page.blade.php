@@ -7,13 +7,13 @@
             wire:model.live="list"
             class="select select-sm select-ghost"
         >
-            <option value="activity">Activity</option>
-            <option value="backlog">Backlog</option>
+            <option value="finished">Finished</option>
             <option value="in-progress">In Progress</option>
+            <option value="backlog">Backlog</option>
         </select>
 
         <select wire:model.live="year" class="select select-sm select-ghost">
-            <option value="">All</option>
+            <option value="">All Years</option>
             @foreach ($years as $year)
                 <option value="{{ $year }}">{{ $year }}</option>
             @endforeach

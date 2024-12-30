@@ -12,8 +12,8 @@ use Livewire\Component;
 
 class MediaPage extends Component
 {
-    #[Url(except: 'activity')]
-    public string $list = 'activity';
+    #[Url(except: 'finished')]
+    public string $list = 'finished';
 
     #[Url(except: '')]
     public string $year = '';

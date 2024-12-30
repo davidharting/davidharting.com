@@ -87,7 +87,7 @@ describe('with data', function () {
             ->assertDontSee('Read Book');
     });
 
-    test('Activity (default)', function () {
+    test('Finished (default)', function () {
         Livewire::test(MediaPage::class)
             ->assertStatus(200)
             ->assertSeeInOrder([
