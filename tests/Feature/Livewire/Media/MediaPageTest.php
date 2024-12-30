@@ -14,45 +14,99 @@ test('empty state', function () {
         ->assertSee('No items');
 });
 
-test('logbook', function () {
-    /** @var TestCase $this */
+describe('with data', function () {
+    beforeEach(function () {
+        // Backlog
+        Media::factory()
+            ->book()
+            ->for(Creator::factory(['name' => 'Author One']))
+            ->create(['title' => 'Backlogged Book', 'created_at' => Carbon::parse('2022-01-01')]);
 
-    // Create backlog
-    Media::factory()
-        ->book()
-        ->for(Creator::factory(['name' => 'Author One']))
-        ->create(['title' => 'Backlogged Book']);
+        Media::factory()
+            ->album()
+            ->for(Creator::factory(['name' => 'Artist One']))
+            ->create(['title' => 'Backlogged Album', 'created_at' => Carbon::parse('2023-07-22')]);
 
-    Media::factory()
-        ->album()
-        ->for(Creator::factory(['name' => 'Artist One']))
-        ->create(['title' => 'Backlogged Album']);
+        // Activity
+        Media::factory()
+            ->movie()
+            ->has(MediaEvent::factory()->started()->at(Carbon::parse('2022-01-06')), 'events')
+            ->has(MediaEvent::factory()->finished()->at(Carbon::parse('2022-01-07')), 'events')
+            ->create(['title' => 'Watched Movie']);
 
-    // Create logbook
-    Media::factory()
-        ->movie()
-        ->has(MediaEvent::factory()->started()->at(Carbon::parse('2022-01-06')), 'events')
-        ->has(MediaEvent::factory()->finished()->at(Carbon::parse('2022-01-07')), 'events')
-        ->create(['title' => 'Watched Movie']);
+        Media::factory()
+            ->book()
+            ->for(Creator::factory(['name' => 'Author Two']))
+            ->has(MediaEvent::factory()->started()->at(Carbon::parse('2019-10-15')), 'events')
+            ->has(MediaEvent::factory()->finished()->at(Carbon::parse('2019-12-26')), 'events')
+            ->create(['title' => 'Read Book']);
 
-    Media::factory()
-        ->book()
-        ->for(Creator::factory(['name' => 'Author Two']))
-        ->has(MediaEvent::factory()->started()->at(Carbon::parse('2019-10-15')), 'events')
-        ->has(MediaEvent::factory()->finished()->at(Carbon::parse('2019-12-26')), 'events');
+        Media::factory()
+            ->album()
+            ->for(Creator::factory(['name' => 'Artist Two']))
+            ->has(MediaEvent::factory()->finished()->at(Carbon::parse('2018-9-6')), 'events')
+            ->create(['title' => 'Listened Album']);
 
-    Media::factory()
-        ->album()
-        ->for(Creator::factory(['name' => 'Artist Two']))
-        ->has(MediaEvent::factory()->finished()->at(Carbon::parse('2018-9-6')), 'events')
-        ->create(['title' => 'Listened Album']);
+        // In Progress
+        Media::factory()
+            ->book()
+            ->for(Creator::factory(['name' => 'Author Three']))
+            ->has(MediaEvent::factory()->started()->at(Carbon::parse('2024-12-29')), 'events')
+            ->create(['title' => 'Reading Book']);
+    });
 
-    // In Progress
-    Media::factory()
-        ->book()
-        ->for(Creator::factory(['name' => 'Author Three']))
-        ->has(MediaEvent::factory()->started()->at(Carbon::parse('2024-12-29')), 'events');
+    test('Backlog', function () {
+        Livewire::withQueryParams(['list' => 'backlog'])->test(MediaPage::class)
+            ->assertStatus(200)
+            ->assertSeeInOrder([
+                '2023 July 22',
+                'Backlogged Album',
+                'Artist One',
+                '2022 January 01',
+                'Backlogged Book',
+                'Author One',
+            ])
+            ->assertDontSee('Watched Movie')
+            ->assertDontSee('Listened Album')
+            ->assertDontSee('Read Book')
+            ->assertDontSee('Reading Book');
+    });
 
-    Livewire::test(MediaPage::class)
-        ->assertStatus(200);
+    test('In Progress', function () {
+
+        Livewire::withQueryParams(['list' => 'in-progress'])->test(MediaPage::class)
+            ->assertStatus(200)
+            ->assertSeeInOrder([
+                '2024 December 29',
+                'Reading Book',
+                'Author Three',
+            ])
+            ->assertDontSee('Backlogged Album')
+            ->assertDontSee('Backlogged Book')
+            ->assertDontSee('Watched Movie')
+            ->assertDontSee('Listened Album')
+            ->assertDontSee('Read Book');
+    });
+
+    test('Activity (default)', function () {
+        Livewire::test(MediaPage::class)
+            ->assertStatus(200)
+            ->assertSeeInOrder([
+                '2022 January 07',
+                'Watched Movie',
+
+                '2019 December 26',
+                'Read Book',
+                'Author Two',
+
+                '2018 September 06',
+                'Listened Album',
+                'Artist Two',
+            ])
+            ->assertDontSee('Backlogged Album')
+            ->assertDontSee('Backlogged Book')
+            ->assertDontSee('Reading Book');
+    });
+
+    // TODO: Test filtering
 });
