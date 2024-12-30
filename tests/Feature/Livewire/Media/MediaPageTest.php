@@ -73,7 +73,6 @@ describe('with data', function () {
     });
 
     test('In Progress', function () {
-
         Livewire::withQueryParams(['list' => 'in-progress'])->test(MediaPage::class)
             ->assertStatus(200)
             ->assertSeeInOrder([
