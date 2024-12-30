@@ -2,11 +2,9 @@
 
 namespace App\Queries\Media;
 
+use App\Enum\MediaEventTypeName;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Enum\MediaEventTypeName;
-
-
 
 class InProgressQuery
 {

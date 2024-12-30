@@ -45,7 +45,7 @@ class MediaPage extends Component
     {
         return match ($this->list) {
             'backlog' => (new BacklogQuery($this->getYear(), $this->getType()))->execute(),
-            'in-progress' => (new InProgressQuery())->execute(),
+            'in-progress' => (new InProgressQuery)->execute(),
             default => (new LogbookQuery($this->getYear(), $this->getType()))->execute(),
         };
     }

@@ -2,11 +2,11 @@
 
 namespace App\View\Components\Media;
 
+use App\Enum\MediaTypeName;
 use Carbon\Carbon;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
-use App\Enum\MediaTypeName;
 use stdClass;
 
 class Item extends Component
