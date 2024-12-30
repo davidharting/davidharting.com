@@ -43,7 +43,7 @@ test('backlog query test', function () {
     expect($result->first()->title)->toBe('Backlog Book');
     expect($result->first()->creator)->toBe('Author 4');
     expect($result->first()->type)->toBe('book');
-    expect(Carbon::parse($result->first()->added_at)->format('Y F d'))->toBe('2023 January 08');
+    expect(Carbon::parse($result->first()->occurred_at)->format('Y F d'))->toBe('2023 January 08');
 
     expect($result->last()->title)->toBe('Backlog Movie');
 });
