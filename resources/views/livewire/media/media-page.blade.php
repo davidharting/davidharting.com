@@ -37,7 +37,7 @@
                 <ul class="space-y-4">
                     @foreach ($items as $item)
                         <li>
-                            <x-media.logbook-item :item="$item" />
+                            <x-media.item :item="$item" />
                         </li>
                     @endforeach
                 </ul>
