@@ -4,6 +4,7 @@ namespace App\Livewire\Media;
 
 use App\Enum\MediaTypeName;
 use App\Queries\Media\BacklogQuery;
+use App\Queries\Media\InProgressQuery;
 use App\Queries\Media\LogbookQuery;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Url;
@@ -42,10 +43,9 @@ class MediaPage extends Component
 
     private function query(): Collection
     {
-
         return match ($this->list) {
             'backlog' => (new BacklogQuery($this->getYear(), $this->getType()))->execute(),
-            'in-progress' => Collection::empty(),
+            'in-progress' => (new InProgressQuery())->execute(),
             default => (new LogbookQuery($this->getYear(), $this->getType()))->execute(),
         };
     }
