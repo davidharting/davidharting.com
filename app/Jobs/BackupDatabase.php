@@ -18,10 +18,9 @@ class BackupDatabase implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct()
-    {
-        //
-    }
+    public function __construct(
+        public string $path
+    ) {}
 
     /**
      * Execute the job.
@@ -44,16 +43,13 @@ class BackupDatabase implements ShouldQueue
             // Log the error output
             Log::error('Database backup failed', ['stdEr' => $result->errorOutput()]);
             // Raise an appropriate exception
-            throw new RuntimeException('Database backup failed: ' . $result->errorOutput());
+            throw new RuntimeException('Database backup failed: '.$result->errorOutput());
         }
 
-        $path = Str::of('backups/')->append(Str::ulid())->append('.tar.gz');
-        Storage::disk('local')->put($path, $result->output());
-
-
+        Storage::disk('local')->put($this->path, $result->output());
 
         Log::info('Database backup completed successfully', [
-            'file' => $path
+            'file' => $this->path,
         ]);
     }
 }

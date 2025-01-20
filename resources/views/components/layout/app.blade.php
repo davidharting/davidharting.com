@@ -42,6 +42,16 @@
                     >
                         Scorecards
                     </a>
+
+                    @can("administrate")
+                        <a
+                            href="{{ route("admin.index") }}"
+                            wire:navigate
+                            class="link link-primary"
+                        >
+                            Admin
+                        </a>
+                    @endcan
                 </div>
                 {{ $slot }}
             </main>
