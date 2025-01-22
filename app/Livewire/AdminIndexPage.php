@@ -23,9 +23,6 @@ class AdminIndexPage extends Component
         $path = Str::of('backups/')->append($filename);
         try {
             BackupDatabase::dispatchSync($path);
-
-            // $temporaryUrl = Storage::temporaryUrl($path, now()->addMinutes(5));
-            // return response()->download($temporaryUrl, $path);
             return Storage::download($path, $filename);
         } catch (RuntimeException $e) {
             $this->backupError = $e->getMessage();
