@@ -9,11 +9,17 @@ RUN npm run build
 
 
 
-FROM dunglas/frankenphp:php8.2-bookworm 
+FROM dunglas/frankenphp:php8.2-bookworm
 
-RUN apt-get update && \
-    apt-get install -y unzip libnss3-tools procps && \
-    rm -rf /var/lib/apt/lists/*
+
+RUN sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' \
+    && apt-get update \
+    && apt-get install -y curl ca-certificates gnupg \
+    && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null \
+    && apt-get update \
+    && apt-get install -y unzip libnss3-tools procps postgresql-client-17 \
+    && rm -rf /var/lib/apt/lists/*
+
 
 RUN install-php-extensions \
     intl \
@@ -30,7 +36,7 @@ RUN mkdir -p /app/public/build
 COPY --from=frontend_builder /app/public/build/ /app/public/build/
 
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer 
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY . /app
 
 RUN composer install --optimize-autoloader && php artisan optimize:clear
