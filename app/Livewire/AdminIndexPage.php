@@ -15,6 +15,7 @@ class AdminIndexPage extends Component
 
     public function backupDatabase()
     {
+        $this->authorize('administrate');
         $this->backupError = '';
 
         $timestamp = Carbon::now()->format('Y-m-d-H-i-s');
