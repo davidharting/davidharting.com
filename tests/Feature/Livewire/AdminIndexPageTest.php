@@ -2,9 +2,9 @@
 
 use App\Livewire\AdminIndexPage;
 use App\Models\User;
+use Illuminate\Support\Facades\Process;
 use Livewire\Livewire;
 use Tests\TestCase;
-use Illuminate\Support\Facades\Process;
 
 it('renders successfully', function () {
     Livewire::test(AdminIndexPage::class)
@@ -39,7 +39,6 @@ test('successful database backup', function () {
         ->assertFileDownloaded('database-backup-2024-02-17-01-05-13.tar.gz');
 });
 
-
 test('error backing up database', function () {
     /** @var TestCase $this */
     Process::fake([
@@ -47,9 +46,8 @@ test('error backing up database', function () {
             output: 'error',
             errorOutput: 'pg_dump version 14 does not match postgres version 15.1',
             exitCode: 1
-        )
+        ),
     ]);
-
 
     $admin = User::factory()->admin()->create();
 

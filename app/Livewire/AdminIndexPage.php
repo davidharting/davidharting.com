@@ -23,6 +23,7 @@ class AdminIndexPage extends Component
         $path = Str::of('backups/')->append($filename);
         try {
             BackupDatabase::dispatchSync($path);
+
             return Storage::download($path, $filename);
         } catch (RuntimeException $e) {
             $this->backupError = $e->getMessage();

@@ -41,7 +41,7 @@ class BackupDatabase implements ShouldQueue
             // Log the error output
             Log::error('Database backup failed', ['stdEr' => $result->errorOutput()]);
             // Raise an appropriate exception
-            throw new RuntimeException('Database backup failed: ' . $result->errorOutput());
+            throw new RuntimeException('Database backup failed: '.$result->errorOutput());
         }
 
         Storage::disk('local')->put($this->path, $result->output());
