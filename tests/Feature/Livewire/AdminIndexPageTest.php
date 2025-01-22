@@ -27,8 +27,10 @@ test('regular user cannot backup database', function () {
 
 test('successful database backup', function () {
     /** @var TestCase $this */
-
-    // Note, this test actually runs pg_dump. Required pg_dump installed and matching version of running database
+    Process::fake([
+        'pg_dump *' => Process::result(output: 'some tar file'),
+        'gzip' => Process::result(output: 'compressed tar file'),
+    ]);
 
     $this->travelTo('2024-02-17 01:05:13');
 
@@ -36,7 +38,7 @@ test('successful database backup', function () {
 
     Livewire::actingAs($user)->test(AdminIndexPage::class)
         ->call('backupDatabase')
-        ->assertFileDownloaded('database-backup-2024-02-17-01-05-13.tar.gz');
+        ->assertFileDownloaded('database-backup-2024-02-17-01-05-13.tar.gz', "compressed tar file\n");
 });
 
 test('error backing up database', function () {
