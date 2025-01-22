@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
+use App\Livewire\AdminIndexPage;
 use App\Livewire\Media\MediaPage;
 use App\Livewire\Notes\NotesIndexPage;
 use App\Livewire\Notes\ShowNotePage;
@@ -22,6 +23,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+Route::get('/backend', AdminIndexPage::class)->name('admin.index')->middleware('can:administrate');
 
 Route::get('/dashboard', function () {
     return view('dashboard');

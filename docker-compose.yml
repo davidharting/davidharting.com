@@ -54,7 +54,7 @@ x-laravel-config: &laravel-config
 
 services:
     database:
-        image: postgres:latest
+        image: postgres:17.2
         secrets:
             - DB_PASSWORD
         environment:
