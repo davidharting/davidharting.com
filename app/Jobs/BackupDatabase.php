@@ -15,16 +15,8 @@ class BackupDatabase implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new job instance.
-     */
-    public function __construct(
-        public string $path
-    ) {}
+    public function __construct(public string $path) {}
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
 
@@ -43,7 +35,7 @@ class BackupDatabase implements ShouldQueue
             // Log the error output
             Log::error('Database backup failed', ['stdEr' => $result->errorOutput()]);
             // Raise an appropriate exception
-            throw new RuntimeException('Database backup failed: '.$result->errorOutput());
+            throw new RuntimeException('Database backup failed: ' . $result->errorOutput());
         }
 
         Storage::disk('local')->put($this->path, $result->output());
