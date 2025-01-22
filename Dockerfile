@@ -8,18 +8,16 @@ RUN npm run build
 
 
 
-
 FROM dunglas/frankenphp:php8.2-bookworm
 
 
-RUN sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list' \
-    && apt-get update \
-    && apt-get install -y curl ca-certificates gnupg \
-    && curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /etc/apt/trusted.gpg.d/apt.postgresql.org.gpg >/dev/null \
+RUN apt-get update \
+    && apt-get install -y curl ca-certificates gnupg2 \
+    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] https://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
     && apt-get install -y unzip libnss3-tools procps postgresql-client-17 \
     && rm -rf /var/lib/apt/lists/*
-
 
 RUN install-php-extensions \
     intl \
