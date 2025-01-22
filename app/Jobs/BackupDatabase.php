@@ -23,10 +23,16 @@ class BackupDatabase implements ShouldQueue
         $result = Process::pipe(function (Pipe $pipe) {
             $backupCommand = Str::of('pg_dump')->append(' -U ')
                 ->append(config('database.connections.pgsql.username'))
+                ->append(' --host ')
+                ->append(config('database.connections.pgsql.host'))
+                ->append(' --port ')
+                ->append(config('database.connections.pgsql.port'))
                 ->append(' --format tar ')
                 ->append(config('database.connections.pgsql.database'));
 
-            $pipe->as('pg_dump')->command($backupCommand);
+            $pipe->as('pg_dump')->command($backupCommand)->env([
+                'PGPASSWORD' => config('database.connections.pgsql.password'),
+            ]);
             $pipe->as('gzip')->command('gzip');
         });
 
