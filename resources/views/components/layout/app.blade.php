@@ -1,3 +1,8 @@
+@props([
+    "title",
+    "description",
+])
+
 <!DOCTYPE html>
 <html lang="{{ str_replace("_", "-", app()->getLocale()) }}">
     <head>
@@ -5,7 +10,16 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-        <title>{{ config("app.name", "Laravel") }}</title>
+        @php
+            $pageTitle = $title ?? "David Harting's Website";
+            $pageDescription = $description ?? "David's Corner of the Internet";
+        @endphp
+
+        <title>{{ $pageTitle }}</title>
+        <meta name="title" content="{{ $pageTitle }}" />
+
+        <meta name="description" content="{{ $pageDescription }}" />
+        <meta property="og:description" content="{{ $pageDescription }}" />
 
         @vite(["resources/css/app.css", "resources/js/app.js"])
     </head>
