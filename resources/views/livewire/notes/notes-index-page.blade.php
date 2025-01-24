@@ -1,3 +1,7 @@
+<x-slot:title>David's Notes</x-slot>
+
+<x-slot:description>Notes from David</x-slot>
+
 <div>
     <x-type.page-title>Notes</x-type.page-title>
     @if ($notes->isEmpty())
