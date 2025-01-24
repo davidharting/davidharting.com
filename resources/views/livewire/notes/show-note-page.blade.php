@@ -1,3 +1,9 @@
+<x-slot:title>{{ $note->title }}</x-slot>
+
+<x-slot:description>
+    {{ $this->description() }}
+</x-slot>
+
 <div>
     @if ($note->title)
         <x-type.page-title>{{ $note->title }}</x-type.page-title>
