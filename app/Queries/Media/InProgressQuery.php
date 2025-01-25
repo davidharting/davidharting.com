@@ -29,6 +29,7 @@ class InProgressQuery
                 ->whereIn('second_event_types.name', [MediaEventTypeName::FINISHED, MediaEventTypeName::ABANDONED]);
         });
 
+
         $query->select(
             'media.title as title',
             'creators.name as creator',
@@ -36,6 +37,8 @@ class InProgressQuery
             'started_events.occurred_at as occurred_at',
             'media.note as note'
         );
+
+        $query->orderBy('started_events.occurred_at', 'desc');
 
         return $query->get();
     }
