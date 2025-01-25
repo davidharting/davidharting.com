@@ -12,21 +12,29 @@
             <option value="backlog">Backlog</option>
         </select>
 
-        <select wire:model.live="year" class="select select-sm select-ghost">
-            <option value="">All Years</option>
-            @foreach ($years as $year)
-                <option value="{{ $year }}">{{ $year }}</option>
-            @endforeach
-        </select>
+            <select
+                wire:model.live="year"
+                class="select select-sm select-ghost"
+                @if($this->disableFilters()) disabled @endif
+            >
+                <option value="">All Years</option>
+                @foreach ($years as $year)
+                    <option value="{{ $year }}">{{ $year }}</option>
+                @endforeach
+            </select>
 
-        <select wire:model.live="type" class="select select-sm select-ghost">
-            <option value="">All Types</option>
-            @foreach ($mediaTypes as $type)
-                <option value="{{ $type->value }}">
-                    {{ $type->displayName() }}
-                </option>
-            @endforeach
-        </select>
+            <select
+                wire:model.live="type"
+                class="select select-sm select-ghost"
+                @if($this->disableFilters()) disabled @endif
+            >
+                <option value="">All Types</option>
+                @foreach ($mediaTypes as $type)
+                    <option value="{{ $type->value }}">
+                        {{ $type->displayName() }}
+                    </option>
+                @endforeach
+            </select>
     </form>
 
     <div class="my-6">
