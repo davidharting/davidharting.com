@@ -28,7 +28,7 @@ test('show', function () {
     ]);
     $response = $this->get('/notes/'.$note->slug);
     $response->assertSuccessful();
-    $response->assertSeeTextInOrder(['A cool post', 'You should read this', '2000', 'February', 'Captivating content']);
+    $response->assertSeeTextInOrder(['2000 February', 'A cool post', 'You should read this', 'Captivating content']);
 
     $response->assertSeeHtml('<title>A cool post</title>');
     $response->assertSeeHtml("<meta name=\"description\" content=\"You should read this\n\nBy David Harting.\nPublished on 2000 February 1\" />");
