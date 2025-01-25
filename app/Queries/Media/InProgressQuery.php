@@ -29,7 +29,6 @@ class InProgressQuery
                 ->whereIn('second_event_types.name', [MediaEventTypeName::FINISHED, MediaEventTypeName::ABANDONED]);
         });
 
-
         $query->select(
             'media.title as title',
             'creators.name as creator',
