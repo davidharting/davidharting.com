@@ -17,5 +17,5 @@ test('renders for logged in user', function () {
     $response->assertOk();
 
     $response->assertSeeTextInOrder(['Dashboard - davidharting.com', 'Profile']);
-    $response->assertSee("Log out");
+    $response->assertSee('Log out');
 });
