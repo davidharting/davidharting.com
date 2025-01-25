@@ -1,4 +1,4 @@
-<x-layout.app $title="Dashboard - davidharting.com">
+<x-layout.app title="Dashboard - davidharting.com">
     <x-type.page-title class="mb-8">Dashboard</x-type.page-title>
 
     <ul>
