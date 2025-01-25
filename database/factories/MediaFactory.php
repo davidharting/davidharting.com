@@ -62,4 +62,11 @@ class MediaFactory extends Factory
             'media_type_id' => MediaType::where('name', MediaTypeName::Movie)->first()->id,
         ]);
     }
+
+    public function show(): MediaFactory
+    {
+        return $this->state([
+            'media_type_id' => MediaType::where('name', MediaTypeName::TvShow)->first()->id,
+        ]);
+    }
 }

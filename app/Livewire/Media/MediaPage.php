@@ -41,6 +41,11 @@ class MediaPage extends Component
         return $this->type ? MediaTypeName::from($this->type) : null;
     }
 
+    public function disableFilters()
+    {
+        return $this->list === 'in-progress';
+    }
+
     private function query(): Collection
     {
         return match ($this->list) {

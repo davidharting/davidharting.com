@@ -37,6 +37,8 @@ class InProgressQuery
             'media.note as note'
         );
 
+        $query->orderBy('started_events.occurred_at', 'desc');
+
         return $query->get();
     }
 }

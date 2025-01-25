@@ -27,7 +27,13 @@ test('example', function () {
         ->game()
         ->create(['title' => 'Backlogged Game']);
 
+    Media::factory()
+        ->show()
+        ->has(MediaEvent::factory()->started()->at(Carbon::parse('2025-01-01')), 'events')
+        ->create(['title' => 'In Progress TV Show']);
+
     $result = (new InProgressQuery)->execute();
-    $this->assertCount(1, $result);
-    $this->assertEquals('In Progress Book', $result->first()->title);
+    $this->assertCount(2, $result);
+    $this->assertEquals('In Progress TV Show', $result->first()->title);
+    $this->assertEquals('In Progress Book', $result->last()->title);
 });
