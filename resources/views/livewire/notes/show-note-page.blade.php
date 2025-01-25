@@ -4,28 +4,26 @@
     {{ $this->description() }}
 </x-slot>
 
-<div>
-    @if ($note->title)
-        <x-type.page-title>{{ $note->title }}</x-type.page-title>
-    @endif
-
-    @if ($note->lead)
-        <p class="text-2xl mt-2">{{ $note->lead }}</p>
-    @endif
-
-    <p class="mt-2 text-gray-600">
+<article class="prose dark:prose-invert">
+    <p class="text-sm text-gray-600">
         {{ $note->publicationDate() }}
     </p>
 
-    @if ($note->content)
-        <div class="mt-4 prose">
-            {!! $note->content !!}
-        </div>
+    @if ($note->title)
+        <h1 class="font-serif">{{ $note->title }}</h1>
     @endif
 
-    <div class="mt-6">
+    @if ($note->lead)
+        <p class="lead">{{ $note->lead }}</p>
+    @endif
+
+    @if ($note->content)
+        {!! $note->content !!}
+    @endif
+
+    <p class="text-sm">
         <a href="{{ route("notes.index") }}" class="link" wire:navigate>
             Back to all notes
         </a>
-    </div>
-</div>
+    </p>
+</article>
