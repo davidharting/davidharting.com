@@ -15,8 +15,7 @@ class DetailTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
-    public function renders_successfully()
+    public function test_renders_successfully()
     {
         Livewire::test(Detail::class)
             ->assertStatus(200);
