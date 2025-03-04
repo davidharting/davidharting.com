@@ -5,7 +5,7 @@
         <select
             name="list"
             wire:model.live="list"
-            class="select select-sm select-ghost"
+            class="select select-sm select-ghost max-w-32"
         >
             <option value="finished">Finished</option>
             <option value="in-progress">In Progress</option>
@@ -14,7 +14,7 @@
 
         <select
             wire:model.live="year"
-            class="select select-sm select-ghost"
+            class="select select-sm select-ghost max-w-32"
             @if($this->disableFilters()) disabled @endif
         >
             <option value="">All Years</option>
@@ -25,7 +25,7 @@
 
         <select
             wire:model.live="type"
-            class="select select-sm select-ghost"
+            class="select select-sm select-ghost max-w-32"
             @if($this->disableFilters()) disabled @endif
         >
             <option value="">All Types</option>

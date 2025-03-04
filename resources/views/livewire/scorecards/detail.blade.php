@@ -29,7 +29,7 @@
 
                     @foreach ($this->rounds as $round)
                         <tr
-                            class="hover:bg-accent hover:bg-opacity-30 cursor-pointer"
+                            class="hover:bg-base-300 cursor-pointer"
                             aria-label="edit row"
                             wire:click="openEditForm({{ $round[0] }})"
                         >
