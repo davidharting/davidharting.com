@@ -1,5 +1,5 @@
-<fieldset class='fieldset'>
-    <label class='fieldset-label'>
+<fieldset class="fieldset">
+    <label class="fieldset-label">
         <input
             type="checkbox"
             :name="$name"
@@ -7,6 +7,7 @@
             {{ $attributes->merge(["class" => "checkbox"]) }}
         />
         {{ $label ?? $name }}
+    </label>
     @error($name)
         <div class="text-sm text-error">
             {{ $message }}
