@@ -13,8 +13,7 @@ class LogbookTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
-    public function redirects()
+    public function test_redirects()
     {
         $this->get('/media/log?year=2024')
             ->assertRedirect('/media?year=2024');

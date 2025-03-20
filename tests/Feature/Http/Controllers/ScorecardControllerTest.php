@@ -10,7 +10,7 @@ class ScorecardControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testSmokeTestRoutes(): void
+    public function test_smoke_test_routes(): void
     {
         $response = $this->get('/scorecards/create');
         $response->assertOk();

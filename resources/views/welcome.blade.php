@@ -5,7 +5,7 @@
         >
             <div class="avatar mb-4 sm:mb-0 flex justify-center">
                 <div
-                    class="w-24 rounded-xl ring ring-primary ring-offset-base-100 ring-offset-2"
+                    class="w-24 rounded-xl ring-3 ring-primary ring-offset-base-100 ring-offset-2"
                 >
                     <img src="headshot.jpg" />
                 </div>
