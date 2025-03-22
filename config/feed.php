@@ -16,10 +16,10 @@ return [
             /*
              * The feed will be available on this url.
              */
-            'url' => '',
+            'url' => 'feed',
 
-            'title' => 'My feed',
-            'description' => 'The description of the feed.',
+            'title' => 'David Harting',
+            'description' => 'Notes and media log updates from David Harting',
             'language' => 'en-US',
 
             /*
@@ -27,7 +27,7 @@ return [
              * a banner/logo; for RSS and JSON feeds, it's displayed as an icon.
              * An empty value omits the image attribute from the feed.
              */
-            'image' => '',
+            'image' => 'headshot.jpg',
 
             /*
              * The format of the feed. Acceptable values are 'rss', 'atom', or 'json'.
