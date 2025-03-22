@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Spatie\Feed\Feedable;
+use Spatie\Feed\FeedItem;
 
-class Note extends Model
+class Note extends Model implements Feedable
 {
     use HasFactory;
 
@@ -52,5 +54,17 @@ class Note extends Model
     public function publicationDate(): string
     {
         return $this->published_at->format('Y F j');
+    }
+
+    public function toFeedItem(): FeedItem
+    {
+        return FeedItem::create()
+            ->id($this->slug)
+            ->title($this->title)
+            ->summary($this->lead)
+            ->updated($this->published_at)
+            ->link(route('notes.show', $this->slug))
+            ->authorName('David Harting')
+            ->authorEmail('connect@davidharting.com');
     }
 }
