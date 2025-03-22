@@ -1,3 +1,6 @@
+<x-slot:title>Create a scorecard</x-slot>
+<x-slot:description>Track scores for a game</x-slot>
+
 <div class="mt-8 md:w-2/3 xl:w-1/2">
     <form class="w-full space-y-8" wire:submit="create">
         <x-form.input

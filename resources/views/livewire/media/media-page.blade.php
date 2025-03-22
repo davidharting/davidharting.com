@@ -1,3 +1,9 @@
+<x-slot:title>David's Media Log</x-slot>
+
+<x-slot:description>
+    I track what I read, watch, and play here!
+</x-slot>
+
 <div>
     <x-type.page-title>Media Log</x-type.page-title>
 
