@@ -8,9 +8,9 @@ test('empty feed', function () {
     $response = $this->get('/feed');
 
     $response->assertStatus(200);
-    $response->assertSeeTextInOrder([
-        'Notes and media log updates from David Harting',
-    ]);
+    $response->assertSeeText(
+        'Notes from David Harting'
+    );
 });
 
 test('Invisible posts do not show up', function () {
