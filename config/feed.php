@@ -19,7 +19,7 @@ return [
             'url' => 'feed',
 
             'title' => 'David Harting',
-            'description' => 'Notes and media log updates from David Harting',
+            'description' => 'Notes from David Harting',
             'language' => 'en-US',
 
             /*
