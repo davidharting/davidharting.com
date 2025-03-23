@@ -2,7 +2,7 @@
 
 namespace App\Queries;
 
-use Illuminate\Support\Collection;
+use App\Models\Note;
 
 class FeedQuery
 {
@@ -16,6 +16,6 @@ class FeedQuery
 
     public static function execute()
     {
-        return Collection::empty();
+        return Note::where('visible', true)->orderBy('published_at', 'desc')->limit(50)->get();
     }
 }
