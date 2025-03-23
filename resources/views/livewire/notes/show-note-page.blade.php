@@ -9,17 +9,7 @@
         {{ $note->publicationDate() }}
     </p>
 
-    @if ($note->title)
-        <h1 class="font-serif">{{ $note->title }}</h1>
-    @endif
-
-    @if ($note->lead)
-        <p class="lead">{{ $note->lead }}</p>
-    @endif
-
-    @if ($note->content)
-        {!! $note->content !!}
-    @endif
+    <x-notes.prose :note="$note" />
 
     <p class="text-sm">
         <a href="{{ route("notes.index") }}" class="link" wire:navigate>

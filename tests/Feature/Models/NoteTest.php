@@ -4,6 +4,9 @@ use App\Models\Note;
 use Carbon\Carbon;
 use Tests\TestCase;
 
+use function PHPUnit\Framework\assertStringContainsString;
+use function PHPUnit\Framework\assertStringNotContainsString;
+
 describe('slug', function () {
     it('is respected if provided', function () {
         /** @var TestCase $this */
@@ -56,5 +59,28 @@ describe('publicationDate', function () {
         /** @var TestCase $this */
         $note = Note::factory()->create(['published_at' => Carbon::create(2000, 02, 01)]);
         expect($note->publicationDate())->toBe('2000 February 1');
+    });
+});
+
+describe('toFeedItem', function () {
+    it('works', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create([
+            'title' => 'My Note Title',
+            'lead' => 'Captivating lead',
+            'content' => 'This is the content of the note.',
+        ]);
+
+        $item = $note->toFeedItem();
+        expect($item->title)->toBe($note->title);
+        expect($item->id)->toBe($note->slug);
+        expect($item->updated)->toEqual($note->published_at);
+        expect($item->link)->toBe(route('notes.show', $note->slug));
+        expect($item->authorName)->toBe('David Harting');
+        expect($item->authorEmail)->toBe('connect@davidharting.com');
+
+        assertStringNotContainsString($note->title, $item->summary);
+        assertStringContainsString($note->lead, $item->summary);
+        assertStringContainsString($note->content, $item->summary);
     });
 });

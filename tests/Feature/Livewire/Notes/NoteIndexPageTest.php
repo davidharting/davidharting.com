@@ -28,6 +28,8 @@ test('displays visible notes with most recently updated first', function () {
     $response = Livewire::test(NotesIndexPage::class);
     $response->assertDontSee('SHOULD NOT SEE');
     $response->assertSeeInOrder([
-        'newest note', 'middle note', 'oldest note',
+        'newest note',
+        'middle note',
+        'oldest note',
     ]);
 });

@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::feeds();
+
 Route::get('/', function () {
     return view('welcome');
 })->name('home');

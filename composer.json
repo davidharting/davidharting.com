@@ -18,7 +18,8 @@
         "laravel/tinker": "^2.10.1",
         "league/csv": "^9.22.0",
         "livewire/livewire": "^3.6",
-        "mailersend/laravel-driver": "^2.7"
+        "mailersend/laravel-driver": "^2.7",
+        "spatie/laravel-feed": "^4.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24.1",

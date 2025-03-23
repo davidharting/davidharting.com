@@ -22,6 +22,8 @@
         <meta property="og:description" content="{{ $pageDescription }}" />
 
         @vite(["resources/css/app.css", "resources/js/app.js"])
+
+        <x-feed-links />
     </head>
 
     <body class="font-sans antialiased">
