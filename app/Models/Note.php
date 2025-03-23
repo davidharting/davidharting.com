@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Str;
 use Spatie\Feed\Feedable;
 use Spatie\Feed\FeedItem;
@@ -57,20 +56,15 @@ class Note extends Model implements Feedable
         return $this->published_at->format('Y F j');
     }
 
-
     public function toFeedItem(): FeedItem
     {
         $fullPost = view('components.notes.prose', ['note' => $this])->render();
         $fullPost = preg_replace('/<!--.*?-->/s', '', $fullPost);
-        // Problem: I have logic for deleaing with all the cases in html of
-        // Lead only? Title only? etc.
-        // Need to abstract and share?
+
         return FeedItem::create()
             ->id($this->slug)
             ->title($this->rssTitle())
-            // TODO: Not yet dealing with all full post variants?
-            // I also don't want the title in the full post?
-            ->summary($fullPost)
+            ->summary($this->rssSummary())
             ->updated($this->published_at)
             ->link(route('notes.show', $this->slug))
             ->authorName('David Harting')
@@ -84,9 +78,34 @@ class Note extends Model implements Feedable
         }
 
         if ($this->lead) {
+            // Should I truncate this?
             return $this->lead;
         }
 
         return 'Untitled note';
+    }
+
+    /**
+     * I'm including full test of the post in the RSS feed
+     * rather than just a summary and link
+     */
+    private function rssSummary(): string
+    {
+        $fullContent = Str::of('');
+
+        // Do not include title
+        // Because that will already be visible as the title of the post in the RSS reader
+
+        if ($this->lead) {
+            $fullContent = $fullContent->append('<p><i>');
+            $fullContent = $fullContent->append($this->lead);
+            $fullContent = $fullContent->append('</i></p>');
+        }
+
+        if ($this->content) {
+            $fullContent = $fullContent->append($this->content);
+        }
+
+        return $fullContent;
     }
 }

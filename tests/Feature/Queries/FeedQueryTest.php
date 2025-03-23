@@ -38,7 +38,6 @@ test('Posts are in reverse chronological order', function () {
     ]);
 
     $response = $this->get('/feed');
-    $response->dump();
     $response->assertSeeHtml([
         'Oldest Post',
         '**some bold text**',

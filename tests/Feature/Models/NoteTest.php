@@ -5,6 +5,7 @@ use Carbon\Carbon;
 use Tests\TestCase;
 
 use function PHPUnit\Framework\assertStringContainsString;
+use function PHPUnit\Framework\assertStringNotContainsString;
 
 describe('slug', function () {
     it('is respected if provided', function () {
@@ -70,7 +71,6 @@ describe('toFeedItem', function () {
             'content' => 'This is the content of the note.',
         ]);
 
-
         $item = $note->toFeedItem();
         expect($item->title)->toBe($note->title);
         expect($item->id)->toBe($note->slug);
@@ -79,8 +79,9 @@ describe('toFeedItem', function () {
         expect($item->authorName)->toBe('David Harting');
         expect($item->authorEmail)->toBe('connect@davidharting.com');
 
+        dd($item->summary);
 
-        assertStringContainsString($note->title, $item->summary);
+        assertStringNotContainsString($note->title, $item->summary);
         assertStringContainsString($note->lead, $item->summary);
         assertStringContainsString($note->content, $item->summary);
     });
