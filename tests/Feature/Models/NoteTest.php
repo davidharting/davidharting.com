@@ -79,8 +79,6 @@ describe('toFeedItem', function () {
         expect($item->authorName)->toBe('David Harting');
         expect($item->authorEmail)->toBe('connect@davidharting.com');
 
-        dd($item->summary);
-
         assertStringNotContainsString($note->title, $item->summary);
         assertStringContainsString($note->lead, $item->summary);
         assertStringContainsString($note->content, $item->summary);
