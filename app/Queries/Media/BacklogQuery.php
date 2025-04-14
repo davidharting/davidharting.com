@@ -21,6 +21,7 @@ class BacklogQuery
             ->leftJoin('media_events', 'media_events.media_id', '=', 'media.id')
 
             ->select(
+                'media.id as id',
                 'media.title as title',
                 'creators.name as creator',
                 'media_types.name as type',
