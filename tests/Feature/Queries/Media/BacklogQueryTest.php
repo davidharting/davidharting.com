@@ -28,22 +28,25 @@ test('backlog query test', function () {
         ->create(['title' => 'Abandoned Media']);
 
     // Create additional media with no events
-    Media::factory(['created_at' => Carbon::parse('2023-01-08')])
+    $backlogBook = Media::factory(['created_at' => Carbon::parse('2023-01-08')])
         ->book()
         ->for(Creator::factory(['name' => 'Author 4']))
         ->create(['title' => 'Backlog Book']);
 
-    Media::factory(['created_at' => Carbon::parse('2023-01-05')])
+    $backlogMovie = Media::factory(['created_at' => Carbon::parse('2023-01-05')])
         ->movie()
         ->create(['title' => 'Backlog Movie']);
 
     $result = (new BacklogQuery)->execute();
 
     expect($result)->toHaveCount(2);
+
+    expect($result->first()->id)->toBe($backlogBook->id);
     expect($result->first()->title)->toBe('Backlog Book');
     expect($result->first()->creator)->toBe('Author 4');
     expect($result->first()->type)->toBe('book');
     expect(Carbon::parse($result->first()->occurred_at)->format('Y F d'))->toBe('2023 January 08');
 
     expect($result->last()->title)->toBe('Backlog Movie');
+    expect($result->last()->id)->toBe($backlogMovie->id);
 });

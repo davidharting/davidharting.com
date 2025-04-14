@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 test('1 item', function () {
     /** @var TestCase $this */
-    Media::factory()
+    $media = Media::factory()
         ->book()
         ->for(Creator::factory(['name' => 'J.R.R. Tolkien']))
         ->has(MediaEvent::factory()->finished()->state(['occurred_at' => '2023-02-07']), 'events')
@@ -21,6 +21,7 @@ test('1 item', function () {
     expect($result)->toHaveCount(1);
 
     $first = $result->first();
+    expect($first->id)->toBe($media->id);
     expect($first->title)->toBe('The Hobbit');
     expect($first->creator)->toBe('J.R.R. Tolkien');
     expect($first->type)->toBe('book');
