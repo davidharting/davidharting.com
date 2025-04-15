@@ -47,7 +47,7 @@ class MediaResource extends Resource
     {
         return $table
             ->defaultSort('updated_at', 'desc')
-            ->defaultPaginationPageOption(50)
+            ->defaultPaginationPageOption(10)
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

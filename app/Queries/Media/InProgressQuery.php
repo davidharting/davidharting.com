@@ -30,6 +30,7 @@ class InProgressQuery
         });
 
         $query->select(
+            'media.id as id',
             'media.title as title',
             'creators.name as creator',
             'media_types.name as type',

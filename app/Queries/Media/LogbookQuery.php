@@ -26,6 +26,7 @@ class LogbookQuery
             ->leftJoin('creators', 'media.creator_id', '=', 'creators.id')
 
             ->select(
+                'media.id as id',
                 'media.title as title',
                 'creators.name as creator',
                 'media_types.name as type',

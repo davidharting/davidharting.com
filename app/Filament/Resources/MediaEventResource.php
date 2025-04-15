@@ -41,7 +41,7 @@ class MediaEventResource extends Resource
     {
         return $table
             ->defaultSort('occurred_at', 'desc')
-            ->defaultPaginationPageOption(50)
+            ->defaultPaginationPageOption(10)
             ->columns([
                 Tables\Columns\TextColumn::make('mediaEventType.name')
                     ->sortable(),
