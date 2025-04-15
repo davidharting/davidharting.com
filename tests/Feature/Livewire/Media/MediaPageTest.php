@@ -4,6 +4,7 @@ use App\Livewire\Media\MediaPage;
 use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaEvent;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 
@@ -104,6 +105,28 @@ describe('with data', function () {
             ->assertDontSee('Backlogged Album')
             ->assertDontSee('Backlogged Book')
             ->assertDontSee('Reading Book');
+    });
+
+
+    describe('admin edit link', function () {
+        test('guest user cannot set it', function () {
+            Livewire::test(MediaPage::class)
+                ->assertDontSee('Edit');
+        });
+
+        test("regular users cannot set it", function () {
+            $this->actingAs(User::factory(['is_admin' => false])->create());
+
+            Livewire::test(MediaPage::class)
+                ->assertDontSee('Edit');
+        });
+
+        test('admins can see it', function () {
+            $this->actingAs(User::factory(['is_admin' => true])->create());
+
+            Livewire::test(MediaPage::class)
+                ->assertSee('Edit');
+        });
     });
 
     // TODO: Test filtering
