@@ -3,8 +3,6 @@
 use App\Models\Media;
 use App\Models\User;
 use Tests\TestCase;
-use League\HTMLToMarkdown\HtmlConverter;
-
 
 test('anonymous user not allowed', function () {
     /** @var TestCase $this */

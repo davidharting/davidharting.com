@@ -107,14 +107,13 @@ describe('with data', function () {
             ->assertDontSee('Reading Book');
     });
 
-
     describe('admin edit link', function () {
         test('guest user cannot set it', function () {
             Livewire::test(MediaPage::class)
                 ->assertDontSee('Edit');
         });
 
-        test("regular users cannot set it", function () {
+        test('regular users cannot set it', function () {
             $this->actingAs(User::factory(['is_admin' => false])->create());
 
             Livewire::test(MediaPage::class)
