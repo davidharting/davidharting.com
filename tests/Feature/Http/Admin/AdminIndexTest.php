@@ -27,5 +27,6 @@ test('Visible to admin', function () {
         'Admin',
         'Filament Admin',
         'Backup database',
+        'Pulse',
     ]);
 });
