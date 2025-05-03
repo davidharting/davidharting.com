@@ -23,7 +23,7 @@ x-laravel-config: &laravel-config
         APP_NAME: davidharting.com
         APP_URL: https://davidharting.com
         BROADCAST_DRIVER: log
-        CACHE_DRIVER: file
+        CACHE_DRIVER: database
         DB_CONNECTION: pgsql
         DB_DATABASE: laravel
         DB_HOST: database
@@ -41,7 +41,7 @@ x-laravel-config: &laravel-config
         OCTANE_HTTPS: true
         OCTANE_SERVER: frankenphp
         QUEUE_CONNECTION: database
-        SESSION_DRIVER: file # TODO: database driver
+        SESSION_DRIVER: database
         SESSION_LIFETIME: 120
         VITE_APP_NAME: davidharting.com
 
