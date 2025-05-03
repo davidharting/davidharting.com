@@ -25,7 +25,7 @@
         <env name="DB_DATABASE" value="laravel"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
-        <env name="SESSION_DRIVER" value="array"/>
+        <env name="SESSION_DRIVER" value="database"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="APP_URL" value="http://davidharting-dot-com.test" />
     </php>

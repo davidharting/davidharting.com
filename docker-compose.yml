@@ -41,7 +41,7 @@ x-laravel-config: &laravel-config
         OCTANE_HTTPS: true
         OCTANE_SERVER: frankenphp
         QUEUE_CONNECTION: database
-        SESSION_DRIVER: file # TODO: database driver
+        SESSION_DRIVER: database
         SESSION_LIFETIME: 120
         VITE_APP_NAME: davidharting.com
 
