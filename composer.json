@@ -14,6 +14,7 @@
         "laravel/breeze": "^2.3.5",
         "laravel/framework": "^12.3",
         "laravel/octane": "^2.8.1",
+        "laravel/pulse": "^1.4",
         "laravel/sanctum": "^4.0.8",
         "laravel/tinker": "^2.10.1",
         "league/csv": "^9.22.0",
