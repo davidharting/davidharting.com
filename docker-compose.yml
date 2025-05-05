@@ -110,7 +110,6 @@ services:
     cron:
         <<: *laravel-config
         command: ["php", "artisan", "schedule:work"]
-        # TODO: Add health check
         depends_on:
             migrations:
                 condition: service_completed_successfully
