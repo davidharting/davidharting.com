@@ -103,6 +103,11 @@ services:
         volumes:
             - caddy_data:/data
 
+        healthcheck:
+            test: ["CMD-SHELL", "curl -f http://localhost/healthz || exit 1"]
+            interval: 30s
+            timeout: 5s
+            retries: 5
     cron:
         <<: *laravel-config
         command: ["php", "artisan", "schedule:work"]
@@ -110,6 +115,11 @@ services:
         depends_on:
             migrations:
                 condition: service_completed_successfully
+        healthcheck:
+            test: ["CMD-SHELL", 'pgrep -fl "php artisan schedule:work"']
+            interval: 30s
+            timeout: 5s
+            retries: 5
 
     worker:
         <<: *laravel-config

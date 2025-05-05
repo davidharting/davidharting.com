@@ -22,6 +22,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::feeds();
 
+Route::get('/healthz', function () {
+    return response('OK', 200);
+});
+
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
@@ -55,4 +59,4 @@ if (env('APP_ENV') == 'local') {
     });
 }
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
