@@ -18,7 +18,7 @@ services:
         "--caddyfile",
         "Caddyfile.dev",
         "--host",
-        "localhost"
+        "localhost",
       ]
     ports:
       - "8080:80"
@@ -32,4 +32,3 @@ services:
   migrations:
     <<: *laravel-dev-env
     command: ["php", "artisan", "migrate:fresh", "--seed"]
-
