@@ -59,4 +59,4 @@ if (env('APP_ENV') == 'local') {
     });
 }
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
