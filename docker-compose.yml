@@ -130,6 +130,6 @@ services:
 
         healthcheck:
             test: ["CMD-SHELL", 'pgrep -fl "php artisan queue:work"']
-            interval: 1s
+            interval: 30s
             timeout: 5s
             retries: 5
