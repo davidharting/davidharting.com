@@ -31,7 +31,5 @@ services:
 
   migrations:
     <<: *laravel-dev-env
+    command: ["php", "artisan", "migrate:fresh", "--seed"]
 
-
-# TODO: Run dev seeder
-# TODO: Why is webserver considered unhealthy?
