@@ -1,0 +1,34 @@
+x-laravel-dev-env: &laravel-dev-env
+  environment:
+    APP_ENV: local
+    APP_DEBUG: "true"
+    APP_URL: http://localhost
+    MAIL_MAILER: log
+    MAIL_FROM_ADDRESS: "hello@localhost"
+    OCTANE_HTTPS: false
+
+services:
+  web:
+    <<: *laravel-dev-env
+    command:
+      [
+        "php",
+        "artisan",
+        "octane:frankenphp",
+        "--caddyfile",
+        "Caddyfile.dev",
+        "--host",
+        "localhost",
+      ]
+    ports:
+      - "8080:80"
+
+  worker:
+    <<: *laravel-dev-env
+
+  cron:
+    <<: *laravel-dev-env
+
+  migrations:
+    <<: *laravel-dev-env
+    command: ["php", "artisan", "migrate:fresh", "--seed"]

@@ -26,6 +26,7 @@ fly.toml
 **/Thumbs.db
 public/hot
 docker-compose.yml
+docker-compose.dev.yml
 
 
 # 3. Copy over top-level .gitignore

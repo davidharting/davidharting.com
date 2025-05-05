@@ -1,6 +1,7 @@
 volumes:
     db_data:
     caddy_data:
+    # TODO: private and public disks
 
 secrets:
     DB_PASSWORD:
@@ -73,7 +74,6 @@ services:
 
     migrations:
         <<: *laravel-config
-        # TODO: seed in dev
         command: ["php", "artisan", "migrate", "--force"]
         restart: no
 
@@ -102,12 +102,22 @@ services:
         volumes:
             - caddy_data:/data
 
-    # cron:
-    #     <<: *laravel-config
-    #     command: ["php", "artisan", "schedule:work"]
-    #     depends_on:
-    #         migrations:
-    #             condition: service_completed_successfully
+        healthcheck:
+            test: ["CMD-SHELL", "curl -f http://localhost/healthz || exit 1"]
+            interval: 30s
+            timeout: 5s
+            retries: 5
+    cron:
+        <<: *laravel-config
+        command: ["php", "artisan", "schedule:work"]
+        depends_on:
+            migrations:
+                condition: service_completed_successfully
+        healthcheck:
+            test: ["CMD-SHELL", 'pgrep -fl "php artisan schedule:work"']
+            interval: 30s
+            timeout: 5s
+            retries: 5
 
     worker:
         <<: *laravel-config
@@ -118,6 +128,6 @@ services:
 
         healthcheck:
             test: ["CMD-SHELL", 'pgrep -fl "php artisan queue:work"']
-            interval: 1s
+            interval: 30s
             timeout: 5s
             retries: 5

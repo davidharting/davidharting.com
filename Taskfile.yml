@@ -1,0 +1,21 @@
+# https://taskfile.dev
+
+version: "3"
+
+tasks:
+  format:
+    cmds:
+      - ./vendor/bin/pint
+      - npm run format
+
+  dev:docker:build:
+    cmd: docker builder build -t davidhartingdotcom:latest -f Dockerfile .
+
+  dev:docker:down:
+    cmd: docker-compose down -v
+
+  dev:docker:up:
+    cmd: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+    deps:
+      - dev:docker:down
+      - dev:docker:build
