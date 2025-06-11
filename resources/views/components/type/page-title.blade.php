@@ -1,9 +1,3 @@
-<h1
-    {{
-        $attributes->merge([
-            "class" => "font-serif text-6xl",
-        ])
-    }}
->
+<flux:heading size='xl' level='1' class="font-serif">
     {{ $slot }}
-</h1>
+</flux:heading>

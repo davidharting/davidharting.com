@@ -1,24 +1,21 @@
 <div>
     <article>
-        <p>
-            <a
-                class="link {{ $note->title ? "" : "link link-hover" }}"
-                wire:navigate
-                href="{{ route("notes.show", $note) }}"
-            >
-                @if ($note->title)
-                    <span class="font-semibold">{{ $note->title }}</span>
-                @else
-                    <span class="text-sm text-gray-600">Permalink</span>
-                @endif
-            </a>
-        </p>
+        @if ($note->title)
+            <flux:link variant='ghost' href="{{ route('notes.show', $note) }}">
+                {{ $note->title }}
+            </flux:link>
+        @else
+            <flux:link variant='subtle' href="{{ route('notes.show', $note) }}">
+                <span class='text-xs'>Permalink</span>
+            </flux:link>
+        @endif
 
         @if ($note->lead)
-            <p>{{ $note->lead }}</p>
+            <flux:text>{{ $note->lead }}</flux:text>
         @endif
     </article>
-    <div class="text-sm text-gray-600">
+
+    <flux:text size='sm'>
         {{ $note->publicationDate() }}
-    </div>
+    </flux:text>
 </div>

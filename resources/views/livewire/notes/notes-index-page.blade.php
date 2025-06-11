@@ -1,13 +1,13 @@
 <x-slot:title>David's Notes</x-slot>
 <x-slot:description>Notes from David</x-slot>
 
-<div>
+<div class="m-auto mx-4 sm:mx-auto max-w-2xl">
     <x-type.page-title>Notes</x-type.page-title>
     @if ($notes->isEmpty())
         No notes yet
     @endif
 
-    <div class="mt-12 w-full space-y-6">
+    <div class="mt-6 space-y-6">
         @foreach ($notes as $note)
             <x-note-index-item :note='$note' />
         @endforeach
