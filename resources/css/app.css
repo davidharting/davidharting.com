@@ -1,11 +1,6 @@
 @import "tailwindcss";
 
 @plugin '@tailwindcss/typography';
-@plugin "daisyui" {
-    themes:
-        cmyk --default,
-        night --prefersdark;
-}
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 

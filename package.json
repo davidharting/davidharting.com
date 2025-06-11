@@ -10,7 +10,6 @@
     "devDependencies": {
         "@tailwindcss/postcss": "^4.0.9",
         "@tailwindcss/typography": "^0.5.16",
-        "daisyui": "^5.0.0",
         "laravel-vite-plugin": "^1.2.0",
         "postcss": "^8.5.3",
         "prettier": "^3.5.3",
