@@ -30,47 +30,47 @@
     <body class="font-sans antialiased">
         <div class="container mx-auto">
             <main class="mt-8">
-                <div class="flex justify-start space-x-8 mb-8">
-                    <a
-                        href="{{ route("home") }}"
-                        wire:navigate
-                        class="link link-primary"
+                <flux:navbar>
+                    <flux:navbar.item
+                        href="{{ route('home') }}"
+                        :current="request()->routeIs('home')"
                     >
                         Home
-                    </a>
-                    <a
-                        href="{{ route("notes.index") }}"
-                        wire:navigate
-                        class="link link-primary"
+                    </flux:navbar.item>
+
+                    <flux:navbar.item
+                        href="{{ route('notes.index') }}"
+                        :current="request()->routeIs('notes.index')"
                     >
                         Notes
-                    </a>
-                    <a
-                        href="{{ route("media.index") }}"
-                        wire:navigate
-                        class="link link-primary"
+                    </flux:navbar.item>
+
+                    <flux:navbar.item
+                        href="{{ route('media.index') }}"
+                        :current="request()->routeIs('media.index')"
                     >
                         Media Log
-                    </a>
-                    <a
-                        href="{{ route("scorecards.create") }}"
-                        wire:navigate
-                        class="link link-primary"
+                    </flux:navbar.item>
+
+                    <flux:navbar.item
+                        href="{{ route('scorecards.create') }}"
+                        :current="request()->routeIs('scorecards.create')"
                     >
                         Scorecards
-                    </a>
+                    </flux:navbar.item>
 
                     @can("administrate")
-                        <a
-                            href="{{ route("admin.index") }}"
-                            wire:navigate
-                            class="link link-primary"
+                        <flux:navbar.item
+                            href="{{ route('admin.index') }}"
+                        :current="request()->routeIs('admin.index')"
                         >
                             Admin
-                        </a>
+                        </flux:navbar.item>
                     @endcan
+                </flux:navbar>
+                <div class='mt-8'>
+                    {{ $slot }}
                 </div>
-                {{ $slot }}
             </main>
         </div>
         @fluxScripts
