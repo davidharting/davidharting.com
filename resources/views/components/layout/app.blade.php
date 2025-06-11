@@ -24,6 +24,7 @@
         @vite(["resources/css/app.css", "resources/js/app.js"])
 
         <x-feed-links />
+        @fluxAppearance
     </head>
 
     <body class="font-sans antialiased">
@@ -72,5 +73,6 @@
                 {{ $slot }}
             </main>
         </div>
+        @fluxScripts
     </body>
 </html>
