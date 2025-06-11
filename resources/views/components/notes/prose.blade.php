@@ -1,6 +1,6 @@
 <div>
     @if ($note->title)
-        <h1 class="font-serif">{{ $note->title }}</h1>
+        <flux:heading size='xl' level='1' class="font-serif">{{ $note->title }}</flux:heading>
     @endif
 
     @if ($note->lead)

@@ -4,16 +4,18 @@
     {{ $this->description() }}
 </x-slot>
 
-<article class="prose dark:prose-invert">
-    <p class="text-sm text-gray-600">
-        {{ $note->publicationDate() }}
-    </p>
+<div>
+    <article class="prose dark:prose-invert prose-sm prose-pink">
+        <p class="text-sm text-gray-600">
+            {{ $note->publicationDate() }}
+        </p>
 
-    <x-notes.prose :note="$note" />
+        <x-notes.prose :note="$note" />
 
-    <p class="text-sm">
-        <a href="{{ route("notes.index") }}" class="link" wire:navigate>
-            Back to all notes
-        </a>
-    </p>
-</article>
+    </article>
+    <div class='mt-8'>
+    <flux:link class='text-sm' href="{{ route('notes.index') }}">
+        Back to all notes
+    </flux:link>
+</div>
+</div>
