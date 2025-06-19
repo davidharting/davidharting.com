@@ -29,9 +29,6 @@ tasks:
     desc: "Bring down all docker-compose services"
     cmd: docker-compose down -v
 
-
   docker:stats:
     desc: "Monitor CPU and memory usage of docker-compose services"
     cmd: docker stats --no-stream --format '{{.DOCKER_STATS_FORMAT}}'
-
-

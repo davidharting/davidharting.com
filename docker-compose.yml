@@ -56,10 +56,10 @@ x-laravel-config: &laravel-config
     deploy:
         resources:
             limits:
-                cpus: '0.25'
+                cpus: "0.25"
                 memory: 256M
             reservations:
-                cpus: '0.1'
+                cpus: "0.1"
                 memory: 128M
 
 services:
@@ -84,10 +84,10 @@ services:
         deploy:
             resources:
                 limits:
-                    cpus: '0.25'
+                    cpus: "0.25"
                     memory: 256M
                 reservations:
-                    cpus: '0.1'
+                    cpus: "0.1"
                     memory: 128M
 
     migrations:
