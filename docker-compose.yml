@@ -53,6 +53,15 @@ x-laravel-config: &laravel-config
     stdin_open: true
     tty: true
 
+    deploy:
+        resources:
+            limits:
+                cpus: '0.25'
+                memory: 256M
+            reservations:
+                cpus: '0.1'
+                memory: 128M
+
 services:
     database:
         image: postgres:17.2
@@ -71,6 +80,15 @@ services:
             retries: 15
         volumes:
             - db_data:/var/lib/postgresql/data
+
+        deploy:
+            resources:
+                limits:
+                    cpus: '0.25'
+                    memory: 256M
+                reservations:
+                    cpus: '0.1'
+                    memory: 128M
 
     migrations:
         <<: *laravel-config

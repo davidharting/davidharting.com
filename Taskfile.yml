@@ -2,20 +2,36 @@
 
 version: "3"
 
+vars:
+  # This is wonky because both Taskfile and docker stats use Go text/template
+  # {{`{{`}} is to produce a "{{" literal that will make it to docker stats
+  DOCKER_STATS_FORMAT: "table {{`{{`}}.Name{{`}}`}}\t{{`{{`}}.Container{{`}}`}}\t{{`{{`}}.CPUPerc{{`}}`}}\t{{`{{`}}.MemUsage{{`}}`}}\t{{`{{`}}.MemPerc{{`}}`}}"
+
 tasks:
   format:
+    desc: "Format all backend and frontend code"
     cmds:
       - ./vendor/bin/pint
       - npm run format
 
   dev:docker:build:
+    desc: "Builds the image containing Frankenphp and the Laravel app"
     cmd: docker builder build -t davidhartingdotcom:latest -f Dockerfile .
 
-  dev:docker:down:
-    cmd: docker-compose down -v
-
   dev:docker:up:
+    desc: "Bring up all services with docker-compose using development configuration"
     cmd: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
     deps:
       - dev:docker:down
       - dev:docker:build
+
+  dev:docker:down:
+    desc: "Bring down all docker-compose services"
+    cmd: docker-compose down -v
+
+
+  docker:stats:
+    desc: "Monitor CPU and memory usage of docker-compose services"
+    cmd: docker stats --no-stream --format '{{.DOCKER_STATS_FORMAT}}'
+
+
