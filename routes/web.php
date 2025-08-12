@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
+use App\Http\Controllers\WelcomeController;
 use App\Livewire\AdminIndexPage;
 use App\Livewire\Media\MediaPage;
 use App\Livewire\Notes\NotesIndexPage;
@@ -26,9 +27,12 @@ Route::get('/healthz', function () {
     return response('OK', 200);
 });
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+// stale while revalidate
+Route::middleware('cache.headers:public;max_age=60;stale_while_revalidate=3600;etag')->group(
+    function () {
+        Route::get('/', [WelcomeController::class, 'show'])->name('home');
+    }
+);
 
 Route::get('/backend', AdminIndexPage::class)->name('admin.index')->middleware('can:administrate');
 
