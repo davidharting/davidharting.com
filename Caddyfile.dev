@@ -26,6 +26,12 @@ localhost:80 {
 		root * "{$APP_PUBLIC_PATH}"
 		encode zstd br gzip
 
+		# Cache Laravel Vite versioned assets (with hash in filename)
+		@versioned  path /build/assets/*
+		header @versioned {
+			Cache-Control "public, max-age=31536000, immutable"
+		}
+
 		# Mercure configuration is injected here...
 		{$CADDY_SERVER_EXTRA_DIRECTIVES}
 
