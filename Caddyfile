@@ -31,14 +31,6 @@ davidharting.com {
 			Cache-Control "public, max-age=31536000, immutable"
 		}
 
-		# Cache static assets for 1 year
-		@static {
-			path *.css *.js *.png *.jpg *.jpeg *.gif *.ico *.svg *.woff *.woff2 *.ttf *.eot *.pdf *.zip
-		}
-		header @static {
-			Cache-Control "public, max-age=31536000, immutable"
-		}
-
 		# Mercure configuration is injected here...
 		{$CADDY_SERVER_EXTRA_DIRECTIVES}
 
