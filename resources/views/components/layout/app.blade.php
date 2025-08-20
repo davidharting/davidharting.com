@@ -55,7 +55,11 @@
                     </div>
                     <div>
                         @guest
-                            <a href="{{ route("login") }}" wire:navigate class="link link-primary">
+                            <a
+                                href="{{ route("login") }}"
+                                wire:navigate
+                                class="link link-primary"
+                            >
                                 Login
                             </a>
                         @endguest
