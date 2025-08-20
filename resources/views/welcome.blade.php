@@ -88,12 +88,8 @@
                         </a>
                         .
                     </p>
-                    <p>While you're here, why not click the button?</p>
                 </div>
             </div>
-        </div>
-        <div class="mt-12">
-            <livewire:upclick lazy />
         </div>
     </div>
 </x-layout.app>
