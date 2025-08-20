@@ -29,45 +29,51 @@
     <body class="font-sans antialiased">
         <div class="container mx-auto">
             <main class="mt-8">
-                <div class="flex justify-start space-x-8 mb-8">
-                    <a
-                        href="{{ route("home") }}"
-                        wire:navigate
-                        class="link link-primary"
-                    >
-                        Home
-                    </a>
-                    <a
-                        href="{{ route("notes.index") }}"
-                        wire:navigate
-                        class="link link-primary"
-                    >
-                        Notes
-                    </a>
-                    <a
-                        href="{{ route("media.index") }}"
-                        wire:navigate
-                        class="link link-primary"
-                    >
-                        Media Log
-                    </a>
-                    <a
-                        href="{{ route("scorecards.create") }}"
-                        wire:navigate
-                        class="link link-primary"
-                    >
-                        Scorecards
-                    </a>
-
-                    @can("administrate")
+                <div class="flex justify-between w-full">
+                    <div class="flex justify-start space-x-8 mb-8">
                         <a
-                            href="{{ route("admin.index") }}"
+                            href="{{ route("home") }}"
                             wire:navigate
                             class="link link-primary"
                         >
-                            Admin
+                            Home
                         </a>
-                    @endcan
+                        <a
+                            href="{{ route("notes.index") }}"
+                            wire:navigate
+                            class="link link-primary"
+                        >
+                            Notes
+                        </a>
+                        <a
+                            href="{{ route("media.index") }}"
+                            wire:navigate
+                            class="link link-primary"
+                        >
+                            Media Log
+                        </a>
+                    </div>
+                    <div>
+                        @guest
+                            <a
+                                href="{{ route("login") }}"
+                                wire:navigate
+                                class="link link-primary"
+                            >
+                                Login
+                            </a>
+                        @endguest
+
+                        @can("administrate")
+                            <a
+                                href="{{ route("admin.index") }}"
+                                wire:navigate
+                                class="link link-primary"
+                            >
+                                Admin
+                            </a>
+                        @endcan
+                    </div>
                 </div>
                 {{ $slot }}
             </main>
