@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
 use App\Livewire\AdminIndexPage;
@@ -51,6 +52,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/fileshare/create', [FileShareController::class, 'create'])->name('fileshare.create');
+    Route::post('/fileshare', [FileShareController::class, 'store'])->name('fileshare.store');
+    Route::get('/fileshare/{path}', [FileShareController::class, 'show'])->name('fileshare.show')->where('path', '.*');
 });
 
 if (env('APP_ENV') == 'local') {
