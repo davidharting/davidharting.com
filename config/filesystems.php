@@ -34,7 +34,6 @@ return [
             'root' => storage_path('app/private'),
             'visibility' => 'private',
             'throw' => false,
-            // 'serve' => true,
         ],
 
         'local-public' => [
@@ -57,12 +56,17 @@ return [
             'throw' => false,
         ],
 
-        // 'r2-private' => [
-        // ],
-        //
-        // 'r2-public' => [
-        // ]
-
+        'r2-private' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto', // R2 uses 'auto' as the region
+            'bucket' => env('R2_PRIVATE_BUCKET'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => true, // Required for R2
+            'visibility' => 'private',
+            'throw' => false,
+        ],
     ],
 
     /*

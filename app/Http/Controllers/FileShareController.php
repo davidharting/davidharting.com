@@ -15,7 +15,7 @@ class FileShareController extends Controller
 
     public function store(Request $request)
     {
-        $path = $request->file('file')->store('fileshare');
+        $path = $request->file('file')->store('fileshare', ['visibility' => 'private']);
 
         return redirect()->route('fileshare.show', ['path' => $path]);
     }
