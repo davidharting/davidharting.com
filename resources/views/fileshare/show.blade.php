@@ -3,6 +3,5 @@
 
     <ul>
         <li>Size: {{ $size }}</li>
-        <li>Visibility: {{ $visibility }}</li>
     </ul>
 </x-layout.app>
