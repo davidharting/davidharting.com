@@ -54,11 +54,9 @@ class FileShareController extends Controller
             abort(404);
         }
 
-        $visibility = Storage::disk()->getVisibility($path);
         $size = Storage::disk()->size($path);
 
         return view('fileshare.show', [
-            'visibility' => $visibility,
             'size' => $size,
         ]);
     }
