@@ -33,7 +33,7 @@ return [
             'driver' => 'local',
             'root' => storage_path('app/private'),
             'visibility' => 'private',
-            'throw' => false,
+            'throw' => true,
         ],
 
         'local-public' => [
@@ -65,7 +65,7 @@ return [
             'endpoint' => env('R2_ENDPOINT'),
             'use_path_style_endpoint' => true, // Required for R2
             'visibility' => 'private',
-            'throw' => false,
+            'throw' => true,
         ],
     ],
 
