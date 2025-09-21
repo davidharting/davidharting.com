@@ -10,6 +10,14 @@ secrets:
         file: ./secrets/APP_KEY.txt
     MAILERSEND_API_KEY:
         file: ./secrets/MAILERSEND_API_KEY.txt
+    R2_ACCESS_KEY_ID:
+        file: ./secrets/R2_ACCESS_KEY_ID.txt
+    R2_SECRET_ACCESS_KEY:
+        file: ./secrets/R2_SECRET_ACCESS_KEY.txt
+    R2_ENDPOINT:
+        file: ./secrets/R2_ENDPOINT.txt
+    R2_PRIVATE_BUCKET:
+        file: ./secrets/R2_PRIVATE_BUCKET.txt
 
 x-laravel-config: &laravel-config
     image: davidhartingdotcom:latest
@@ -17,6 +25,10 @@ x-laravel-config: &laravel-config
         - DB_PASSWORD
         - APP_KEY
         - MAILERSEND_API_KEY
+        - R2_ACCESS_KEY_ID
+        - R2_SECRET_ACCESS_KEY
+        - R2_ENDPOINT
+        - R2_PRIVATE_BUCKET
     environment:
         APP_DEBUG: "false"
         APP_ENV: production
@@ -31,7 +43,7 @@ x-laravel-config: &laravel-config
         # DB_PASSWORD: Injected into /run/secrets/DB_PASSWORD
         DB_PORT: 5432
         DB_USERNAME: laravel
-        FILESYSTEM_DISK: local
+        FILESYSTEM_DISK_PRIVATE: r2-private
         LOG_CHANNEL: stderr
         LOG_DEPRECATIONS_CHANNEL: null
         LOG_LEVEL: debug

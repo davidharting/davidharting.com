@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DISK', 'local'),
+    'default' => env('FILESYSTEM_DISK_PRIVATE', 'local-private'),
 
     /*
     |--------------------------------------------------------------------------
@@ -29,15 +29,15 @@ return [
     */
 
     'disks' => [
-
-        'local' => [
+        'local-private' => [
             'driver' => 'local',
-            'root' => storage_path('app'),
+            'root' => storage_path('app/private'),
+            'visibility' => 'private',
             'throw' => false,
-            'serve' => true,
+            // 'serve' => true,
         ],
 
-        'public' => [
+        'local-public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => env('APP_URL').'/storage',
@@ -57,6 +57,17 @@ return [
             'throw' => false,
         ],
 
+        'r2-private' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto', // R2 uses 'auto' as the region
+            'bucket' => env('R2_PRIVATE_BUCKET'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => true, // Required for R2
+            'visibility' => 'private',
+            'throw' => false,
+        ],
     ],
 
     /*
@@ -73,5 +84,4 @@ return [
     'links' => [
         public_path('storage') => storage_path('app/public'),
     ],
-
 ];

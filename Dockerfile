@@ -7,6 +7,7 @@ RUN apt-get update \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] https://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y unzip libnss3-tools procps postgresql-client-17 nodejs \
     && rm -rf /var/lib/apt/lists/*
 
