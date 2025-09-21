@@ -40,6 +40,7 @@ docker-compose.dev.yml
 /vendor
 .env
 .env.backup
+.env.task
 .env.production
 .phpactor.json
 .phpunit.result.cache
@@ -53,6 +54,8 @@ yarn-error.log
 /secrets
 
 todo.md
+# Ignore tar files from prod:build
+davidharting*.tar
 
 /caddy
 frankenphp
