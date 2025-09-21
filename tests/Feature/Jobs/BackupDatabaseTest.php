@@ -7,7 +7,7 @@ use Tests\TestCase;
 
 test('happy path', function () {
     /** @var TestCase $this */
-    Storage::fake('local');
+    Storage::fake('local-private');
 
     Process::fake([
         'pg_dump *' => Process::result(output: 'some tar file'),
@@ -21,7 +21,7 @@ test('happy path', function () {
 
 test('failure', function () {
     /** @var TestCase $this */
-    Storage::fake('local');
+    Storage::fake('local-private');
 
     Process::fake([
         'pg_dump *' => Process::result(exitCode: 1, errorOutput: 'pg_dump: error'),
