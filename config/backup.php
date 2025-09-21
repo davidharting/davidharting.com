@@ -14,7 +14,9 @@ return [
                 /*
                  * The list of directories and files that will be included in the backup.
                  */
-                'include' => [],
+                'include' => [
+                    base_path(),
+                ],
 
                 /*
                  * These directories and files will be excluded from the backup.
@@ -75,7 +77,7 @@ return [
              * For a complete list of available customization options, see https://github.com/spatie/db-dumper
              */
             'databases' => [
-                env('DB_CONNECTION', 'mysql'),
+                env('DB_CONNECTION', 'pgsql'),
             ],
         ],
 
@@ -90,7 +92,7 @@ return [
          *
          * If you do not want any compressor at all, set it to null.
          */
-        'database_dump_compressor' => null,
+        'database_dump_compressor' => \Spatie\DbDumper\Compressors\GzipCompressor::class,
 
         /*
          * If specified, the database dumped file name will contain a timestamp (e.g.: 'Y-m-d-H-i-s').
@@ -143,13 +145,13 @@ return [
             /*
              * The filename prefix used for the backup zip file.
              */
-            'filename_prefix' => '',
+            'filename_prefix' => 'backup-',
 
             /*
              * The disk names on which the backups will be stored.
              */
             'disks' => [
-                'local',
+                'backups'
             ],
         ],
 
@@ -171,18 +173,18 @@ return [
          * When set to 'default', we'll use ZipArchive::EM_AES_256 if it is
          * available on your system.
          */
-        'encryption' => 'default',
+        'encryption' => false,
 
         /*
          * The number of attempts, in case the backup command encounters an exception
          */
-        'tries' => 1,
+        'tries' => 2,
 
         /*
          * The number of seconds to wait before attempting a new backup if the previous try failed
          * Set to `0` for none
          */
-        'retry_delay' => 0,
+        'retry_delay' => 2,
     ],
 
     /*
@@ -197,7 +199,7 @@ return [
             \Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification::class => ['mail'],
             \Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification::class => ['mail'],
             \Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification::class => ['mail'],
-            \Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class => ['mail'],
+            \Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class => [],
             \Spatie\Backup\Notifications\Notifications\HealthyBackupWasFoundNotification::class => ['mail'],
             \Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification::class => ['mail'],
         ],
@@ -209,7 +211,7 @@ return [
         'notifiable' => \Spatie\Backup\Notifications\Notifiable::class,
 
         'mail' => [
-            'to' => 'your@example.com',
+            'to' => env('MAIL_FROM_ADDRESS'),
 
             'from' => [
                 'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
@@ -253,7 +255,7 @@ return [
     'monitor_backups' => [
         [
             'name' => env('APP_NAME', 'laravel-backup'),
-            'disks' => ['local'],
+            'disks' => [],
             'health_checks' => [
                 \Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays::class => 1,
                 \Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumStorageInMegabytes::class => 5000,
@@ -327,13 +329,13 @@ return [
         /*
          * The number of attempts, in case the cleanup command encounters an exception
          */
-        'tries' => 1,
+        'tries' => 2,
 
         /*
          * The number of seconds to wait before attempting a new cleanup if the previous try failed
          * Set to `0` for none
          */
-        'retry_delay' => 0,
+        'retry_delay' => 5,
     ],
 
 ];
