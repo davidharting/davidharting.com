@@ -20,3 +20,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('pulse:check --once')->everyMinute();
+
+
+Schedule::command('backup:clean')->daily();
+Schedule::command('backup:run --only-db')->hourly();
