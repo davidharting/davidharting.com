@@ -19,8 +19,14 @@ npm-debug.log
 yarn-error.log
 /.fleet
 /.idea
+.claude
 
 todo.md
+plan.md
+PLAN.md
+prompt.md
+PROMPT.md
+
 # Ignore tar files from prod:build
 davidharting*.tar
 

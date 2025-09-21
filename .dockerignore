@@ -13,6 +13,7 @@ vendor
 
 # 2. Ignore common files/directories we don't need
 fly.toml
+.claude
 .vscode
 .idea
 **/*node_modules
@@ -54,6 +55,11 @@ yarn-error.log
 /secrets
 
 todo.md
+plan.md
+PLAN.md
+prompt.md
+PROMPT.md
+
 # Ignore tar files from prod:build
 davidharting*.tar
 
