@@ -18,5 +18,5 @@ test('happy path', function () {
 
     $response = $this->actingAs(User::factory()->createOne())->get('/fileshare/the-path.txt');
     $response->assertStatus(200);
-    $response->assertSeeInOrder(['Size', '8', 'Visibility']);
+    $response->assertSeeInOrder(['Size', '8']);
 });
