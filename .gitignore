@@ -9,6 +9,7 @@
 .env
 .env.backup
 .env.production
+.env.task
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
@@ -18,8 +19,16 @@ npm-debug.log
 yarn-error.log
 /.fleet
 /.idea
+.claude
 
 todo.md
+plan.md
+PLAN.md
+prompt.md
+PROMPT.md
+
+# Ignore tar files from prod:build
+davidharting*.tar
 
 /caddy
 frankenphp
