@@ -29,11 +29,6 @@ $r2PrivateDisk = [
     'throw' => false,
 ];
 
-$backupsDisk = match ($privateDisk) {
-    'r2-private' => [...$r2PrivateDisk, 'prefix' => 'backups/'],
-    default => [...$localPrivateDisk, 'root' => storage_path('app/private/backups')],
-};
-
 return [
 
     /*
@@ -66,7 +61,6 @@ return [
         'local-private' => $localPrivateDisk,
         'local-public' => $localPublicDisk,
         'r2-private' => $r2PrivateDisk,
-        'backups' => $backupsDisk,
     ],
 
     /*
