@@ -9,7 +9,7 @@ return [
          * The name of this application. You can use this name to monitor
          * the backups.
          */
-        'name' =>  'laravel-backup',
+        'name' => 'laravel-backup',
 
         'source' => [
             'files' => [
@@ -151,7 +151,7 @@ return [
              * The disk names on which the backups will be stored.
              */
             'disks' => [
-                $privateDisk
+                $privateDisk,
             ],
         ],
 

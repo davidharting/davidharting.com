@@ -21,6 +21,5 @@ Artisan::command('inspire', function () {
 
 Schedule::command('pulse:check --once')->everyMinute()->sendOutputTo('/dev/stderr');
 
-
 Schedule::command('backup:clean')->daily()->sendOutputTo('/dev/stderr');
 Schedule::command('backup:run --only-db')->hourly()->sendOutputTo('/dev/stderr');
