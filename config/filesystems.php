@@ -1,5 +1,34 @@
 <?php
 
+$privateDisk = env('FILESYSTEM_DISK_PRIVATE', 'local-private');
+
+$localPrivateDisk = [
+    'driver' => 'local',
+    'root' => storage_path('app/private'),
+    'visibility' => 'private',
+    'throw' => false,
+];
+
+$localPublicDisk = [
+    'driver' => 'local',
+    'root' => storage_path('app/public'),
+    'url' => env('APP_URL').'/storage',
+    'visibility' => 'public',
+    'throw' => false,
+];
+
+$r2PrivateDisk = [
+    'driver' => 's3',
+    'key' => env('R2_ACCESS_KEY_ID'),
+    'secret' => env('R2_SECRET_ACCESS_KEY'),
+    'region' => 'auto', // R2 uses 'auto' as the region
+    'bucket' => env('R2_PRIVATE_BUCKET'),
+    'endpoint' => env('R2_ENDPOINT'),
+    'use_path_style_endpoint' => true, // Required for R2
+    'visibility' => 'private',
+    'throw' => false,
+];
+
 return [
 
     /*
@@ -29,45 +58,9 @@ return [
     */
 
     'disks' => [
-        'local-private' => [
-            'driver' => 'local',
-            'root' => storage_path('app/private'),
-            'visibility' => 'private',
-            'throw' => false,
-            // 'serve' => true,
-        ],
-
-        'local-public' => [
-            'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
-            'visibility' => 'public',
-            'throw' => false,
-        ],
-
-        's3' => [
-            'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
-        ],
-
-        'r2-private' => [
-            'driver' => 's3',
-            'key' => env('R2_ACCESS_KEY_ID'),
-            'secret' => env('R2_SECRET_ACCESS_KEY'),
-            'region' => 'auto', // R2 uses 'auto' as the region
-            'bucket' => env('R2_PRIVATE_BUCKET'),
-            'endpoint' => env('R2_ENDPOINT'),
-            'use_path_style_endpoint' => true, // Required for R2
-            'visibility' => 'private',
-            'throw' => false,
-        ],
+        'local-private' => $localPrivateDisk,
+        'local-public' => $localPublicDisk,
+        'r2-private' => $r2PrivateDisk,
     ],
 
     /*

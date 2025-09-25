@@ -27,6 +27,9 @@ RUN mkdir -p /app/public/build
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY . /app
 
+# spatie/laravel-backup expects this to be defined in the post-install script
+ENV MAIL_FROM_ADDRESS=hello@davidharting.com
+
 RUN composer install --optimize-autoloader && php artisan optimize:clear
 
 RUN npm ci --no-audit
