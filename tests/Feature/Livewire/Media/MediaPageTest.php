@@ -39,7 +39,7 @@ describe('with data', function () {
             ->for(Creator::factory(['name' => 'Author Two']))
             ->has(MediaEvent::factory()->started()->at(Carbon::parse('2019-10-15')), 'events')
             ->has(MediaEvent::factory()->finished()->at(Carbon::parse('2019-12-26')), 'events')
-            ->create(['title' => 'Read Book']);
+            ->create(['title' => 'Read Book', 'note' => 'Recommended by George']);
 
         Media::factory()
             ->album()
@@ -125,6 +125,27 @@ describe('with data', function () {
 
             Livewire::test(MediaPage::class)
                 ->assertSee('Edit');
+        });
+    });
+
+    describe('notes', function () {
+        test('guest users cannot see note', function () {
+            Livewire::test(MediaPage::class)
+                ->assertDontSee('Recommended by George');
+        });
+
+        test('regular users cannot see note', function () {
+            $this->actingAs(User::factory(['is_admin' => false])->create());
+
+            Livewire::test(MediaPage::class)
+                ->assertDontSee('Recommended by George');
+        });
+
+        test('admin users see note', function () {
+            $this->actingAs(User::factory(['is_admin' => true])->create());
+
+            Livewire::test(MediaPage::class)
+                ->assertSee('Recommended by George');
         });
     });
 
