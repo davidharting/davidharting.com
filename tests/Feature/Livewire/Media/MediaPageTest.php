@@ -38,7 +38,7 @@ describe('with data', function () {
             ->book()
             ->for(Creator::factory(['name' => 'Author Two']))
             ->has(MediaEvent::factory()->started()->at(Carbon::parse('2019-10-15')), 'events')
-            ->has(MediaEvent::factory()->finished()->at(Carbon::parse('2019-12-26')), 'events')
+            ->has(MediaEvent::factory()->state(['comment' => 'It was great!'])->finished()->at(Carbon::parse('2019-12-26')), 'events')
             ->create(['title' => 'Read Book', 'note' => 'Recommended by George']);
 
         Media::factory()
@@ -131,21 +131,23 @@ describe('with data', function () {
     describe('notes', function () {
         test('guest users cannot see note', function () {
             Livewire::test(MediaPage::class)
-                ->assertDontSee('Recommended by George');
+                ->assertDontSee('Recommended by George')
+                ->assertDontSee('It was great!');
         });
 
         test('regular users cannot see note', function () {
             $this->actingAs(User::factory(['is_admin' => false])->create());
 
             Livewire::test(MediaPage::class)
-                ->assertDontSee('Recommended by George');
+                ->assertDontSee('Recommended by George')
+                ->assertDontSee('It was great!');
         });
 
         test('admin users see note', function () {
             $this->actingAs(User::factory(['is_admin' => true])->create());
 
             Livewire::test(MediaPage::class)
-                ->assertSee('Recommended by George');
+                ->assertSeeInOrder(['Recommended by George', 'It was great!']);
         });
     });
 
