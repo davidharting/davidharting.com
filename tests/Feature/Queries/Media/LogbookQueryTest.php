@@ -11,7 +11,7 @@ test('1 item', function () {
     $media = Media::factory()
         ->book()
         ->for(Creator::factory(['name' => 'J.R.R. Tolkien']))
-        ->has(MediaEvent::factory()->finished()->state(['occurred_at' => '2023-02-07']), 'events')
+        ->has(MediaEvent::factory()->finished()->state(['occurred_at' => '2023-02-07', 'comment' => null]), 'events')
         ->create([
             'title' => 'The Hobbit',
             'note' => 'Classic!',
