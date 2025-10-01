@@ -42,26 +42,12 @@ tasks:
       IMAGE_NAME: "davidhartingdotcom:{{.TAG}}"
       TAR_FILE: "davidhartingdotcom-{{.TAG}}.tar"
     cmds:
-      - echo "Building image {{.IMAGE_NAME}} for linux/amd64..."
       - docker buildx build --platform linux/amd64 -t {{.IMAGE_NAME}} -f Dockerfile .
-      - echo "Saving image to {{.TAR_FILE}}..."
       - docker save --output {{.TAR_FILE}} {{.IMAGE_NAME}}
       - echo "Build complete! Tar file saved as {{.TAR_FILE}}"
 
   prod:deploy:
-    desc: "Upload and deploy docker image to production server"
-    vars:
-      TAG: '{{.TAG | default "latest"}}'
-      TAR_FILE: "davidhartingdotcom-{{.TAG}}.tar"
-    deps:
-      - prod:build
+    desc: "Deploy latest docker image to production server"
     cmds:
-      - echo "Uploading {{.TAR_FILE}} to production server..."
-      - scp -C -P $SSH_PORT {{.TAR_FILE}} $SSH_USER@$SSH_HOST:/home/$SSH_USER/docker/
-      - echo "Loading image on production server..."
-      - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "docker load --input /home/$SSH_USER/docker/{{.TAR_FILE}}"
-      - echo "Deploying on production server..."
-      - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "docker compose -f /home/$SSH_USER/repos/davidharting.com/docker-compose.yml up -d"
-      - echo "Cleaning up local tar file..."
-      - rm {{.TAR_FILE}}
+      - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/$SSH_USER/repos/davidharting.com && docker compose pull && docker compose up -d"
       - echo "Deploy complete!"

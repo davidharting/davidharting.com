@@ -22,7 +22,7 @@ secrets:
         file: ./secrets/R2_PRIVATE_BUCKET.txt
 
 x-laravel-config: &laravel-config
-    image: davidhartingdotcom:latest
+    image: ghcr.io/davidharting/davidharting.com:latest
     secrets:
         - DB_PASSWORD
         - APP_KEY
