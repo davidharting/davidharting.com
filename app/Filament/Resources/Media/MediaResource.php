@@ -15,6 +15,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -49,6 +50,22 @@ class MediaResource extends Resource
                         TextInput::make('name')
                             ->required(),
                     ]),
+            ]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                TextEntry::make('mediaType.name')
+                    ->label('Media Type'),
+                TextEntry::make('year'),
+                TextEntry::make('title'),
+                TextEntry::make('creator.name')
+                    ->label('Creator')
+                    ->url(fn ($record) => $record->creator ? route('filament.admin.resources.creators.view', ['record' => $record->creator]) : null),
+                TextEntry::make('note')
+                    ->columnSpanFull(),
             ]);
     }
 
