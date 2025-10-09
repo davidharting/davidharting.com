@@ -2,8 +2,20 @@
 
 namespace App\Filament\Resources\CreatorResource\RelationManagers;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\CreateAction;
+use Filament\Actions\AssociateAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DissociateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DetachBulkAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -12,19 +24,19 @@ class MediaRelationManager extends RelationManager
 {
     protected static string $relationship = 'media';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('media_type_id')
+        return $schema
+            ->components([
+                Select::make('media_type_id')
                     ->relationship('mediaType', 'name')
                     ->required(),
-                Forms\Components\TextInput::make('year')
+                TextInput::make('year')
                     ->numeric(),
-                Forms\Components\TextInput::make('title')
+                TextInput::make('title')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('note')
+                Textarea::make('note')
                     ->columnSpanFull(),
             ]);
     }
@@ -34,27 +46,27 @@ class MediaRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('title')
             ->columns([
-                Tables\Columns\TextColumn::make('title'),
-                Tables\Columns\TextColumn::make('year')->numeric(thousandsSeparator: ''),
+                TextColumn::make('title'),
+                TextColumn::make('year')->numeric(thousandsSeparator: ''),
             ])
             ->filters([
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                CreateAction::make(),
                 // Tables\Actions\AttachAction::make(),
-                Tables\Actions\AssociateAction::make()->preloadRecordSelect(),
+                AssociateAction::make()->preloadRecordSelect(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
                 // Tables\Actions\DetachAction::make(),
-                Tables\Actions\DissociateAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                DissociateAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DetachBulkAction::make(),
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DetachBulkAction::make(),
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->inverseRelationship('creator');

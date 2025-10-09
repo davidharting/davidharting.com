@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MediaResource\Pages;
 
+use Filament\Actions\EditAction;
 use App\Filament\Resources\MediaResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
@@ -13,7 +14,7 @@ class ViewMedia extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make(),
+            EditAction::make(),
         ];
     }
 }

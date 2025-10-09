@@ -2,10 +2,22 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\MediaEventResource\Pages\ListMediaEvents;
+use App\Filament\Resources\MediaEventResource\Pages\CreateMediaEvent;
+use App\Filament\Resources\MediaEventResource\Pages\ViewMediaEvent;
+use App\Filament\Resources\MediaEventResource\Pages\EditMediaEvent;
 use App\Filament\Resources\MediaEventResource\Pages;
 use App\Models\MediaEvent;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -14,25 +26,25 @@ class MediaEventResource extends Resource
 {
     protected static ?string $model = MediaEvent::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('media_event_type_id')
+        return $schema
+            ->components([
+                Select::make('media_event_type_id')
                     ->relationship(name: 'mediaEventType', titleAttribute: 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name->value)
                     ->required(),
-                Forms\Components\DatePicker::make('occurred_at')
+                DatePicker::make('occurred_at')
                     ->label('Date')
                     ->required(),
-                Forms\Components\Select::make('media_id')
+                Select::make('media_id')
                     ->relationship('media', 'title')
                     ->searchable()
                     ->preload()
                     ->required(),
-                Forms\Components\Textarea::make('comment')
+                Textarea::make('comment')
                     ->columnSpanFull(),
             ]);
     }
@@ -43,19 +55,19 @@ class MediaEventResource extends Resource
             ->defaultSort('occurred_at', 'desc')
             ->defaultPaginationPageOption(10)
             ->columns([
-                Tables\Columns\TextColumn::make('mediaEventType.name')
+                TextColumn::make('mediaEventType.name')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('media.title')
+                TextColumn::make('media.title')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('occurred_at')
+                TextColumn::make('occurred_at')
                     ->date()
                     ->label('Date')
                     ->sortable(),
@@ -63,13 +75,13 @@ class MediaEventResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -84,10 +96,10 @@ class MediaEventResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListMediaEvents::route('/'),
-            'create' => Pages\CreateMediaEvent::route('/create'),
-            'view' => Pages\ViewMediaEvent::route('/{record}'),
-            'edit' => Pages\EditMediaEvent::route('/{record}/edit'),
+            'index' => ListMediaEvents::route('/'),
+            'create' => CreateMediaEvent::route('/create'),
+            'view' => ViewMediaEvent::route('/{record}'),
+            'edit' => EditMediaEvent::route('/{record}/edit'),
         ];
     }
 }

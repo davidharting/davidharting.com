@@ -2,11 +2,23 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\MediaResource\Pages\ListMedia;
+use App\Filament\Resources\MediaResource\Pages\CreateMedia;
+use App\Filament\Resources\MediaResource\Pages\ViewMedia;
+use App\Filament\Resources\MediaResource\Pages\EditMedia;
 use App\Filament\Resources\MediaResource\Pages;
 use App\Filament\Resources\MediaResource\RelationManagers\EventsRelationManager;
 use App\Models\Media;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -15,29 +27,29 @@ class MediaResource extends Resource
 {
     protected static ?string $model = Media::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('media_type_id')
+        return $schema
+            ->components([
+                Select::make('media_type_id')
                     ->relationship('mediaType')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name->getLabel())
                     ->required(),
-                Forms\Components\TextInput::make('year')
+                TextInput::make('year')
                     ->numeric(),
-                Forms\Components\TextInput::make('title')
+                TextInput::make('title')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('note')
+                Textarea::make('note')
                     ->columnSpanFull(),
-                Forms\Components\Select::make('creator_id')
+                Select::make('creator_id')
                     ->relationship(name: 'creator', titleAttribute: 'name')
                     ->searchable()
                     ->preload()
                     ->createOptionForm([
-                        Forms\Components\TextInput::make('name')
+                        TextInput::make('name')
                             ->required(),
                     ]),
             ]);
@@ -49,32 +61,32 @@ class MediaResource extends Resource
             ->defaultSort('updated_at', 'desc')
             ->defaultPaginationPageOption(10)
             ->columns([
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('mediaType.name')
+                TextColumn::make('mediaType.name')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('year')
+                TextColumn::make('year')
                     ->numeric(thousandsSeparator: false)
                     ->sortable(),
-                Tables\Columns\TextColumn::make('title')
+                TextColumn::make('title')
                     ->searchable(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -89,10 +101,10 @@ class MediaResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListMedia::route('/'),
-            'create' => Pages\CreateMedia::route('/create'),
-            'view' => Pages\ViewMedia::route('/{record}'),
-            'edit' => Pages\EditMedia::route('/{record}/edit'),
+            'index' => ListMedia::route('/'),
+            'create' => CreateMedia::route('/create'),
+            'view' => ViewMedia::route('/{record}'),
+            'edit' => EditMedia::route('/{record}/edit'),
         ];
     }
 }

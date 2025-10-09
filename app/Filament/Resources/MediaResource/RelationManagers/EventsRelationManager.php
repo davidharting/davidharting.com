@@ -2,8 +2,17 @@
 
 namespace App\Filament\Resources\MediaResource\RelationManagers;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\CreateAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -12,18 +21,18 @@ class EventsRelationManager extends RelationManager
 {
     protected static string $relationship = 'events';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('media_event_type_id')
+        return $schema
+            ->components([
+                Select::make('media_event_type_id')
                     ->relationship(name: 'mediaEventType', titleAttribute: 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name->value)
                     ->required(),
-                Forms\Components\DatePicker::make('occurred_at')
+                DatePicker::make('occurred_at')
                     ->label('Date')
                     ->required(),
-                Forms\Components\Textarea::make('comment')
+                Textarea::make('comment')
                     ->columnSpanFull(),
             ]);
     }
@@ -33,26 +42,26 @@ class EventsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('name')
             ->columns([
-                Tables\Columns\TextColumn::make('mediaEventType.name'),
-                Tables\Columns\TextColumn::make('occurred_at')->label('Date')->date(),
-                Tables\Columns\TextColumn::make('comment')->limit(50),
+                TextColumn::make('mediaEventType.name'),
+                TextColumn::make('occurred_at')->label('Date')->date(),
+                TextColumn::make('comment')->limit(50),
             ])
             ->filters([
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                CreateAction::make(),
                 // Tables\Actions\AssociateAction::make(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
                 // Tables\Actions\DissociateAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
+            ->toolbarActions([
+                BulkActionGroup::make([
                     // Tables\Actions\DissociateBulkAction::make(),
-                    Tables\Actions\DeleteBulkAction::make(),
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

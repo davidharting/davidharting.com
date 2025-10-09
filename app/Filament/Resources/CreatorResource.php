@@ -2,11 +2,21 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\CreatorResource\Pages\ListCreators;
+use App\Filament\Resources\CreatorResource\Pages\CreateCreator;
+use App\Filament\Resources\CreatorResource\Pages\ViewCreator;
+use App\Filament\Resources\CreatorResource\Pages\EditCreator;
 use App\Filament\Resources\CreatorResource\Pages;
 use App\Filament\Resources\CreatorResource\RelationManagers\MediaRelationManager;
 use App\Models\Creator;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -15,13 +25,13 @@ class CreatorResource extends Resource
 {
     protected static ?string $model = Creator::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
+        return $schema
+            ->components([
+                TextInput::make('name')
                     ->required()
                     ->maxLength(255),
             ]);
@@ -33,27 +43,27 @@ class CreatorResource extends Resource
             ->defaultSort('updated_at', 'desc')
             ->defaultPaginationPageOption(50)
             ->columns([
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->searchable(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -68,10 +78,10 @@ class CreatorResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCreators::route('/'),
-            'create' => Pages\CreateCreator::route('/create'),
-            'view' => Pages\ViewCreator::route('/{record}'),
-            'edit' => Pages\EditCreator::route('/{record}/edit'),
+            'index' => ListCreators::route('/'),
+            'create' => CreateCreator::route('/create'),
+            'view' => ViewCreator::route('/{record}'),
+            'edit' => EditCreator::route('/{record}/edit'),
         ];
     }
 }

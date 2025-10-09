@@ -2,11 +2,24 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\NoteResource\Pages\ListNotes;
+use App\Filament\Resources\NoteResource\Pages\CreateNote;
+use App\Filament\Resources\NoteResource\Pages\EditNote;
 use App\Filament\Resources\NoteResource\Pages;
 use App\Models\Note;
 use Carbon\Carbon;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -15,20 +28,20 @@ class NoteResource extends Resource
 {
     protected static ?string $model = Note::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('slug'),
-                Forms\Components\DatePicker::make('published_at')->default(Carbon::now())->label('Publish Date'),
-                Forms\Components\TextInput::make('title')
+        return $schema
+            ->components([
+                TextInput::make('slug'),
+                DatePicker::make('published_at')->default(Carbon::now())->label('Publish Date'),
+                TextInput::make('title')
                     ->columnSpanFull(),
-                Forms\Components\Textarea::make('lead')
+                Textarea::make('lead')
                     ->columnSpanFull(),
-                Forms\Components\RichEditor::make('content')->columnSpanFull(),
-                Forms\Components\Toggle::make('visible')->default(true)
+                RichEditor::make('content')->columnSpanFull(),
+                Toggle::make('visible')->default(true)
                     ->required(),
             ]);
     }
@@ -38,19 +51,19 @@ class NoteResource extends Resource
         return $table
             ->defaultSort('updated_at', 'desc')
             ->columns([
-                Tables\Columns\TextColumn::make('slug'),
-                Tables\Columns\TextColumn::make('title')->lineClamp(50),
-                Tables\Columns\TextColumn::make('lead')->lineClamp(50),
-                Tables\Columns\IconColumn::make('visible')
+                TextColumn::make('slug'),
+                TextColumn::make('title')->lineClamp(50),
+                TextColumn::make('lead')->lineClamp(50),
+                IconColumn::make('visible')
                     ->boolean(),
-                Tables\Columns\TextColumn::make('published_at')
+                TextColumn::make('published_at')
                     ->dateTime()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
+                TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -58,12 +71,12 @@ class NoteResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -78,9 +91,9 @@ class NoteResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListNotes::route('/'),
-            'create' => Pages\CreateNote::route('/create'),
-            'edit' => Pages\EditNote::route('/{record}/edit'),
+            'index' => ListNotes::route('/'),
+            'create' => CreateNote::route('/create'),
+            'edit' => EditNote::route('/{record}/edit'),
         ];
     }
 }
