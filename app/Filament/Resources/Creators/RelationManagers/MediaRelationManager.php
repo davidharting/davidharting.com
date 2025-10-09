@@ -10,6 +10,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DetachBulkAction;
 use Filament\Actions\DissociateAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -28,7 +29,8 @@ class MediaRelationManager extends RelationManager
         return $schema
             ->components([
                 Select::make('media_type_id')
-                    ->relationship('mediaType', 'name')
+                    ->relationship('mediaType')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name->getLabel())
                     ->required(),
                 TextInput::make('year')
                     ->numeric(),
@@ -57,6 +59,8 @@ class MediaRelationManager extends RelationManager
                 AssociateAction::make()->preloadRecordSelect(),
             ])
             ->recordActions([
+                ViewAction::make()
+                    ->url(fn ($record) => route('filament.admin.resources.media.view', ['record' => $record])),
                 EditAction::make(),
                 // Tables\Actions\DetachAction::make(),
                 DissociateAction::make(),

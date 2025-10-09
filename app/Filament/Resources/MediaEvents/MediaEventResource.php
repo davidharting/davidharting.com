@@ -14,6 +14,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -42,6 +43,23 @@ class MediaEventResource extends Resource
                     ->preload()
                     ->required(),
                 Textarea::make('comment')
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                TextEntry::make('mediaEventType.name')
+                    ->label('Event Type'),
+                TextEntry::make('media.title')
+                    ->label('Media')
+                    ->url(fn ($record) => $record->media ? route('filament.admin.resources.media.view', ['record' => $record->media]) : null),
+                TextEntry::make('occurred_at')
+                    ->label('Date')
+                    ->date(),
+                TextEntry::make('comment')
                     ->columnSpanFull(),
             ]);
     }
