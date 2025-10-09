@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\CreatorResource\Pages;
+namespace App\Filament\Resources\Media\Pages;
 
 use Filament\Actions\EditAction;
-use App\Filament\Resources\CreatorResource;
+use App\Filament\Resources\Media\MediaResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 
-class ViewCreator extends ViewRecord
+class ViewMedia extends ViewRecord
 {
-    protected static string $resource = CreatorResource::class;
+    protected static string $resource = MediaResource::class;
 
     protected function getHeaderActions(): array
     {

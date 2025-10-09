@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\MediaResource\Pages;
+namespace App\Filament\Resources\Creators\Pages;
 
 use Filament\Actions\CreateAction;
-use App\Filament\Resources\MediaResource;
+use App\Filament\Resources\Creators\CreatorResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListMedia extends ListRecords
+class ListCreators extends ListRecords
 {
-    protected static string $resource = MediaResource::class;
+    protected static string $resource = CreatorResource::class;
 
     protected function getHeaderActions(): array
     {

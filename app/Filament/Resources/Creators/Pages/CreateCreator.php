@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\CreatorResource\Pages;
+namespace App\Filament\Resources\Creators\Pages;
 
-use App\Filament\Resources\CreatorResource;
+use App\Filament\Resources\Creators\CreatorResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateCreator extends CreateRecord

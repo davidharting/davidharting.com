@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\NoteResource\Pages;
+namespace App\Filament\Resources\Notes\Pages;
 
-use App\Filament\Resources\NoteResource;
+use App\Filament\Resources\Notes\NoteResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateNote extends CreateRecord

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Media;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
@@ -11,12 +11,12 @@ use Filament\Actions\ViewAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\MediaResource\Pages\ListMedia;
-use App\Filament\Resources\MediaResource\Pages\CreateMedia;
-use App\Filament\Resources\MediaResource\Pages\ViewMedia;
-use App\Filament\Resources\MediaResource\Pages\EditMedia;
+use App\Filament\Resources\Media\Pages\ListMedia;
+use App\Filament\Resources\Media\Pages\CreateMedia;
+use App\Filament\Resources\Media\Pages\ViewMedia;
+use App\Filament\Resources\Media\Pages\EditMedia;
 use App\Filament\Resources\MediaResource\Pages;
-use App\Filament\Resources\MediaResource\RelationManagers\EventsRelationManager;
+use App\Filament\Resources\Media\RelationManagers\EventsRelationManager;
 use App\Models\Media;
 use Filament\Forms;
 use Filament\Resources\Resource;

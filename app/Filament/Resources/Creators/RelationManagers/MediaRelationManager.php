@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\CreatorResource\RelationManagers;
+namespace App\Filament\Resources\Creators\RelationManagers;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;

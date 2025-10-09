@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Resources\NoteResource\Pages;
+namespace App\Filament\Resources\Notes\Pages;
 
 use Filament\Actions\DeleteAction;
-use App\Filament\Resources\NoteResource;
+use App\Filament\Resources\Notes\NoteResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 

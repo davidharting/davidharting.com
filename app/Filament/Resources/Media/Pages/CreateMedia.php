@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\MediaResource\Pages;
+namespace App\Filament\Resources\Media\Pages;
 
-use App\Filament\Resources\MediaResource;
+use App\Filament\Resources\Media\MediaResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateMedia extends CreateRecord

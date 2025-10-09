@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\MediaEventResource\Pages;
+namespace App\Filament\Resources\MediaEvents\Pages;
 
-use App\Filament\Resources\MediaEventResource;
+use App\Filament\Resources\MediaEvents\MediaEventResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateMediaEvent extends CreateRecord

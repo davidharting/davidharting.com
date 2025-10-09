@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\NoteResource\Pages;
+namespace App\Filament\Resources\MediaEvents\Pages;
 
 use Filament\Actions\CreateAction;
-use App\Filament\Resources\NoteResource;
+use App\Filament\Resources\MediaEvents\MediaEventResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
-class ListNotes extends ListRecords
+class ListMediaEvents extends ListRecords
 {
-    protected static string $resource = NoteResource::class;
+    protected static string $resource = MediaEventResource::class;
 
     protected function getHeaderActions(): array
     {

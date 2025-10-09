@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\MediaEvents;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
@@ -11,10 +11,10 @@ use Filament\Actions\ViewAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\MediaEventResource\Pages\ListMediaEvents;
-use App\Filament\Resources\MediaEventResource\Pages\CreateMediaEvent;
-use App\Filament\Resources\MediaEventResource\Pages\ViewMediaEvent;
-use App\Filament\Resources\MediaEventResource\Pages\EditMediaEvent;
+use App\Filament\Resources\MediaEvents\Pages\ListMediaEvents;
+use App\Filament\Resources\MediaEvents\Pages\CreateMediaEvent;
+use App\Filament\Resources\MediaEvents\Pages\ViewMediaEvent;
+use App\Filament\Resources\MediaEvents\Pages\EditMediaEvent;
 use App\Filament\Resources\MediaEventResource\Pages;
 use App\Models\MediaEvent;
 use Filament\Forms;

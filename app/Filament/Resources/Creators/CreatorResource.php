@@ -1,32 +1,29 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Creators;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
+use Filament\Actions\ViewAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\NoteResource\Pages\ListNotes;
-use App\Filament\Resources\NoteResource\Pages\CreateNote;
-use App\Filament\Resources\NoteResource\Pages\EditNote;
-use App\Filament\Resources\NoteResource\Pages;
-use App\Models\Note;
-use Carbon\Carbon;
+use App\Filament\Resources\Creators\Pages\ListCreators;
+use App\Filament\Resources\Creators\Pages\CreateCreator;
+use App\Filament\Resources\Creators\Pages\ViewCreator;
+use App\Filament\Resources\Creators\Pages\EditCreator;
+use App\Filament\Resources\CreatorResource\Pages;
+use App\Filament\Resources\Creators\RelationManagers\MediaRelationManager;
+use App\Models\Creator;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-class NoteResource extends Resource
+class CreatorResource extends Resource
 {
-    protected static ?string $model = Note::class;
+    protected static ?string $model = Creator::class;
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -34,15 +31,9 @@ class NoteResource extends Resource
     {
         return $schema
             ->components([
-                TextInput::make('slug'),
-                DatePicker::make('published_at')->default(Carbon::now())->label('Publish Date'),
-                TextInput::make('title')
-                    ->columnSpanFull(),
-                Textarea::make('lead')
-                    ->columnSpanFull(),
-                RichEditor::make('content')->columnSpanFull(),
-                Toggle::make('visible')->default(true)
-                    ->required(),
+                TextInput::make('name')
+                    ->required()
+                    ->maxLength(255),
             ]);
     }
 
@@ -50,15 +41,8 @@ class NoteResource extends Resource
     {
         return $table
             ->defaultSort('updated_at', 'desc')
+            ->defaultPaginationPageOption(50)
             ->columns([
-                TextColumn::make('slug'),
-                TextColumn::make('title')->lineClamp(50),
-                TextColumn::make('lead')->lineClamp(50),
-                IconColumn::make('visible')
-                    ->boolean(),
-                TextColumn::make('published_at')
-                    ->dateTime()
-                    ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -67,11 +51,14 @@ class NoteResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('name')
+                    ->searchable(),
             ])
             ->filters([
                 //
             ])
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([
@@ -84,16 +71,17 @@ class NoteResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            MediaRelationManager::class,
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => ListNotes::route('/'),
-            'create' => CreateNote::route('/create'),
-            'edit' => EditNote::route('/{record}/edit'),
+            'index' => ListCreators::route('/'),
+            'create' => CreateCreator::route('/create'),
+            'view' => ViewCreator::route('/{record}'),
+            'edit' => EditCreator::route('/{record}/edit'),
         ];
     }
 }

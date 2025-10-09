@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Resources\MediaEventResource\Pages;
+namespace App\Filament\Resources\MediaEvents\Pages;
 
 use Filament\Actions\EditAction;
-use App\Filament\Resources\MediaEventResource;
+use App\Filament\Resources\MediaEvents\MediaEventResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 

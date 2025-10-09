@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Filament\Resources\CreatorResource\Pages;
+namespace App\Filament\Resources\Media\Pages;
 
 use Filament\Actions\ViewAction;
 use Filament\Actions\DeleteAction;
-use App\Filament\Resources\CreatorResource;
+use App\Filament\Resources\Media\MediaResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditCreator extends EditRecord
+class EditMedia extends EditRecord
 {
-    protected static string $resource = CreatorResource::class;
+    protected static string $resource = MediaResource::class;
 
     protected function getHeaderActions(): array
     {
