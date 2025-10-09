@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Media\Pages;
 
-use Filament\Actions\EditAction;
 use App\Filament\Resources\Media\MediaResource;
-use Filament\Actions;
+use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewMedia extends ViewRecord

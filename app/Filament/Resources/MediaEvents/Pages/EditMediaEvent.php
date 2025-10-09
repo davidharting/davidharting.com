@@ -2,10 +2,9 @@
 
 namespace App\Filament\Resources\MediaEvents\Pages;
 
-use Filament\Actions\ViewAction;
-use Filament\Actions\DeleteAction;
 use App\Filament\Resources\MediaEvents\MediaEventResource;
-use Filament\Actions;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditMediaEvent extends EditRecord

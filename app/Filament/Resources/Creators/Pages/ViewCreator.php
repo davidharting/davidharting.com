@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Creators\Pages;
 
-use Filament\Actions\EditAction;
 use App\Filament\Resources\Creators\CreatorResource;
-use Filament\Actions;
+use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewCreator extends ViewRecord

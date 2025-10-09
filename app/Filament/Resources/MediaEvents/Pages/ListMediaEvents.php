@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\MediaEvents\Pages;
 
-use Filament\Actions\CreateAction;
 use App\Filament\Resources\MediaEvents\MediaEventResource;
-use Filament\Actions;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListMediaEvents extends ListRecords

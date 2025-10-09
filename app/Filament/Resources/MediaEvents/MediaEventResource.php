@@ -2,31 +2,28 @@
 
 namespace App\Filament\Resources\MediaEvents;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Textarea;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
+use App\Filament\Resources\MediaEvents\Pages\CreateMediaEvent;
+use App\Filament\Resources\MediaEvents\Pages\EditMediaEvent;
+use App\Filament\Resources\MediaEvents\Pages\ListMediaEvents;
+use App\Filament\Resources\MediaEvents\Pages\ViewMediaEvent;
+use App\Models\MediaEvent;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\MediaEvents\Pages\ListMediaEvents;
-use App\Filament\Resources\MediaEvents\Pages\CreateMediaEvent;
-use App\Filament\Resources\MediaEvents\Pages\ViewMediaEvent;
-use App\Filament\Resources\MediaEvents\Pages\EditMediaEvent;
-use App\Filament\Resources\MediaEventResource\Pages;
-use App\Models\MediaEvent;
-use Filament\Forms;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class MediaEventResource extends Resource
 {
     protected static ?string $model = MediaEvent::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Schema $schema): Schema
     {
