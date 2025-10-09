@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Scorecards;
 
+use App\Mail\ScorecardLink;
 use App\Models\Score;
 use App\Models\Scorecard;
 use Illuminate\Database\Query\Builder;
@@ -142,7 +143,7 @@ class Detail extends Component
     {
         $this->validateOnly('email');
 
-        Mail::to($this->email)->queue(new \App\Mail\ScorecardLink($this->scorecard));
+        Mail::to($this->email)->queue(new ScorecardLink($this->scorecard));
         $this->linkRequested = true;
     }
 }
