@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - build-images-in-github
   workflow_dispatch:
 
 permissions:
