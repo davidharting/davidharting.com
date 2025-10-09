@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Media\RelationManagers;
 
+use App\Filament\Resources\MediaEvents\MediaEventResource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -55,7 +56,7 @@ class EventsRelationManager extends RelationManager
             ])
             ->recordActions([
                 ViewAction::make()
-                    ->url(fn ($record) => route('filament.admin.resources.media-events.view', ['record' => $record])),
+                    ->url(fn ($record) => MediaEventResource::getUrl('view', ['record' => $record])),
                 EditAction::make(),
                 // Tables\Actions\DissociateAction::make(),
                 DeleteAction::make(),

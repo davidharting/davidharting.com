@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MediaEvents;
 
+use App\Filament\Resources\Media\MediaResource;
 use App\Filament\Resources\MediaEvents\Pages\CreateMediaEvent;
 use App\Filament\Resources\MediaEvents\Pages\EditMediaEvent;
 use App\Filament\Resources\MediaEvents\Pages\ListMediaEvents;
@@ -55,7 +56,7 @@ class MediaEventResource extends Resource
                     ->label('Event Type'),
                 TextEntry::make('media.title')
                     ->label('Media')
-                    ->url(fn ($record) => $record->media ? route('filament.admin.resources.media.view', ['record' => $record->media]) : null),
+                    ->url(fn ($record) => $record->media ? MediaResource::getUrl('view', ['record' => $record->media]) : null),
                 TextEntry::make('occurred_at')
                     ->label('Date')
                     ->date(),

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Creators\RelationManagers;
 
+use App\Filament\Resources\Media\MediaResource;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -60,7 +61,7 @@ class MediaRelationManager extends RelationManager
             ])
             ->recordActions([
                 ViewAction::make()
-                    ->url(fn ($record) => route('filament.admin.resources.media.view', ['record' => $record])),
+                    ->url(fn ($record) => MediaResource::getUrl('view', ['record' => $record])),
                 EditAction::make(),
                 // Tables\Actions\DetachAction::make(),
                 DissociateAction::make(),

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Media;
 
+use App\Filament\Resources\Creators\CreatorResource;
 use App\Filament\Resources\Media\Pages\CreateMedia;
 use App\Filament\Resources\Media\Pages\EditMedia;
 use App\Filament\Resources\Media\Pages\ListMedia;
@@ -63,7 +64,7 @@ class MediaResource extends Resource
                 TextEntry::make('title'),
                 TextEntry::make('creator.name')
                     ->label('Creator')
-                    ->url(fn ($record) => $record->creator ? route('filament.admin.resources.creators.view', ['record' => $record->creator]) : null),
+                    ->url(fn ($record) => $record->creator ? CreatorResource::getUrl('view', ['record' => $record->creator]) : null),
                 TextEntry::make('note')
                     ->columnSpanFull(),
             ]);
