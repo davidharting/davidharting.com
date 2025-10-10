@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\MediaEvents;
 
+use App\Filament\Resources\Media\MediaResource;
 use App\Filament\Resources\MediaEvents\Pages\CreateMediaEvent;
 use App\Filament\Resources\MediaEvents\Pages\EditMediaEvent;
 use App\Filament\Resources\MediaEvents\Pages\ListMediaEvents;
@@ -14,6 +15,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -42,6 +44,23 @@ class MediaEventResource extends Resource
                     ->preload()
                     ->required(),
                 Textarea::make('comment')
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                TextEntry::make('mediaEventType.name')
+                    ->label('Event Type'),
+                TextEntry::make('media.title')
+                    ->label('Media')
+                    ->url(fn ($record) => $record->media ? MediaResource::getUrl('view', ['record' => $record->media]) : null),
+                TextEntry::make('occurred_at')
+                    ->label('Date')
+                    ->date(),
+                TextEntry::make('comment')
                     ->columnSpanFull(),
             ]);
     }

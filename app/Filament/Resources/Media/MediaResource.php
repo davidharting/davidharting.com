@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Media;
 
+use App\Filament\Resources\Creators\CreatorResource;
 use App\Filament\Resources\Media\Pages\CreateMedia;
 use App\Filament\Resources\Media\Pages\EditMedia;
 use App\Filament\Resources\Media\Pages\ListMedia;
@@ -15,6 +16,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -49,6 +51,22 @@ class MediaResource extends Resource
                         TextInput::make('name')
                             ->required(),
                     ]),
+            ]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                TextEntry::make('mediaType.name')
+                    ->label('Media Type'),
+                TextEntry::make('year'),
+                TextEntry::make('title'),
+                TextEntry::make('creator.name')
+                    ->label('Creator')
+                    ->url(fn ($record) => $record->creator ? CreatorResource::getUrl('view', ['record' => $record->creator]) : null),
+                TextEntry::make('note')
+                    ->columnSpanFull(),
             ]);
     }
 
