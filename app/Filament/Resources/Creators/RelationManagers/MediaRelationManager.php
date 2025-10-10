@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Filament\Resources\Creators\RelationManagers;
+
+use App\Filament\Resources\Media\MediaResource;
+use Filament\Actions\AssociateAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\DetachBulkAction;
+use Filament\Actions\DissociateAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
+use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+
+class MediaRelationManager extends RelationManager
+{
+    protected static string $relationship = 'media';
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Select::make('media_type_id')
+                    ->relationship('mediaType')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->name->getLabel())
+                    ->required(),
+                TextInput::make('year')
+                    ->numeric(),
+                TextInput::make('title')
+                    ->required()
+                    ->maxLength(255),
+                Textarea::make('note')
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    public function table(Table $table): Table
+    {
+        return $table
+            ->recordTitleAttribute('title')
+            ->columns([
+                TextColumn::make('title'),
+                TextColumn::make('year')->numeric(thousandsSeparator: ''),
+            ])
+            ->filters([
+                //
+            ])
+            ->headerActions([
+                CreateAction::make(),
+                // Tables\Actions\AttachAction::make(),
+                AssociateAction::make()->preloadRecordSelect(),
+            ])
+            ->recordActions([
+                ViewAction::make()
+                    ->url(fn ($record) => MediaResource::getUrl('view', ['record' => $record])),
+                EditAction::make(),
+                // Tables\Actions\DetachAction::make(),
+                DissociateAction::make(),
+                DeleteAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DetachBulkAction::make(),
+                    DeleteBulkAction::make(),
+                ]),
+            ])
+            ->inverseRelationship('creator');
+    }
+}
