@@ -28,3 +28,23 @@ test('1 item', function () {
     expect($first->note)->toBe('Classic!');
     $this->stringStartsWith($first->occurred_at, '2023-02-07');
 });
+
+test('returns finished comment column', function () {
+    /** @var TestCase $this */
+    $media = Media::factory()
+        ->book()
+        ->for(Creator::factory(['name' => 'Isaac Asimov']))
+        ->has(MediaEvent::factory()->finished()->state(['occurred_at' => '2024-03-15', 'comment' => 'Mind-blowing sci-fi concepts!']), 'events')
+        ->create([
+            'title' => 'Foundation',
+            'note' => 'Part of a famous series',
+        ]);
+
+    $result = (new LogbookQuery)->execute();
+    expect($result)->toHaveCount(1);
+
+    $first = $result->first();
+    expect($first->id)->toBe($media->id);
+    expect($first->title)->toBe('Foundation');
+    expect($first->finished_comment)->toBe('Mind-blowing sci-fi concepts!');
+});
