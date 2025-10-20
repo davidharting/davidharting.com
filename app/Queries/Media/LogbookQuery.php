@@ -31,12 +31,8 @@ class LogbookQuery
                 'creators.name as creator',
                 'media_types.name as type',
                 'media_events.occurred_at as occurred_at',
-                DB::raw("CASE
-                    WHEN media.note IS NOT NULL AND media_events.comment IS NOT NULL THEN concat(media.note, E'\n\n', media_events.comment)
-                    WHEN media.note IS NOT NULL THEN media.note
-                    WHEN media_events.comment IS NOT NULL THEN media_events.comment
-                    ELSE NULL
-                END as note")
+                'media_events.comment as finished_comment',
+                'media.note as note'
             )
 
             ->orderBy('media_events.occurred_at', 'desc')
