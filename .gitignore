@@ -13,6 +13,7 @@
 .env.backup
 .env.production
 .env.task
+mise.toml
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
