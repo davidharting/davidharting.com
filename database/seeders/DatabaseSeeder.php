@@ -8,7 +8,7 @@ use App\Actions\GoodreadsImport\Importer as GoodreadsImporter;
 use App\Actions\SofaImport\Importer as SofaImporter;
 use App\Models\Creator;
 use App\Models\Media;
-use App\Models\MediaType;
+use App\Models\MediaEvent;
 use App\Models\Note;
 use App\Models\Player;
 use App\Models\Score;
@@ -17,6 +17,7 @@ use App\Models\Upclick;
 use App\Models\User;
 use Exception;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
 
 class DatabaseSeeder extends Seeder
@@ -29,7 +30,7 @@ class DatabaseSeeder extends Seeder
         if (! App::environment('local')) {
             throw new Exception('This seeder can only be run in the local environment');
         }
-        $admin = User::factory()->create([
+        User::factory()->create([
             'name' => 'Adam Min',
             'email' => 'admin@example.com',
             'is_admin' => true,
@@ -80,16 +81,15 @@ class DatabaseSeeder extends Seeder
             });
         }
 
-        // $bookMediaType = MediaType::where('name', 'book')->first();
-
-        // $authors = Creator::factory(500)->create();
-        // $authors->each(fn (Creator $author) => Media::factory(random_int(1, 6))->hasEvents(2)->create(
-        //     ['creator_id' => $author, 'media_type_id' => $bookMediaType]
-        // ));
-        //
-
         (new GoodreadsImporter(app_path('Actions/GoodreadsImport/data/goodreads-export-20241129.csv')))->import(null);
         (new SofaImporter)->import();
+
+        Media::factory()
+            ->book()
+            ->for(Creator::factory(['name' => 'Gil G. Mesh']))
+            ->has(MediaEvent::factory()->started()->at(Carbon::now()), 'events')
+            ->has(MediaEvent::factory()->state(['comment' => 'It was great!'])->finished()->at(Carbon::now()), 'events')
+            ->create(['title' => 'What a Time to Be Alive', 'note' => "Recommended by Kirk Hamilton.\nA fun, quick read."]);
 
         Note::factory(20)->create();
         Note::factory(25)->leadOnly()->create();
