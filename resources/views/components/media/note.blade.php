@@ -5,7 +5,7 @@
         </div>
     @endif
 
-    @if ($item->finished_comment)
+    @if (isset($item->finished_comment) && $item->finished_comment)
         <div class="text-xs text-gray-600">
             {{ trim($item->finished_comment) }}
         </div>

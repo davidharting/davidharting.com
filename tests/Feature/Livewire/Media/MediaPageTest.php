@@ -72,6 +72,21 @@ describe('with data', function () {
             ->assertDontSee('Reading Book');
     });
 
+    test('Backlog as admin', function () {
+        $this->actingAs(User::factory(['is_admin' => true])->create());
+
+        Livewire::withQueryParams(['list' => 'backlog'])->test(MediaPage::class)
+            ->assertStatus(200)
+            ->assertSeeInOrder([
+                '2023 July 22',
+                'Backlogged Album',
+                'Artist One',
+                '2022 January 01',
+                'Backlogged Book',
+                'Author One',
+            ]);
+    });
+
     test('In Progress', function () {
         Livewire::withQueryParams(['list' => 'in-progress'])->test(MediaPage::class)
             ->assertStatus(200)
@@ -85,6 +100,18 @@ describe('with data', function () {
             ->assertDontSee('Watched Movie')
             ->assertDontSee('Listened Album')
             ->assertDontSee('Read Book');
+    });
+
+    test('In Progress as admin', function () {
+        $this->actingAs(User::factory(['is_admin' => true])->create());
+
+        Livewire::withQueryParams(['list' => 'in-progress'])->test(MediaPage::class)
+            ->assertStatus(200)
+            ->assertSeeInOrder([
+                '2024 December 29',
+                'Reading Book',
+                'Author Three',
+            ]);
     });
 
     test('Finished (default)', function () {
