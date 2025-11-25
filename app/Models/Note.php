@@ -57,13 +57,13 @@ class Note extends Model implements Feedable
         return $this->published_at->format('Y F j');
     }
 
-    public function renderContent(): string
+    public function renderContent(): ?string
     {
         if ($this->markdown_content !== null) {
             return Str::markdown($this->markdown_content);
         }
 
-        return $this->content ?? '';
+        return $this->content;
     }
 
     public function toFeedItem(): FeedItem
