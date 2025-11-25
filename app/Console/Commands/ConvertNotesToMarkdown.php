@@ -13,7 +13,7 @@ class ConvertNotesToMarkdown extends Command
      *
      * @var string
      */
-    protected $signature = 'notes:convert-to-markdown {--dry-run : Run without making changes}';
+    protected $signature = 'notes:convert-to-markdown {--force : Actually make changes (default is dry-run)}';
 
     /**
      * The console command description.
@@ -27,10 +27,10 @@ class ConvertNotesToMarkdown extends Command
      */
     public function handle()
     {
-        $dryRun = $this->option('dry-run');
+        $dryRun = ! $this->option('force');
 
         if ($dryRun) {
-            $this->info('Running in DRY RUN mode - no changes will be made');
+            $this->info('Running in DRY RUN mode - no changes will be made (use --force to actually convert)');
         }
 
         // Get all notes that have content but no markdown_content yet
