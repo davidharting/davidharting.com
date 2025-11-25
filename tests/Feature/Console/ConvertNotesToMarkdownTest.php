@@ -91,4 +91,43 @@ describe('notes:convert-to-markdown command', function () {
         expect($note->content)->toBe($originalContent);
         expect($note->markdown_content)->not->toBeNull();
     });
+
+    it('overwrites existing markdown_content with --overwrite flag', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create([
+            'content' => '<h1>Updated HTML</h1><p>New content</p>',
+            'markdown_content' => '# Old Markdown',
+        ]);
+
+        $this->artisan('notes:convert-to-markdown --force --overwrite')
+            ->expectsOutputToContain('Overwrite mode enabled')
+            ->expectsOutputToContain('Successfully converted 1 note(s)')
+            ->assertSuccessful();
+
+        $note->refresh();
+        expect($note->markdown_content)->toContain('Updated HTML');
+        expect($note->markdown_content)->not->toContain('Old Markdown');
+    });
+
+    it('reconverts all notes with --overwrite flag', function () {
+        /** @var TestCase $this */
+        // Create notes with existing markdown_content
+        Note::factory()->count(2)->create([
+            'content' => '<p>HTML content</p>',
+            'markdown_content' => '**Old markdown**',
+        ]);
+
+        // Create note without markdown_content
+        Note::factory()->create([
+            'content' => '<p>New HTML</p>',
+            'markdown_content' => null,
+        ]);
+
+        $this->artisan('notes:convert-to-markdown --force --overwrite')
+            ->expectsOutput('Found 3 note(s) to convert')
+            ->expectsOutputToContain('Overwrite mode enabled')
+            ->assertSuccessful();
+
+        expect(Note::whereNotNull('markdown_content')->count())->toBe(3);
+    });
 });

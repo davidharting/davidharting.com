@@ -13,7 +13,9 @@ class ConvertNotesToMarkdown extends Command
      *
      * @var string
      */
-    protected $signature = 'notes:convert-to-markdown {--force : Actually make changes (default is dry-run)}';
+    protected $signature = 'notes:convert-to-markdown
+                            {--force : Actually make changes (default is dry-run)}
+                            {--overwrite : Reconvert ALL notes with content, even if markdown_content already exists}';
 
     /**
      * The console command description.
@@ -28,15 +30,24 @@ class ConvertNotesToMarkdown extends Command
     public function handle()
     {
         $dryRun = ! $this->option('force');
+        $overwrite = $this->option('overwrite');
 
         if ($dryRun) {
             $this->info('Running in DRY RUN mode - no changes will be made (use --force to actually convert)');
         }
 
-        // Get all notes that have content but no markdown_content yet
-        $notes = Note::whereNotNull('content')
-            ->whereNull('markdown_content')
-            ->get();
+        if ($overwrite) {
+            $this->info('Overwrite mode enabled - will reconvert all notes with content');
+        }
+
+        // Get notes to convert
+        $query = Note::whereNotNull('content');
+
+        if (! $overwrite) {
+            $query->whereNull('markdown_content');
+        }
+
+        $notes = $query->get();
 
         if ($notes->isEmpty()) {
             $this->info('No notes found to convert. All notes are already using Markdown!');
