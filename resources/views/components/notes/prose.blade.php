@@ -7,7 +7,7 @@
         <p class="lead">{{ $note->lead }}</p>
     @endif
 
-    @if ($note->content)
-        {!! $note->content !!}
+    @if ($note->renderContent())
+        {!! $note->renderContent() !!}
     @endif
 </div>
