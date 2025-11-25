@@ -20,6 +20,7 @@
         "laravel/tinker": "^2.10.1",
         "league/csv": "^9.22.0",
         "league/flysystem-aws-s3-v3": "^3.0",
+        "league/html-to-markdown": "^5.1",
         "livewire/livewire": "^3.6",
         "mailersend/laravel-driver": "^2.7",
         "spatie/laravel-backup": "^9.3",
