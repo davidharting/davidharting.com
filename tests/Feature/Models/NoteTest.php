@@ -84,3 +84,52 @@ describe('toFeedItem', function () {
         assertStringContainsString($note->content, $item->summary);
     });
 });
+
+describe('renderContent', function () {
+    it('returns markdown_content converted to HTML when it exists', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create([
+            'content' => '<p>Old HTML content</p>',
+            'markdown_content' => '# Markdown Title',
+        ]);
+
+        $rendered = $note->renderContent();
+        expect($rendered)->toContain('<h1>Markdown Title</h1>');
+        expect($rendered)->not->toContain('Old HTML content');
+    });
+
+    it('returns HTML content when markdown_content is null', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create([
+            'content' => '<p>HTML content</p>',
+            'markdown_content' => null,
+        ]);
+
+        $rendered = $note->renderContent();
+        expect($rendered)->toBe('<p>HTML content</p>');
+    });
+
+    it('returns empty string when both are null', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create([
+            'title' => 'Just a title',
+            'content' => null,
+            'markdown_content' => null,
+        ]);
+
+        $rendered = $note->renderContent();
+        expect($rendered)->toBe('');
+    });
+
+    it('converts markdown to HTML correctly', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create([
+            'markdown_content' => "**Bold text**\n\n*Italic text*\n\n[Link](https://example.com)",
+        ]);
+
+        $rendered = $note->renderContent();
+        expect($rendered)->toContain('<strong>Bold text</strong>');
+        expect($rendered)->toContain('<em>Italic text</em>');
+        expect($rendered)->toContain('<a href="https://example.com">Link</a>');
+    });
+});
