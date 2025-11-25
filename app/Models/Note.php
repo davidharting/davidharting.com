@@ -17,6 +17,7 @@ class Note extends Model implements Feedable
         'title',
         'lead',
         'content',
+        'markdown_content',
         'visible',
         'published_at',
     ];
@@ -54,6 +55,15 @@ class Note extends Model implements Feedable
     public function publicationDate(): string
     {
         return $this->published_at->format('Y F j');
+    }
+
+    public function renderContent(): string
+    {
+        if ($this->markdown_content !== null) {
+            return Str::markdown($this->markdown_content);
+        }
+
+        return $this->content ?? '';
     }
 
     public function toFeedItem(): FeedItem
@@ -102,8 +112,9 @@ class Note extends Model implements Feedable
             $fullContent = $fullContent->append('</i></p>');
         }
 
-        if ($this->content) {
-            $fullContent = $fullContent->append($this->content);
+        $renderedContent = $this->renderContent();
+        if ($renderedContent) {
+            $fullContent = $fullContent->append($renderedContent);
         }
 
         return $fullContent;
