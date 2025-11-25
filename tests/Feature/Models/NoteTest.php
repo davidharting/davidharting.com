@@ -109,7 +109,7 @@ describe('renderContent', function () {
         expect($rendered)->toBe('<p>HTML content</p>');
     });
 
-    it('returns empty string when both are null', function () {
+    it('returns null when both are null', function () {
         /** @var TestCase $this */
         $note = Note::factory()->create([
             'title' => 'Just a title',
@@ -118,7 +118,7 @@ describe('renderContent', function () {
         ]);
 
         $rendered = $note->renderContent();
-        expect($rendered)->toBe('');
+        expect($rendered)->toBeNull();
     });
 
     it('converts markdown to HTML correctly', function () {
