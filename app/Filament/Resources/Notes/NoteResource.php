@@ -11,6 +11,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -37,7 +38,12 @@ class NoteResource extends Resource
                     ->columnSpanFull(),
                 Textarea::make('lead')
                     ->columnSpanFull(),
-                RichEditor::make('content')->columnSpanFull(),
+                RichEditor::make('content')
+                    ->label('Content (HTML - Legacy)')
+                    ->columnSpanFull(),
+                MarkdownEditor::make('markdown_content')
+                    ->label('Content (Markdown - Active)')
+                    ->columnSpanFull(),
                 Toggle::make('visible')->default(true)
                     ->required(),
             ]);
