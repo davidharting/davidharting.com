@@ -19,7 +19,8 @@ class NoteFactory extends Factory
         return [
             'title' => $this->faker->sentence(),
             'lead' => $this->faker->sentences(asText: true),
-            'content' => $this->faker->paragraphs(asText: true),
+            'content' => null,
+            'markdown_content' => $this->faker->paragraphs(asText: true),
             'visible' => $this->faker->boolean(85),
             'published_at' => $this->faker->dateTimeBetween('-10 year', 'now', $timezone = 'EST'),
         ];
@@ -30,6 +31,7 @@ class NoteFactory extends Factory
         return $this->state([
             'title' => null,
             'content' => null,
+            'markdown_content' => null,
         ]);
     }
 
@@ -45,6 +47,14 @@ class NoteFactory extends Factory
         return $this->state([
             'title' => null,
             'lead' => null,
+        ]);
+    }
+
+    public function htmlContent(): self
+    {
+        return $this->state([
+            'content' => $this->faker->paragraphs(asText: true),
+            'markdown_content' => null,
         ]);
     }
 }

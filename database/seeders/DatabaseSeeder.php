@@ -95,5 +95,142 @@ class DatabaseSeeder extends Seeder
         Note::factory(25)->leadOnly()->create();
         Note::factory(15)->noLead()->create();
         Note::factory(5)->contentOnly()->create();
+
+        // Kitchen sink markdown example
+        Note::factory()->create([
+            'title' => 'Markdown Kitchen Sink',
+            'slug' => 'markdown-kitchen-sink',
+            'lead' => 'A comprehensive demonstration of markdown features supported by this site.',
+            'visible' => true,
+            'markdown_content' => <<<'MARKDOWN'
+## Heading 2
+### Heading 3
+#### Heading 4
+##### Heading 5
+###### Heading 6
+
+## Text Formatting
+
+This paragraph demonstrates **bold text**, *italic text*, and ***bold italic text***.
+
+You can also use underscores for _italic_ and __bold__ formatting.
+
+~~Strikethrough~~ text is also supported.
+
+## Lists
+
+### Unordered List
+- First item
+- Second item
+  - Nested item
+  - Another nested item
+- Third item
+
+### Ordered List
+1. First step
+2. Second step
+   1. Substep A
+   2. Substep B
+3. Third step
+
+## Links and References
+
+Here's a [link to Anthropic](https://anthropic.com).
+
+You can also use reference-style links like [this one][ref].
+
+[ref]: https://claude.ai "Claude AI"
+
+### Images
+
+Regular markdown image with title attribute (shows tooltip on hover):
+
+![Placeholder image showing mountain landscape](https://placehold.co/600x400/EEE/31343C?text=Mountain+Landscape "A beautiful mountain landscape at sunset")
+
+Semantic HTML version with proper caption:
+
+<figure>
+  <img src="https://placehold.co/600x400/AAA/31343C?text=Semantic+Image" alt="Another landscape">
+  <figcaption>This caption is always visible and semantically correct.</figcaption>
+</figure>
+
+## Blockquotes
+
+Basic blockquote:
+
+> This is a blockquote.
+> It can span multiple lines.
+>
+> > And can be nested too!
+
+### Blockquote with Attribution
+
+Standard markdown approach (attribution after blockquote):
+
+> The best way to predict the future is to invent it.
+
+— Alan Kay
+
+Semantic HTML version with figure and figcaption:
+
+<figure>
+  <blockquote>
+    <p>Programs must be written for people to read, and only incidentally for machines to execute.</p>
+  </blockquote>
+  <figcaption>— Harold Abelson, <cite>Structure and Interpretation of Computer Programs</cite></figcaption>
+</figure>
+
+## Code
+
+Inline code looks like `const x = 42;`
+
+Fenced code blocks:
+
+```javascript
+function greet(name) {
+    return `Hello, ${name}!`;
+}
+
+console.log(greet('World'));
+```
+
+```python
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+print(fibonacci(10))
+```
+
+## Horizontal Rules
+
+You can create horizontal rules:
+
+---
+
+## Tables
+
+| Feature | Supported | Notes |
+|---------|-----------|-------|
+| Headers | ✓ | H1-H6 |
+| Lists | ✓ | Ordered & Unordered |
+| Code | ✓ | Inline & Blocks |
+| Tables | ✓ | Like this one! |
+
+## Task Lists
+
+- [x] Implement markdown support
+- [x] Add HTML sanitization
+- [ ] Write more notes
+- [ ] Ship it!
+
+## Special Characters
+
+You can escape special characters: \* \_ \[ \] \# \+
+
+And use HTML entities: &copy; &trade; &hearts;
+MARKDOWN
+        ]);
     }
 }

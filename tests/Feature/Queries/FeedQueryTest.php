@@ -19,7 +19,7 @@ test('Invisible posts do not show up', function () {
         'visible' => false,
         'title' => 'Hidden Note',
         'slug' => 'hidden-note',
-        'content' => 'John Cena',
+        'markdown_content' => 'John Cena',
     ]);
 
     $response = $this->get('/feed');
@@ -32,7 +32,7 @@ test('Posts are in reverse chronological order', function () {
     Note::factory()->create([
         'visible' => true,
         'title' => 'Oldest Post',
-        'content' => '**some bold text**',
+        'markdown_content' => '**some bold text**',
         'slug' => 'oldest-post',
         'published_at' => now()->subDays(2),
     ]);
@@ -40,6 +40,6 @@ test('Posts are in reverse chronological order', function () {
     $response = $this->get('/feed');
     $response->assertSeeHtml([
         'Oldest Post',
-        '**some bold text**',
+        '<strong>some bold text</strong>',
     ]);
 });

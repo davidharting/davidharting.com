@@ -16,6 +16,12 @@ tasks:
       - ./vendor/bin/pint
       - npm run format
 
+  dev:db:refresh:
+    desc: "Migrate fresh and re-seed"
+    cmds:
+      - php artisan migrate:fresh
+      - php artisan db:seed
+
   dev:docker:build:
     desc: "Builds the image containing Frankenphp and the Laravel app"
     cmd: docker builder build -t davidhartingdotcom:latest -f Dockerfile .
