@@ -143,9 +143,7 @@ You can also use reference-style links like [this one][ref].
 
 ### Images
 
-![Placeholder image showing mountain landscape](https://placehold.co/600x400/EEE/31343C?text=Mountain+Landscape)
-
-*A beautiful mountain landscape at sunset.*
+![Placeholder image showing mountain landscape](https://placehold.co/600x400/EEE/31343C?text=Mountain+Landscape "A beautiful mountain landscape at sunset")
 
 ## Blockquotes
 
