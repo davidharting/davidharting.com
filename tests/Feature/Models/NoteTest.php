@@ -68,7 +68,7 @@ describe('toFeedItem', function () {
         $note = Note::factory()->create([
             'title' => 'My Note Title',
             'lead' => 'Captivating lead',
-            'content' => 'This is the content of the note.',
+            'markdown_content' => 'This is the content of the note.',
         ]);
 
         $item = $note->toFeedItem();
@@ -81,14 +81,14 @@ describe('toFeedItem', function () {
 
         assertStringNotContainsString($note->title, $item->summary);
         assertStringContainsString($note->lead, $item->summary);
-        assertStringContainsString($note->content, $item->summary);
+        assertStringContainsString($note->markdown_content, $item->summary);
     });
 });
 
 describe('renderContent', function () {
     it('returns markdown_content converted to HTML when it exists', function () {
         /** @var TestCase $this */
-        $note = Note::factory()->create([
+        $note = Note::factory()->htmlContent()->create([
             'content' => '<p>Old HTML content</p>',
             'markdown_content' => '# Markdown Title',
         ]);
@@ -100,7 +100,7 @@ describe('renderContent', function () {
 
     it('returns HTML content when markdown_content is null', function () {
         /** @var TestCase $this */
-        $note = Note::factory()->create([
+        $note = Note::factory()->htmlContent()->create([
             'content' => '<p>HTML content</p>',
             'markdown_content' => null,
         ]);

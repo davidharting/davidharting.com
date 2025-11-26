@@ -23,7 +23,7 @@ test('show', function () {
         'visible' => true,
         'title' => 'A cool post',
         'lead' => 'You should read this',
-        'content' => 'Captivating content',
+        'markdown_content' => 'Captivating content',
         'published_at' => Carbon::create(2000, 02, 01),
     ]);
     $response = $this->get('/notes/'.$note->slug);
