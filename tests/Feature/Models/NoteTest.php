@@ -140,7 +140,7 @@ describe('renderContent', function () {
     it('allows HTML in markdown_content for semantic markup', function () {
         /** @var TestCase $this */
         $note = Note::factory()->create([
-            'markdown_content' => "**Markdown** with <figure><img src=\"test.jpg\" alt=\"Test\"><figcaption>A caption</figcaption></figure>",
+            'markdown_content' => '**Markdown** with <figure><img src="test.jpg" alt="Test"><figcaption>A caption</figcaption></figure>',
         ]);
 
         $rendered = $note->renderContent();
