@@ -137,18 +137,16 @@ describe('renderContent', function () {
         expect($rendered)->toContain('<a href="https://example.com">Link</a>');
     });
 
-    it('strips HTML tags from markdown_content for XSS protection', function () {
+    it('allows HTML in markdown_content for semantic markup', function () {
         /** @var TestCase $this */
         $note = Note::factory()->create([
-            'markdown_content' => "**Safe markdown** with <script>alert('XSS')</script> and <div onclick='bad()'>click me</div>",
+            'markdown_content' => "**Markdown** with <figure><img src=\"test.jpg\" alt=\"Test\"><figcaption>A caption</figcaption></figure>",
         ]);
 
         $rendered = $note->renderContent();
-        expect($rendered)->toContain('<strong>Safe markdown</strong>');
-        expect($rendered)->not->toContain('<script>');
-        expect($rendered)->not->toContain('<div');
-        expect($rendered)->not->toContain('onclick');
-        expect($rendered)->toContain("alert('XSS')"); // Text content is preserved
-        expect($rendered)->toContain('click me'); // Text content is preserved
+        expect($rendered)->toContain('<strong>Markdown</strong>');
+        expect($rendered)->toContain('<figure>');
+        expect($rendered)->toContain('<figcaption>');
+        expect($rendered)->toContain('A caption');
     });
 });

@@ -143,20 +143,42 @@ You can also use reference-style links like [this one][ref].
 
 ### Images
 
+Regular markdown image with title attribute (shows tooltip on hover):
+
 ![Placeholder image showing mountain landscape](https://placehold.co/600x400/EEE/31343C?text=Mountain+Landscape "A beautiful mountain landscape at sunset")
 
+Semantic HTML version with proper caption:
+
+<figure>
+  <img src="https://placehold.co/600x400/AAA/31343C?text=Semantic+Image" alt="Another landscape">
+  <figcaption>This caption is always visible and semantically correct.</figcaption>
+</figure>
+
 ## Blockquotes
+
+Basic blockquote:
 
 > This is a blockquote.
 > It can span multiple lines.
 >
 > > And can be nested too!
 
-### Quote with Attribution
+### Blockquote with Attribution
+
+Standard markdown approach (attribution after blockquote):
 
 > The best way to predict the future is to invent it.
->
-> — Alan Kay
+
+— Alan Kay
+
+Semantic HTML version with figure and figcaption:
+
+<figure>
+  <blockquote>
+    <p>Programs must be written for people to read, and only incidentally for machines to execute.</p>
+  </blockquote>
+  <figcaption>— Harold Abelson, <cite>Structure and Interpretation of Computer Programs</cite></figcaption>
+</figure>
 
 ## Code
 

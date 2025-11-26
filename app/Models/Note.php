@@ -60,9 +60,7 @@ class Note extends Model implements Feedable
     public function renderContent(): ?string
     {
         if ($this->markdown_content !== null) {
-            return Str::markdown($this->markdown_content, [
-                'html_input' => 'strip',
-            ]);
+            return Str::markdown($this->markdown_content);
         }
 
         return $this->content;
