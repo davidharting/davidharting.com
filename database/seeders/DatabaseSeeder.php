@@ -103,7 +103,6 @@ class DatabaseSeeder extends Seeder
             'lead' => 'A comprehensive demonstration of markdown features supported by this site.',
             'visible' => true,
             'markdown_content' => <<<'MARKDOWN'
-# Heading 1
 ## Heading 2
 ### Heading 3
 #### Heading 4
@@ -142,12 +141,24 @@ You can also use reference-style links like [this one][ref].
 
 [ref]: https://claude.ai "Claude AI"
 
+### Images
+
+![Placeholder image showing mountain landscape](https://placehold.co/600x400/EEE/31343C?text=Mountain+Landscape)
+
+*A beautiful mountain landscape at sunset.*
+
 ## Blockquotes
 
 > This is a blockquote.
 > It can span multiple lines.
 >
 > > And can be nested too!
+
+### Quote with Attribution
+
+> The best way to predict the future is to invent it.
+>
+> — Alan Kay
 
 ## Code
 
