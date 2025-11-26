@@ -132,4 +132,19 @@ describe('renderContent', function () {
         expect($rendered)->toContain('<em>Italic text</em>');
         expect($rendered)->toContain('<a href="https://example.com">Link</a>');
     });
+
+    it('strips HTML tags from markdown_content for XSS protection', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create([
+            'markdown_content' => "**Safe markdown** with <script>alert('XSS')</script> and <div onclick='bad()'>click me</div>",
+        ]);
+
+        $rendered = $note->renderContent();
+        expect($rendered)->toContain('<strong>Safe markdown</strong>');
+        expect($rendered)->not->toContain('<script>');
+        expect($rendered)->not->toContain('<div');
+        expect($rendered)->not->toContain('onclick');
+        expect($rendered)->toContain("alert('XSS')"); // Text content is preserved
+        expect($rendered)->toContain('click me'); // Text content is preserved
+    });
 });
