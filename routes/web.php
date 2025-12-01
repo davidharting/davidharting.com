@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\FileShareController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
 use App\Livewire\AdminIndexPage;
@@ -42,6 +43,9 @@ Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->nam
 
 Route::get('/notes', NotesIndexPage::class)->name('notes.index');
 Route::get('/notes/{note}', ShowNotePage::class)->name('notes.show')->can('view', 'note');
+
+Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
+Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show');
 
 Route::get('/media', MediaPage::class)->name('media.index');
 Route::get('/media/log', function () {
