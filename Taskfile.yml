@@ -57,3 +57,19 @@ tasks:
     cmds:
       - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/$SSH_USER/repos/davidharting.com && docker pull ghcr.io/davidharting/davidharting.com:latest && docker compose up -d"
       - echo "Deploy complete!"
+
+  prod:ssh:shell:
+    desc: "Open an interactive SSH shell on the production server"
+    cmd: ssh -t -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/$SSH_USER/repos/davidharting.com && exec bash"
+
+  prod:ssh:exec:
+    desc: "Execute a command on the production server (usage: task prod:ssh:exec -- <command>)"
+    cmd: ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/$SSH_USER/repos/davidharting.com && {{.CLI_ARGS}}"
+
+  prod:web:exec:
+    desc: "Execute a command in the production web container with secrets loaded (usage: task prod:web:exec -- <command>)"
+    cmd: ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/$SSH_USER/repos/davidharting.com && docker compose exec -T web bash /entrypoint.sh {{.CLI_ARGS}}"
+
+  prod:web:shell:
+    desc: "Open an interactive shell in the production web container with secrets loaded"
+    cmd: ssh -t -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/$SSH_USER/repos/davidharting.com && docker compose exec web bash /entrypoint.sh bash"
