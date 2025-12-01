@@ -46,6 +46,13 @@
                             Notes
                         </a>
                         <a
+                            href="{{ route("pages.index") }}"
+                            wire:navigate
+                            class="link link-primary"
+                        >
+                            Pages
+                        </a>
+                        <a
                             href="{{ route("media.index") }}"
                             wire:navigate
                             class="link link-primary"
