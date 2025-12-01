@@ -16,7 +16,6 @@ class Note extends Model implements Feedable
         'slug',
         'title',
         'lead',
-        'content',
         'markdown_content',
         'visible',
         'published_at',
@@ -59,11 +58,7 @@ class Note extends Model implements Feedable
 
     public function renderContent(): ?string
     {
-        if ($this->markdown_content !== null) {
-            return Str::markdown($this->markdown_content);
-        }
-
-        return $this->content;
+        return $this->markdown_content ? Str::markdown($this->markdown_content) : null;
     }
 
     public function toFeedItem(): FeedItem

@@ -27,26 +27,21 @@ describe('slug', function () {
     });
 });
 
-describe('title, lead, content, or markdown_content must be provided', function () {
+describe('title, lead, or markdown_content must be provided', function () {
     it('is valid if title is provided', function () {
-        Note::factory()->create(['title' => 'My Title', 'lead' => null, 'content' => null, 'markdown_content' => null]);
+        Note::factory()->create(['title' => 'My Title', 'lead' => null, 'markdown_content' => null]);
     })->throwsNoExceptions();
 
     it('is valid if lead is provided', function () {
-        Note::factory()->create(['lead' => 'My Lead', 'content' => null, 'title' => null, 'markdown_content' => null]);
-    })->throwsNoExceptions();
-
-    it('is valid if content is provided', function () {
-        /** @var TestCase $this */
-        Note::factory()->create(['content' => 'My Content', 'title' => null, 'lead' => null, 'markdown_content' => null]);
+        Note::factory()->create(['lead' => 'My Lead', 'title' => null, 'markdown_content' => null]);
     })->throwsNoExceptions();
 
     it('is valid if markdown_content is provided', function () {
-        Note::factory()->create(['markdown_content' => 'My Markdown', 'title' => null, 'lead' => null, 'content' => null]);
+        Note::factory()->create(['markdown_content' => 'My Markdown', 'title' => null, 'lead' => null]);
     })->throwsNoExceptions();
 
     it('is invalid if none are provided', function () {
-        expect(Note::factory()->create(['title' => null, 'lead' => null, 'content' => null, 'markdown_content' => null]));
+        expect(Note::factory()->create(['title' => null, 'lead' => null, 'markdown_content' => null]));
     })->throws('Illuminate\Database\QueryException');
 });
 
@@ -90,41 +85,6 @@ describe('toFeedItem', function () {
 });
 
 describe('renderContent', function () {
-    it('returns markdown_content converted to HTML when it exists', function () {
-        /** @var TestCase $this */
-        $note = Note::factory()->htmlContent()->create([
-            'content' => '<p>Old HTML content</p>',
-            'markdown_content' => '# Markdown Title',
-        ]);
-
-        $rendered = $note->renderContent();
-        expect($rendered)->toContain('<h1>Markdown Title</h1>');
-        expect($rendered)->not->toContain('Old HTML content');
-    });
-
-    it('returns HTML content when markdown_content is null', function () {
-        /** @var TestCase $this */
-        $note = Note::factory()->htmlContent()->create([
-            'content' => '<p>HTML content</p>',
-            'markdown_content' => null,
-        ]);
-
-        $rendered = $note->renderContent();
-        expect($rendered)->toBe('<p>HTML content</p>');
-    });
-
-    it('returns null when both are null', function () {
-        /** @var TestCase $this */
-        $note = Note::factory()->create([
-            'title' => 'Just a title',
-            'content' => null,
-            'markdown_content' => null,
-        ]);
-
-        $rendered = $note->renderContent();
-        expect($rendered)->toBeNull();
-    });
-
     it('converts markdown to HTML correctly', function () {
         /** @var TestCase $this */
         $note = Note::factory()->create([
@@ -135,6 +95,17 @@ describe('renderContent', function () {
         expect($rendered)->toContain('<strong>Bold text</strong>');
         expect($rendered)->toContain('<em>Italic text</em>');
         expect($rendered)->toContain('<a href="https://example.com">Link</a>');
+    });
+
+    it('returns null when markdown_content is null', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create([
+            'title' => 'Just a title',
+            'markdown_content' => null,
+        ]);
+
+        $rendered = $note->renderContent();
+        expect($rendered)->toBeNull();
     });
 
     it('allows HTML in markdown_content for semantic markup', function () {
