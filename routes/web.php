@@ -45,7 +45,7 @@ Route::get('/notes', NotesIndexPage::class)->name('notes.index');
 Route::get('/notes/{note}', ShowNotePage::class)->name('notes.show')->can('view', 'note');
 
 Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
-Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show');
+Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show')->can('view', 'page');
 
 Route::get('/media', MediaPage::class)->name('media.index');
 Route::get('/media/log', function () {
