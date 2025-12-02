@@ -196,19 +196,19 @@ return [
      */
     'notifications' => [
         'notifications' => [
-            \Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification::class => ['mail'],
-            \Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification::class => ['mail'],
-            \Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification::class => ['mail'],
-            \Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class => [],
-            \Spatie\Backup\Notifications\Notifications\HealthyBackupWasFoundNotification::class => ['mail'],
-            \Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification::class => ['mail'],
+            \App\Notifications\BackupHasFailedNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
+            \App\Notifications\UnhealthyBackupWasFoundNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
+            \App\Notifications\CleanupHasFailedNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
+            \App\Notifications\BackupWasSuccessfulNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
+            \App\Notifications\HealthyBackupWasFoundNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
+            \App\Notifications\CleanupWasSuccessfulNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
         ],
 
         /*
          * Here you can specify the notifiable to which the notifications should be sent. The default
          * notifiable will use the variables specified in this config file.
          */
-        'notifiable' => \Spatie\Backup\Notifications\Notifiable::class,
+        'notifiable' => \App\Support\TelegramBackupNotifiable::class,
 
         'mail' => [
             'to' => env('MAILERSEND_ADMIN_ADDRESS', 'fake@example.com'),
