@@ -16,7 +16,7 @@ return new class extends Migration
             $table->text('slug', 300)->unique()->index();
             $table->text('title');
             $table->text('markdown_content');
-            $table->boolean('is_published')->default(true);
+            $table->boolean('is_published')->default(false);
             $table->timestampsTz();
         });
     }

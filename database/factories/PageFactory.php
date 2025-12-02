@@ -19,8 +19,15 @@ class PageFactory extends Factory
         return [
             'title' => $this->faker->sentence(),
             'markdown_content' => $this->faker->paragraphs(asText: true),
-            'is_published' => true,
+            'is_published' => false,
         ];
+    }
+
+    public function published(): self
+    {
+        return $this->state([
+            'is_published' => true,
+        ]);
     }
 
     public function unpublished(): self

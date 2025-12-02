@@ -63,10 +63,10 @@ describe('renderContent', function () {
 });
 
 describe('is_published', function () {
-    it('defaults to true when creating a new page', function () {
+    it('defaults to false when creating a new page', function () {
         /** @var TestCase $this */
         $page = Page::factory()->create();
-        expect($page->is_published)->toBeTrue();
+        expect($page->is_published)->toBeFalse();
     });
 
     it('can be set to false', function () {
