@@ -77,7 +77,7 @@ test('page links work', function () {
 
 test('admin can see unpublished pages in index', function () {
     /** @var TestCase $this */
-    $admin = User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->admin()->create();
 
     $publishedPage = Page::factory()->create([
         'title' => 'Published Page',
@@ -98,7 +98,7 @@ test('admin can see unpublished pages in index', function () {
 
 test('unpublished pages show indicator for admin', function () {
     /** @var TestCase $this */
-    $admin = User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->admin()->create();
 
     $unpublishedPage = Page::factory()->create([
         'title' => 'Draft Page',
@@ -114,7 +114,7 @@ test('unpublished pages show indicator for admin', function () {
 
 test('published pages do not show unpublished indicator', function () {
     /** @var TestCase $this */
-    $admin = User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->admin()->create();
 
     $publishedPage = Page::factory()->create([
         'title' => 'Published Page',
