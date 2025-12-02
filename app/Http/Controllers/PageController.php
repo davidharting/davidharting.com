@@ -9,12 +9,14 @@ class PageController extends Controller
 {
     public function index(): View
     {
-        $pages = Page::where('is_published', true)
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        $query = Page::query()->orderBy('updated_at', 'desc');
+
+        if (! auth()->check() || ! auth()->user()->is_admin) {
+            $query->where('is_published', true);
+        }
 
         return view('pages.index', [
-            'pages' => $pages,
+            'pages' => $query->get(),
         ]);
     }
 

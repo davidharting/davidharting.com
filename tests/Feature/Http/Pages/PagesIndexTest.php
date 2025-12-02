@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Page;
+use App\Models\User;
 use Tests\TestCase;
 
 test('shows pages index', function () {
@@ -72,4 +73,57 @@ test('page links work', function () {
     $response = $this->get('/pages');
     $response->assertSuccessful();
     $response->assertSee(route('pages.show', $page->slug));
+});
+
+test('admin can see unpublished pages in index', function () {
+    /** @var TestCase $this */
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $publishedPage = Page::factory()->create([
+        'title' => 'Published Page',
+        'is_published' => true,
+    ]);
+
+    $unpublishedPage = Page::factory()->create([
+        'title' => 'Unpublished Page',
+        'is_published' => false,
+    ]);
+
+    $this->actingAs($admin);
+    $response = $this->get('/pages');
+    $response->assertSuccessful();
+    $response->assertSee('Published Page');
+    $response->assertSee('Unpublished Page');
+});
+
+test('unpublished pages show indicator for admin', function () {
+    /** @var TestCase $this */
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $unpublishedPage = Page::factory()->create([
+        'title' => 'Draft Page',
+        'is_published' => false,
+    ]);
+
+    $this->actingAs($admin);
+    $response = $this->get('/pages');
+    $response->assertSuccessful();
+    $response->assertSee('Draft Page');
+    $response->assertSee('Unpublished');
+});
+
+test('published pages do not show unpublished indicator', function () {
+    /** @var TestCase $this */
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $publishedPage = Page::factory()->create([
+        'title' => 'Published Page',
+        'is_published' => true,
+    ]);
+
+    $this->actingAs($admin);
+    $response = $this->get('/pages');
+    $response->assertSuccessful();
+    $response->assertSee('Published Page');
+    $response->assertDontSee('Unpublished');
 });
