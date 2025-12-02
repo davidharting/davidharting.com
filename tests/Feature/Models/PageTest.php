@@ -15,13 +15,6 @@ describe('slug', function () {
         $page = Page::factory()->create(['title' => 'My Page Title']);
         expect($page->slug)->toBe('my-page-title');
     });
-
-    it('is generated as a ULID if only slug is not provided and title is empty', function () {
-        /** @var TestCase $this */
-        $page = Page::factory()->create(['title' => '', 'slug' => null]);
-        // ULID should be 26 characters long
-        expect($page->slug)->toHaveLength(26);
-    });
 });
 
 describe('renderContent', function () {

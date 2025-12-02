@@ -17,10 +17,6 @@ class Page extends Model
         'is_published',
     ];
 
-    protected $casts = [
-        'is_published' => 'boolean',
-    ];
-
     protected static function boot()
     {
         parent::boot();
@@ -35,11 +31,8 @@ class Page extends Model
         if ($this->slug) {
             return $this->slug;
         }
-        if ($this->title) {
-            return Str::slug($this->title);
-        }
 
-        return Str::lower(Str::ulid());
+        return Str::slug($this->title);
     }
 
     public function getRouteKeyName()
