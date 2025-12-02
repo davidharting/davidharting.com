@@ -10,6 +10,7 @@ use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaEvent;
 use App\Models\Note;
+use App\Models\Page;
 use App\Models\Player;
 use App\Models\Score;
 use App\Models\Scorecard;
@@ -95,6 +96,49 @@ class DatabaseSeeder extends Seeder
         Note::factory(25)->leadOnly()->create();
         Note::factory(15)->noLead()->create();
         Note::factory(5)->contentOnly()->create();
+
+        // Pages for development
+        Page::create([
+            'slug' => 'about',
+            'title' => 'About Me',
+            'is_published' => true,
+            'markdown_content' => <<<'MARKDOWN'
+I'm a software engineer who loves building things for the web.
+
+## What I Do
+
+I work primarily with Laravel, PHP, and modern JavaScript frameworks. I'm passionate about:
+
+- Writing clean, maintainable code
+- Building great user experiences
+- Learning new technologies
+- Sharing knowledge through writing
+
+## Get in Touch
+
+Feel free to reach out if you want to chat about web development, technology, or anything else!
+MARKDOWN
+        ]);
+
+        Page::create([
+            'slug' => 'projects',
+            'title' => 'My Projects',
+            'is_published' => false,
+            'markdown_content' => <<<'MARKDOWN'
+Here are some projects I'm working on or have completed.
+
+## Current Projects
+
+### This Website
+Built with Laravel and Tailwind CSS. Features include:
+- Blog with markdown support
+- Admin panel with Filament
+- Custom pages system
+
+### Other Projects
+More coming soon...
+MARKDOWN
+        ]);
 
         // Kitchen sink markdown example
         Note::factory()->create([

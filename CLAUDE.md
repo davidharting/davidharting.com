@@ -30,4 +30,6 @@ We focus on feature tests to get more leverage
 
 ## Way of working
 
-Unless I say otherwise, work on a small change and then come back to me for review. Work on only what I ask you to do, and one thing at a time.
+- Work on only what I ask you to do, and one thing at a time. Focus changes to just the task at hand. Ask about refactors before doing them.
+- Make atomic commits with detailed messages
+- Include tests as you go rather than at the end. The tests should be committed with the relevant application changes.

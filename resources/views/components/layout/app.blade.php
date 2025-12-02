@@ -52,6 +52,13 @@
                         >
                             Media Log
                         </a>
+                        <a
+                            href="{{ route("pages.index") }}"
+                            wire:navigate
+                            class="link link-primary"
+                        >
+                            Pages
+                        </a>
                     </div>
                     <div>
                         @guest
