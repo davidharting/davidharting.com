@@ -17,12 +17,12 @@ class PageForm
                 TextInput::make('title')
                     ->required()
                     ->columnSpanFull(),
+                Toggle::make('is_published')
+                    ->default(false),
                 MarkdownEditor::make('markdown_content')
                     ->label('Content')
                     ->required()
                     ->columnSpanFull(),
-                Toggle::make('is_published')
-                    ->default(true),
             ]);
     }
 }
