@@ -14,11 +14,7 @@
                         {{ $page->title }}
                     </a>
                     @if (! $page->is_published)
-                        <span
-                            class="ml-2 inline-block rounded bg-gray-200 px-2 py-1 text-xs font-medium text-gray-700"
-                        >
-                            Unpublished
-                        </span>
+                        <span class="badge badge-ghost ml-2">Unpublished</span>
                     @endif
                 </li>
             @endforeach
