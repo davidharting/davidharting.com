@@ -10,9 +10,4 @@ class TelegramBackupNotifiable extends Notifiable
     {
         return config('services.telegram.chat_id');
     }
-
-    public function routeNotificationForLog(): string
-    {
-        return 'backup-notifications';
-    }
 }

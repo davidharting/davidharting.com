@@ -43,12 +43,6 @@ test('TelegramBackupNotifiable returns correct chat ID', function () {
     expect($notifiable->routeNotificationForTelegram())->toBe('123456789');
 });
 
-test('TelegramBackupNotifiable returns correct log channel', function () {
-    $notifiable = new TelegramBackupNotifiable;
-
-    expect($notifiable->routeNotificationForLog())->toBe('backup-notifications');
-});
-
 function mockBackupDestination(): \Spatie\Backup\BackupDestination\BackupDestination
 {
     $disk = Storage::fake('backups');

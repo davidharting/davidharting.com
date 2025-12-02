@@ -196,12 +196,12 @@ return [
      */
     'notifications' => [
         'notifications' => [
-            \App\Notifications\BackupHasFailedNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
-            \App\Notifications\UnhealthyBackupWasFoundNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
-            \App\Notifications\CleanupHasFailedNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
-            \App\Notifications\BackupWasSuccessfulNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
-            \App\Notifications\HealthyBackupWasFoundNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
-            \App\Notifications\CleanupWasSuccessfulNotification::class => [env('APP_ENV') === 'local' ? 'log' : 'telegram'],
+            \App\Notifications\BackupHasFailedNotification::class => [env('APP_ENV') === 'local' ? 'mail' : 'telegram'],
+            \App\Notifications\UnhealthyBackupWasFoundNotification::class => [env('APP_ENV') === 'local' ? 'mail' : 'telegram'],
+            \App\Notifications\CleanupHasFailedNotification::class => [env('APP_ENV') === 'local' ? 'mail' : 'telegram'],
+            \App\Notifications\BackupWasSuccessfulNotification::class => [env('APP_ENV') === 'local' ? 'mail' : 'telegram'],
+            \App\Notifications\HealthyBackupWasFoundNotification::class => [env('APP_ENV') === 'local' ? 'mail' : 'telegram'],
+            \App\Notifications\CleanupWasSuccessfulNotification::class => [env('APP_ENV') === 'local' ? 'mail' : 'telegram'],
         ],
 
         /*
