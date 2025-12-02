@@ -11,7 +11,7 @@ class PageController extends Controller
     {
         $query = Page::query()->orderBy('updated_at', 'desc');
 
-        if (! auth()->check() || ! auth()->user()->is_admin) {
+        if (! auth()->user()?->can('viewAny', Page::class)) {
             $query->where('is_published', true);
         }
 
