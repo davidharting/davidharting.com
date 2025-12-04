@@ -173,7 +173,7 @@ services:
 
     nightwatch-agent:
         <<: *laravel-config
-        command: ["php", "artisan", "nightwatch:agent"]
+        command: ["php", "artisan", "nightwatch:agent", "--listen=0.0.0.0:2407"]
         depends_on:
             migrations:
                 condition: service_completed_successfully
