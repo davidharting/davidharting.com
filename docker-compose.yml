@@ -169,3 +169,16 @@ services:
             interval: 30s
             timeout: 5s
             retries: 5
+
+    nightwatch-agent:
+        <<: *laravel-config
+        command: ["php", "artisan", "nightwatch:agent"]
+        depends_on:
+            migrations:
+                condition: service_completed_successfully
+
+        healthcheck:
+            test: ["CMD-SHELL", 'pgrep -fl "php artisan nightwatch:agent"']
+            interval: 30s
+            timeout: 5s
+            retries: 5
