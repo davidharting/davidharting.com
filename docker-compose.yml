@@ -173,8 +173,8 @@ services:
 
     nightwatch-agent:
         image: laravelphp/nightwatch-agent:v1
-        environment:
-            NIGHTWATCH_TOKEN_FILE: /run/secrets/NIGHTWATCH_TOKEN
+        entrypoint: ["/bin/sh", "-c"]
+        command: ["export NIGHTWATCH_TOKEN=$(cat /run/secrets/NIGHTWATCH_TOKEN) && exec php nightwatch-agent"]
         secrets:
             - NIGHTWATCH_TOKEN
         restart: unless-stopped
