@@ -54,6 +54,7 @@ x-laravel-config: &laravel-config
         LOG_STACK: stderr,nightwatch
         LOG_DEPRECATIONS_CHANNEL: null
         LOG_LEVEL: debug
+        NIGHTWATCH_REQUEST_SAMPLE_RATE: "0.1"
         MAIL_FROM_ADDRESS: "hello@davidharting.com"
         MAIL_FROM_NAME: davidharting.com
         MAIL_LOG_CHANNEL: stderr
