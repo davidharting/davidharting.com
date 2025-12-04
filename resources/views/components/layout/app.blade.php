@@ -27,7 +27,7 @@
     </head>
 
     <body class="font-sans antialiased">
-        <div class="container mx-auto">
+        <div class="container mx-auto px-4">
             <main class="mt-8">
                 <div class="flex justify-between w-full">
                     <div class="flex justify-start space-x-8 mb-8">
