@@ -172,13 +172,22 @@ services:
             retries: 5
 
     nightwatch-agent:
-        <<: *laravel-config
+        image: ghcr.io/davidharting/davidharting.com:latest
+        secrets:
+            - NIGHTWATCH_TOKEN
         command: ["php", "artisan", "nightwatch:agent"]
-        environment:
-            NIGHTWATCH_INGEST_URI: ""
-        depends_on:
-            migrations:
-                condition: service_completed_successfully
+        restart: unless-stopped
+        stdin_open: true
+        tty: true
+
+        deploy:
+            resources:
+                limits:
+                    cpus: "0.25"
+                    memory: 256M
+                reservations:
+                    cpus: "0.1"
+                    memory: 128M
 
         healthcheck:
             test: ["CMD-SHELL", 'pgrep -fl "php artisan nightwatch:agent"']
