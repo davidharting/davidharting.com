@@ -173,6 +173,8 @@ services:
 
     nightwatch-agent:
         image: laravelphp/nightwatch-agent:v1
+        environment:
+            NIGHTWATCH_TOKEN_FILE: /run/secrets/NIGHTWATCH_TOKEN
         secrets:
             - NIGHTWATCH_TOKEN
         restart: unless-stopped
