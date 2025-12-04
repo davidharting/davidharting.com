@@ -174,7 +174,7 @@ services:
     nightwatch-agent:
         image: laravelphp/nightwatch-agent:v1
         entrypoint: ["/bin/sh", "-c"]
-        command: ["export NIGHTWATCH_TOKEN=$(cat /run/secrets/NIGHTWATCH_TOKEN) && exec php agent/build/agent.phar"]
+        command: ["export NIGHTWATCH_TOKEN=$(cat /run/secrets/NIGHTWATCH_TOKEN) && exec /entrypoint.sh"]
         secrets:
             - NIGHTWATCH_TOKEN
         restart: unless-stopped
