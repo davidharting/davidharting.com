@@ -20,6 +20,8 @@ secrets:
         file: ./secrets/R2_ENDPOINT.txt
     R2_PRIVATE_BUCKET:
         file: ./secrets/R2_PRIVATE_BUCKET.txt
+    NIGHTWATCH_TOKEN:
+        file: ./secrets/NIGHTWATCH_TOKEN.txt
 
 x-laravel-config: &laravel-config
     image: ghcr.io/davidharting/davidharting.com:latest
@@ -32,6 +34,7 @@ x-laravel-config: &laravel-config
         - R2_SECRET_ACCESS_KEY
         - R2_ENDPOINT
         - R2_PRIVATE_BUCKET
+        - NIGHTWATCH_TOKEN
     environment:
         APP_DEBUG: "false"
         APP_ENV: production
@@ -47,9 +50,12 @@ x-laravel-config: &laravel-config
         DB_PORT: 5432
         DB_USERNAME: laravel
         FILESYSTEM_DISK_PRIVATE: r2-private
-        LOG_CHANNEL: stderr
+        LOG_CHANNEL: stack
+        LOG_STACK: stderr,nightwatch
         LOG_DEPRECATIONS_CHANNEL: null
         LOG_LEVEL: debug
+        NIGHTWATCH_INGEST_URI: nightwatch-agent:2407
+        NIGHTWATCH_REQUEST_SAMPLE_RATE: "1"
         MAIL_FROM_ADDRESS: "hello@davidharting.com"
         MAIL_FROM_NAME: davidharting.com
         MAIL_LOG_CHANNEL: stderr
@@ -164,3 +170,20 @@ services:
             interval: 30s
             timeout: 5s
             retries: 5
+
+    nightwatch-agent:
+        image: laravelphp/nightwatch-agent:v1
+        entrypoint: ["/bin/sh", "-c"]
+        command:
+            [
+                "export NIGHTWATCH_TOKEN=$(cat /run/secrets/NIGHTWATCH_TOKEN) && exec ./entrypoint.sh",
+            ]
+        secrets:
+            - NIGHTWATCH_TOKEN
+        restart: unless-stopped
+        healthcheck:
+            test: php nightwatch-status
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 5s

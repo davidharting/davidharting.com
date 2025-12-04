@@ -24,9 +24,5 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('administrate', function (User $user) {
             return $user->is_admin;
         });
-
-        Gate::define('viewPulse', function (User $user) {
-            return $user->is_admin;
-        });
     }
 }

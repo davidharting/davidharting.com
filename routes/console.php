@@ -19,7 +19,5 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('pulse:check --once')->everyMinute()->sendOutputTo('/dev/stderr');
-
 Schedule::command('backup:clean')->daily()->sendOutputTo('/dev/stderr');
 Schedule::command('backup:run --only-db')->hourly()->sendOutputTo('/dev/stderr');
