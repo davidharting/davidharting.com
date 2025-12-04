@@ -172,25 +172,13 @@ services:
             retries: 5
 
     nightwatch-agent:
-        image: ghcr.io/davidharting/davidharting.com:latest
+        image: laravelphp/nightwatch-agent:v1
         secrets:
             - NIGHTWATCH_TOKEN
-        command: ["php", "artisan", "nightwatch:agent"]
         restart: unless-stopped
-        stdin_open: true
-        tty: true
-
-        deploy:
-            resources:
-                limits:
-                    cpus: "0.25"
-                    memory: 256M
-                reservations:
-                    cpus: "0.1"
-                    memory: 128M
-
         healthcheck:
-            test: ["CMD-SHELL", 'pgrep -fl "php artisan nightwatch:agent"']
+            test: php nightwatch-status
             interval: 30s
             timeout: 5s
-            retries: 5
+            retries: 3
+            start_period: 5s
