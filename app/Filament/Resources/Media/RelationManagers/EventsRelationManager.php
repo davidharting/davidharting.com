@@ -32,19 +32,15 @@ class EventsRelationManager extends RelationManager
                     ->relationship(name: 'mediaEventType', titleAttribute: 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name->value)
                     ->required()
+                    // live() re-evaluates dependent field validation when this changes
                     ->live(),
                 DatePicker::make('occurred_at')
                     ->label('Date')
                     ->required(),
                 Textarea::make('comment')
                     ->columnSpanFull()
-                    ->required(fn (Get $get): bool => $get('media_event_type_id') == self::commentEventTypeId()),
+                    ->required(fn (Get $get): bool => $get('media_event_type_id') == MediaEventType::idFor(MediaEventTypeName::COMMENT)),
             ]);
-    }
-
-    private static function commentEventTypeId(): ?int
-    {
-        return once(fn () => MediaEventType::where('name', MediaEventTypeName::COMMENT)->first()?->id);
     }
 
     public function table(Table $table): Table
