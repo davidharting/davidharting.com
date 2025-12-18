@@ -41,11 +41,21 @@ sudo systemctl daemon-reload
 echo "Enabling service for auto-start on boot..."
 sudo systemctl enable davidharting-com
 
+# Start or restart the service
+if sudo systemctl is-active --quiet davidharting-com; then
+    echo "Service is already running. Restarting to apply changes..."
+    sudo systemctl restart davidharting-com
+else
+    echo "Starting service..."
+    sudo systemctl start davidharting-com
+fi
+
 echo ""
-echo "✓ Service installed successfully!"
+echo "✓ Service installed and started successfully!"
 echo ""
-echo "You can now manage the service with:"
-echo "  sudo systemctl start davidharting-com      # Start the application"
+sudo systemctl status davidharting-com --no-pager
+echo ""
+echo "You can manage the service with:"
 echo "  sudo systemctl stop davidharting-com       # Stop the application"
 echo "  sudo systemctl restart davidharting-com    # Restart the application"
 echo "  sudo systemctl status davidharting-com     # Check service status"
