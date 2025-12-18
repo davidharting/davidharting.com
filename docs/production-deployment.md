@@ -40,16 +40,11 @@ The systemd service ensures the application automatically starts when the server
    - Generate the systemd service file with your username and paths
    - Install it to `/etc/systemd/system/davidharting-com.service`
    - Enable auto-start on boot
-   - Display management commands
+   - Start the service (or restart if already running)
+   - Display service status
 
-3. Start the service:
+3. Verify containers are running (optional - script shows status):
    ```bash
-   sudo systemctl start davidharting-com
-   ```
-
-4. Verify it's running:
-   ```bash
-   sudo systemctl status davidharting-com
    docker compose ps
    ```
 
