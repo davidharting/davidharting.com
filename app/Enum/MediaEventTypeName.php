@@ -7,4 +7,5 @@ enum MediaEventTypeName: string
     case STARTED = 'started';
     case FINISHED = 'finished';
     case ABANDONED = 'abandoned';
+    case COMMENT = 'comment';
 }

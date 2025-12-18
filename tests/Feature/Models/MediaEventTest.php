@@ -34,3 +34,11 @@ test('casts media event type name to enum', function () {
 
     expect($event->mediaEventType->name)->toBeInstanceOf(\App\Enum\MediaEventTypeName::class);
 });
+
+test('comment factory method creates comment event with text', function () {
+    /** @var TestCase $this */
+    $event = MediaEvent::factory()->comment('My thoughts on chapter 5')->create();
+
+    expect($event->mediaEventType->name)->toBe(\App\Enum\MediaEventTypeName::COMMENT);
+    expect($event->comment)->toBe('My thoughts on chapter 5');
+});

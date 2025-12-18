@@ -56,4 +56,12 @@ class MediaEventFactory extends Factory
             'media_event_type_id' => MediaEventType::where('name', MediaEventTypeName::ABANDONED)->first()->id,
         ]);
     }
+
+    public function comment(string $text): MediaEventFactory
+    {
+        return $this->state([
+            'media_event_type_id' => MediaEventType::where('name', MediaEventTypeName::COMMENT)->first()->id,
+            'comment' => $text,
+        ]);
+    }
 }
