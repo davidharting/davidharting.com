@@ -15,8 +15,10 @@ test('idFor returns the correct ID for each event type', function () {
     foreach (MediaEventTypeName::cases() as $name) {
         $expected = MediaEventType::where('name', $name)->first()->id;
         $actual = MediaEventType::idFor($name);
+        $actualCached = MediaEventType::idFor($name);
 
         expect($actual)->toBe($expected);
+        expect($actualCached)->toBe($expected);
     }
 });
 
