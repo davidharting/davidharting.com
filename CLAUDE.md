@@ -1,5 +1,9 @@
 This is a Laravel project for my personal website, davidharting.com.
 
+## Development Setup
+
+If you're setting up a fresh development environment (e.g., new git worktree), follow the steps in [docs/development-setup.md](docs/development-setup.md) to bootstrap from zero to passing tests.
+
 ## Architecture overview
 
 - Cloudflare DNS. Orange-checkmark reverse proxy to my Digital Ocean droplet
