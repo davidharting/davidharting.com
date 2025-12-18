@@ -2,6 +2,7 @@
 
 namespace App\Queries\Media;
 
+use App\Enum\MediaEventTypeName;
 use App\Enum\MediaTypeName;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,6 @@ class BacklogQuery
         $query = DB::table('media')
             ->join('media_types', 'media.media_type_id', '=', 'media_types.id')
             ->leftJoin('creators', 'media.creator_id', '=', 'creators.id')
-            ->leftJoin('media_events', 'media_events.media_id', '=', 'media.id')
 
             ->select(
                 'media.id as id',
@@ -29,7 +29,18 @@ class BacklogQuery
                 'media.note as note'
             )
 
-            ->whereNull('media_events.id')
+            // No started, finished, or abandoned events (comment events are ignored)
+            ->whereNotExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('media_events')
+                    ->join('media_event_types', 'media_events.media_event_type_id', '=', 'media_event_types.id')
+                    ->whereColumn('media_events.media_id', 'media.id')
+                    ->whereIn('media_event_types.name', [
+                        MediaEventTypeName::STARTED,
+                        MediaEventTypeName::FINISHED,
+                        MediaEventTypeName::ABANDONED,
+                    ]);
+            })
 
             ->orderBy('media.created_at', 'desc');
 
