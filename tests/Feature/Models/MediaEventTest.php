@@ -1,5 +1,6 @@
 <?php
 
+use App\Enum\MediaEventTypeName;
 use App\Models\Media;
 use App\Models\MediaEvent;
 use Tests\TestCase;
@@ -32,13 +33,13 @@ test('casts media event type name to enum', function () {
     /** @var TestCase $this */
     $event = MediaEvent::factory()->create();
 
-    expect($event->mediaEventType->name)->toBeInstanceOf(\App\Enum\MediaEventTypeName::class);
+    expect($event->mediaEventType->name)->toBeInstanceOf(MediaEventTypeName::class);
 });
 
 test('comment factory method creates comment event with text', function () {
     /** @var TestCase $this */
     $event = MediaEvent::factory()->comment('My thoughts on chapter 5')->create();
 
-    expect($event->mediaEventType->name)->toBe(\App\Enum\MediaEventTypeName::COMMENT);
+    expect($event->mediaEventType->name)->toBe(MediaEventTypeName::COMMENT);
     expect($event->comment)->toBe('My thoughts on chapter 5');
 });
