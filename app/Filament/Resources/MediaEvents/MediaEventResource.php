@@ -49,19 +49,13 @@ class MediaEventResource extends Resource
                     ->required(),
                 Textarea::make('comment')
                     ->columnSpanFull()
-                    ->required(fn (Get $get): bool => self::isCommentEventType($get('media_event_type_id'))),
+                    ->required(fn (Get $get): bool => $get('media_event_type_id') == self::commentEventTypeId()),
             ]);
     }
 
-    private static function isCommentEventType(?string $eventTypeId): bool
+    private static function commentEventTypeId(): ?int
     {
-        if ($eventTypeId === null) {
-            return false;
-        }
-
-        $eventType = MediaEventType::find($eventTypeId);
-
-        return $eventType?->name === MediaEventTypeName::COMMENT;
+        return once(fn () => MediaEventType::where('name', MediaEventTypeName::COMMENT)->first()?->id);
     }
 
     public static function infolist(Schema $schema): Schema

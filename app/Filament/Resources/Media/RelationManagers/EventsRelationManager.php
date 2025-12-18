@@ -17,7 +17,6 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Get;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -39,19 +38,13 @@ class EventsRelationManager extends RelationManager
                     ->required(),
                 Textarea::make('comment')
                     ->columnSpanFull()
-                    ->required(fn (Get $get): bool => self::isCommentEventType($get('media_event_type_id'))),
+                    ->required(fn (Get $get): bool => $get('media_event_type_id') == self::commentEventTypeId()),
             ]);
     }
 
-    private static function isCommentEventType(?string $eventTypeId): bool
+    private static function commentEventTypeId(): ?int
     {
-        if ($eventTypeId === null) {
-            return false;
-        }
-
-        $eventType = MediaEventType::find($eventTypeId);
-
-        return $eventType?->name === MediaEventTypeName::COMMENT;
+        return once(fn () => MediaEventType::where('name', MediaEventTypeName::COMMENT)->first()?->id);
     }
 
     public function table(Table $table): Table
