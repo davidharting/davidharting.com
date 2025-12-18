@@ -1,0 +1,18 @@
+[Unit]
+Description=davidharting.com Web Application
+Requires=docker.service
+After=docker.service
+Documentation=https://github.com/davidharting/davidharting.com
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=WORKING_DIR_PLACEHOLDER
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+User=USER_PLACEHOLDER
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
