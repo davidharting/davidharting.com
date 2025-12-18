@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Media\RelationManagers;
 
+use App\Enum\MediaEventTypeName;
 use App\Filament\Resources\MediaEvents\MediaEventResource;
+use App\Models\MediaEventType;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -12,6 +14,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Get;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables;
@@ -29,13 +32,26 @@ class EventsRelationManager extends RelationManager
                 Select::make('media_event_type_id')
                     ->relationship(name: 'mediaEventType', titleAttribute: 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name->value)
-                    ->required(),
+                    ->required()
+                    ->live(),
                 DatePicker::make('occurred_at')
                     ->label('Date')
                     ->required(),
                 Textarea::make('comment')
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->required(fn (Get $get): bool => self::isCommentEventType($get('media_event_type_id'))),
             ]);
+    }
+
+    private static function isCommentEventType(?string $eventTypeId): bool
+    {
+        if ($eventTypeId === null) {
+            return false;
+        }
+
+        $eventType = MediaEventType::find($eventTypeId);
+
+        return $eventType?->name === MediaEventTypeName::COMMENT;
     }
 
     public function table(Table $table): Table

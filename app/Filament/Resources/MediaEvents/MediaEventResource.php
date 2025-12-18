@@ -2,12 +2,14 @@
 
 namespace App\Filament\Resources\MediaEvents;
 
+use App\Enum\MediaEventTypeName;
 use App\Filament\Resources\Media\MediaResource;
 use App\Filament\Resources\MediaEvents\Pages\CreateMediaEvent;
 use App\Filament\Resources\MediaEvents\Pages\EditMediaEvent;
 use App\Filament\Resources\MediaEvents\Pages\ListMediaEvents;
 use App\Filament\Resources\MediaEvents\Pages\ViewMediaEvent;
 use App\Models\MediaEvent;
+use App\Models\MediaEventType;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -15,6 +17,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Get;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -34,7 +37,8 @@ class MediaEventResource extends Resource
                 Select::make('media_event_type_id')
                     ->relationship(name: 'mediaEventType', titleAttribute: 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name->value)
-                    ->required(),
+                    ->required()
+                    ->live(),
                 DatePicker::make('occurred_at')
                     ->label('Date')
                     ->required(),
@@ -44,8 +48,20 @@ class MediaEventResource extends Resource
                     ->preload()
                     ->required(),
                 Textarea::make('comment')
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->required(fn (Get $get): bool => self::isCommentEventType($get('media_event_type_id'))),
             ]);
+    }
+
+    private static function isCommentEventType(?string $eventTypeId): bool
+    {
+        if ($eventTypeId === null) {
+            return false;
+        }
+
+        $eventType = MediaEventType::find($eventTypeId);
+
+        return $eventType?->name === MediaEventTypeName::COMMENT;
     }
 
     public static function infolist(Schema $schema): Schema
