@@ -2,9 +2,7 @@
 
 namespace App\Filament\Resources\Media\RelationManagers;
 
-use App\Enum\MediaEventTypeName;
 use App\Filament\Resources\MediaEvents\MediaEventResource;
-use App\Models\MediaEventType;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -15,7 +13,6 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -31,15 +28,12 @@ class EventsRelationManager extends RelationManager
                 Select::make('media_event_type_id')
                     ->relationship(name: 'mediaEventType', titleAttribute: 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name->value)
-                    ->required()
-                    // live() re-evaluates dependent field validation when this changes
-                    ->live(),
+                    ->required(),
                 DatePicker::make('occurred_at')
                     ->label('Date')
                     ->required(),
                 Textarea::make('comment')
-                    ->columnSpanFull()
-                    ->required(fn (Get $get): bool => $get('media_event_type_id') == MediaEventType::idFor(MediaEventTypeName::COMMENT)),
+                    ->columnSpanFull(),
             ]);
     }
 
