@@ -41,3 +41,22 @@ test('example', function () {
     $this->assertEquals('In Progress Book', $result->last()->title);
     $this->assertEquals($inProgressBook->id, $result->last()->id);
 });
+
+test('comment events do not affect in progress status', function () {
+    // Media with started event AND comment events should still be in progress
+    $inProgressWithComments = Media::factory()
+        ->book()
+        ->has(MediaEvent::factory()->started()->at(Carbon::parse('2024-12-01')), 'events')
+        ->has(MediaEvent::factory()->comment('Loving chapter 3!')->at(Carbon::parse('2024-12-10')), 'events')
+        ->create(['title' => 'Book With Comments']);
+
+    // Media with ONLY comment events (no started) should NOT be in progress
+    Media::factory()
+        ->book()
+        ->has(MediaEvent::factory()->comment('Just a note'), 'events')
+        ->create(['title' => 'Only Comment Book']);
+
+    $result = (new InProgressQuery)->execute();
+    $this->assertCount(1, $result);
+    $this->assertEquals('Book With Comments', $result->first()->title);
+});
