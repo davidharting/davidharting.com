@@ -2,14 +2,12 @@
 
 namespace App\Filament\Resources\MediaEvents;
 
-use App\Enum\MediaEventTypeName;
 use App\Filament\Resources\Media\MediaResource;
 use App\Filament\Resources\MediaEvents\Pages\CreateMediaEvent;
 use App\Filament\Resources\MediaEvents\Pages\EditMediaEvent;
 use App\Filament\Resources\MediaEvents\Pages\ListMediaEvents;
 use App\Filament\Resources\MediaEvents\Pages\ViewMediaEvent;
 use App\Models\MediaEvent;
-use App\Models\MediaEventType;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -19,7 +17,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -37,9 +34,7 @@ class MediaEventResource extends Resource
                 Select::make('media_event_type_id')
                     ->relationship(name: 'mediaEventType', titleAttribute: 'name')
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->name->value)
-                    ->required()
-                    // live() re-evaluates dependent field validation when this changes
-                    ->live(),
+                    ->required(),
                 DatePicker::make('occurred_at')
                     ->label('Date')
                     ->required(),
@@ -49,8 +44,7 @@ class MediaEventResource extends Resource
                     ->preload()
                     ->required(),
                 Textarea::make('comment')
-                    ->columnSpanFull()
-                    ->required(fn (Get $get): bool => $get('media_event_type_id') == MediaEventType::idFor(MediaEventTypeName::COMMENT)),
+                    ->columnSpanFull(),
             ]);
     }
 
