@@ -155,6 +155,28 @@ describe('with data', function () {
         });
     });
 
+    describe('clickable titles', function () {
+        test('guest users see plain text titles', function () {
+            Livewire::test(MediaPage::class)
+                ->assertDontSee(route('media.show', 1));
+        });
+
+        test('regular users see plain text titles', function () {
+            $this->actingAs(User::factory(['is_admin' => false])->create());
+
+            Livewire::test(MediaPage::class)
+                ->assertDontSee(route('media.show', 1));
+        });
+
+        test('admins see clickable titles linking to detail page', function () {
+            $this->actingAs(User::factory(['is_admin' => true])->create());
+
+            $media = Media::where('title', 'Watched Movie')->first();
+            Livewire::test(MediaPage::class)
+                ->assertSee(route('media.show', $media->id));
+        });
+    });
+
     describe('notes', function () {
         test('guest users cannot see note', function () {
             Livewire::test(MediaPage::class)
