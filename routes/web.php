@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\FileShareController;
+use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
@@ -51,6 +52,7 @@ Route::get('/media', MediaPage::class)->name('media.index');
 Route::get('/media/log', function () {
     return redirect()->route('media.index', request()->query());
 });
+Route::get('/media/{media}', [MediaController::class, 'show'])->name('media.show')->can('view', 'media');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
