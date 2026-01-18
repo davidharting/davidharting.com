@@ -157,18 +157,20 @@ describe('with data', function () {
 
     describe('clickable titles', function () {
         test('guest users see plain text titles', function () {
-            $mediaId = Media::first()->id;
+            $media = Media::where('title', 'Watched Movie')->first();
 
             Livewire::test(MediaPage::class)
-                ->assertDontSee(route('media.show', $mediaId));
+                ->assertSee('Watched Movie')
+                ->assertDontSee(route('media.show', $media->id));
         });
 
         test('regular users see plain text titles', function () {
             $this->actingAs(User::factory(['is_admin' => false])->create());
-            $mediaId = Media::first()->id;
+            $media = Media::where('title', 'Watched Movie')->first();
 
             Livewire::test(MediaPage::class)
-                ->assertDontSee(route('media.show', $mediaId));
+                ->assertSee('Watched Movie')
+                ->assertDontSee(route('media.show', $media->id));
         });
 
         test('admins see clickable titles linking to detail page', function () {
