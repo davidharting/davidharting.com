@@ -27,7 +27,7 @@ class MediaEventFactory extends Factory
             'occurred_at' => $this->faker->dateTimeThisDecade(),
             'comment' => Lottery::odds(1, 5)
                 ->winner(fn () => $this->faker->sentence(random_int(1, 5)))
-                ->loser(null),
+                ->loser(fn () => null),
         ];
     }
 

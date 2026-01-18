@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('pages', function (Blueprint $table) {
             $table->id();
-            $table->text('slug', 300)->unique()->index();
+            $table->string('slug', 300)->unique()->index();
             $table->text('title');
             $table->text('markdown_content');
             $table->boolean('is_published')->default(false);

@@ -73,7 +73,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         for ($round = 1; $round <= 10; $round++) {
-            $conkers->players->each(function (Player $player) use ($round) {
+            $conkers->players->each(function (Player $player, int $key) use ($round) {
                 $player->scores()->save(
                     Score::factory()->makeOne([
                         'round' => $round,
