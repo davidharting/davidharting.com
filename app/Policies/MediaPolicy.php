@@ -7,17 +7,12 @@ use App\Models\User;
 
 class MediaPolicy
 {
-    public function before(User $user): ?bool
-    {
-        return $user->is_admin;
-    }
-
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->is_admin;
     }
 
     /**
@@ -25,7 +20,7 @@ class MediaPolicy
      */
     public function view(User $user, Media $media): bool
     {
-        return true;
+        return $user->is_admin;
     }
 
     /**
@@ -33,7 +28,7 @@ class MediaPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->is_admin;
     }
 
     /**
@@ -41,7 +36,7 @@ class MediaPolicy
      */
     public function update(User $user, Media $media): bool
     {
-        return false;
+        return $user->is_admin;
     }
 
     /**
@@ -49,7 +44,7 @@ class MediaPolicy
      */
     public function delete(User $user, Media $media): bool
     {
-        return false;
+        return $user->is_admin;
     }
 
     /**
@@ -57,7 +52,7 @@ class MediaPolicy
      */
     public function restore(User $user, Media $media): bool
     {
-        return false;
+        return $user->is_admin;
     }
 
     /**
@@ -65,7 +60,7 @@ class MediaPolicy
      */
     public function forceDelete(User $user, Media $media): bool
     {
-        return false;
+        return $user->is_admin;
     }
 
     /**
@@ -73,6 +68,6 @@ class MediaPolicy
      */
     public function seeNote(User $user): bool
     {
-        return false;
+        return $user->is_admin;
     }
 }
