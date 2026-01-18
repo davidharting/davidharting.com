@@ -11,7 +11,7 @@ use Livewire\Livewire;
 test('empty state', function () {
     Livewire::test(MediaPage::class)
         ->assertStatus(200)
-        ->assertSee('No items');
+        ->assertSeeText('No items');
 });
 
 describe('with data', function () {
@@ -58,7 +58,7 @@ describe('with data', function () {
     test('Backlog', function () {
         Livewire::withQueryParams(['list' => 'backlog'])->test(MediaPage::class)
             ->assertStatus(200)
-            ->assertSeeInOrder([
+            ->assertSeeTextInOrder([
                 '2023 July 22',
                 'Backlogged Album',
                 'Artist One',
@@ -66,10 +66,10 @@ describe('with data', function () {
                 'Backlogged Book',
                 'Author One',
             ])
-            ->assertDontSee('Watched Movie')
-            ->assertDontSee('Listened Album')
-            ->assertDontSee('Read Book')
-            ->assertDontSee('Reading Book');
+            ->assertDontSeeText('Watched Movie')
+            ->assertDontSeeText('Listened Album')
+            ->assertDontSeeText('Read Book')
+            ->assertDontSeeText('Reading Book');
     });
 
     test('Backlog as admin', function () {
@@ -77,7 +77,7 @@ describe('with data', function () {
 
         Livewire::withQueryParams(['list' => 'backlog'])->test(MediaPage::class)
             ->assertStatus(200)
-            ->assertSeeInOrder([
+            ->assertSeeTextInOrder([
                 '2023 July 22',
                 'Backlogged Album',
                 'Artist One',
@@ -90,16 +90,16 @@ describe('with data', function () {
     test('In Progress', function () {
         Livewire::withQueryParams(['list' => 'in-progress'])->test(MediaPage::class)
             ->assertStatus(200)
-            ->assertSeeInOrder([
+            ->assertSeeTextInOrder([
                 '2024 December 29',
                 'Reading Book',
                 'Author Three',
             ])
-            ->assertDontSee('Backlogged Album')
-            ->assertDontSee('Backlogged Book')
-            ->assertDontSee('Watched Movie')
-            ->assertDontSee('Listened Album')
-            ->assertDontSee('Read Book');
+            ->assertDontSeeText('Backlogged Album')
+            ->assertDontSeeText('Backlogged Book')
+            ->assertDontSeeText('Watched Movie')
+            ->assertDontSeeText('Listened Album')
+            ->assertDontSeeText('Read Book');
     });
 
     test('In Progress as admin', function () {
@@ -107,7 +107,7 @@ describe('with data', function () {
 
         Livewire::withQueryParams(['list' => 'in-progress'])->test(MediaPage::class)
             ->assertStatus(200)
-            ->assertSeeInOrder([
+            ->assertSeeTextInOrder([
                 '2024 December 29',
                 'Reading Book',
                 'Author Three',
@@ -117,7 +117,7 @@ describe('with data', function () {
     test('Finished (default)', function () {
         Livewire::test(MediaPage::class)
             ->assertStatus(200)
-            ->assertSeeInOrder([
+            ->assertSeeTextInOrder([
                 '2022 January 07',
                 'Watched Movie',
 
@@ -129,52 +129,80 @@ describe('with data', function () {
                 'Listened Album',
                 'Artist Two',
             ])
-            ->assertDontSee('Backlogged Album')
-            ->assertDontSee('Backlogged Book')
-            ->assertDontSee('Reading Book');
+            ->assertDontSeeText('Backlogged Album')
+            ->assertDontSeeText('Backlogged Book')
+            ->assertDontSeeText('Reading Book');
     });
 
     describe('admin edit link', function () {
         test('guest user cannot set it', function () {
             Livewire::test(MediaPage::class)
-                ->assertDontSee('Edit');
+                ->assertDontSeeText('Edit');
         });
 
         test('regular users cannot set it', function () {
             $this->actingAs(User::factory(['is_admin' => false])->create());
 
             Livewire::test(MediaPage::class)
-                ->assertDontSee('Edit');
+                ->assertDontSeeText('Edit');
         });
 
         test('admins can see it', function () {
             $this->actingAs(User::factory(['is_admin' => true])->create());
 
             Livewire::test(MediaPage::class)
-                ->assertSee('Edit');
+                ->assertSeeText('Edit');
+        });
+    });
+
+    describe('clickable titles', function () {
+        test('guest users see plain text titles', function () {
+            $media = Media::where('title', 'Watched Movie')->first();
+
+            Livewire::test(MediaPage::class)
+                ->assertSeeText('Watched Movie')
+                ->assertDontSee(route('media.show', $media->id));
+        });
+
+        test('regular users see plain text titles', function () {
+            $this->actingAs(User::factory(['is_admin' => false])->create());
+            $media = Media::where('title', 'Watched Movie')->first();
+
+            Livewire::test(MediaPage::class)
+                ->assertSeeText('Watched Movie')
+                ->assertDontSee(route('media.show', $media->id));
+        });
+
+        test('admins see clickable titles linking to detail page', function () {
+            $this->actingAs(User::factory(['is_admin' => true])->create());
+
+            $media = Media::where('title', 'Watched Movie')->first();
+            Livewire::test(MediaPage::class)
+                ->assertSeeText('Watched Movie')
+                ->assertSee(route('media.show', $media->id));
         });
     });
 
     describe('notes', function () {
         test('guest users cannot see note', function () {
             Livewire::test(MediaPage::class)
-                ->assertDontSee('Recommended by George')
-                ->assertDontSee('It was great!');
+                ->assertDontSeeText('Recommended by George')
+                ->assertDontSeeText('It was great!');
         });
 
         test('regular users cannot see note', function () {
             $this->actingAs(User::factory(['is_admin' => false])->create());
 
             Livewire::test(MediaPage::class)
-                ->assertDontSee('Recommended by George')
-                ->assertDontSee('It was great!');
+                ->assertDontSeeText('Recommended by George')
+                ->assertDontSeeText('It was great!');
         });
 
         test('admin users see note', function () {
             $this->actingAs(User::factory(['is_admin' => true])->create());
 
             Livewire::test(MediaPage::class)
-                ->assertSeeInOrder(['Recommended by George', 'It was great!']);
+                ->assertSeeTextInOrder(['Recommended by George', 'It was great!']);
         });
     });
 
