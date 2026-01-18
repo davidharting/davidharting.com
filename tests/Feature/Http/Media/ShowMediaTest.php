@@ -46,11 +46,11 @@ test('admin can view media detail page', function () {
     $response = $this->actingAs($admin)->get('/media/'.$media->id);
 
     $response->assertSuccessful();
-    $response->assertSee('Test Media Title');
-    $response->assertSee('2024');
-    $response->assertSee('This is a test note');
-    $response->assertSee($media->creator->name);
-    $response->assertSee($media->mediaType->name->value);
+    $response->assertSeeText('Test Media Title');
+    $response->assertSeeText('2024');
+    $response->assertSeeText('This is a test note');
+    $response->assertSeeText($media->creator->name);
+    $response->assertSeeText($media->mediaType->name->value);
 });
 
 test('timeline shows added event from media created_at', function () {
@@ -63,8 +63,8 @@ test('timeline shows added event from media created_at', function () {
     $response = $this->actingAs($admin)->get('/media/'.$media->id);
 
     $response->assertSuccessful();
-    $response->assertSee('Added');
-    $response->assertSee('Jan 15, 2024');
+    $response->assertSeeText('Added');
+    $response->assertSeeText('Jan 15, 2024');
 });
 
 test('timeline shows all event types sorted oldest-first with dates and comments', function () {
@@ -92,7 +92,7 @@ test('timeline shows all event types sorted oldest-first with dates and comments
     $response = $this->actingAs($admin)->get('/media/'.$media->id);
 
     $response->assertSuccessful();
-    $response->assertSeeInOrder([
+    $response->assertSeeTextInOrder([
         'Jan 1, 2024',
         'Added',
         'Feb 15, 2024',
@@ -113,6 +113,6 @@ test('page includes back link to media index', function () {
     $response = $this->actingAs($admin)->get('/media/'.$media->id);
 
     $response->assertSuccessful();
-    $response->assertSee('Back to media log');
+    $response->assertSeeText('Back to media log');
     $response->assertSee(route('media.index'));
 });
