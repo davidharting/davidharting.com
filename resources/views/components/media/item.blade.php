@@ -2,7 +2,7 @@
     <div class="text-sm text-gray-600">{{ $getDate() }}</div>
     <div>
         <span>{{ $icon() }}</span>
-        @can("administrate")
+        @can("viewAny", App\Models\Media::class)
             <a
                 href="{{ route("media.show", $item->id) }}"
                 class="link link-hover"
