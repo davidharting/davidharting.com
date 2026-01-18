@@ -21,8 +21,7 @@ test('displays visible notes with most recently updated first', function () {
         ]
     );
 
-    expect(Note::all()->count())->toBe(4);
-
+    expect(Note::count())->toBe(4);
     expect(Note::where('visible', true)->count())->toBe(3);
 
     $response = Livewire::test(NotesIndexPage::class);
