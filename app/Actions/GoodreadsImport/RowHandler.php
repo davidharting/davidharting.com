@@ -56,21 +56,21 @@ class RowHandler
         $book = Media::firstOrNew([
             'title' => $cleanTitle,
             'media_type_id' => $bookMediaType->id,
-            'year' => $this->row->publicationYear,
+            'year' => $this->row->publicationYear !== null ? (string) $this->row->publicationYear : null,
         ]);
         if (! $book->exists) {
             $report['media'] = 1;
         }
-        $book->year = $this->row->publicationYear;
-        $book->created_at = $this->row->dateAdded;
-        $book->updated_at = $this->row->dateAdded;
+        $book->year = $this->row->publicationYear !== null ? (string) $this->row->publicationYear : null;
+        $book->created_at = $this->row->dateAdded->format('Y-m-d H:i:s');
+        $book->updated_at = $this->row->dateAdded->format('Y-m-d H:i:s');
         if ($creator !== null) {
             $book->creator()->associate($creator);
         }
 
         $book->save();
 
-        if ($this->row->dateRead) {
+        if ($this->row->dateRead !== null) {
             $finishedEvent = MediaEvent::firstOrNew([
                 'media_id' => $book->id,
                 'media_event_type_id' => $finishedEventType->id,
@@ -78,7 +78,7 @@ class RowHandler
             if (! $finishedEvent->exists) {
                 $report['events'] = 1;
             }
-            $finishedEvent->occurred_at = $this->row->dateRead;
+            $finishedEvent->occurred_at = $this->row->dateRead->format('Y-m-d H:i:s');
 
             $finishedEvent->save();
         }

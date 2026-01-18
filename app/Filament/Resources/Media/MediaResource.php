@@ -87,7 +87,7 @@ class MediaResource extends Resource
                 TextColumn::make('mediaType.name')
                     ->sortable(),
                 TextColumn::make('year')
-                    ->numeric(thousandsSeparator: false)
+                    ->numeric(thousandsSeparator: '')
                     ->sortable(),
                 TextColumn::make('title')
                     ->searchable(),

@@ -82,7 +82,7 @@ class Detail extends Component
             ->select('round as round_number')->addSelect(DB::raw('json_agg(score order by player_id asc) as round_scores'))
             ->get();
 
-        $data = $collection->map(function ($item) {
+        $data = $collection->map(function (object $item) {
             return array_merge([$item->round_number], json_decode($item->round_scores));
         });
 
