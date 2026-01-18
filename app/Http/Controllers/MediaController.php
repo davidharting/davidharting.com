@@ -20,7 +20,7 @@ class MediaController extends Controller
             ->prepend([
                 'type' => 'added',
                 'date' => $media->created_at,
-                'comment' => null,
+                'comment' => $media->note,
             ])
             ->sortBy('date')
             ->values();
