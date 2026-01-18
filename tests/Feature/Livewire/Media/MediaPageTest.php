@@ -157,15 +157,18 @@ describe('with data', function () {
 
     describe('clickable titles', function () {
         test('guest users see plain text titles', function () {
+            $mediaId = Media::first()->id;
+
             Livewire::test(MediaPage::class)
-                ->assertDontSee(route('media.show', 1));
+                ->assertDontSee(route('media.show', $mediaId));
         });
 
         test('regular users see plain text titles', function () {
             $this->actingAs(User::factory(['is_admin' => false])->create());
+            $mediaId = Media::first()->id;
 
             Livewire::test(MediaPage::class)
-                ->assertDontSee(route('media.show', 1));
+                ->assertDontSee(route('media.show', $mediaId));
         });
 
         test('admins see clickable titles linking to detail page', function () {
