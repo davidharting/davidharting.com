@@ -67,7 +67,7 @@ test('timeline shows added event from media created_at', function () {
     $response->assertSee('Jan 15, 2024');
 });
 
-test('timeline shows all event types with dates and comments', function () {
+test('timeline shows all event types sorted oldest-first with dates and comments', function () {
     /** @var TestCase $this */
     $admin = User::factory()->admin()->create();
     $media = Media::factory()->create([
@@ -92,41 +92,14 @@ test('timeline shows all event types with dates and comments', function () {
     $response = $this->actingAs($admin)->get('/media/'.$media->id);
 
     $response->assertSuccessful();
-    $response->assertSee('Added');
-    $response->assertSee('Started');
-    $response->assertSee('Comment');
-    $response->assertSee('Great so far!');
-    $response->assertSee('Finished');
-    $response->assertSee('Feb 15, 2024');
-    $response->assertSee('Feb 20, 2024');
-    $response->assertSee('Mar 1, 2024');
-});
-
-test('timeline is sorted oldest-first', function () {
-    /** @var TestCase $this */
-    $admin = User::factory()->admin()->create();
-    $media = Media::factory()->create([
-        'created_at' => Carbon::parse('2024-01-15'),
-    ]);
-
-    MediaEvent::factory()->finished()->create([
-        'media_id' => $media->id,
-        'occurred_at' => Carbon::parse('2024-03-01'),
-    ]);
-
-    MediaEvent::factory()->started()->create([
-        'media_id' => $media->id,
-        'occurred_at' => Carbon::parse('2024-02-01'),
-    ]);
-
-    $response = $this->actingAs($admin)->get('/media/'.$media->id);
-
-    $response->assertSuccessful();
     $response->assertSeeInOrder([
-        'Jan 15, 2024',
+        'Jan 1, 2024',
         'Added',
-        'Feb 1, 2024',
+        'Feb 15, 2024',
         'Started',
+        'Feb 20, 2024',
+        'Comment',
+        'Great so far!',
         'Mar 1, 2024',
         'Finished',
     ]);
