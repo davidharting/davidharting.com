@@ -82,8 +82,12 @@ class Detail extends Component
             ->select('round as round_number')->addSelect(DB::raw('json_agg(score order by player_id asc) as round_scores'))
             ->get();
 
-        $data = $collection->map(function (object $item) {
-            return array_merge([$item->round_number], json_decode($item->round_scores));
+        $data = $collection->map(function ($item) {
+            // Using raw SQL select, these properties exist but PHPStan doesn't know about them
+            /** @var object{round_number: int, round_scores: string} $roundData */
+            $roundData = $item;
+
+            return array_merge([$roundData->round_number], json_decode($roundData->round_scores));
         });
 
         return $data;

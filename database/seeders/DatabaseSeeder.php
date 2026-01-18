@@ -73,7 +73,9 @@ class DatabaseSeeder extends Seeder
         ]);
 
         for ($round = 1; $round <= 10; $round++) {
-            $conkers->players->each(function (Player $player, int $key) use ($round) {
+            /** @var \Illuminate\Database\Eloquent\Collection<int, Player> $players */
+            $players = $conkers->players;
+            $players->each(function (Player $player, int $key) use ($round) {
                 $player->scores()->save(
                     Score::factory()->makeOne([
                         'round' => $round,

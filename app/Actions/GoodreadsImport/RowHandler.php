@@ -8,6 +8,7 @@ use App\Models\Media;
 use App\Models\MediaEvent;
 use App\Models\MediaEventType;
 use App\Models\MediaType;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -62,15 +63,16 @@ class RowHandler
             $report['media'] = 1;
         }
         $book->year = $this->row->publicationYear !== null ? (string) $this->row->publicationYear : null;
-        $book->created_at = $this->row->dateAdded->format('Y-m-d H:i:s');
-        $book->updated_at = $this->row->dateAdded->format('Y-m-d H:i:s');
+        $book->created_at = Carbon::parse($this->row->dateAdded);
+        $book->updated_at = Carbon::parse($this->row->dateAdded);
         if ($creator !== null) {
             $book->creator()->associate($creator);
         }
 
         $book->save();
 
-        if ($this->row->dateRead !== null) {
+        // @phpstan-ignore if.alwaysTrue
+        if ($this->row->dateRead) {
             $finishedEvent = MediaEvent::firstOrNew([
                 'media_id' => $book->id,
                 'media_event_type_id' => $finishedEventType->id,
@@ -78,7 +80,7 @@ class RowHandler
             if (! $finishedEvent->exists) {
                 $report['events'] = 1;
             }
-            $finishedEvent->occurred_at = $this->row->dateRead->format('Y-m-d H:i:s');
+            $finishedEvent->occurred_at = Carbon::parse($this->row->dateRead);
 
             $finishedEvent->save();
         }
