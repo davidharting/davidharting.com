@@ -28,11 +28,11 @@
         </dl>
 
         @if ($media->note)
-            <div class="bg-base-200 p-4 rounded-lg mb-6">
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    Note
-                </p>
-                <p>{{ $media->note }}</p>
+            <div class="card bg-base-200 mb-6">
+                <div class="card-body">
+                    <h3 class="card-title text-base">Note</h3>
+                    <p>{{ $media->note }}</p>
+                </div>
             </div>
         @endif
 
