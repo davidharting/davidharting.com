@@ -178,6 +178,7 @@ describe('with data', function () {
 
             $media = Media::where('title', 'Watched Movie')->first();
             Livewire::test(MediaPage::class)
+                ->assertSeeText('Watched Movie')
                 ->assertSee(route('media.show', $media->id));
         });
     });
