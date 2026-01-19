@@ -60,7 +60,6 @@ class LogbookQuery
             ->where('media_event_types.name', MediaEventTypeName::FINISHED)
             ->selectRaw('distinct extract(year from media_events.occurred_at) as year')
             ->orderBy('year', 'desc')
-            ->get()
             ->pluck('year')
             ->toArray();
     }

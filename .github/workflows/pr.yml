@@ -44,6 +44,9 @@ jobs:
       - name: Pint
         run: ./vendor/bin/pint --test
 
+      - name: Larastan
+        run: ./vendor/bin/phpstan analyse
+
       - name: Generate key
         run: php artisan key:generate
 

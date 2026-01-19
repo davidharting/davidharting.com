@@ -5,10 +5,9 @@ use App\Models\MediaType;
 use Tests\TestCase;
 
 test('factory works', function () {
-    /** @var TestCase $this */
     $mediaType = MediaType::factory()->make();
-    $this->assertNotNull($mediaType);
-    $this->assertNotEmpty($mediaType->name);
+    expect($mediaType)->toBeInstanceOf(MediaType::class);
+    expect($mediaType->name)->not->toBeEmpty();
 });
 
 test('media type seeded with data', function () {

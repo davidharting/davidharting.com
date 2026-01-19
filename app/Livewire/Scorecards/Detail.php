@@ -83,7 +83,11 @@ class Detail extends Component
             ->get();
 
         $data = $collection->map(function ($item) {
-            return array_merge([$item->round_number], json_decode($item->round_scores));
+            // Using raw SQL select, these properties exist but PHPStan doesn't know about them
+            /** @var object{round_number: int, round_scores: string} $roundData */
+            $roundData = $item;
+
+            return array_merge([$roundData->round_number], json_decode($roundData->round_scores));
         });
 
         return $data;

@@ -64,7 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/fileshare/{path}', [FileShareController::class, 'show'])->name('fileshare.show')->where('path', '.*');
 });
 
-if (env('APP_ENV') == 'local') {
+if (config('app.env') == 'local') {
     Route::get('/mail/scorecard/{scorecard}', function (Scorecard $scorecard) {
         return new App\Mail\ScorecardLink($scorecard);
     });

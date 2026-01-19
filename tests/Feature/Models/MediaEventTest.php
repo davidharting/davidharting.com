@@ -6,20 +6,20 @@ use App\Models\MediaEvent;
 use Tests\TestCase;
 
 test('factory', function () {
-    /** @var TestCase $this */
     $event = MediaEvent::factory()->create();
 
-    $this->assertEquals(1, MediaEvent::count());
-    $this->assertEquals(1, Media::count());
+    expect(MediaEvent::count())->toBe(1);
+    expect(Media::count())->toBe(1);
 
+    /** @var Media $media */
     $media = $event->media;
 
     MediaEvent::factory(3)->create([
         'media_id' => $media->id,
     ]);
 
-    $this->assertEquals(1, Media::count());
-    $this->assertEquals(4, MediaEvent::count());
+    expect(Media::count())->toBe(1);
+    expect(MediaEvent::count())->toBe(4);
 });
 
 test('from media', function () {

@@ -16,6 +16,10 @@ tasks:
       - ./vendor/bin/pint
       - npm run format
 
+  analyse:
+    desc: "Run static analysis with Larastan"
+    cmd: ./vendor/bin/phpstan analyse
+
   dev:db:refresh:
     desc: "Migrate fresh and re-seed"
     cmds:

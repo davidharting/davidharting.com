@@ -1,0 +1,31 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - app
+        - config
+        - database
+        - routes
+        - tests
+    excludePaths:
+        - vendor
+    ignoreErrors:
+        # Pest test context provides Laravel TestCase methods dynamically
+        - '#Call to (method|an undefined method) (.*\\TestCase::)?(artisan|actingAs|expectExceptionMessage|assertDatabaseHas|assertThrows)\(\)#'
+        - '#Call to protected method (assertDatabaseHas|assertThrows)\(\) of class#'
+        # Eloquent models have magic properties from database
+        - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$#'
+        # PHPDoc type mismatches in tests
+        - '#PHPDoc tag @var for variable \$this contains unknown class (TestCase|Tests\\Feature\\Actions\\SofaImport\\TestCase)#'
+        # Spatie Feed protected properties accessed in tests
+        - '#Access to protected property Spatie\\Feed\\FeedItem::\$#'
+        # PHPUnit methods with incorrect parameter count in tests
+        - '#Method PHPUnit\\Framework\\Assert::(stringStartsWith|stringContains)\(\) invoked with \d+ parameters#'
+        # Test response methods not recognized
+        - '#Call to an undefined method Illuminate\\Testing\\TestResponse::call\(\)#'
+        # False positive for VideoGame match arm in Media/Item.php
+        - '#Match arm comparison between App\\Enum\\MediaTypeName::VideoGame and App\\Enum\\MediaTypeName::VideoGame is always true#'
+        # Raw SQL query returns object with dynamic properties, not Score model
+        - '#PHPDoc tag @var with type object\{round_number: int, round_scores: string\} is not subtype of native type App\\Models\\Score#'

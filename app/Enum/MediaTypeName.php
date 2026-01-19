@@ -26,7 +26,7 @@ enum MediaTypeName: string implements HasLabel
         };
     }
 
-    public function getLabel(): ?string
+    public function getLabel(): string
     {
         return $this->displayName();
     }

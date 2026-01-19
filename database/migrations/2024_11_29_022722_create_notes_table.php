@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
-            $table->text('slug', 300)->unique()->index();
+            $table->string('slug', 300)->unique()->index();
 
             $table->text('title')->nullable();
             $table->text('lead')->nullable();

@@ -4,9 +4,10 @@ use App\Models\Media;
 
 test('factory', function () {
     $media = Media::factory()->create();
-    $this->assertNotNull($media);
-    $this->assertNotNull($media->creator->name);
+    expect($media)->toBeInstanceOf(Media::class);
+    expect($media->creator)->not->toBeNull();
+    expect($media->creator?->name)->not->toBeNull();
 
     $media = Media::factory()->create(['creator_id' => null]);
-    $this->assertNull($media->creator);
+    expect($media->creator)->toBeNull();
 });
