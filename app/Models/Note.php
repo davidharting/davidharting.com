@@ -58,7 +58,19 @@ class Note extends Model implements Feedable
 
     public function renderContent(): ?string
     {
-        return $this->markdown_content ? Str::markdown($this->markdown_content) : null;
+        if (! $this->markdown_content) {
+            return null;
+        }
+
+        return Str::markdown($this->markdown_content, [
+            'html_input' => 'allow',
+            'allow_unsafe_links' => true,
+            'disallowed_raw_html' => [
+                // Allow iframes for embeds (Apple Music, YouTube, etc.)
+                // Default list minus 'iframe': title, textarea, style, xmp, noembed, noframes, script, plaintext
+                'disallowed_tags' => ['title', 'textarea', 'style', 'xmp', 'noembed', 'noframes', 'script', 'plaintext'],
+            ],
+        ]);
     }
 
     public function toFeedItem(): FeedItem

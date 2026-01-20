@@ -120,4 +120,17 @@ describe('renderContent', function () {
         expect($rendered)->toContain('<figcaption>');
         expect($rendered)->toContain('A caption');
     });
+
+    it('allows iframe embeds in markdown_content', function () {
+        /** @var TestCase $this */
+        $iframe = '<iframe src="https://embed.music.apple.com/us/album/example/123"></iframe>';
+        $note = Note::factory()->create([
+            'markdown_content' => "Check out this song:\n\n{$iframe}",
+        ]);
+
+        $rendered = $note->renderContent();
+        expect($rendered)->toContain('<iframe');
+        expect($rendered)->toContain('src="https://embed.music.apple.com/us/album/example/123"');
+        expect($rendered)->toContain('</iframe>');
+    });
 });
