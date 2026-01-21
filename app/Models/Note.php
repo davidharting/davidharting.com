@@ -66,9 +66,9 @@ class Note extends Model implements Feedable
             'html_input' => 'allow',
             'allow_unsafe_links' => true,
             'disallowed_raw_html' => [
-                // Allow iframes for embeds (Apple Music, YouTube, etc.)
-                // Default list minus 'iframe': title, textarea, style, xmp, noembed, noframes, script, plaintext
-                'disallowed_tags' => ['title', 'textarea', 'style', 'xmp', 'noembed', 'noframes', 'script', 'plaintext'],
+                // Allow iframes and scripts for embeds (YouTube, GitHub Gist, Bluesky, etc.)
+                // Default list minus 'iframe' and 'script': title, textarea, style, xmp, noembed, noframes, plaintext
+                'disallowed_tags' => ['title', 'textarea', 'style', 'xmp', 'noembed', 'noframes', 'plaintext'],
             ],
         ]);
     }

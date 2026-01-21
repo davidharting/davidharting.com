@@ -276,5 +276,40 @@ You can escape special characters: \* \_ \[ \] \# \+
 And use HTML entities: &copy; &trade; &hearts;
 MARKDOWN
         ]);
+
+        // Embed samples
+        Note::factory()->create([
+            'title' => 'Embed Samples',
+            'slug' => 'embed-samples',
+            'lead' => 'Examples of embedded content from various platforms.',
+            'visible' => true,
+            'markdown_content' => <<<'MARKDOWN'
+## Apple Music
+
+<iframe allow="autoplay *; encrypted-media *;" frameborder="0" height="150" style="width:100%;max-width:660px;overflow:hidden;background:transparent;" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/us/album/homecoming/1024335136?i=1024336144"></iframe>
+
+## YouTube
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/H6ufcNxeAXU?si=Ny-vGmwGXWnUuFzK" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Spotify
+
+<iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/4cOdK2wGLETKBW3PvgPWqT?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+
+## Vimeo
+
+<iframe src="https://player.vimeo.com/video/347119375?h=be462f9adc" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+
+## Bluesky
+
+<blockquote class="bluesky-embed" data-bluesky-uri="at://did:plc:pqeikn4fnyts5seuh5bazj7b/app.bsky.feed.post/3la4vfasktq27" data-bluesky-cid="bafyreidl4kaed27iku6slbtccliuiqhr3p2rsjku4sntblb4spbb4kswwy" data-bluesky-embed-color-mode="system"><p lang="en">I like to think that Yoshi gets the zoomies</p>&mdash; David Harting (<a href="https://bsky.app/profile/did:plc:pqeikn4fnyts5seuh5bazj7b?ref_src=embed">@davidharting.com</a>) <a href="https://bsky.app/profile/did:plc:pqeikn4fnyts5seuh5bazj7b/post/3la4vfasktq27?ref_src=embed">November 4, 2024 at 9:09 AM</a></blockquote><script async src="https://embed.bsky.app/static/embed.js" charset="utf-8"></script>
+
+## GitHub Gist
+
+GitHub Gist embeds use `document.write()` which only works during initial page load. Since this content is rendered after the page loads, gist script embeds won't display. Consider linking to gists instead:
+
+[View Gist: davidharting/54ce4d8dcb597c657d9f6725c9465249](https://gist.github.com/davidharting/54ce4d8dcb597c657d9f6725c9465249)
+MARKDOWN
+        ]);
     }
 }
