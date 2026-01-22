@@ -120,4 +120,30 @@ describe('renderContent', function () {
         expect($rendered)->toContain('<figcaption>');
         expect($rendered)->toContain('A caption');
     });
+
+    it('allows iframe embeds in markdown_content', function () {
+        /** @var TestCase $this */
+        $iframe = '<iframe src="https://embed.music.apple.com/us/album/example/123"></iframe>';
+        $note = Note::factory()->create([
+            'markdown_content' => "Check out this song:\n\n{$iframe}",
+        ]);
+
+        $rendered = $note->renderContent();
+        expect($rendered)->toContain('<iframe');
+        expect($rendered)->toContain('src="https://embed.music.apple.com/us/album/example/123"');
+        expect($rendered)->toContain('</iframe>');
+    });
+
+    it('allows script tags for embeds in markdown_content', function () {
+        /** @var TestCase $this */
+        $script = '<script src="https://gist.github.com/user/abc123.js"></script>';
+        $note = Note::factory()->create([
+            'markdown_content' => "Check out this gist:\n\n{$script}",
+        ]);
+
+        $rendered = $note->renderContent();
+        expect($rendered)->toContain('<script');
+        expect($rendered)->toContain('src="https://gist.github.com/user/abc123.js"');
+        expect($rendered)->toContain('</script>');
+    });
 });
