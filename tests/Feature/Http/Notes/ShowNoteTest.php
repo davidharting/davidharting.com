@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Note;
+use App\Models\User;
 use Carbon\Carbon;
 use Tests\TestCase;
 
@@ -32,4 +33,18 @@ test('show', function () {
 
     $response->assertSeeHtml('<title>A cool post</title>');
     $response->assertSeeHtml("<meta name=\"description\" content=\"You should read this\n\nBy David Harting.\nPublished on 2000 February 1\" />");
+});
+
+test('admin can view unpublished note', function () {
+    /** @var TestCase $this */
+    $admin = User::factory()->create(['is_admin' => true]);
+    $note = Note::factory()->create([
+        'visible' => false,
+        'title' => 'Draft post',
+        'lead' => 'Work in progress',
+    ]);
+
+    $response = $this->actingAs($admin)->get('/notes/'.$note->slug);
+    $response->assertSuccessful();
+    $response->assertSeeText('Draft post');
 });
