@@ -45,8 +45,8 @@ test('admin can see unpublished notes in index', function () {
 
     Livewire::actingAs($admin)
         ->test(NotesIndexPage::class)
-        ->assertSee('Published note')
-        ->assertSee('Unpublished note');
+        ->assertSeeText('Published note')
+        ->assertSeeText('Unpublished note');
 });
 
 test('unpublished notes show Unpublished badge for admin', function () {
@@ -56,8 +56,8 @@ test('unpublished notes show Unpublished badge for admin', function () {
 
     Livewire::actingAs($admin)
         ->test(NotesIndexPage::class)
-        ->assertSee('Draft note')
-        ->assertSee('Unpublished');
+        ->assertSeeText('Draft note')
+        ->assertSeeText('Unpublished');
 });
 
 test('published notes do not show Unpublished badge', function () {
@@ -67,8 +67,8 @@ test('published notes do not show Unpublished badge', function () {
 
     Livewire::actingAs($admin)
         ->test(NotesIndexPage::class)
-        ->assertSee('Live note')
-        ->assertDontSee('Unpublished');
+        ->assertSeeText('Live note')
+        ->assertDontSeeText('Unpublished');
 });
 
 test('non-admin user cannot see unpublished notes', function () {
@@ -81,6 +81,17 @@ test('non-admin user cannot see unpublished notes', function () {
 
     Livewire::actingAs($user)
         ->test(NotesIndexPage::class)
-        ->assertSee('Published note')
-        ->assertDontSee('Unpublished note');
+        ->assertSeeText('Published note')
+        ->assertDontSeeText('Unpublished note');
+});
+
+test('guest user cannot see unpublished notes', function () {
+    Note::factory()->createMany([
+        ['title' => 'Published note', 'visible' => true, 'published_at' => Carbon::create(2020, 1, 1)],
+        ['title' => 'Unpublished note', 'visible' => false, 'published_at' => Carbon::create(2021, 1, 1)],
+    ]);
+
+    Livewire::test(NotesIndexPage::class)
+        ->assertSeeText('Published note')
+        ->assertDontSeeText('Unpublished note');
 });
