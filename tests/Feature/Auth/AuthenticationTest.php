@@ -87,11 +87,14 @@ class AuthenticationTest extends TestCase
         $this->assertNull($user->remember_token);
 
         // Login with remember me
-        $this->post('/login', [
+        $response = $this->post('/login', [
             'email' => $user->email,
             'password' => 'password',
             'remember' => true,
         ]);
+
+        // Verify the remember cookie was created
+        $response->assertCookie(Auth::getRecallerName());
 
         // Verify the remember_token was set in the database
         $user->refresh();
@@ -104,7 +107,7 @@ class AuthenticationTest extends TestCase
 
     public function test_login_without_remember_me_does_not_create_remember_cookie(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['remember_token' => null]);
 
         $response = $this->post('/login', [
             'email' => $user->email,
@@ -115,5 +118,9 @@ class AuthenticationTest extends TestCase
 
         // Verify no remember cookie was created
         $response->assertCookieMissing(Auth::getRecallerName());
+
+        // Verify remember_token is still null in database
+        $user->refresh();
+        $this->assertNull($user->remember_token);
     }
 }
