@@ -12,6 +12,9 @@
                     <span class="text-sm text-gray-600">Permalink</span>
                 @endif
             </a>
+            @if (! $note->visible)
+                <span class="badge badge-ghost ml-2">Unpublished</span>
+            @endif
         </p>
 
         @if ($note->lead)

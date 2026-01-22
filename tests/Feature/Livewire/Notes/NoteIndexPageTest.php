@@ -4,6 +4,7 @@ namespace Tests\Feature\Livewire;
 
 use App\Livewire\Notes\NotesIndexPage;
 use App\Models\Note;
+use App\Models\User;
 use Carbon\Carbon;
 use Livewire\Livewire;
 
@@ -32,4 +33,54 @@ test('displays visible notes with most recently updated first', function () {
         'middle note',
         'oldest note',
     ]);
+});
+
+test('admin can see unpublished notes in index', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    Note::factory()->createMany([
+        ['title' => 'Published note', 'visible' => true, 'published_at' => Carbon::create(2020, 1, 1)],
+        ['title' => 'Unpublished note', 'visible' => false, 'published_at' => Carbon::create(2021, 1, 1)],
+    ]);
+
+    Livewire::actingAs($admin)
+        ->test(NotesIndexPage::class)
+        ->assertSee('Published note')
+        ->assertSee('Unpublished note');
+});
+
+test('unpublished notes show Unpublished badge for admin', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    Note::factory()->create(['title' => 'Draft note', 'visible' => false]);
+
+    Livewire::actingAs($admin)
+        ->test(NotesIndexPage::class)
+        ->assertSee('Draft note')
+        ->assertSee('Unpublished');
+});
+
+test('published notes do not show Unpublished badge', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    Note::factory()->create(['title' => 'Live note', 'visible' => true]);
+
+    Livewire::actingAs($admin)
+        ->test(NotesIndexPage::class)
+        ->assertSee('Live note')
+        ->assertDontSee('Unpublished');
+});
+
+test('non-admin user cannot see unpublished notes', function () {
+    $user = User::factory()->create(['is_admin' => false]);
+
+    Note::factory()->createMany([
+        ['title' => 'Published note', 'visible' => true, 'published_at' => Carbon::create(2020, 1, 1)],
+        ['title' => 'Unpublished note', 'visible' => false, 'published_at' => Carbon::create(2021, 1, 1)],
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(NotesIndexPage::class)
+        ->assertSee('Published note')
+        ->assertDontSee('Unpublished note');
 });
