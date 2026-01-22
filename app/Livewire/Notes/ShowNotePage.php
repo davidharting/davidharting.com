@@ -35,10 +35,6 @@ class ShowNotePage extends Component
 
     public function mount(Note $note): void
     {
-        if ($note->visible) {
-            $this->note = $note;
-        } else {
-            $this->note = null;
-        }
+        $this->note = $note;
     }
 }
