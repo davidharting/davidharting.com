@@ -2,7 +2,17 @@ This is a Laravel project for my personal website, davidharting.com.
 
 ## Development Setup
 
+**IMPORTANT: Before making any code changes, ensure the development environment is properly configured and tests are passing.**
+
 If you're setting up a fresh development environment (e.g., new git worktree), follow the steps in [docs/development-setup.md](docs/development-setup.md) to bootstrap from zero to passing tests.
+
+### Pre-Change Checklist
+
+Before writing or modifying code:
+
+1. Run `php artisan test` to verify tests pass
+2. If tests fail or the command errors, follow [docs/development-setup.md](docs/development-setup.md) to set up the environment
+3. Only proceed with code changes once all tests pass
 
 ## Architecture overview
 
