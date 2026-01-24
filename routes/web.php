@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
-use App\Livewire\AdminIndexPage;
 use App\Livewire\Media\MediaPage;
 use App\Livewire\Notes\NotesIndexPage;
 use App\Livewire\Notes\ShowNotePage;
@@ -33,7 +33,8 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::get('/backend', AdminIndexPage::class)->name('admin.index')->middleware('can:administrate');
+Route::get('/backend', [AdminController::class, 'index'])->name('admin.index')->middleware('can:administrate');
+Route::post('/backend/backup', [AdminController::class, 'backupDatabase'])->name('admin.backup')->middleware('can:administrate');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
