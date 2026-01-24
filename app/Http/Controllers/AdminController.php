@@ -31,7 +31,7 @@ class AdminController extends Controller
 
             return Storage::download($path, $filename);
         } catch (RuntimeException $e) {
-            return redirect()->route('admin.index')->with('backupError', $e->getMessage());
+            return redirect()->route('admin.index')->with('backupError', trim($e->getMessage()));
         }
     }
 }
