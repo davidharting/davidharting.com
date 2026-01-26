@@ -33,7 +33,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::get('/backend', AdminIndexPage::class)->name('admin.index')->middleware('can:administrate');
+Route::livewire('/backend', AdminIndexPage::class)->name('admin.index')->middleware('can:administrate');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -42,13 +42,13 @@ Route::get('/dashboard', function () {
 Route::get('/scorecards/create', [ScorecardController::class, 'create'])->name('scorecards.create');
 Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->name('scorecards.show');
 
-Route::get('/notes', NotesIndexPage::class)->name('notes.index');
-Route::get('/notes/{note}', ShowNotePage::class)->name('notes.show')->can('view', 'note');
+Route::livewire('/notes', NotesIndexPage::class)->name('notes.index');
+Route::livewire('/notes/{note}', ShowNotePage::class)->name('notes.show')->can('view', 'note');
 
 Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
 Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show')->can('view', 'page');
 
-Route::get('/media', MediaPage::class)->name('media.index');
+Route::livewire('/media', MediaPage::class)->name('media.index');
 Route::get('/media/log', function () {
     return redirect()->route('media.index', request()->query());
 });
