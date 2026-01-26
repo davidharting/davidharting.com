@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Http\Controllers\Notes;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Note;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
-class ShowNoteController extends Controller
+class NoteController extends Controller
 {
-    public function __invoke(Note $note): View
+    public function show(Note $note): View
     {
         return view('notes.show', [
             'note' => $note,
