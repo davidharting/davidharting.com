@@ -49,3 +49,5 @@ Include a high-level functional description before bulleting out the important c
 ### Why
 
 Explain the motivation for the change.
+
+As the last line, add: "PR description written by Claude"
