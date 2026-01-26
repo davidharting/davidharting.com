@@ -41,6 +41,10 @@ This is more involved than the other pages.
 
 The tests use `Livewire::withQueryParams(['list' => 'backlog'])`. The new controller will need to read the `list` query parameter from the request.
 
+### Layout Still Uses wire:navigate
+
+The shared layout at `resources/views/components/layout/app.blade.php` has `wire:navigate` on navigation links. To fully remove Livewire from content pages, these would need to become regular links. This is a broader change affecting the whole site and could be done as a final cleanup step after all pages are converted.
+
 ### Suggested Order
 
 From simplest to most complex:
