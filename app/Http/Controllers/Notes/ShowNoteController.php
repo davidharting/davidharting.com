@@ -1,40 +1,34 @@
 <?php
 
-namespace App\Livewire\Notes;
+namespace App\Http\Controllers\Notes;
 
+use App\Http\Controllers\Controller;
 use App\Models\Note;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Livewire\Attributes\Computed;
-use Livewire\Component;
 
-class ShowNotePage extends Component
+class ShowNoteController extends Controller
 {
-    public Note $note;
+    public function __invoke(Note $note): View
+    {
+        return view('notes.show', [
+            'note' => $note,
+            'description' => $this->description($note),
+        ]);
+    }
 
-    #[Computed]
-    public function description(): string
+    private function description(Note $note): string
     {
         $description = Str::of('');
 
-        if ($this->note->lead) {
-            $description = $description->append($this->note->lead);
+        if ($note->lead) {
+            $description = $description->append($note->lead);
             $description = $description->append("\n\n");
         }
 
         $description = $description->append("By David Harting.\n");
-        $description = $description->append('Published on '.$this->note->published_at->format('Y F j'));
+        $description = $description->append('Published on '.$note->published_at->format('Y F j'));
 
         return $description->toString();
-    }
-
-    public function render(): View
-    {
-        return view('livewire.notes.show-note-page');
-    }
-
-    public function mount(Note $note): void
-    {
-        $this->note = $note;
     }
 }

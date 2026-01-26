@@ -2,13 +2,13 @@
 
 use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\Notes\ShowNoteController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
 use App\Livewire\AdminIndexPage;
 use App\Livewire\Media\MediaPage;
 use App\Livewire\Notes\NotesIndexPage;
-use App\Livewire\Notes\ShowNotePage;
 use App\Models\Scorecard;
 use Illuminate\Support\Facades\Route;
 
@@ -43,7 +43,7 @@ Route::get('/scorecards/create', [ScorecardController::class, 'create'])->name('
 Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->name('scorecards.show');
 
 Route::livewire('/notes', NotesIndexPage::class)->name('notes.index');
-Route::livewire('/notes/{note}', ShowNotePage::class)->name('notes.show')->can('view', 'note');
+Route::get('/notes/{note}', ShowNoteController::class)->name('notes.show')->can('view', 'note');
 
 Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
 Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show')->can('view', 'page');

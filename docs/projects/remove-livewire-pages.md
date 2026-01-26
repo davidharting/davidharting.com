@@ -24,10 +24,13 @@ For a given PR, follow these steps:
 ## Analysis
 
 ### ShowNotePage Already Has Feature Tests
+
 `tests/Feature/Http/Notes/ShowNoteTest.php` contains feature tests (using `$this->get()`) rather than Livewire tests. This page may already be partially done, or these tests were written as feature tests from the start (which works since Livewire pages respond to normal HTTP requests). Could potentially skip step 1 for this component.
 
 ### AdminIndexPage Has Interactive Functionality
+
 Unlike the other "content-focused" pages, `AdminIndexPage` has a `backupDatabase()` action that gets called via Livewire. Converting this will require:
+
 - A POST route for the action
 - A controller method to handle the form submission
 - Updating the view to use a form instead of `wire:click`
@@ -35,10 +38,13 @@ Unlike the other "content-focused" pages, `AdminIndexPage` has a `backupDatabase
 This is more involved than the other pages.
 
 ### MediaPage Uses Query Parameters
+
 The tests use `Livewire::withQueryParams(['list' => 'backlog'])`. The new controller will need to read the `list` query parameter from the request.
 
 ### Suggested Order
+
 From simplest to most complex:
+
 1. **ShowNotePage** - already has feature tests
 2. **NotesIndexPage** - simple list display
 3. **MediaPage** - list display with query param filtering
