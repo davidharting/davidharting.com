@@ -7,7 +7,7 @@
 
 - [ ] AdminIndexPage
 - [ ] NotesIndexPage
-- [ ] ShowNotePage
+- [x] ShowNotePage
 - [ ] MediaPage
 
 ## Methodology
