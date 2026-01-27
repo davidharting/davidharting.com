@@ -4,6 +4,27 @@ This is a Laravel project for my personal website, davidharting.com.
 
 If you're setting up a fresh development environment (e.g., new git worktree), follow the steps in [docs/development-setup.md](docs/development-setup.md) to bootstrap from zero to passing tests.
 
+### Remote Session Detection
+
+Check if this is a remote Claude Code session:
+
+```bash
+# Remote sessions typically have /home/user as home directory
+[ "$HOME" = "/home/user" ] && echo "Remote session detected" || echo "Local session"
+```
+
+If in a remote session, verify the dev environment is ready:
+
+```bash
+# Quick check - all should exist/pass for a working environment
+test -f .env && echo "✓ .env exists" || echo "✗ .env missing - run: cp .env.example .env && php artisan key:generate"
+test -d vendor && echo "✓ vendor exists" || echo "✗ vendor missing - run: composer install"
+test -d node_modules && echo "✓ node_modules exists" || echo "✗ node_modules missing - run: npm install"
+php artisan migrate:status > /dev/null 2>&1 && echo "✓ database connected" || echo "✗ database not ready - see docs/development-setup.md"
+```
+
+If any checks fail, follow [docs/development-setup.md](docs/development-setup.md).
+
 ## Architecture overview
 
 - Cloudflare DNS. Orange-checkmark reverse proxy to my Digital Ocean droplet
