@@ -6,7 +6,7 @@
 ## Projects
 
 - [ ] AdminIndexPage
-- [ ] NotesIndexPage
+- [x] NotesIndexPage
 - [x] ShowNotePage
 - [ ] MediaPage
 

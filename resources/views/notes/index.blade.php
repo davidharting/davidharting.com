@@ -1,7 +1,4 @@
-<x-slot:title>David's Notes</x-slot>
-<x-slot:description>Notes from David</x-slot>
-
-<div>
+<x-layout.app title="David's Notes" description="Notes from David">
     <x-type.page-title>Notes</x-type.page-title>
     @if ($notes->isEmpty())
         No notes yet
@@ -28,4 +25,4 @@
             @endif
         </div>
     </div>
-</div>
+</x-layout.app>
