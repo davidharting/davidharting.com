@@ -16,9 +16,7 @@
         </li>
     </ul>
 
-    @if (session("backup_error"))
-        <div class="mt-4 text-error">
-            {{ session("backup_error") }}
-        </div>
-    @endif
+    @error("backup")
+        <div class="mt-4 text-error">{{ $message }}</div>
+    @enderror
 </x-layout.app>
