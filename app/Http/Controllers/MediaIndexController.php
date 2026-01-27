@@ -6,17 +6,28 @@ use App\Enum\MediaTypeName;
 use App\Queries\Media\BacklogQuery;
 use App\Queries\Media\InProgressQuery;
 use App\Queries\Media\LogbookQuery;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class MediaIndexController extends Controller
 {
-    public function __invoke(Request $request): View
+    public function __invoke(Request $request): View|RedirectResponse
     {
-        $list = $request->input('list', 'finished');
-        $year = $request->input('year', '');
-        $type = $request->input('type', '');
+        $list = $request->input('list') ?? 'finished';
+        $year = $request->input('year') ?? '';
+        $type = $request->input('type') ?? '';
+
+        // Redirect to clean URL if there are empty query params
+        if ($request->has('year') && $year === '' || $request->has('type') && $type === '') {
+            $params = array_filter(['list' => $list, 'year' => $year, 'type' => $type]);
+            if ($list === 'finished') {
+                unset($params['list']);
+            }
+
+            return redirect()->route('media.index', $params);
+        }
 
         $disableFilters = $list === 'in-progress';
 
