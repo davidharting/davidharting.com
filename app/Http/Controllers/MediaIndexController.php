@@ -1,25 +1,35 @@
 <?php
 
-namespace App\Livewire\Media;
+namespace App\Http\Controllers;
 
 use App\Enum\MediaTypeName;
 use App\Queries\Media\BacklogQuery;
 use App\Queries\Media\InProgressQuery;
 use App\Queries\Media\LogbookQuery;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Livewire\Attributes\Url;
-use Livewire\Component;
+use Illuminate\View\View;
 
-class MediaPage extends Component
+class MediaIndexController extends Controller
 {
-    #[Url(except: 'finished')]
-    public string $list = 'finished';
+    public function __invoke(Request $request): View
+    {
+        $list = $request->input('list', 'finished');
+        $year = $request->input('year', '');
+        $type = $request->input('type', '');
 
-    #[Url(except: '')]
-    public string $year = '';
+        $disableFilters = $list === 'in-progress';
 
-    #[Url(except: '')]
-    public string $type = '';
+        return view('media.index', [
+            'items' => $this->query($list, $year, $type),
+            'years' => $this->years(),
+            'mediaTypes' => $this->mediaTypes(),
+            'list' => $list,
+            'year' => $year,
+            'type' => $type,
+            'disableFilters' => $disableFilters,
+        ]);
+    }
 
     private function mediaTypes(): array
     {
@@ -31,36 +41,22 @@ class MediaPage extends Component
         return (new LogbookQuery)->years();
     }
 
-    private function getYear(): ?int
+    private function getYear(string $year): ?int
     {
-        return $this->year ? (int) $this->year : null;
+        return $year ? (int) $year : null;
     }
 
-    private function getType(): ?MediaTypeName
+    private function getType(string $type): ?MediaTypeName
     {
-        return $this->type ? MediaTypeName::from($this->type) : null;
+        return $type ? MediaTypeName::from($type) : null;
     }
 
-    public function disableFilters()
+    private function query(string $list, string $year, string $type): Collection
     {
-        return $this->list === 'in-progress';
-    }
-
-    private function query(): Collection
-    {
-        return match ($this->list) {
-            'backlog' => (new BacklogQuery($this->getYear(), $this->getType()))->execute(),
+        return match ($list) {
+            'backlog' => (new BacklogQuery($this->getYear($year), $this->getType($type)))->execute(),
             'in-progress' => (new InProgressQuery)->execute(),
-            default => (new LogbookQuery($this->getYear(), $this->getType()))->execute(),
+            default => (new LogbookQuery($this->getYear($year), $this->getType($type)))->execute(),
         };
-    }
-
-    public function render()
-    {
-        return view('livewire.media.media-page', [
-            'items' => $this->query(),
-            'years' => $this->years(),
-            'mediaTypes' => $this->mediaTypes(),
-        ]);
     }
 }

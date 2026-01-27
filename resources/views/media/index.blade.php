@@ -1,43 +1,60 @@
-<x-slot:title>David's Media Log</x-slot>
-
-<x-slot:description>
-    I track what I read, watch, and play here!
-</x-slot>
-
-<div>
+<x-layout.app
+    title="David's Media Log"
+    description="I track what I read, watch, and play here!"
+>
     <x-type.page-title>Media Log</x-type.page-title>
 
-    <form class="flex flex-row space-x-2 m-2">
+    <form
+        class="flex flex-row space-x-2 m-2"
+        method="GET"
+        action="{{ route("media.index") }}"
+    >
         <select
             name="list"
-            wire:model.live="list"
             class="select select-sm select-ghost max-w-32"
+            onchange="this.form.submit()"
         >
-            <option value="finished">Finished</option>
-            <option value="in-progress">In Progress</option>
-            <option value="backlog">Backlog</option>
+            <option value="finished" @selected($list === "finished")>
+                Finished
+            </option>
+            <option value="in-progress" @selected($list === "in-progress")>
+                In Progress
+            </option>
+            <option value="backlog" @selected($list === "backlog")>
+                Backlog
+            </option>
         </select>
 
         <select
-            wire:model.live="year"
+            name="year"
             class="select select-sm select-ghost max-w-32"
-            @if($this->disableFilters()) disabled @endif
+            @if($disableFilters) disabled @endif
+            onchange="this.form.submit()"
         >
             <option value="">All Years</option>
-            @foreach ($years as $year)
-                <option value="{{ $year }}">{{ $year }}</option>
+            @foreach ($years as $yearOption)
+                <option
+                    value="{{ $yearOption }}"
+                    @selected($year == $yearOption)
+                >
+                    {{ $yearOption }}
+                </option>
             @endforeach
         </select>
 
         <select
-            wire:model.live="type"
+            name="type"
             class="select select-sm select-ghost max-w-32"
-            @if($this->disableFilters()) disabled @endif
+            @if($disableFilters) disabled @endif
+            onchange="this.form.submit()"
         >
             <option value="">All Types</option>
-            @foreach ($mediaTypes as $type)
-                <option value="{{ $type->value }}">
-                    {{ $type->displayName() }}
+            @foreach ($mediaTypes as $mediaType)
+                <option
+                    value="{{ $mediaType->value }}"
+                    @selected($type === $mediaType->value)
+                >
+                    {{ $mediaType->displayName() }}
                 </option>
             @endforeach
         </select>
@@ -58,4 +75,4 @@
             </div>
         @endif
     </div>
-</div>
+</x-layout.app>
