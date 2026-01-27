@@ -1,18 +1,13 @@
 <?php
 
-namespace App\Livewire\Notes;
+namespace App\Http\Controllers;
 
 use App\Models\Note;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Livewire\Component;
-use Livewire\WithPagination;
+use Illuminate\View\View;
 
-class NotesIndexPage extends Component
+class NotesIndexController extends Controller
 {
-    use WithPagination;
-
-    public function render(): View|Factory
+    public function __invoke(): View
     {
         $query = Note::query()->orderBy('published_at', 'desc');
 
@@ -20,7 +15,7 @@ class NotesIndexPage extends Component
             $query->where('visible', true);
         }
 
-        return view('livewire.notes.notes-index-page', [
+        return view('notes.index', [
             'notes' => $query->simplePaginate(1000),
         ]);
     }
