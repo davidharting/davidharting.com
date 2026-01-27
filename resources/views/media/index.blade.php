@@ -58,6 +58,11 @@
                 </option>
             @endforeach
         </select>
+
+        @if ($disableFilters)
+            <input type="hidden" name="year" value="{{ $year }}" />
+            <input type="hidden" name="type" value="{{ $type }}" />
+        @endif
     </form>
 
     <div class="my-6">
