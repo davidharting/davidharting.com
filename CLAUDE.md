@@ -37,3 +37,17 @@ We focus on feature tests to get more leverage
 - Work on only what I ask you to do, and one thing at a time. Focus changes to just the task at hand. Ask about refactors before doing them.
 - Make atomic commits with detailed messages
 - Include tests as you go rather than at the end. The tests should be committed with the relevant application changes.
+
+## Pull Requests
+
+When opening a PR, be succinct but complete. Use just these headers:
+
+### What changed
+
+Include a high-level functional description before bulleting out the important changes.
+
+### Why
+
+Explain the motivation for the change.
+
+As the last line, add: "PR description written by Claude"
