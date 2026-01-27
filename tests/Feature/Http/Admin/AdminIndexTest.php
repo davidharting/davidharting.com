@@ -71,8 +71,6 @@ test('error backing up database', function () {
 
     $admin = User::factory()->admin()->create();
 
-    $response = $this->actingAs($admin)->post('/backend/backup');
-    $response->assertRedirect('/backend');
-    $response->assertSessionHasErrors('backup');
-    expect(session('errors')->get('backup')[0])->toContain('Database backup failed: pg_dump version 14 does not match postgres version 15.1');
+    $response = $this->actingAs($admin)->followingRedirects()->post('/backend/backup');
+    $response->assertSeeText('Database backup failed: pg_dump version 14 does not match postgres version 15.1');
 });
