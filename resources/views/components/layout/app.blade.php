@@ -26,7 +26,7 @@
         <x-feed-links />
     </head>
 
-    <body class="font-sans antialiased">
+    <body class="font-serif antialiased">
         <div class="container mx-auto px-4">
             <main class="mt-8">
                 <div class="flex justify-between w-full">
