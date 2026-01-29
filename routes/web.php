@@ -65,6 +65,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/fileshare/{path}', [FileShareController::class, 'show'])->name('fileshare.show')->where('path', '.*');
 });
 
+Route::get('/kitchen-sink', function () {
+    return view('kitchen-sink');
+})->name('kitchen-sink');
+
 if (env('APP_ENV') == 'local') {
     Route::get('/mail/scorecard/{scorecard}', function (Scorecard $scorecard) {
         return new App\Mail\ScorecardLink($scorecard);

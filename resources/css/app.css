@@ -14,36 +14,36 @@
     color-scheme: light;
 
     /* Soft green like rolling hills, not corporate emerald */
-    --color-primary: oklch(55% .12 145);
-    --color-primary-content: oklch(98% .01 90);
+    --color-primary: oklch(55% 0.12 145);
+    --color-primary-content: oklch(98% 0.01 90);
 
     /* Warm wood brown - lived-in, not polished */
-    --color-secondary: oklch(45% .08 55);
-    --color-secondary-content: oklch(95% .02 80);
+    --color-secondary: oklch(45% 0.08 55);
+    --color-secondary-content: oklch(95% 0.02 80);
 
     /* Cozy amber - firelight warmth */
-    --color-accent: oklch(65% .14 70);
-    --color-accent-content: oklch(25% .03 55);
+    --color-accent: oklch(65% 0.14 70);
+    --color-accent-content: oklch(25% 0.03 55);
 
     /* Warm neutral with brown undertones */
-    --color-neutral: oklch(35% .03 60);
-    --color-neutral-content: oklch(92% .02 85);
+    --color-neutral: oklch(35% 0.03 60);
+    --color-neutral-content: oklch(92% 0.02 85);
 
     /* Parchment base - old cream, not premium stationery */
-    --color-base-100: oklch(96% .02 85);
-    --color-base-200: oklch(92% .025 80);
-    --color-base-300: oklch(88% .03 75);
-    --color-base-content: oklch(25% .04 55);
+    --color-base-100: oklch(96% 0.02 85);
+    --color-base-200: oklch(92% 0.025 80);
+    --color-base-300: oklch(88% 0.03 75);
+    --color-base-content: oklch(25% 0.04 55);
 
     /* Gentle feedback colors */
-    --color-info: oklch(55% .1 230);
-    --color-info-content: oklch(98% .01 230);
-    --color-success: oklch(55% .13 150);
-    --color-success-content: oklch(98% .01 150);
-    --color-warning: oklch(70% .15 75);
-    --color-warning-content: oklch(25% .05 75);
-    --color-error: oklch(55% .15 25);
-    --color-error-content: oklch(98% .01 25);
+    --color-info: oklch(55% 0.1 230);
+    --color-info-content: oklch(98% 0.01 230);
+    --color-success: oklch(55% 0.13 150);
+    --color-success-content: oklch(98% 0.01 150);
+    --color-warning: oklch(70% 0.15 75);
+    --color-warning-content: oklch(25% 0.05 75);
+    --color-error: oklch(55% 0.15 25);
+    --color-error-content: oklch(98% 0.01 25);
 
     /* Slightly rounded - hobbits love a round door */
     --radius-selector: 0.75rem;
@@ -65,36 +65,36 @@
     color-scheme: dark;
 
     /* Muted sage green - evening garden through the window */
-    --color-primary: oklch(55% .08 145);
-    --color-primary-content: oklch(95% .02 90);
+    --color-primary: oklch(55% 0.08 145);
+    --color-primary-content: oklch(95% 0.02 90);
 
     /* Rich warm brown - polished wood by firelight */
-    --color-secondary: oklch(50% .10 50);
-    --color-secondary-content: oklch(95% .02 60);
+    --color-secondary: oklch(50% 0.1 50);
+    --color-secondary-content: oklch(95% 0.02 60);
 
     /* Lamplight amber - the warm glow of candles */
-    --color-accent: oklch(72% .15 65);
-    --color-accent-content: oklch(20% .04 50);
+    --color-accent: oklch(72% 0.15 65);
+    --color-accent-content: oklch(20% 0.04 50);
 
     /* Deep tobacco brown neutral */
-    --color-neutral: oklch(30% .04 50);
-    --color-neutral-content: oklch(90% .03 70);
+    --color-neutral: oklch(30% 0.04 50);
+    --color-neutral-content: oklch(90% 0.03 70);
 
     /* Deep warm browns - aged oak and firelight shadows */
-    --color-base-100: oklch(20% .03 45);
-    --color-base-200: oklch(17% .035 40);
-    --color-base-300: oklch(14% .04 35);
-    --color-base-content: oklch(92% .03 70);
+    --color-base-100: oklch(20% 0.03 45);
+    --color-base-200: oklch(17% 0.035 40);
+    --color-base-300: oklch(14% 0.04 35);
+    --color-base-content: oklch(92% 0.03 70);
 
     /* Feedback colors - all shifted warm */
-    --color-info: oklch(55% .06 180);
-    --color-info-content: oklch(95% .02 180);
-    --color-success: oklch(55% .10 145);
-    --color-success-content: oklch(95% .02 145);
-    --color-warning: oklch(72% .14 70);
-    --color-warning-content: oklch(20% .04 50);
-    --color-error: oklch(55% .14 25);
-    --color-error-content: oklch(95% .02 25);
+    --color-info: oklch(55% 0.06 180);
+    --color-info-content: oklch(95% 0.02 180);
+    --color-success: oklch(55% 0.1 145);
+    --color-success-content: oklch(95% 0.02 145);
+    --color-warning: oklch(72% 0.14 70);
+    --color-warning-content: oklch(20% 0.04 50);
+    --color-error: oklch(55% 0.14 25);
+    --color-error-content: oklch(95% 0.02 25);
 
     /* Same cozy rounded corners */
     --radius-selector: 0.75rem;

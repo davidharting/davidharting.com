@@ -24,6 +24,8 @@
         @vite(["resources/css/app.css", "resources/js/app.js"])
 
         <x-feed-links />
+
+        {{ $head ?? "" }}
     </head>
 
     <body class="font-serif antialiased">
