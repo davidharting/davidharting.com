@@ -15,5 +15,5 @@ test('kitchen sink page has noindex meta tag', function () {
     $response = $this->get('/kitchen-sink');
 
     $response->assertStatus(200);
-    $response->assertSee('<meta name="robots" content="noindex, nofollow">', false);
+    $response->assertSee('<meta name="robots" content="noindex, nofollow" />', false);
 });

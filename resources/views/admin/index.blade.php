@@ -14,6 +14,12 @@
                 </button>
             </form>
         </li>
+
+        <li class="list-item">
+            <a class="link link-primary" href="{{ route("kitchen-sink") }}">
+                Kitchen Sink
+            </a>
+        </li>
     </ul>
 
     @error("backup")
