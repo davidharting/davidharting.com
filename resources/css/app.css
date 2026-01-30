@@ -64,9 +64,9 @@
     prefersdark: true;
     color-scheme: dark;
 
-    /* Muted sage green - evening garden through the window */
-    --color-primary: oklch(55% 0.08 145);
-    --color-primary-content: oklch(95% 0.02 90);
+    /* Sage green - bright enough to read against dark background */
+    --color-primary: oklch(75% 0.1 145);
+    --color-primary-content: oklch(20% 0.03 145);
 
     /* Rich warm brown - polished wood by firelight */
     --color-secondary: oklch(50% 0.1 50);
@@ -74,7 +74,7 @@
 
     /* Lamplight amber - the warm glow of candles */
     --color-accent: oklch(72% 0.15 65);
-    --color-accent-content: oklch(20% 0.04 50);
+    --color-accent-content: oklch(15% 0.04 50);
 
     /* Deep tobacco brown neutral */
     --color-neutral: oklch(30% 0.04 50);
