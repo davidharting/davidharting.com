@@ -23,7 +23,9 @@ npm-debug.log
 yarn-error.log
 /.fleet
 /.idea
-.claude
+# Claude Code - ignore user settings, but share project commands
+.claude/*
+!.claude/commands/
 
 todo.md
 plan.md
