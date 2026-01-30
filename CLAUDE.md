@@ -53,5 +53,6 @@ In `.blade.php` files, use [Daisy UI v5](https://daisyui.com/) components. Most 
 ## Slash Commands
 
 Custom workflows are available in `.claude/commands/`:
-- `/project:make-pr` - Create a pull request with proper formatting
+- `/project:setup-dev` - Bootstrap a fresh development environment
 - `/project:check-work` - Review checklist before completing a task
+- `/project:make-pr` - Create a pull request with proper formatting
