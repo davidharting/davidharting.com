@@ -2,7 +2,9 @@ This is a Laravel project for my personal website, davidharting.com.
 
 ## Development Setup
 
-If you're setting up a fresh development environment (e.g., new git worktree), follow the steps in [docs/development-setup.md](docs/development-setup.md) to bootstrap from zero to passing tests.
+**If commands fail due to missing dependencies** (e.g., `vendor/autoload.php` not found, missing node_modules), you are in a fresh environment. Follow [docs/development-setup.md](docs/development-setup.md) to bootstrap before proceeding.
+
+Quick check: if `php artisan test` fails with autoload errors, run the setup.
 
 ## Architecture overview
 
@@ -46,13 +48,8 @@ Before each commit, always:
 1. Run `task format`
 2. Run `php artisan test` and ensure tests pass
 
-### Blade templates and styling
-
-In `.blade.php` files, use [Daisy UI v5](https://daisyui.com/) components. Most styling should use basic Daisy components. Limit custom styling to controlling spacing.
-
 ## Slash Commands
 
 Custom workflows are available in `.claude/commands/`:
-- `/project:setup-dev` - Bootstrap a fresh development environment
 - `/project:check-work` - Review checklist before completing a task
 - `/project:make-pr` - Create a pull request with proper formatting
