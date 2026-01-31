@@ -29,7 +29,7 @@
         {{ $head ?? "" }}
     </head>
 
-    <body class="font-serif antialiased" hx-ext="preload">
+    <body class="font-serif antialiased">
         <div class="container mx-auto px-4">
             <main class="mt-8">
                 <div class="flex justify-between w-full mb-8">
@@ -64,7 +64,6 @@
                             <x-nav-link
                                 :href="route('login')"
                                 active-pattern="login"
-                                :preload="false"
                             >
                                 Login
                             </x-nav-link>
@@ -74,7 +73,6 @@
                             <x-nav-link
                                 :href="route('admin.index')"
                                 active-pattern="admin.*"
-                                :preload="false"
                             >
                                 Admin
                             </x-nav-link>

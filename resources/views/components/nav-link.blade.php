@@ -1,7 +1,6 @@
 @props([
     "href",
     "activePattern",
-    "preload" => true,
 ])
 
 @php
@@ -11,7 +10,6 @@
 <a
     href="{{ $href }}"
     class="btn btn-ghost btn-sm relative {{ $isActive ? "text-primary" : "" }}"
-    @if ($preload) preload="mouseover" @endif
 >
     {{ $slot }}
     @if ($isActive)
