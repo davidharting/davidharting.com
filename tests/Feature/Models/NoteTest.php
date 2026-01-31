@@ -82,6 +82,30 @@ describe('toFeedItem', function () {
         assertStringContainsString($note->lead, $item->summary);
         assertStringContainsString($note->markdown_content, $item->summary);
     });
+
+    it('uses lead as title when title is missing', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create([
+            'title' => null,
+            'lead' => 'This is the lead text',
+            'markdown_content' => 'Some content here.',
+        ]);
+
+        $item = $note->toFeedItem();
+        expect($item->title)->toBe('This is the lead text');
+    });
+
+    it('uses "Untitled note" when title and lead are missing', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create([
+            'title' => null,
+            'lead' => null,
+            'markdown_content' => 'Just some content without title or lead.',
+        ]);
+
+        $item = $note->toFeedItem();
+        expect($item->title)->toBe('Untitled note');
+    });
 });
 
 describe('renderContent', function () {
