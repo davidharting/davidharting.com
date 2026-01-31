@@ -29,46 +29,69 @@
         {{ $head ?? "" }}
     </head>
 
-    <body class="font-serif antialiased">
+    <body class="font-serif antialiased" hx-ext="preload">
         <div class="container mx-auto px-4">
             <main class="mt-8">
-                <div class="flex justify-between w-full">
-                    <div class="flex justify-start space-x-8 mb-8">
+                <div class="flex justify-between w-full mb-8">
+                    <nav class="flex gap-1">
                         <a
                             href="{{ route("home") }}"
-                            wire:navigate
-                            class="link link-primary"
+                            class="btn btn-ghost btn-sm relative {{ request()->routeIs("home") ? "text-primary" : "" }}"
+                            preload="mouseover"
                         >
                             Home
+                            @if (request()->routeIs("home"))
+                                <span
+                                    class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded"
+                                    style="view-transition-name: nav-indicator"
+                                ></span>
+                            @endif
                         </a>
                         <a
                             href="{{ route("notes.index") }}"
-                            wire:navigate
-                            class="link link-primary"
+                            class="btn btn-ghost btn-sm relative {{ request()->routeIs("notes.*") ? "text-primary" : "" }}"
+                            preload="mouseover"
                         >
                             Notes
+                            @if (request()->routeIs("notes.*"))
+                                <span
+                                    class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded"
+                                    style="view-transition-name: nav-indicator"
+                                ></span>
+                            @endif
                         </a>
                         <a
                             href="{{ route("media.index") }}"
-                            wire:navigate
-                            class="link link-primary"
+                            class="btn btn-ghost btn-sm relative {{ request()->routeIs("media.*") ? "text-primary" : "" }}"
+                            preload="mouseover"
                         >
                             Media Log
+                            @if (request()->routeIs("media.*"))
+                                <span
+                                    class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded"
+                                    style="view-transition-name: nav-indicator"
+                                ></span>
+                            @endif
                         </a>
                         <a
                             href="{{ route("pages.index") }}"
-                            wire:navigate
-                            class="link link-primary"
+                            class="btn btn-ghost btn-sm relative {{ request()->routeIs("pages.*") ? "text-primary" : "" }}"
+                            preload="mouseover"
                         >
                             Pages
+                            @if (request()->routeIs("pages.*"))
+                                <span
+                                    class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded"
+                                    style="view-transition-name: nav-indicator"
+                                ></span>
+                            @endif
                         </a>
-                    </div>
-                    <div>
+                    </nav>
+                    <div class="flex gap-1">
                         @guest
                             <a
                                 href="{{ route("login") }}"
-                                wire:navigate
-                                class="link link-primary"
+                                class="btn btn-ghost btn-sm"
                             >
                                 Login
                             </a>
@@ -77,10 +100,17 @@
                         @can("administrate")
                             <a
                                 href="{{ route("admin.index") }}"
-                                wire:navigate
-                                class="link link-primary"
+                                class="btn btn-ghost btn-sm relative {{ request()->routeIs("admin.*") ? "text-primary" : "" }}"
                             >
                                 Admin
+                                @if (request()->routeIs("admin.*"))
+                                    <span
+                                        class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded"
+                                        style="
+                                            view-transition-name: nav-indicator;
+                                        "
+                                    ></span>
+                                @endif
                             </a>
                         @endcan
                     </div>
