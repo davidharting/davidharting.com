@@ -34,21 +34,7 @@ test('feed contains visible posts in reverse chronological order', function () {
         'published_at' => now()->subDays(1),
     ]);
 
-    $response = $this->get('/feed');
-    $content = $response->getContent();
-
-    // Verify all posts appear
-    $response->assertSee('Oldest Post');
-    $response->assertSee('Middle Post');
-    $response->assertSee('Newest Post');
-
-    // Verify newest appears before oldest (reverse chronological)
-    $newestPos = strpos($content, 'Newest Post');
-    $middlePos = strpos($content, 'Middle Post');
-    $oldestPos = strpos($content, 'Oldest Post');
-
-    expect($newestPos)->toBeLessThan($middlePos);
-    expect($middlePos)->toBeLessThan($oldestPos);
+    $this->get('/feed')->assertSeeInOrder(['Newest Post', 'Middle Post', 'Oldest Post']);
 });
 
 test('feed excludes invisible posts', function () {
