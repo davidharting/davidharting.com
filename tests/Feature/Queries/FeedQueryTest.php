@@ -1,45 +1,44 @@
 <?php
 
 use App\Models\Note;
-use Tests\TestCase;
+use App\Queries\FeedQuery;
 
-test('empty feed', function () {
-    /** @var TestCase $this */
-    $response = $this->get('/feed');
+test('returns only visible notes', function () {
+    Note::factory()->create(['visible' => true, 'title' => 'Visible']);
+    Note::factory()->create(['visible' => false, 'title' => 'Hidden']);
 
-    $response->assertStatus(200);
-    $response->assertSeeText(
-        'Notes from David Harting'
-    );
+    $results = FeedQuery::execute();
+
+    expect($results)->toHaveCount(1);
+    expect($results->first()->title)->toBe('Visible');
 });
 
-test('Invisible posts do not show up', function () {
-    /** @var TestCase $this */
-    Note::factory()->create([
-        'visible' => false,
-        'title' => 'Hidden Note',
-        'slug' => 'hidden-note',
-        'markdown_content' => 'John Cena',
-    ]);
-
-    $response = $this->get('/feed');
-    $response->assertDontSeeText('Hidden Note');
-    $response->assertDontSeeText('John Cena');
-});
-
-test('Posts are in reverse chronological order', function () {
-    /** @var TestCase $this */
+test('returns notes in reverse chronological order', function () {
     Note::factory()->create([
         'visible' => true,
-        'title' => 'Oldest Post',
-        'markdown_content' => '**some bold text**',
-        'slug' => 'oldest-post',
+        'title' => 'Oldest',
+        'published_at' => now()->subDays(3),
+    ]);
+    Note::factory()->create([
+        'visible' => true,
+        'title' => 'Newest',
+        'published_at' => now()->subDays(1),
+    ]);
+    Note::factory()->create([
+        'visible' => true,
+        'title' => 'Middle',
         'published_at' => now()->subDays(2),
     ]);
 
-    $response = $this->get('/feed');
-    $response->assertSeeHtml([
-        'Oldest Post',
-        '<strong>some bold text</strong>',
-    ]);
+    $results = FeedQuery::execute();
+
+    expect($results->pluck('title')->toArray())->toBe(['Newest', 'Middle', 'Oldest']);
+});
+
+test('limits to 50 notes', function () {
+    Note::factory()->count(60)->create(['visible' => true]);
+
+    $results = FeedQuery::execute();
+
+    expect($results)->toHaveCount(50);
 });
