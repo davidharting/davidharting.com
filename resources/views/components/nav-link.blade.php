@@ -1,11 +1,11 @@
 @props([
     "href",
-    "route",
+    "activePattern",
     "preload" => true,
 ])
 
 @php
-    $isActive = request()->routeIs($route);
+    $isActive = request()->routeIs($activePattern);
 @endphp
 
 <a

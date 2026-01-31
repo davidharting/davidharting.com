@@ -34,24 +34,27 @@
             <main class="mt-8">
                 <div class="flex justify-between w-full mb-8">
                     <nav class="flex gap-1">
-                        <x-nav-link :href="route('home')" route="home">
+                        <x-nav-link
+                            :href="route('home')"
+                            active-pattern="home"
+                        >
                             Home
                         </x-nav-link>
                         <x-nav-link
                             :href="route('notes.index')"
-                            route="notes.*"
+                            active-pattern="notes.*"
                         >
                             Notes
                         </x-nav-link>
                         <x-nav-link
                             :href="route('media.index')"
-                            route="media.*"
+                            active-pattern="media.*"
                         >
                             Media Log
                         </x-nav-link>
                         <x-nav-link
                             :href="route('pages.index')"
-                            route="pages.*"
+                            active-pattern="pages.*"
                         >
                             Pages
                         </x-nav-link>
@@ -60,7 +63,7 @@
                         @guest
                             <x-nav-link
                                 :href="route('login')"
-                                route="login"
+                                active-pattern="login"
                                 :preload="false"
                             >
                                 Login
@@ -70,7 +73,7 @@
                         @can("administrate")
                             <x-nav-link
                                 :href="route('admin.index')"
-                                route="admin.*"
+                                active-pattern="admin.*"
                                 :preload="false"
                             >
                                 Admin
