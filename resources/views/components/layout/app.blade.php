@@ -34,84 +34,47 @@
             <main class="mt-8">
                 <div class="flex justify-between w-full mb-8">
                     <nav class="flex gap-1">
-                        <a
-                            href="{{ route("home") }}"
-                            class="btn btn-ghost btn-sm relative {{ request()->routeIs("home") ? "text-primary" : "" }}"
-                            preload="mouseover"
-                        >
+                        <x-nav-link :href="route('home')" route="home">
                             Home
-                            @if (request()->routeIs("home"))
-                                <span
-                                    class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded"
-                                    style="view-transition-name: nav-indicator"
-                                ></span>
-                            @endif
-                        </a>
-                        <a
-                            href="{{ route("notes.index") }}"
-                            class="btn btn-ghost btn-sm relative {{ request()->routeIs("notes.*") ? "text-primary" : "" }}"
-                            preload="mouseover"
+                        </x-nav-link>
+                        <x-nav-link
+                            :href="route('notes.index')"
+                            route="notes.*"
                         >
                             Notes
-                            @if (request()->routeIs("notes.*"))
-                                <span
-                                    class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded"
-                                    style="view-transition-name: nav-indicator"
-                                ></span>
-                            @endif
-                        </a>
-                        <a
-                            href="{{ route("media.index") }}"
-                            class="btn btn-ghost btn-sm relative {{ request()->routeIs("media.*") ? "text-primary" : "" }}"
-                            preload="mouseover"
+                        </x-nav-link>
+                        <x-nav-link
+                            :href="route('media.index')"
+                            route="media.*"
                         >
                             Media Log
-                            @if (request()->routeIs("media.*"))
-                                <span
-                                    class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded"
-                                    style="view-transition-name: nav-indicator"
-                                ></span>
-                            @endif
-                        </a>
-                        <a
-                            href="{{ route("pages.index") }}"
-                            class="btn btn-ghost btn-sm relative {{ request()->routeIs("pages.*") ? "text-primary" : "" }}"
-                            preload="mouseover"
+                        </x-nav-link>
+                        <x-nav-link
+                            :href="route('pages.index')"
+                            route="pages.*"
                         >
                             Pages
-                            @if (request()->routeIs("pages.*"))
-                                <span
-                                    class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded"
-                                    style="view-transition-name: nav-indicator"
-                                ></span>
-                            @endif
-                        </a>
+                        </x-nav-link>
                     </nav>
                     <div class="flex gap-1">
                         @guest
-                            <a
-                                href="{{ route("login") }}"
-                                class="btn btn-ghost btn-sm"
+                            <x-nav-link
+                                :href="route('login')"
+                                route="login"
+                                :preload="false"
                             >
                                 Login
-                            </a>
+                            </x-nav-link>
                         @endguest
 
                         @can("administrate")
-                            <a
-                                href="{{ route("admin.index") }}"
-                                class="btn btn-ghost btn-sm relative {{ request()->routeIs("admin.*") ? "text-primary" : "" }}"
+                            <x-nav-link
+                                :href="route('admin.index')"
+                                route="admin.*"
+                                :preload="false"
                             >
                                 Admin
-                                @if (request()->routeIs("admin.*"))
-                                    <span
-                                        class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded"
-                                        style="
-                                            view-transition-name: nav-indicator;
-                                        "
-                                    ></span>
-                                @endif
-                            </a>
+                            </x-nav-link>
                         @endcan
                     </div>
                 </div>
