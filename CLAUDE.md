@@ -41,15 +41,3 @@ The containers are:
 
 - Write tests for all changes
 - Focus on feature tests to get more leverage
-
-### Pre-commit checklist
-
-Before each commit, always:
-1. Run `task format`
-2. Run `php artisan test` and ensure tests pass
-
-## Slash Commands
-
-Custom workflows are available in `.claude/commands/`:
-- `/project:check-work` - Review checklist before completing a task
-- `/project:make-pr` - Create a pull request with proper formatting
