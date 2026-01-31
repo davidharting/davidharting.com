@@ -34,9 +34,7 @@
             <main class="mt-8">
                 <div class="flex justify-between w-full mb-8">
                     <nav class="flex gap-1">
-                        <x-nav-link :href="route('home')">
-                            Home
-                        </x-nav-link>
+                        <x-nav-link :href="route('home')">Home</x-nav-link>
                         <x-nav-link :href="route('notes.index')">
                             Notes
                         </x-nav-link>
