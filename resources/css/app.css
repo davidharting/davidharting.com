@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+@view-transition {
+    navigation: auto;
+}
+
+/* Subtle crossfade transition */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.2s;
+    animation-timing-function: ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none !important;
+    }
+}
+
 @plugin '@tailwindcss/typography';
 @plugin "daisyui";
 

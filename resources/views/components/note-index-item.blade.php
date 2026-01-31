@@ -3,7 +3,6 @@
         <p>
             <a
                 class="link {{ $note->title ? "" : "link link-hover" }}"
-                wire:navigate
                 href="{{ route("notes.show", $note) }}"
             >
                 @if ($note->title)
