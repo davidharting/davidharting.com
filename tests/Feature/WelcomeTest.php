@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Tests\TestCase;
 
 test('Welcome page contains link to atom feed', function () {
@@ -17,22 +18,36 @@ test('navigation links are present for anonymous users', function () {
     $response->assertSuccessful();
 
     // Public nav links
-    $response->assertSee('Home');
+    $response->assertSeeText('Home');
     $response->assertSee(route('home'));
 
-    $response->assertSee('Notes');
+    $response->assertSeeText('Notes');
     $response->assertSee(route('notes.index'));
 
-    $response->assertSee('Media Log');
+    $response->assertSeeText('Media Log');
     $response->assertSee(route('media.index'));
 
-    $response->assertSee('Pages');
+    $response->assertSeeText('Pages');
     $response->assertSee(route('pages.index'));
 
     // Guest-only link
-    $response->assertSee('Login');
+    $response->assertSeeText('Login');
     $response->assertSee(route('login'));
 
     // Admin link should not be visible
     $response->assertDontSee(route('admin.index'));
+});
+
+test('admin link is visible to admin users', function () {
+    /** @var TestCase $this */
+    $admin = User::factory()->admin()->create();
+
+    $response = $this->actingAs($admin)->get('/');
+    $response->assertSuccessful();
+
+    $response->assertSeeText('Admin');
+    $response->assertSee(route('admin.index'));
+
+    // Login link should not be visible when authenticated
+    $response->assertDontSeeText('Login');
 });

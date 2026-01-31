@@ -2,7 +2,7 @@
     <article>
         <p>
             <a
-                class="link {{ $note->title ? "" : "link link-hover" }}"
+                class="link {{ $note->title ? "" : "link-hover" }}"
                 href="{{ route("notes.show", $note) }}"
             >
                 @if ($note->title)
