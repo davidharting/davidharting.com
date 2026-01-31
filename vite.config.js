@@ -8,7 +8,4 @@ export default defineConfig({
             refresh: true,
         }),
     ],
-    server: {
-        host: true,
-    },
 });
