@@ -30,5 +30,6 @@ Consider if `DatabaseSeeder.php` needs updates:
 ## After Checks Pass
 
 If all checks pass:
+
 1. Create the commit automatically. Write a detailed commit message explaining the "why" behind the changes.
 2. Push to the remote feature branch.
