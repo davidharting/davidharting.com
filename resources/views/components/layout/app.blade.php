@@ -24,9 +24,12 @@
         @vite(["resources/css/app.css", "resources/js/app.js"])
 
         <x-feed-links />
+
+        {{-- Optional slot for page-specific <head> content (e.g., extra meta tags, structured data, page-specific styles) --}}
+        {{ $head ?? "" }}
     </head>
 
-    <body class="font-sans antialiased">
+    <body class="font-serif antialiased">
         <div class="container mx-auto px-4">
             <main class="mt-8">
                 <div class="flex justify-between w-full">
