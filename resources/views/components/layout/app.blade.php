@@ -25,6 +25,7 @@
 
         <x-feed-links />
 
+        {{-- Optional slot for page-specific <head> content (e.g., extra meta tags, structured data, page-specific styles) --}}
         {{ $head ?? "" }}
     </head>
 
