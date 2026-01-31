@@ -1,10 +1,9 @@
 @props([
     "href",
-    "activePattern",
 ])
 
 @php
-    $isActive = request()->routeIs($activePattern);
+    $isActive = request()->url() === $href;
 @endphp
 
 <a

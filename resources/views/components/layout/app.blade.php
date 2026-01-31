@@ -34,46 +34,28 @@
             <main class="mt-8">
                 <div class="flex justify-between w-full mb-8">
                     <nav class="flex gap-1">
-                        <x-nav-link
-                            :href="route('home')"
-                            active-pattern="home"
-                        >
+                        <x-nav-link :href="route('home')">
                             Home
                         </x-nav-link>
-                        <x-nav-link
-                            :href="route('notes.index')"
-                            active-pattern="notes.*"
-                        >
+                        <x-nav-link :href="route('notes.index')">
                             Notes
                         </x-nav-link>
-                        <x-nav-link
-                            :href="route('media.index')"
-                            active-pattern="media.*"
-                        >
+                        <x-nav-link :href="route('media.index')">
                             Media Log
                         </x-nav-link>
-                        <x-nav-link
-                            :href="route('pages.index')"
-                            active-pattern="pages.*"
-                        >
+                        <x-nav-link :href="route('pages.index')">
                             Pages
                         </x-nav-link>
                     </nav>
                     <div class="flex gap-1">
                         @guest
-                            <x-nav-link
-                                :href="route('login')"
-                                active-pattern="login"
-                            >
+                            <x-nav-link :href="route('login')">
                                 Login
                             </x-nav-link>
                         @endguest
 
                         @can("administrate")
-                            <x-nav-link
-                                :href="route('admin.index')"
-                                active-pattern="admin.*"
-                            >
+                            <x-nav-link :href="route('admin.index')">
                                 Admin
                             </x-nav-link>
                         @endcan
