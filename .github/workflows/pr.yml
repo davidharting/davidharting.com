@@ -35,7 +35,7 @@ jobs:
       - name: Prettier
         run: npm run format:check
 
-      - name: Check highlight.js theme contrast (WCAG AA)
+      - name: Check theme contrast (WCAG)
         run: npm run check:contrast
 
       - name: Frontend build
