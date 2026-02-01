@@ -140,6 +140,368 @@ More coming soon...
 MARKDOWN
         ]);
 
+        // Syntax highlighting test page
+        Page::create([
+            'slug' => 'syntax-highlighting-test',
+            'title' => 'Syntax Highlighting Test',
+            'is_published' => true,
+            'markdown_content' => <<<'MARKDOWN'
+A showcase of code blocks in various languages to test syntax highlighting.
+
+## PHP
+
+```php
+<?php
+
+namespace App\Services;
+
+use App\Models\User;
+use Illuminate\Support\Collection;
+
+class UserService
+{
+    public function __construct(
+        private readonly UserRepository $repository
+    ) {}
+
+    public function getActiveUsers(): Collection
+    {
+        return $this->repository
+            ->query()
+            ->where('active', true)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+}
+```
+
+## JavaScript
+
+```javascript
+async function fetchUserData(userId) {
+    const response = await fetch(`/api/users/${userId}`);
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+        ...data,
+        fullName: `${data.firstName} ${data.lastName}`,
+    };
+}
+
+// Usage with error handling
+fetchUserData(42)
+    .then(user => console.log(user.fullName))
+    .catch(err => console.error('Failed to fetch:', err));
+```
+
+## TypeScript
+
+```typescript
+interface User {
+    id: number;
+    email: string;
+    name: string;
+    createdAt: Date;
+}
+
+type UserCreateInput = Omit<User, 'id' | 'createdAt'>;
+
+class UserService {
+    private users: Map<number, User> = new Map();
+
+    create(input: UserCreateInput): User {
+        const user: User = {
+            ...input,
+            id: this.users.size + 1,
+            createdAt: new Date(),
+        };
+        this.users.set(user.id, user);
+        return user;
+    }
+
+    findById(id: number): User | undefined {
+        return this.users.get(id);
+    }
+}
+```
+
+## Python
+
+```python
+from dataclasses import dataclass
+from typing import Optional
+import asyncio
+
+@dataclass
+class Config:
+    host: str = "localhost"
+    port: int = 8080
+    debug: bool = False
+
+async def fetch_data(url: str) -> Optional[dict]:
+    """Fetch JSON data from a URL."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status == 200:
+                return await response.json()
+            return None
+
+if __name__ == "__main__":
+    config = Config(debug=True)
+    print(f"Starting server on {config.host}:{config.port}")
+```
+
+## HTML
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example Page</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav aria-label="Main navigation">
+            <a href="/" class="logo">My Site</a>
+            <ul class="nav-links">
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main id="content">
+        <h1>Welcome!</h1>
+    </main>
+</body>
+</html>
+```
+
+## CSS
+
+```css
+:root {
+    --color-primary: oklch(55% 0.15 250);
+    --color-secondary: oklch(70% 0.12 180);
+    --spacing-base: 1rem;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-base);
+    padding: calc(var(--spacing-base) * 1.5);
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, white, #f5f5f5);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+    .card {
+        background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+    }
+}
+```
+
+## SQL
+
+```sql
+-- Find users with their order statistics
+SELECT
+    u.id,
+    u.name,
+    u.email,
+    COUNT(o.id) AS total_orders,
+    COALESCE(SUM(o.total), 0) AS lifetime_value,
+    MAX(o.created_at) AS last_order_date
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id
+WHERE u.active = true
+    AND u.created_at >= '2024-01-01'
+GROUP BY u.id, u.name, u.email
+HAVING COUNT(o.id) > 0
+ORDER BY lifetime_value DESC
+LIMIT 100;
+```
+
+## Bash
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+# Deploy script for production
+DEPLOY_DIR="/var/www/app"
+BACKUP_DIR="/var/backups/app"
+
+echo "Starting deployment..."
+
+# Create backup
+timestamp=$(date +%Y%m%d_%H%M%S)
+tar -czf "$BACKUP_DIR/backup_$timestamp.tar.gz" "$DEPLOY_DIR"
+
+# Pull latest changes
+cd "$DEPLOY_DIR"
+git fetch origin main
+git reset --hard origin/main
+
+# Install dependencies
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+
+# Run migrations
+php artisan migrate --force
+
+echo "Deployment complete!"
+```
+
+## JSON
+
+```json
+{
+    "name": "my-project",
+    "version": "1.0.0",
+    "description": "A sample project configuration",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "test": "vitest"
+    },
+    "dependencies": {
+        "vue": "^3.4.0",
+        "axios": "^1.6.0"
+    },
+    "devDependencies": {
+        "vite": "^5.0.0",
+        "typescript": "^5.3.0"
+    }
+}
+```
+
+## Go
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "net/http"
+)
+
+type User struct {
+    ID    int    `json:"id"`
+    Name  string `json:"name"`
+    Email string `json:"email"`
+}
+
+func handleGetUser(w http.ResponseWriter, r *http.Request) {
+    user := User{
+        ID:    1,
+        Name:  "Frodo Baggins",
+        Email: "frodo@shire.me",
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(user)
+}
+
+func main() {
+    http.HandleFunc("/user", handleGetUser)
+    fmt.Println("Server starting on :8080")
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+## Rust
+
+```rust
+use std::collections::HashMap;
+
+#[derive(Debug, Clone)]
+struct Cache<T> {
+    data: HashMap<String, T>,
+    max_size: usize,
+}
+
+impl<T: Clone> Cache<T> {
+    fn new(max_size: usize) -> Self {
+        Cache {
+            data: HashMap::new(),
+            max_size,
+        }
+    }
+
+    fn get(&self, key: &str) -> Option<&T> {
+        self.data.get(key)
+    }
+
+    fn set(&mut self, key: String, value: T) -> Result<(), &'static str> {
+        if self.data.len() >= self.max_size && !self.data.contains_key(&key) {
+            return Err("Cache is full");
+        }
+        self.data.insert(key, value);
+        Ok(())
+    }
+}
+
+fn main() {
+    let mut cache: Cache<i32> = Cache::new(100);
+    cache.set("answer".to_string(), 42).unwrap();
+    println!("Cached value: {:?}", cache.get("answer"));
+}
+```
+
+## YAML
+
+```yaml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://user:pass@db:5432/app
+      - REDIS_URL=redis://cache:6379
+    depends_on:
+      - db
+      - cache
+    volumes:
+      - ./storage:/app/storage
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: app
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  cache:
+    image: redis:7-alpine
+
+volumes:
+  postgres_data:
+```
+MARKDOWN
+        ]);
+
         // Kitchen sink markdown example
         Note::factory()->create([
             'title' => 'Markdown Kitchen Sink',
