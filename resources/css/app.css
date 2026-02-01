@@ -154,7 +154,9 @@
 
 @media (prefers-color-scheme: dark) {
     .prose pre code {
-        background: oklch(17% 0.035 40); /* deep oak shadow - matches hljs-bagend */
+        background: oklch(
+            17% 0.035 40
+        ); /* deep oak shadow - matches hljs-bagend */
         color: oklch(92% 0.03 70); /* warm cream */
     }
 }

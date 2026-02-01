@@ -64,7 +64,12 @@ function getContrastRatio(color1, color2) {
 function checkColorPairs(pairs, defaultThreshold = WCAG_AA) {
     const results = [];
 
-    for (const { name, foreground, background, threshold: pairThreshold } of pairs) {
+    for (const {
+        name,
+        foreground,
+        background,
+        threshold: pairThreshold,
+    } of pairs) {
         const threshold = pairThreshold ?? defaultThreshold;
         const ratio = getContrastRatio(foreground, background);
         const pass = ratio !== null && ratio >= threshold;
@@ -307,9 +312,15 @@ function getHljsColorPairs(colors) {
 // Main
 // =============================================================================
 
-console.log("\n╔════════════════════════════════════════════════════════════════╗");
-console.log("║              Theme Contrast Checker                            ║");
-console.log("╚════════════════════════════════════════════════════════════════╝");
+console.log(
+    "\n╔════════════════════════════════════════════════════════════════╗",
+);
+console.log(
+    "║              Theme Contrast Checker                            ║",
+);
+console.log(
+    "╚════════════════════════════════════════════════════════════════╝",
+);
 
 let exitCode = 0;
 
