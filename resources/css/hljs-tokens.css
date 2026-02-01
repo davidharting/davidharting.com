@@ -17,7 +17,7 @@
         --hljs-keyword: oklch(45% 0.14 145); /* hill green */
         --hljs-type: oklch(40% 0.12 145); /* rich green */
         --hljs-string: oklch(50% 0.14 55); /* warm amber-brown */
-        --hljs-number: oklch(55% 0.15 70); /* cozy amber */
+        --hljs-number: oklch(48% 0.15 70); /* cozy amber */
         --hljs-builtin: oklch(40% 0.1 50); /* deep wood brown */
         --hljs-attribute: oklch(45% 0.08 55); /* secondary brown */
         --hljs-meta: oklch(50% 0.06 145); /* subtle green */
@@ -41,7 +41,7 @@
         --hljs-fg: oklch(92% 0.03 70); /* warm cream */
 
         /* Syntax colors */
-        --hljs-comment: oklch(55% 0.03 60); /* smoke wisps */
+        --hljs-comment: oklch(60% 0.03 60); /* smoke wisps */
         --hljs-keyword: oklch(72% 0.12 145); /* sage green */
         --hljs-type: oklch(78% 0.1 145); /* lighter sage */
         --hljs-string: oklch(72% 0.15 65); /* lamplight amber */
