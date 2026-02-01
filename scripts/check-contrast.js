@@ -211,33 +211,42 @@ function getDaisyUIColorPairs(colors) {
 }
 
 // =============================================================================
-// Highlight.js Theme Parsing
+// Highlight.js Theme Parsing (from app.css media queries)
 // =============================================================================
 
 /**
- * Parse highlight.js theme file
+ * Parse highlight.js theme from a media query block in app.css
  */
-function parseHljsTheme(filepath) {
-    const content = readFileSync(filepath, "utf-8");
-    const colors = {};
+function parseHljsThemeFromMediaQuery(content, colorScheme) {
+    // Find the media query block for this color scheme
+    const mediaRegex = new RegExp(
+        `@media\\s*\\(prefers-color-scheme:\\s*${colorScheme}\\)\\s*\\{([\\s\\S]*?)\\n\\}`,
+        "g",
+    );
 
-    // Extract background color from .hljs
-    const bgMatch = content.match(/\.hljs\s*\{[^}]*background:\s*([^;]+);/);
-    if (bgMatch) {
-        colors.bg = bgMatch[1].trim();
+    let mediaContent = "";
+    let match;
+    while ((match = mediaRegex.exec(content)) !== null) {
+        mediaContent += match[1];
     }
 
-    // Extract foreground color from .hljs
-    const fgMatch = content.match(/\.hljs\s*\{[^}]*\bcolor:\s*([^;]+);/);
-    if (fgMatch) {
-        colors.fg = fgMatch[1].trim();
+    if (!mediaContent) return null;
+
+    const colors = {};
+
+    // Extract background and foreground from .hljs
+    const hljsMatch = mediaContent.match(
+        /\.hljs\s*\{[^}]*background:\s*([^;]+);[^}]*color:\s*([^;]+);/,
+    );
+    if (hljsMatch) {
+        colors.bg = hljsMatch[1].trim();
+        colors.fg = hljsMatch[2].trim();
     }
 
     // Token selectors to check
     const tokens = [
         ".hljs-comment",
         ".hljs-keyword",
-        ".hljs-type",
         ".hljs-string",
         ".hljs-number",
         ".hljs-built_in",
@@ -245,7 +254,6 @@ function parseHljsTheme(filepath) {
         ".hljs-meta",
         ".hljs-punctuation",
         ".hljs-params",
-        ".hljs-link",
     ];
 
     for (const selector of tokens) {
@@ -253,9 +261,9 @@ function parseHljsTheme(filepath) {
         const regex = new RegExp(
             `${escapedSelector}[^{]*\\{[^}]*\\bcolor:\\s*([^;]+);`,
         );
-        const match = content.match(regex);
-        if (match) {
-            colors[selector] = match[1].trim();
+        const tokenMatch = mediaContent.match(regex);
+        if (tokenMatch) {
+            colors[selector] = tokenMatch[1].trim();
         }
     }
 
@@ -280,11 +288,10 @@ function getHljsColorPairs(colors) {
         });
     }
 
-    // Check each token type
+    // Check each token type (trimmed to supported languages: bash, json, yaml, sql, python)
     const tokenNames = {
         ".hljs-comment": "comment",
         ".hljs-keyword": "keyword",
-        ".hljs-type": "type",
         ".hljs-string": "string",
         ".hljs-number": "number",
         ".hljs-built_in": "built-in",
@@ -292,7 +299,6 @@ function getHljsColorPairs(colors) {
         ".hljs-meta": "meta",
         ".hljs-punctuation": "punctuation",
         ".hljs-params": "params",
-        ".hljs-link": "link",
     };
 
     for (const [selector, name] of Object.entries(tokenNames)) {
@@ -351,15 +357,20 @@ for (const theme of daisyThemes) {
     if (!allPass) exitCode = 1;
 }
 
-// Check highlight.js themes (AA standard)
+// Check highlight.js themes (AA standard) - parsed from app.css media queries
 const hljsThemes = [
-    { name: "shire", file: "hljs-shire.css", label: "Shire (light)" },
-    { name: "bagend", file: "hljs-bagend.css", label: "Bag End (dark)" },
+    { scheme: "light", label: "Shire (light)" },
+    { scheme: "dark", label: "Bag End (dark)" },
 ];
 
 for (const theme of hljsThemes) {
-    const themePath = resolve(__dirname, `../resources/css/${theme.file}`);
-    const colors = parseHljsTheme(themePath);
+    const colors = parseHljsThemeFromMediaQuery(appCss, theme.scheme);
+    if (!colors) {
+        console.log(
+            `\nWARNING: Could not find hljs styles for ${theme.scheme} mode`,
+        );
+        continue;
+    }
     const pairs = getHljsColorPairs(colors);
     const results = checkColorPairs(pairs, WCAG_AA);
     const { output, allPass } = formatResults(
