@@ -48,3 +48,25 @@ test('admin can view unpublished note', function () {
     $response->assertSuccessful();
     $response->assertSeeText('Draft post');
 });
+
+test('code blocks are rendered for syntax highlighting', function () {
+    /** @var TestCase $this */
+    $note = Note::factory()->create([
+        'visible' => true,
+        'title' => 'Code example',
+        'markdown_content' => <<<'MD'
+Here is some PHP code:
+
+```php
+function hello() {
+    return 'world';
+}
+```
+MD,
+    ]);
+
+    $response = $this->get('/notes/'.$note->slug);
+    $response->assertSuccessful();
+    $response->assertSee('<pre><code class="language-php">', false);
+    $response->assertSeeText("function hello()");
+});

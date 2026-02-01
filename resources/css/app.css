@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Syntax highlighting - light theme (shire) */
+@import "highlight.js/styles/stackoverflow-light.css"
+    (prefers-color-scheme: light);
+/* Syntax highlighting - dark theme (bagend) */
+@import "highlight.js/styles/stackoverflow-dark.css"
+    (prefers-color-scheme: dark);
+
 @plugin '@tailwindcss/typography';
 @plugin "daisyui";
 
@@ -127,4 +134,14 @@
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
     }
+}
+
+/* Code block styling within prose */
+.prose pre {
+    border-radius: var(--radius-box, 0.75rem);
+}
+
+.prose pre code.hljs {
+    padding: 1rem;
+    border-radius: var(--radius-box, 0.75rem);
 }
