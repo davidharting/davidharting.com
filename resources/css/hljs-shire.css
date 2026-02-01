@@ -4,18 +4,23 @@
   Parchment backgrounds, soft hill-greens, warm wood browns.
   Code that feels like reading from a well-loved book by the fire.
 
-  Uses tokens from hljs-tokens.css for colors.
+  Color mapping:
+  - Keywords/types: Hill green (primary)
+  - Strings/values: Firelight amber (accent)
+  - Functions/attributes: Wood brown (secondary)
+  - Comments: Faded ink
+  - Base text: Dark earth
 */
 
 .hljs {
-    background: var(--hljs-bg);
-    color: var(--hljs-fg);
+    background: oklch(92% 0.025 80); /* parchment */
+    color: oklch(25% 0.04 55); /* dark earth */
 }
 
 /* Comments - faded ink, like margin notes */
 .hljs-comment,
 .hljs-quote {
-    color: var(--hljs-comment);
+    color: oklch(50% 0.03 60); /* faded ink */
     font-style: italic;
 }
 
@@ -23,7 +28,7 @@
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-tag {
-    color: var(--hljs-keyword);
+    color: oklch(45% 0.14 145); /* hill green */
     font-weight: 600;
 }
 
@@ -32,27 +37,27 @@
 .hljs-title,
 .hljs-title.class_,
 .hljs-title.function_ {
-    color: var(--hljs-type);
+    color: oklch(40% 0.12 145); /* rich green */
 }
 
 /* Strings and literals - firelight amber warmth */
 .hljs-string,
 .hljs-template-variable,
 .hljs-regexp {
-    color: var(--hljs-string);
+    color: oklch(50% 0.14 55); /* warm amber-brown */
 }
 
 /* Numbers and constants - cozy amber */
 .hljs-number,
 .hljs-literal,
 .hljs-variable.constant_ {
-    color: var(--hljs-number);
+    color: oklch(48% 0.15 70); /* cozy amber */
 }
 
 /* Functions and methods - wood brown */
 .hljs-built_in,
 .hljs-symbol {
-    color: var(--hljs-builtin);
+    color: oklch(40% 0.1 50); /* deep wood brown */
 }
 
 /* Attributes and properties - warm brown */
@@ -61,19 +66,19 @@
 .hljs-variable,
 .hljs-template-tag,
 .hljs-property {
-    color: var(--hljs-attribute);
+    color: oklch(45% 0.08 55); /* secondary brown */
 }
 
 /* Meta and preprocessor - subtle */
 .hljs-meta,
 .hljs-doctag {
-    color: var(--hljs-meta);
+    color: oklch(50% 0.06 145); /* subtle green */
 }
 
 /* Punctuation and operators */
 .hljs-punctuation,
 .hljs-operator {
-    color: var(--hljs-punctuation);
+    color: oklch(35% 0.04 55); /* dark earth */
 }
 
 /* Sections and selectors */
@@ -84,13 +89,13 @@
 .hljs-selector-pseudo,
 .hljs-name,
 .hljs-bullet {
-    color: var(--hljs-keyword);
+    color: oklch(45% 0.14 145); /* hill green */
     font-weight: 600;
 }
 
 /* Links */
 .hljs-link {
-    color: var(--hljs-link);
+    color: oklch(45% 0.1 230); /* muted blue */
     text-decoration: underline;
 }
 
@@ -105,59 +110,59 @@
 
 /* Diff additions */
 .hljs-addition {
-    background: var(--hljs-addition-bg);
-    color: var(--hljs-addition-fg);
+    background: oklch(90% 0.08 150);
+    color: oklch(35% 0.13 150);
 }
 
 /* Diff deletions */
 .hljs-deletion {
-    background: var(--hljs-deletion-bg);
-    color: var(--hljs-deletion-fg);
+    background: oklch(90% 0.08 25);
+    color: oklch(40% 0.15 25);
 }
 
 /* Params */
 .hljs-params {
-    color: var(--hljs-params);
+    color: oklch(30% 0.04 55); /* darker earth */
 }
 
 /* Subst */
 .hljs-subst {
-    color: var(--hljs-fg);
+    color: oklch(25% 0.04 55); /* dark earth */
 }
 
 /* Markup code blocks */
 .hljs-code {
-    color: var(--hljs-builtin);
+    color: oklch(40% 0.1 50); /* deep wood brown */
     font-family: monospace;
 }
 
 /* Formulas */
 .hljs-formula {
-    color: var(--hljs-string);
+    color: oklch(50% 0.14 55); /* warm amber-brown */
     font-style: italic;
 }
 
 /* Meta with nested scopes */
 .hljs-meta .hljs-keyword {
-    color: var(--hljs-keyword);
+    color: oklch(45% 0.14 145); /* hill green */
     font-weight: 600;
 }
 
 .hljs-meta .hljs-string {
-    color: var(--hljs-string);
+    color: oklch(50% 0.14 55); /* warm amber-brown */
 }
 
 /* High fidelity highlighting */
 .hljs-title.class_.inherited__ {
-    color: var(--hljs-type);
+    color: oklch(40% 0.12 145); /* rich green */
     font-style: italic;
 }
 
 .hljs-char.escape_ {
-    color: var(--hljs-number);
+    color: oklch(48% 0.15 70); /* cozy amber */
 }
 
 .hljs-variable.language_ {
-    color: var(--hljs-keyword);
+    color: oklch(45% 0.14 145); /* hill green */
     font-style: italic;
 }

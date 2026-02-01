@@ -4,18 +4,23 @@
   Deep earthy shadows, firelight amber, lamplight on aged oak.
   Code by candlelight in a cozy hobbit hole.
 
-  Uses tokens from hljs-tokens.css for colors.
+  Color mapping:
+  - Keywords/types: Sage green (primary) - bright enough against dark
+  - Strings/values: Lamplight amber (accent)
+  - Functions/attributes: Polished wood brown (secondary)
+  - Comments: Smoke wisps
+  - Base text: Warm cream
 */
 
 .hljs {
-    background: var(--hljs-bg);
-    color: var(--hljs-fg);
+    background: oklch(17% 0.035 40); /* deep oak shadow */
+    color: oklch(92% 0.03 70); /* warm cream */
 }
 
 /* Comments - smoke wisps in the lamplight */
 .hljs-comment,
 .hljs-quote {
-    color: var(--hljs-comment);
+    color: oklch(60% 0.03 60); /* smoke wisps */
     font-style: italic;
 }
 
@@ -23,7 +28,7 @@
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-tag {
-    color: var(--hljs-keyword);
+    color: oklch(72% 0.12 145); /* sage green */
     font-weight: 600;
 }
 
@@ -32,27 +37,27 @@
 .hljs-title,
 .hljs-title.class_,
 .hljs-title.function_ {
-    color: var(--hljs-type);
+    color: oklch(78% 0.1 145); /* lighter sage */
 }
 
 /* Strings and literals - lamplight amber */
 .hljs-string,
 .hljs-template-variable,
 .hljs-regexp {
-    color: var(--hljs-string);
+    color: oklch(72% 0.15 65); /* lamplight amber */
 }
 
 /* Numbers and constants - candlelight gold */
 .hljs-number,
 .hljs-literal,
 .hljs-variable.constant_ {
-    color: var(--hljs-number);
+    color: oklch(78% 0.14 70); /* candlelight gold */
 }
 
 /* Functions and methods - polished wood */
 .hljs-built_in,
 .hljs-symbol {
-    color: var(--hljs-builtin);
+    color: oklch(65% 0.1 50); /* polished wood */
 }
 
 /* Attributes and properties - firelit wood */
@@ -61,19 +66,19 @@
 .hljs-variable,
 .hljs-template-tag,
 .hljs-property {
-    color: var(--hljs-attribute);
+    color: oklch(70% 0.08 55); /* firelit wood */
 }
 
 /* Meta and preprocessor - subtle sage */
 .hljs-meta,
 .hljs-doctag {
-    color: var(--hljs-meta);
+    color: oklch(60% 0.06 145); /* subtle sage */
 }
 
 /* Punctuation and operators */
 .hljs-punctuation,
 .hljs-operator {
-    color: var(--hljs-punctuation);
+    color: oklch(75% 0.03 60); /* muted cream */
 }
 
 /* Sections and selectors */
@@ -84,13 +89,13 @@
 .hljs-selector-pseudo,
 .hljs-name,
 .hljs-bullet {
-    color: var(--hljs-keyword);
+    color: oklch(72% 0.12 145); /* sage green */
     font-weight: 600;
 }
 
 /* Links - muted teal by firelight */
 .hljs-link {
-    color: var(--hljs-link);
+    color: oklch(65% 0.08 180); /* muted teal */
     text-decoration: underline;
 }
 
@@ -105,59 +110,59 @@
 
 /* Diff additions - success green glow */
 .hljs-addition {
-    background: var(--hljs-addition-bg);
-    color: var(--hljs-addition-fg);
+    background: oklch(25% 0.08 145);
+    color: oklch(75% 0.12 145);
 }
 
 /* Diff deletions - ember red */
 .hljs-deletion {
-    background: var(--hljs-deletion-bg);
-    color: var(--hljs-deletion-fg);
+    background: oklch(25% 0.08 25);
+    color: oklch(70% 0.14 25);
 }
 
 /* Params */
 .hljs-params {
-    color: var(--hljs-params);
+    color: oklch(85% 0.03 70); /* light cream */
 }
 
 /* Subst */
 .hljs-subst {
-    color: var(--hljs-fg);
+    color: oklch(92% 0.03 70); /* warm cream */
 }
 
 /* Markup code blocks */
 .hljs-code {
-    color: var(--hljs-builtin);
+    color: oklch(65% 0.1 50); /* polished wood */
     font-family: monospace;
 }
 
 /* Formulas */
 .hljs-formula {
-    color: var(--hljs-string);
+    color: oklch(72% 0.15 65); /* lamplight amber */
     font-style: italic;
 }
 
 /* Meta with nested scopes */
 .hljs-meta .hljs-keyword {
-    color: var(--hljs-keyword);
+    color: oklch(72% 0.12 145); /* sage green */
     font-weight: 600;
 }
 
 .hljs-meta .hljs-string {
-    color: var(--hljs-string);
+    color: oklch(72% 0.15 65); /* lamplight amber */
 }
 
 /* High fidelity highlighting */
 .hljs-title.class_.inherited__ {
-    color: var(--hljs-type);
+    color: oklch(78% 0.1 145); /* lighter sage */
     font-style: italic;
 }
 
 .hljs-char.escape_ {
-    color: var(--hljs-number);
+    color: oklch(78% 0.14 70); /* candlelight gold */
 }
 
 .hljs-variable.language_ {
-    color: var(--hljs-keyword);
+    color: oklch(72% 0.12 145); /* sage green */
     font-style: italic;
 }

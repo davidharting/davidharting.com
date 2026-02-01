@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
-/* Syntax highlighting tokens and themes */
-@import "./hljs-tokens.css";
+/* Syntax highlighting - custom hobbit themes */
 @import "./hljs-shire.css" (prefers-color-scheme: light);
 @import "./hljs-bagend.css" (prefers-color-scheme: dark);
 

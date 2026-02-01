@@ -25,37 +25,52 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // WCAG contrast thresholds
 const WCAG_AA = 4.5;
-const WCAG_AA_LARGE = 3.0;
 const WCAG_AAA = 7.0;
+
+// Theme files to check
+const THEMES = [
+    { name: "shire", file: "hljs-shire.css", scheme: "light" },
+    { name: "bagend", file: "hljs-bagend.css", scheme: "dark" },
+];
+
+// Map of CSS selectors to token names for reporting
+const SELECTOR_TO_TOKEN = {
+    ".hljs": "hljs-bg",
+    ".hljs-comment": "hljs-comment",
+    ".hljs-keyword": "hljs-keyword",
+    ".hljs-type": "hljs-type",
+    ".hljs-string": "hljs-string",
+    ".hljs-number": "hljs-number",
+    ".hljs-built_in": "hljs-builtin",
+    ".hljs-attr": "hljs-attribute",
+    ".hljs-meta": "hljs-meta",
+    ".hljs-punctuation": "hljs-punctuation",
+    ".hljs-params": "hljs-params",
+    ".hljs-link": "hljs-link",
+    ".hljs-addition": "hljs-addition-fg",
+    ".hljs-deletion": "hljs-deletion-fg",
+};
 
 /**
  * Calculate relative luminance per WCAG 2.1
- * https://www.w3.org/WAI/GL/wiki/Relative_luminance
  */
 function getLuminance(color) {
     const rgb = parse(color);
     if (!rgb) return null;
 
-    // Convert to sRGB and get components
     const hex = formatHex(rgb);
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
     const b = parseInt(hex.slice(5, 7), 16) / 255;
 
-    // Apply gamma correction
     const toLinear = (c) =>
         c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 
-    const R = toLinear(r);
-    const G = toLinear(g);
-    const B = toLinear(b);
-
-    return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+    return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
 }
 
 /**
  * Calculate contrast ratio between two colors
- * https://www.w3.org/WAI/GL/wiki/Contrast_ratio
  */
 function getContrastRatio(color1, color2) {
     const L1 = getLuminance(color1);
@@ -70,55 +85,58 @@ function getContrastRatio(color1, color2) {
 }
 
 /**
- * Parse CSS file and extract custom properties from media query blocks
+ * Parse a CSS theme file and extract colors
  */
-function parseTokensFile(filepath) {
+function parseThemeFile(filepath) {
     const content = readFileSync(filepath, "utf-8");
+    const colors = {};
 
-    const themes = {
-        light: { name: "shire", tokens: {} },
-        dark: { name: "bagend", tokens: {} },
-    };
+    // Extract background color from .hljs
+    const bgMatch = content.match(/\.hljs\s*\{[^}]*background:\s*([^;]+);/);
+    if (bgMatch) {
+        colors.bg = bgMatch[1].trim();
+    }
 
-    // Match media query blocks
-    const lightMatch = content.match(
-        /@media\s*\(prefers-color-scheme:\s*light\)\s*\{[\s\S]*?:root\s*\{([\s\S]*?)\}\s*\}/,
-    );
-    const darkMatch = content.match(
-        /@media\s*\(prefers-color-scheme:\s*dark\)\s*\{[\s\S]*?:root\s*\{([\s\S]*?)\}\s*\}/,
-    );
+    // Extract foreground color from .hljs
+    const fgMatch = content.match(/\.hljs\s*\{[^}]*\bcolor:\s*([^;]+);/);
+    if (fgMatch) {
+        colors.fg = fgMatch[1].trim();
+    }
 
-    // Parse custom properties
-    const parseProperties = (block) => {
-        const props = {};
-        const regex = /--([\w-]+):\s*([^;]+);/g;
-        let match;
-        while ((match = regex.exec(block)) !== null) {
-            props[match[1]] = match[2].trim();
+    // Extract colors for each token type
+    for (const [selector, token] of Object.entries(SELECTOR_TO_TOKEN)) {
+        if (token === "hljs-bg") continue;
+
+        // Escape special regex characters in selector
+        const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+        // Match the selector (possibly with other selectors) and extract color
+        const regex = new RegExp(
+            `${escapedSelector}[^{]*\\{[^}]*\\bcolor:\\s*([^;]+);`,
+        );
+        const match = content.match(regex);
+        if (match) {
+            colors[token] = match[1].trim();
         }
-        return props;
-    };
+    }
 
-    if (lightMatch) themes.light.tokens = parseProperties(lightMatch[1]);
-    if (darkMatch) themes.dark.tokens = parseProperties(darkMatch[1]);
-
-    return themes;
+    return colors;
 }
 
 /**
  * Check contrast for a theme and return results
  */
-function checkThemeContrast(theme, threshold) {
+function checkThemeContrast(colors, threshold) {
     const results = [];
-    const bg = theme.tokens["hljs-bg"];
+    const bg = colors.bg;
 
     if (!bg) {
         return [{ token: "hljs-bg", error: "Background color not found" }];
     }
 
-    // Foreground tokens to check against background
+    // Check foreground against background
     const fgTokens = [
-        "hljs-fg",
+        "fg",
         "hljs-comment",
         "hljs-keyword",
         "hljs-type",
@@ -135,7 +153,7 @@ function checkThemeContrast(theme, threshold) {
     ];
 
     for (const token of fgTokens) {
-        const fg = theme.tokens[token];
+        const fg = colors[token];
         if (!fg) continue;
 
         const ratio = getContrastRatio(fg, bg);
@@ -194,15 +212,14 @@ const threshold = strict ? WCAG_AAA : WCAG_AA;
 console.log(`\nHighlight.js Theme Contrast Checker`);
 console.log(`WCAG Level: ${strict ? "AAA" : "AA"} (${threshold}:1 minimum)\n`);
 
-const tokensPath = resolve(__dirname, "../resources/css/hljs-tokens.css");
-const themes = parseTokensFile(tokensPath);
-
 let exitCode = 0;
 
-for (const [scheme, theme] of Object.entries(themes)) {
-    const results = checkThemeContrast(theme, threshold);
+for (const theme of THEMES) {
+    const themePath = resolve(__dirname, `../resources/css/${theme.file}`);
+    const colors = parseThemeFile(themePath);
+    const results = checkThemeContrast(colors, threshold);
     const { output, allPass } = formatResults(
-        `${theme.name} (${scheme})`,
+        `${theme.name} (${theme.scheme})`,
         results,
     );
     console.log(output);
