@@ -68,5 +68,5 @@ MD,
     $response = $this->get('/notes/'.$note->slug);
     $response->assertSuccessful();
     $response->assertSee('<pre><code class="language-php">', false);
-    $response->assertSeeText("function hello()");
+    $response->assertSeeText('function hello()');
 });

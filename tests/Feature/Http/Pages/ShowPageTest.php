@@ -98,5 +98,5 @@ MD,
     $response = $this->get('/pages/'.$page->slug);
     $response->assertSuccessful();
     $response->assertSee('<pre><code class="language-javascript">', false);
-    $response->assertSeeText("const greeting");
+    $response->assertSeeText('const greeting');
 });
