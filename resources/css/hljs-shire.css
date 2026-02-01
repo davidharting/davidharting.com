@@ -83,9 +83,16 @@
 /* Sections and selectors */
 .hljs-section,
 .hljs-selector-class,
-.hljs-selector-id {
+.hljs-selector-id,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
     color: oklch(45% 0.14 145);
     font-weight: 600;
+}
+
+/* Properties - warm brown like attributes */
+.hljs-property {
+    color: oklch(45% 0.08 55);
 }
 
 /* Links */
@@ -128,4 +135,44 @@
 /* Subst */
 .hljs-subst {
     color: oklch(25% 0.04 55);
+}
+
+/* Markup - bullets, code blocks, formulas */
+.hljs-bullet {
+    color: oklch(45% 0.14 145);
+}
+
+.hljs-code {
+    color: oklch(40% 0.1 50);
+    font-family: monospace;
+}
+
+.hljs-formula {
+    color: oklch(50% 0.14 55);
+    font-style: italic;
+}
+
+/* Meta with nested scopes */
+.hljs-meta .hljs-keyword {
+    color: oklch(45% 0.14 145);
+    font-weight: 600;
+}
+
+.hljs-meta .hljs-string {
+    color: oklch(50% 0.14 55);
+}
+
+/* High fidelity highlighting */
+.hljs-title.class_.inherited__ {
+    color: oklch(40% 0.12 145);
+    font-style: italic;
+}
+
+.hljs-char.escape_ {
+    color: oklch(55% 0.15 70);
+}
+
+.hljs-variable.language_ {
+    color: oklch(45% 0.14 145);
+    font-style: italic;
 }
