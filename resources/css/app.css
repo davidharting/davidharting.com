@@ -18,7 +18,7 @@
     color-scheme: light;
 
     /* Soft green like rolling hills, not corporate emerald */
-    --color-primary: oklch(55% 0.12 145);
+    --color-primary: oklch(52% 0.12 145);
     --color-primary-content: oklch(98% 0.01 90);
 
     /* Warm wood brown - lived-in, not polished */
@@ -40,9 +40,9 @@
     --color-base-content: oklch(25% 0.04 55);
 
     /* Gentle feedback colors */
-    --color-info: oklch(55% 0.1 230);
+    --color-info: oklch(52% 0.1 230);
     --color-info-content: oklch(98% 0.01 230);
-    --color-success: oklch(55% 0.13 150);
+    --color-success: oklch(50% 0.13 150);
     --color-success-content: oklch(98% 0.01 150);
     --color-warning: oklch(70% 0.15 75);
     --color-warning-content: oklch(25% 0.05 75);
@@ -91,13 +91,13 @@
     --color-base-content: oklch(92% 0.03 70);
 
     /* Feedback colors - all shifted warm */
-    --color-info: oklch(55% 0.06 180);
+    --color-info: oklch(48% 0.06 180);
     --color-info-content: oklch(95% 0.02 180);
-    --color-success: oklch(55% 0.1 145);
+    --color-success: oklch(48% 0.1 145);
     --color-success-content: oklch(95% 0.02 145);
     --color-warning: oklch(72% 0.14 70);
     --color-warning-content: oklch(20% 0.04 50);
-    --color-error: oklch(55% 0.14 25);
+    --color-error: oklch(52% 0.14 25);
     --color-error-content: oklch(95% 0.02 25);
 
     /* Same cozy rounded corners */
@@ -133,12 +133,34 @@
     }
 }
 
-/* Code block styling within prose */
-.prose pre {
-    border-radius: var(--radius-box, 0.75rem);
+/*
+  Code block base styles - match hljs themes for progressive enhancement.
+  These styles apply before highlight.js runs, so there's no flash of
+  unstyled content. When hljs adds the .hljs class, it layers syntax
+  colors on top of these base styles.
+*/
+.prose pre code {
+    display: block;
+    padding: 1em;
+    overflow-x: auto;
 }
 
-.prose pre code.hljs {
-    padding: 1rem;
-    border-radius: var(--radius-box, 0.75rem);
+@media (prefers-color-scheme: light) {
+    .prose pre code {
+        background: oklch(92% 0.025 80); /* parchment - matches hljs-shire */
+        color: oklch(25% 0.04 55); /* dark earth */
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .prose pre code {
+        background: oklch(17% 0.035 40); /* deep oak shadow - matches hljs-bagend */
+        color: oklch(92% 0.03 70); /* warm cream */
+    }
+}
+
+/* When hljs is applied, let it fully control the code element */
+.prose pre:has(code.hljs) {
+    background: transparent;
+    padding: 0;
 }
