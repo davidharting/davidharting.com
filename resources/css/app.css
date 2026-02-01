@@ -1,11 +1,8 @@
 @import "tailwindcss";
 
-/* Syntax highlighting - light theme (shire) */
-@import "highlight.js/styles/stackoverflow-light.css"
-    (prefers-color-scheme: light);
-/* Syntax highlighting - dark theme (bagend) */
-@import "highlight.js/styles/stackoverflow-dark.css"
-    (prefers-color-scheme: dark);
+/* Syntax highlighting - custom hobbit themes */
+@import "./hljs-shire.css" (prefers-color-scheme: light);
+@import "./hljs-bagend.css" (prefers-color-scheme: dark);
 
 @plugin '@tailwindcss/typography';
 @plugin "daisyui";

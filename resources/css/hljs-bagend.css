@@ -1,0 +1,131 @@
+/*
+  Highlight.js theme: Evening in Bag End
+
+  Deep earthy shadows, firelight amber, lamplight on aged oak.
+  Code by candlelight in a cozy hobbit hole.
+
+  Color mapping:
+  - Keywords/types: Sage green (primary) - bright enough against dark
+  - Strings/values: Lamplight amber (accent)
+  - Functions/attributes: Polished wood brown (secondary)
+  - Comments: Smoke wisps
+  - Base text: Warm cream
+*/
+
+.hljs {
+    background: oklch(17% 0.035 40); /* base-200: deep oak shadow */
+    color: oklch(92% 0.03 70); /* base-content: warm cream text */
+}
+
+/* Comments - smoke wisps in the lamplight */
+.hljs-comment,
+.hljs-quote {
+    color: oklch(55% 0.03 60);
+    font-style: italic;
+}
+
+/* Keywords - sage green, bright against the dark */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-tag {
+    color: oklch(72% 0.12 145); /* bright sage green */
+    font-weight: 600;
+}
+
+/* Types and classes - prominent green glow */
+.hljs-type,
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.function_ {
+    color: oklch(78% 0.1 145); /* lighter sage */
+}
+
+/* Strings and literals - lamplight amber */
+.hljs-string,
+.hljs-template-variable,
+.hljs-regexp {
+    color: oklch(72% 0.15 65); /* warm lamp amber */
+}
+
+/* Numbers and constants - candlelight gold */
+.hljs-number,
+.hljs-literal,
+.hljs-variable.constant_ {
+    color: oklch(78% 0.14 70); /* bright amber */
+}
+
+/* Functions and methods - polished wood */
+.hljs-built_in,
+.hljs-symbol {
+    color: oklch(65% 0.1 50); /* warm wood brown */
+}
+
+/* Attributes and properties - firelit wood */
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-tag {
+    color: oklch(70% 0.08 55); /* lighter secondary */
+}
+
+/* Meta and preprocessor - subtle sage */
+.hljs-meta,
+.hljs-doctag {
+    color: oklch(60% 0.06 145);
+}
+
+/* Punctuation and operators */
+.hljs-punctuation,
+.hljs-operator {
+    color: oklch(75% 0.03 60);
+}
+
+/* Sections and selectors */
+.hljs-section,
+.hljs-selector-class,
+.hljs-selector-id {
+    color: oklch(72% 0.12 145);
+    font-weight: 600;
+}
+
+/* Links - muted teal by firelight */
+.hljs-link {
+    color: oklch(65% 0.08 180);
+    text-decoration: underline;
+}
+
+/* Emphasis */
+.hljs-emphasis {
+    font-style: italic;
+}
+
+.hljs-strong {
+    font-weight: 700;
+}
+
+/* Diff additions - success green glow */
+.hljs-addition {
+    background: oklch(25% 0.08 145);
+    color: oklch(75% 0.12 145);
+}
+
+/* Diff deletions - ember red */
+.hljs-deletion {
+    background: oklch(25% 0.08 25);
+    color: oklch(70% 0.14 25);
+}
+
+/* Name highlights */
+.hljs-name {
+    color: oklch(72% 0.12 145);
+}
+
+/* Params */
+.hljs-params {
+    color: oklch(85% 0.03 70);
+}
+
+/* Subst */
+.hljs-subst {
+    color: oklch(92% 0.03 70);
+}
