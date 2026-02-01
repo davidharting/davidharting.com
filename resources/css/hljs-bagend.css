@@ -4,23 +4,18 @@
   Deep earthy shadows, firelight amber, lamplight on aged oak.
   Code by candlelight in a cozy hobbit hole.
 
-  Color mapping:
-  - Keywords/types: Sage green (primary) - bright enough against dark
-  - Strings/values: Lamplight amber (accent)
-  - Functions/attributes: Polished wood brown (secondary)
-  - Comments: Smoke wisps
-  - Base text: Warm cream
+  Uses tokens from hljs-tokens.css for colors.
 */
 
 .hljs {
-    background: oklch(17% 0.035 40); /* base-200: deep oak shadow */
-    color: oklch(92% 0.03 70); /* base-content: warm cream text */
+    background: var(--hljs-bg);
+    color: var(--hljs-fg);
 }
 
 /* Comments - smoke wisps in the lamplight */
 .hljs-comment,
 .hljs-quote {
-    color: oklch(55% 0.03 60);
+    color: var(--hljs-comment);
     font-style: italic;
 }
 
@@ -28,7 +23,7 @@
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-tag {
-    color: oklch(72% 0.12 145); /* bright sage green */
+    color: var(--hljs-keyword);
     font-weight: 600;
 }
 
@@ -37,47 +32,48 @@
 .hljs-title,
 .hljs-title.class_,
 .hljs-title.function_ {
-    color: oklch(78% 0.1 145); /* lighter sage */
+    color: var(--hljs-type);
 }
 
 /* Strings and literals - lamplight amber */
 .hljs-string,
 .hljs-template-variable,
 .hljs-regexp {
-    color: oklch(72% 0.15 65); /* warm lamp amber */
+    color: var(--hljs-string);
 }
 
 /* Numbers and constants - candlelight gold */
 .hljs-number,
 .hljs-literal,
 .hljs-variable.constant_ {
-    color: oklch(78% 0.14 70); /* bright amber */
+    color: var(--hljs-number);
 }
 
 /* Functions and methods - polished wood */
 .hljs-built_in,
 .hljs-symbol {
-    color: oklch(65% 0.1 50); /* warm wood brown */
+    color: var(--hljs-builtin);
 }
 
 /* Attributes and properties - firelit wood */
 .hljs-attr,
 .hljs-attribute,
 .hljs-variable,
-.hljs-template-tag {
-    color: oklch(70% 0.08 55); /* lighter secondary */
+.hljs-template-tag,
+.hljs-property {
+    color: var(--hljs-attribute);
 }
 
 /* Meta and preprocessor - subtle sage */
 .hljs-meta,
 .hljs-doctag {
-    color: oklch(60% 0.06 145);
+    color: var(--hljs-meta);
 }
 
 /* Punctuation and operators */
 .hljs-punctuation,
 .hljs-operator {
-    color: oklch(75% 0.03 60);
+    color: var(--hljs-punctuation);
 }
 
 /* Sections and selectors */
@@ -85,19 +81,16 @@
 .hljs-selector-class,
 .hljs-selector-id,
 .hljs-selector-attr,
-.hljs-selector-pseudo {
-    color: oklch(72% 0.12 145);
+.hljs-selector-pseudo,
+.hljs-name,
+.hljs-bullet {
+    color: var(--hljs-keyword);
     font-weight: 600;
-}
-
-/* Properties - firelit wood like attributes */
-.hljs-property {
-    color: oklch(70% 0.08 55);
 }
 
 /* Links - muted teal by firelight */
 .hljs-link {
-    color: oklch(65% 0.08 180);
+    color: var(--hljs-link);
     text-decoration: underline;
 }
 
@@ -112,67 +105,59 @@
 
 /* Diff additions - success green glow */
 .hljs-addition {
-    background: oklch(25% 0.08 145);
-    color: oklch(75% 0.12 145);
+    background: var(--hljs-addition-bg);
+    color: var(--hljs-addition-fg);
 }
 
 /* Diff deletions - ember red */
 .hljs-deletion {
-    background: oklch(25% 0.08 25);
-    color: oklch(70% 0.14 25);
-}
-
-/* Name highlights */
-.hljs-name {
-    color: oklch(72% 0.12 145);
+    background: var(--hljs-deletion-bg);
+    color: var(--hljs-deletion-fg);
 }
 
 /* Params */
 .hljs-params {
-    color: oklch(85% 0.03 70);
+    color: var(--hljs-params);
 }
 
 /* Subst */
 .hljs-subst {
-    color: oklch(92% 0.03 70);
+    color: var(--hljs-fg);
 }
 
-/* Markup - bullets, code blocks, formulas */
-.hljs-bullet {
-    color: oklch(72% 0.12 145);
-}
-
+/* Markup code blocks */
 .hljs-code {
-    color: oklch(65% 0.1 50);
+    color: var(--hljs-builtin);
     font-family: monospace;
 }
 
+/* Formulas */
 .hljs-formula {
-    color: oklch(72% 0.15 65);
+    color: var(--hljs-string);
     font-style: italic;
 }
 
 /* Meta with nested scopes */
 .hljs-meta .hljs-keyword {
-    color: oklch(72% 0.12 145);
+    color: var(--hljs-keyword);
     font-weight: 600;
 }
 
 .hljs-meta .hljs-string {
-    color: oklch(72% 0.15 65);
+    color: var(--hljs-string);
 }
 
 /* High fidelity highlighting */
 .hljs-title.class_.inherited__ {
-    color: oklch(78% 0.1 145);
+    color: var(--hljs-type);
     font-style: italic;
 }
 
 .hljs-char.escape_ {
-    color: oklch(78% 0.14 70);
+    color: var(--hljs-number);
 }
 
 .hljs-variable.language_ {
-    color: oklch(72% 0.12 145);
+    color: var(--hljs-keyword);
     font-style: italic;
 }

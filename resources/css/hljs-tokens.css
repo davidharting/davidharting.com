@@ -1,0 +1,62 @@
+/*
+  Highlight.js Theme Tokens
+
+  Shared color variables for the shire (light) and bagend (dark) themes.
+  Uses CSS custom properties with prefers-color-scheme for automatic switching.
+*/
+
+/* Shire (light theme) tokens */
+@media (prefers-color-scheme: light) {
+    :root {
+        /* Base colors */
+        --hljs-bg: oklch(92% 0.025 80); /* parchment */
+        --hljs-fg: oklch(25% 0.04 55); /* dark earth */
+
+        /* Syntax colors */
+        --hljs-comment: oklch(50% 0.03 60); /* faded ink */
+        --hljs-keyword: oklch(45% 0.14 145); /* hill green */
+        --hljs-type: oklch(40% 0.12 145); /* rich green */
+        --hljs-string: oklch(50% 0.14 55); /* warm amber-brown */
+        --hljs-number: oklch(55% 0.15 70); /* cozy amber */
+        --hljs-builtin: oklch(40% 0.1 50); /* deep wood brown */
+        --hljs-attribute: oklch(45% 0.08 55); /* secondary brown */
+        --hljs-meta: oklch(50% 0.06 145); /* subtle green */
+        --hljs-punctuation: oklch(35% 0.04 55); /* dark earth */
+        --hljs-params: oklch(30% 0.04 55); /* darker earth */
+        --hljs-link: oklch(45% 0.1 230); /* muted blue */
+
+        /* Diff colors */
+        --hljs-addition-bg: oklch(90% 0.08 150);
+        --hljs-addition-fg: oklch(35% 0.13 150);
+        --hljs-deletion-bg: oklch(90% 0.08 25);
+        --hljs-deletion-fg: oklch(40% 0.15 25);
+    }
+}
+
+/* Bagend (dark theme) tokens */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Base colors */
+        --hljs-bg: oklch(17% 0.035 40); /* deep oak shadow */
+        --hljs-fg: oklch(92% 0.03 70); /* warm cream */
+
+        /* Syntax colors */
+        --hljs-comment: oklch(55% 0.03 60); /* smoke wisps */
+        --hljs-keyword: oklch(72% 0.12 145); /* sage green */
+        --hljs-type: oklch(78% 0.1 145); /* lighter sage */
+        --hljs-string: oklch(72% 0.15 65); /* lamplight amber */
+        --hljs-number: oklch(78% 0.14 70); /* candlelight gold */
+        --hljs-builtin: oklch(65% 0.1 50); /* polished wood */
+        --hljs-attribute: oklch(70% 0.08 55); /* firelit wood */
+        --hljs-meta: oklch(60% 0.06 145); /* subtle sage */
+        --hljs-punctuation: oklch(75% 0.03 60); /* muted cream */
+        --hljs-params: oklch(85% 0.03 70); /* light cream */
+        --hljs-link: oklch(65% 0.08 180); /* muted teal */
+
+        /* Diff colors */
+        --hljs-addition-bg: oklch(25% 0.08 145);
+        --hljs-addition-fg: oklch(75% 0.12 145);
+        --hljs-deletion-bg: oklch(25% 0.08 25);
+        --hljs-deletion-fg: oklch(70% 0.14 25);
+    }
+}
