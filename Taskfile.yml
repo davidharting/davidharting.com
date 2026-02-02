@@ -8,6 +8,7 @@ vars:
   # This is wonky because both Taskfile and docker stats use Go text/template
   # {{`{{`}} is to produce a "{{" literal that will make it to docker stats
   DOCKER_STATS_FORMAT: "table {{`{{`}}.Name{{`}}`}}\t{{`{{`}}.Container{{`}}`}}\t{{`{{`}}.CPUPerc{{`}}`}}\t{{`{{`}}.MemUsage{{`}}`}}\t{{`{{`}}.MemPerc{{`}}`}}"
+  DEV_POSTGRES_CONTAINER: "davidharting-dev-postgres"
 
 tasks:
   format:
@@ -21,6 +22,50 @@ tasks:
     cmds:
       - php artisan migrate:fresh
       - php artisan db:seed
+
+  dev:preflight:
+    desc: "Check that all development dependencies are available"
+    cmd: ./scripts/preflight-check.sh
+
+  dev:db:start:
+    desc: "Start a standalone Postgres container for local development"
+    cmds:
+      - ./scripts/start-dev-postgres.sh
+
+  dev:db:stop:
+    desc: "Stop the standalone Postgres development container"
+    cmd: ./scripts/stop-dev-postgres.sh
+
+  dev:install:
+    desc: "Install PHP and Node dependencies"
+    cmds:
+      - composer install
+      - npm install
+
+  dev:serve:
+    desc: "Start local development environment (Postgres, web server, Vite, queue worker)"
+    deps:
+      - dev:preflight
+      - dev:install
+    vars:
+      DB_PORT:
+        sh: ./scripts/start-dev-postgres.sh
+    env:
+      DB_HOST: "127.0.0.1"
+      DB_PORT: "{{.DB_PORT}}"
+      DB_USERNAME: "root"
+      DB_PASSWORD: "password"
+      DB_DATABASE: "laravel"
+    cmds:
+      - echo "Postgres running on port {{.DB_PORT}}"
+      - php artisan migrate:fresh --seed
+      - defer: { task: dev:db:stop }
+      - cmd: |
+          trap 'kill 0' EXIT
+          php artisan serve &
+          npm run dev &
+          php artisan queue:work --tries=3 &
+          wait
 
   dev:docker:build:
     desc: "Builds the image containing Frankenphp and the Laravel app"
