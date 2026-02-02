@@ -47,8 +47,8 @@ test('regular user cannot backup database', function () {
 test('successful database backup', function () {
     /** @var TestCase $this */
     Process::fake([
-        'pg_dump *' => Process::result(output: 'some tar file'),
-        'gzip' => Process::result(output: 'compressed tar file'),
+        'sqlite3 *' => Process::result(output: ''),
+        'gzip *' => Process::result(output: 'compressed backup'),
     ]);
 
     $this->travelTo('2024-02-17 01:05:13');
@@ -62,9 +62,9 @@ test('successful database backup', function () {
 test('error backing up database', function () {
     /** @var TestCase $this */
     Process::fake([
-        'pg_dump *' => Process::result(
-            output: 'error',
-            errorOutput: 'pg_dump version 14 does not match postgres version 15.1',
+        'sqlite3 *' => Process::result(
+            output: '',
+            errorOutput: 'sqlite3: unable to open database',
             exitCode: 1
         ),
     ]);
@@ -72,5 +72,5 @@ test('error backing up database', function () {
     $admin = User::factory()->admin()->create();
 
     $response = $this->actingAs($admin)->followingRedirects()->post('/backend/backup');
-    $response->assertSeeText('Database backup failed: pg_dump version 14 does not match postgres version 15.1');
+    $response->assertSeeText('Database backup failed: sqlite3: unable to open database');
 });

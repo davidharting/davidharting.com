@@ -1,11 +1,9 @@
 volumes:
-    db_data:
+    sqlite_data:
     caddy_data:
     # TODO: private and public disks
 
 secrets:
-    DB_PASSWORD:
-        file: ./secrets/DB_PASSWORD.txt
     APP_KEY:
         file: ./secrets/APP_KEY.txt
     MAILERSEND_ADMIN_ADDRESS:
@@ -26,7 +24,6 @@ secrets:
 x-laravel-config: &laravel-config
     image: ghcr.io/davidharting/davidharting.com:latest
     secrets:
-        - DB_PASSWORD
         - APP_KEY
         - MAILERSEND_API_KEY
         - MAILERSEND_ADMIN_ADDRESS
@@ -43,12 +40,8 @@ x-laravel-config: &laravel-config
         APP_URL: https://davidharting.com
         BROADCAST_DRIVER: log
         CACHE_DRIVER: database
-        DB_CONNECTION: pgsql
-        DB_DATABASE: laravel
-        DB_HOST: database
-        # DB_PASSWORD: Injected into /run/secrets/DB_PASSWORD
-        DB_PORT: 5432
-        DB_USERNAME: laravel
+        DB_CONNECTION: sqlite
+        DB_DATABASE: /data/database.sqlite
         FILESYSTEM_DISK_PRIVATE: r2-private
         LOG_CHANNEL: stack
         LOG_STACK: stderr,nightwatch
@@ -66,10 +59,8 @@ x-laravel-config: &laravel-config
         SESSION_DRIVER: database
         SESSION_LIFETIME: 120
         VITE_APP_NAME: davidharting.com
-
-    depends_on:
-        database:
-            condition: service_healthy
+    volumes:
+        - sqlite_data:/data
     restart: unless-stopped
     stdin_open: true
     tty: true
@@ -84,33 +75,6 @@ x-laravel-config: &laravel-config
                 memory: 128M
 
 services:
-    database:
-        image: postgres:17.2
-        secrets:
-            - DB_PASSWORD
-        environment:
-            POSTGRES_USER: laravel
-            POSTGRES_PASSWORD_FILE: /run/secrets/DB_PASSWORD
-            POSTGRES_DB: laravel
-        stdin_open: true
-        tty: true
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U laravel"]
-            interval: 1s
-            timeout: 5s
-            retries: 15
-        volumes:
-            - db_data:/var/lib/postgresql/data
-
-        deploy:
-            resources:
-                limits:
-                    cpus: "0.25"
-                    memory: 256M
-                reservations:
-                    cpus: "0.1"
-                    memory: 128M
-
     migrations:
         <<: *laravel-config
         command: ["php", "artisan", "migrate", "--force"]
@@ -139,7 +103,8 @@ services:
                 condition: service_completed_successfully
 
         volumes:
-            - caddy_data:/data
+            - sqlite_data:/data
+            - caddy_data:/data/caddy
 
         healthcheck:
             test: ["CMD-SHELL", "curl -f http://localhost/healthz || exit 1"]

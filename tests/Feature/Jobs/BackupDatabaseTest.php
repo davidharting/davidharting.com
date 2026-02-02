@@ -10,13 +10,13 @@ test('happy path', function () {
     Storage::fake('local-private');
 
     Process::fake([
-        'pg_dump *' => Process::result(output: 'some tar file'),
-        'gzip' => Process::result(output: 'compressed tar file'),
+        'sqlite3 *' => Process::result(output: ''),
+        'gzip *' => Process::result(output: 'compressed backup'),
     ]);
 
     BackupDatabase::dispatchSync('backup');
 
-    Storage::assertExists('backup', "compressed tar file\n");
+    Storage::assertExists('backup');
 });
 
 test('failure', function () {
@@ -24,15 +24,15 @@ test('failure', function () {
     Storage::fake('local-private');
 
     Process::fake([
-        'pg_dump *' => Process::result(exitCode: 1, errorOutput: 'pg_dump: error'),
-        'gzip' => Process::result(output: 'compressed tar file'),
+        'sqlite3 *' => Process::result(exitCode: 1, errorOutput: 'sqlite3: error'),
+        'gzip *' => Process::result(output: 'compressed backup'),
     ]);
 
     $this->assertThrows(function () {
         BackupDatabase::dispatchSync('backup');
     }, RuntimeException::class);
 
-    Process::assertDidntRun('gzip');
+    Process::assertDidntRun('gzip *');
 
     $this->assertFalse(Storage::exists('backup'));
 });
