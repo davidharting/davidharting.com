@@ -79,3 +79,24 @@ test('show page has correct meta tags', function () {
     $response->assertSuccessful();
     $response->assertSeeHtml('<title>About Us</title>');
 });
+
+test('code blocks are rendered for syntax highlighting', function () {
+    /** @var TestCase $this */
+    $page = Page::factory()->create([
+        'is_published' => true,
+        'title' => 'Code example',
+        'markdown_content' => <<<'MD'
+Here is some JavaScript:
+
+```javascript
+const greeting = 'hello';
+console.log(greeting);
+```
+MD,
+    ]);
+
+    $response = $this->get('/pages/'.$page->slug);
+    $response->assertSuccessful();
+    $response->assertSee('<pre><code class="language-javascript">', false);
+    $response->assertSeeText('const greeting');
+});

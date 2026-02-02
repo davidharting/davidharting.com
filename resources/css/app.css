@@ -14,7 +14,7 @@
     color-scheme: light;
 
     /* Soft green like rolling hills, not corporate emerald */
-    --color-primary: oklch(55% 0.12 145);
+    --color-primary: oklch(52% 0.12 145);
     --color-primary-content: oklch(98% 0.01 90);
 
     /* Warm wood brown - lived-in, not polished */
@@ -36,9 +36,9 @@
     --color-base-content: oklch(25% 0.04 55);
 
     /* Gentle feedback colors */
-    --color-info: oklch(55% 0.1 230);
+    --color-info: oklch(52% 0.1 230);
     --color-info-content: oklch(98% 0.01 230);
-    --color-success: oklch(55% 0.13 150);
+    --color-success: oklch(50% 0.13 150);
     --color-success-content: oklch(98% 0.01 150);
     --color-warning: oklch(70% 0.15 75);
     --color-warning-content: oklch(25% 0.05 75);
@@ -87,13 +87,13 @@
     --color-base-content: oklch(92% 0.03 70);
 
     /* Feedback colors - all shifted warm */
-    --color-info: oklch(55% 0.06 180);
+    --color-info: oklch(48% 0.06 180);
     --color-info-content: oklch(95% 0.02 180);
-    --color-success: oklch(55% 0.1 145);
+    --color-success: oklch(48% 0.1 145);
     --color-success-content: oklch(95% 0.02 145);
     --color-warning: oklch(72% 0.14 70);
     --color-warning-content: oklch(20% 0.04 50);
-    --color-error: oklch(55% 0.14 25);
+    --color-error: oklch(52% 0.14 25);
     --color-error-content: oklch(95% 0.02 25);
 
     /* Same cozy rounded corners */
@@ -126,5 +126,132 @@
     ::backdrop,
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+/*
+  Syntax Highlighting with highlight.js (hljs)
+
+  highlight.js is a client-side library that colorizes code blocks. It adds
+  the .hljs class to <code> elements after parsing, along with token classes
+  like .hljs-keyword, .hljs-string, etc.
+
+  Theme approach:
+  1. Base styles on .prose pre code provide background/text colors BEFORE
+     highlight.js runs, preventing flash of unstyled content (FOUC)
+  2. When hljs runs, it adds the .hljs class - our styles apply the same
+     base colors plus token-specific syntax colors
+  3. Media queries switch between light (Shire) and dark (Bag End) themes
+
+  Only languages imported in app.js are supported: bash, json, yaml, sql, python
+*/
+.prose pre code {
+    display: block;
+    padding: 1em;
+    overflow-x: auto;
+}
+
+.prose pre:has(code.hljs) {
+    background: transparent;
+    padding: 0;
+}
+
+/* Light theme: Morning in the Shire */
+@media (prefers-color-scheme: light) {
+    .prose pre code,
+    .hljs {
+        background: oklch(92% 0.025 80); /* parchment */
+        color: oklch(25% 0.04 55); /* dark earth */
+    }
+    .hljs-comment {
+        color: oklch(50% 0.03 60); /* faded ink */
+        font-style: italic;
+    }
+    .hljs-keyword {
+        color: oklch(45% 0.14 145); /* hill green */
+        font-weight: 600;
+    }
+    .hljs-string {
+        color: oklch(50% 0.14 55); /* warm amber-brown */
+    }
+    .hljs-number,
+    .hljs-literal {
+        color: oklch(48% 0.15 70); /* cozy amber */
+    }
+    .hljs-built_in {
+        color: oklch(40% 0.1 50); /* deep wood brown */
+    }
+    .hljs-title,
+    .hljs-title.function_,
+    .hljs-title.class_ {
+        color: oklch(40% 0.12 145); /* rich green */
+    }
+    .hljs-attr,
+    .hljs-variable,
+    .hljs-property {
+        color: oklch(45% 0.08 55); /* secondary brown */
+    }
+    .hljs-meta {
+        color: oklch(50% 0.06 145); /* subtle green */
+    }
+    .hljs-punctuation,
+    .hljs-operator {
+        color: oklch(35% 0.04 55); /* dark earth */
+    }
+    .hljs-params {
+        color: oklch(30% 0.04 55); /* darker earth */
+    }
+    .hljs-subst {
+        color: oklch(25% 0.04 55); /* dark earth */
+    }
+}
+
+/* Dark theme: Evening in Bag End */
+@media (prefers-color-scheme: dark) {
+    .prose pre code,
+    .hljs {
+        background: oklch(17% 0.035 40); /* deep oak shadow */
+        color: oklch(92% 0.03 70); /* warm cream */
+    }
+    .hljs-comment {
+        color: oklch(60% 0.03 60); /* smoke wisps */
+        font-style: italic;
+    }
+    .hljs-keyword {
+        color: oklch(72% 0.12 145); /* sage green */
+        font-weight: 600;
+    }
+    .hljs-string {
+        color: oklch(72% 0.15 65); /* lamplight amber */
+    }
+    .hljs-number,
+    .hljs-literal {
+        color: oklch(78% 0.14 70); /* candlelight gold */
+    }
+    .hljs-built_in {
+        color: oklch(65% 0.1 50); /* polished wood */
+    }
+    .hljs-title,
+    .hljs-title.function_,
+    .hljs-title.class_ {
+        color: oklch(78% 0.1 145); /* lighter sage */
+    }
+    .hljs-attr,
+    .hljs-variable,
+    .hljs-property {
+        color: oklch(70% 0.08 55); /* firelit wood */
+    }
+    .hljs-meta {
+        color: oklch(60% 0.06 145); /* subtle sage */
+    }
+    .hljs-punctuation,
+    .hljs-operator {
+        color: oklch(75% 0.03 60); /* muted cream */
+    }
+    .hljs-params {
+        color: oklch(85% 0.03 70); /* light cream */
+    }
+    .hljs-subst {
+        color: oklch(92% 0.03 70); /* warm cream */
     }
 }
