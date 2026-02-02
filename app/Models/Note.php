@@ -75,9 +75,6 @@ class Note extends Model implements Feedable
 
     public function toFeedItem(): FeedItem
     {
-        $fullPost = view('components.notes.prose', ['note' => $this])->render();
-        $fullPost = preg_replace('/<!--.*?-->/s', '', $fullPost);
-
         return FeedItem::create()
             ->id($this->slug)
             ->title($this->rssTitle())
@@ -103,7 +100,7 @@ class Note extends Model implements Feedable
     }
 
     /**
-     * I'm including full test of the post in the RSS feed
+     * I'm including full text of the post in the RSS feed
      * rather than just a summary and link
      */
     private function rssSummary(): string

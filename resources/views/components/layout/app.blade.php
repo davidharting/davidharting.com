@@ -24,61 +24,38 @@
         @vite(["resources/css/app.css", "resources/js/app.js"])
 
         <x-feed-links />
+
+        {{-- Optional slot for page-specific <head> content (e.g., extra meta tags, structured data, page-specific styles) --}}
+        {{ $head ?? "" }}
     </head>
 
-    <body class="font-sans antialiased">
+    <body class="font-serif antialiased">
         <div class="container mx-auto px-4">
             <main class="mt-8">
-                <div class="flex justify-between w-full">
-                    <div class="flex justify-start space-x-8 mb-8">
-                        <a
-                            href="{{ route("home") }}"
-                            wire:navigate
-                            class="link link-primary"
-                        >
-                            Home
-                        </a>
-                        <a
-                            href="{{ route("notes.index") }}"
-                            wire:navigate
-                            class="link link-primary"
-                        >
+                <div class="flex justify-between w-full mb-8">
+                    <nav class="flex gap-1">
+                        <x-nav-link :href="route('home')">Home</x-nav-link>
+                        <x-nav-link :href="route('notes.index')">
                             Notes
-                        </a>
-                        <a
-                            href="{{ route("media.index") }}"
-                            wire:navigate
-                            class="link link-primary"
-                        >
+                        </x-nav-link>
+                        <x-nav-link :href="route('media.index')">
                             Media Log
-                        </a>
-                        <a
-                            href="{{ route("pages.index") }}"
-                            wire:navigate
-                            class="link link-primary"
-                        >
+                        </x-nav-link>
+                        <x-nav-link :href="route('pages.index')">
                             Pages
-                        </a>
-                    </div>
-                    <div>
+                        </x-nav-link>
+                    </nav>
+                    <div class="flex gap-1">
                         @guest
-                            <a
-                                href="{{ route("login") }}"
-                                wire:navigate
-                                class="link link-primary"
-                            >
+                            <x-nav-link :href="route('login')">
                                 Login
-                            </a>
+                            </x-nav-link>
                         @endguest
 
                         @can("administrate")
-                            <a
-                                href="{{ route("admin.index") }}"
-                                wire:navigate
-                                class="link link-primary"
-                            >
+                            <x-nav-link :href="route('admin.index')">
                                 Admin
-                            </a>
+                            </x-nav-link>
                         @endcan
                     </div>
                 </div>

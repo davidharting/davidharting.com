@@ -6,11 +6,13 @@
         "dev": "vite",
         "build": "vite build",
         "format": "npx prettier --write .",
-        "format:check": "npx prettier --check ."
+        "format:check": "npx prettier --check .",
+        "check:contrast": "node scripts/check-contrast.js"
     },
     "devDependencies": {
         "@tailwindcss/postcss": "^4.0.9",
         "@tailwindcss/typography": "^0.5.16",
+        "culori": "^4.0.2",
         "daisyui": "^5.0.0",
         "laravel-vite-plugin": "^1.2.0",
         "postcss": "^8.5.3",
@@ -19,5 +21,8 @@
         "prettier-plugin-tailwindcss": "^0.6.11",
         "tailwindcss": "^4.0.9",
         "vite": "^6.2.0"
+    },
+    "dependencies": {
+        "highlight.js": "^11.11.1"
     }
 }
