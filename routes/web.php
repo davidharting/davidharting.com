@@ -8,8 +8,6 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ScorecardController;
-use App\Models\Scorecard;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,9 +38,6 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/scorecards/create', [ScorecardController::class, 'create'])->name('scorecards.create');
-Route::get('/scorecards/{scorecard}', [ScorecardController::class, 'show'])->name('scorecards.show');
-
 Route::get('/notes', NotesIndexController::class)->name('notes.index');
 Route::get('/notes/{note}', [NoteController::class, 'show'])->name('notes.show')->can('view', 'note');
 
@@ -68,11 +63,5 @@ Route::middleware('auth')->group(function () {
 Route::get('/kitchen-sink', function () {
     return view('kitchen-sink');
 })->name('kitchen-sink');
-
-if (env('APP_ENV') == 'local') {
-    Route::get('/mail/scorecard/{scorecard}', function (Scorecard $scorecard) {
-        return new App\Mail\ScorecardLink($scorecard);
-    });
-}
 
 require __DIR__.'/auth.php';

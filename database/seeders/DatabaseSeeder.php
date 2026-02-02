@@ -11,9 +11,6 @@ use App\Models\Media;
 use App\Models\MediaEvent;
 use App\Models\Note;
 use App\Models\Page;
-use App\Models\Player;
-use App\Models\Score;
-use App\Models\Scorecard;
 use App\Models\Upclick;
 use App\Models\User;
 use Exception;
@@ -48,39 +45,6 @@ class DatabaseSeeder extends Seeder
         Upclick::factory(500)->create();
         // Frodos clicks
         Upclick::factory(200)->create(['user_id' => $frodo->id]);
-
-        Scorecard::factory(20)->addPlayers()->create();
-
-        $conkers = Scorecard::factory()->makeOne([
-            'title' => 'Conkers',
-        ]);
-
-        $conkers->save();
-
-        $conkers->players()->saveMany([
-            Player::factory()->makeOne([
-                'name' => 'Frodo Baggins',
-            ]),
-            Player::factory()->makeOne([
-                'name' => 'Samwise Gamgee',
-            ]),
-            Player::factory()->makeOne([
-                'name' => 'Peregrin Took',
-            ]),
-            Player::factory()->makeOne([
-                'name' => 'Meriadoc Brandybuck',
-            ]),
-        ]);
-
-        for ($round = 1; $round <= 10; $round++) {
-            $conkers->players->each(function (Player $player) use ($round) {
-                $player->scores()->save(
-                    Score::factory()->makeOne([
-                        'round' => $round,
-                    ])
-                );
-            });
-        }
 
         (new GoodreadsImporter(app_path('Actions/GoodreadsImport/data/goodreads-export-20241129.csv')))->import(null);
         (new SofaImporter)->import();
