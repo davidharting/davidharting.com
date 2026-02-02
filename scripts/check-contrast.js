@@ -234,14 +234,12 @@ function parseHljsThemeFromMediaQuery(content, colorScheme) {
 
     const colors = {};
 
-    // Extract background and foreground from .hljs
-    const hljsMatch = mediaContent.match(
-        /\.hljs\s*\{[^}]*background:\s*([^;]+);[^}]*color:\s*([^;]+);/,
-    );
-    if (hljsMatch) {
-        colors.bg = hljsMatch[1].trim();
-        colors.fg = hljsMatch[2].trim();
-    }
+    // Extract background and foreground from .hljs separately (order-independent)
+    const bgMatch = mediaContent.match(/\.hljs\s*\{[^}]*background:\s*([^;]+);/);
+    const fgMatch = mediaContent.match(/\.hljs\s*\{[^}]*\bcolor:\s*([^;]+);/);
+
+    if (bgMatch) colors.bg = bgMatch[1].trim();
+    if (fgMatch) colors.fg = fgMatch[1].trim();
 
     // Token selectors to check
     const tokens = [
