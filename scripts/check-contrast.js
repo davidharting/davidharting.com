@@ -234,7 +234,9 @@ function parseHljsThemeFromMediaQuery(content, colorScheme) {
     const colors = {};
 
     // Extract background and foreground from .hljs separately (order-independent)
-    const bgMatch = mediaContent.match(/\.hljs\s*\{[^}]*background:\s*([^;]+);/);
+    const bgMatch = mediaContent.match(
+        /\.hljs\s*\{[^}]*background:\s*([^;]+);/,
+    );
     const fgMatch = mediaContent.match(/\.hljs\s*\{[^}]*\bcolor:\s*([^;]+);/);
 
     if (bgMatch) colors.bg = bgMatch[1].trim();
@@ -346,7 +348,9 @@ for (const theme of daisyThemes) {
     }
 
     if (verbose) {
-        console.log(`\n[verbose] DaisyUI ${theme.name}: parsed ${Object.keys(colors).length} colors`);
+        console.log(
+            `\n[verbose] DaisyUI ${theme.name}: parsed ${Object.keys(colors).length} colors`,
+        );
         console.log(colors);
     }
 
@@ -377,7 +381,9 @@ for (const theme of hljsThemes) {
     }
 
     if (verbose) {
-        console.log(`\n[verbose] hljs ${theme.scheme}: parsed ${Object.keys(colors).length} colors`);
+        console.log(
+            `\n[verbose] hljs ${theme.scheme}: parsed ${Object.keys(colors).length} colors`,
+        );
         console.log(colors);
     }
 
