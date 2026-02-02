@@ -68,25 +68,23 @@ class Detail extends Component
     }
 
     /**
-     * Returns a 2D array. Each item represents a round. Each
+     * Returns a 2D array. Each item represents a round.
      */
     #[Computed]
     public function rounds(): Collection
     {
         $scorecard = $this->scorecard;
-        $collection = Score::whereIn('player_id', function (Builder $query) use ($scorecard) {
-            $query->select('id')->from('players')->where('scorecard_id', $scorecard->id);
-        })
-            ->groupBy('round')
+        $playerIds = $scorecard->players()->orderBy('id', 'asc')->pluck('id');
+
+        return Score::whereIn('player_id', $playerIds)
             ->orderBy('round', 'asc')
-            ->select('round as round_number')->addSelect(DB::raw('json_agg(score order by player_id asc) as round_scores'))
-            ->get();
-
-        $data = $collection->map(function ($item) {
-            return array_merge([$item->round_number], json_decode($item->round_scores));
-        });
-
-        return $data;
+            ->orderBy('player_id', 'asc')
+            ->get()
+            ->groupBy('round')
+            ->map(function ($scores, $roundNumber) {
+                return array_merge([$roundNumber], $scores->pluck('score')->toArray());
+            })
+            ->values();
     }
 
     #[Computed]

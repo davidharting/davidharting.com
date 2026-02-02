@@ -6,22 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
+            $table->text('slug')->unique();
+            $table->text('title')->nullable();
+            $table->text('lead')->nullable();
+            $table->boolean('visible')->default(true);
+            $table->timestamp('published_at')->useCurrent();
             $table->timestamps();
-            $table->text('content');
-            $table->boolean('visible')->nullable(false)->default(true);
+            $table->text('markdown_content')->nullable();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('notes');

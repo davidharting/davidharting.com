@@ -7,7 +7,6 @@ Bootstrap a fresh development environment to run tests. This guide is designed f
 - PHP 8.2 or higher
 - Composer
 - Node.js and npm
-- PostgreSQL 15 or higher
 
 ## Setup Steps
 
@@ -25,39 +24,16 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-### 3. PostgreSQL Setup
-
-Start PostgreSQL:
-
-```bash
-sudo service postgresql start
-```
-
-Create database and user:
-
-```bash
-sudo -u postgres psql -c "CREATE DATABASE laravel;"
-sudo -u postgres psql -c "CREATE USER root WITH PASSWORD 'password';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE laravel TO root;"
-sudo -u postgres psql -d laravel -c "GRANT ALL ON SCHEMA public TO root;"
-```
-
-Run migrations:
-
-```bash
-php artisan migrate
-```
-
-### 4. Build Frontend Assets
+### 3. Build Frontend Assets
 
 ```bash
 npm run build
 ```
 
-### 5. Run Tests
+### 4. Run Tests
 
 ```bash
 php artisan test
 ```
 
-All tests should pass.
+All tests should pass. Tests run against an in-memory SQLite database for speed.

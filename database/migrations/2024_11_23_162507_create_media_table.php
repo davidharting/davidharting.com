@@ -6,30 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('media', function (Blueprint $table) {
             $table->id();
-            $table->timestampsTz();
-
+            $table->timestamps();
             $table->unsignedSmallInteger('media_type_id');
-            $table->foreign('media_type_id')->references('id')->on('media_types');
-
-            $table->foreignId('creator_id')->nullable()->constrained()->cascadeOnDelete();
-
-            $table->year('year')->nullable();
-            $table->string('title', 255);
+            $table->foreignId('creator_id')->nullable()->constrained('creators')->cascadeOnDelete();
+            $table->integer('year')->nullable();
+            $table->string('title');
             $table->text('note')->nullable();
 
+            $table->foreign('media_type_id')->references('id')->on('media_types');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('media');

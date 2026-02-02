@@ -46,7 +46,15 @@ class ImportGoodreads extends Command
             $this->info('Starting dry run');
         }
 
-        DB::beginTransaction();
+        // Use a savepoint name for nested transaction support (important for testing)
+        $savepointName = 'goodreads_import_'.uniqid();
+        $inNestedTransaction = DB::transactionLevel() > 0;
+
+        if ($inNestedTransaction) {
+            DB::unprepared("SAVEPOINT {$savepointName}");
+        } else {
+            DB::beginTransaction();
+        }
 
         $importer = new Importer($path);
         $rowsProcessed = 0;
@@ -61,11 +69,19 @@ class ImportGoodreads extends Command
         $this->table(array_keys($report), [array_values($report)]);
 
         if ($shouldSave) {
-            DB::commit();
+            if ($inNestedTransaction) {
+                DB::unprepared("RELEASE SAVEPOINT {$savepointName}");
+            } else {
+                DB::commit();
+            }
             $this->info('Import completed. Committed transaction.');
         } else {
             $this->info('Dry run completed. Rolling back transaction.');
-            DB::rollBack();
+            if ($inNestedTransaction) {
+                DB::unprepared("ROLLBACK TO SAVEPOINT {$savepointName}");
+            } else {
+                DB::rollBack();
+            }
         }
     }
 }

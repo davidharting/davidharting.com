@@ -44,17 +44,33 @@ class ImportSofa extends Command
             $this->info('Starting dry run');
         }
 
-        DB::beginTransaction();
+        // Use a savepoint name for nested transaction support (important for testing)
+        $savepointName = 'sofa_import_'.uniqid();
+        $inNestedTransaction = DB::transactionLevel() > 0;
+
+        if ($inNestedTransaction) {
+            DB::unprepared("SAVEPOINT {$savepointName}");
+        } else {
+            DB::beginTransaction();
+        }
 
         $importer = new Importer;
         $report = $importer->import();
         $this->table(array_keys($report), [array_values($report)]);
 
         if ($shouldSave) {
-            DB::commit();
+            if ($inNestedTransaction) {
+                DB::unprepared("RELEASE SAVEPOINT {$savepointName}");
+            } else {
+                DB::commit();
+            }
             $this->info('Import complete');
         } else {
-            DB::rollBack();
+            if ($inNestedTransaction) {
+                DB::unprepared("ROLLBACK TO SAVEPOINT {$savepointName}");
+            } else {
+                DB::rollBack();
+            }
             $this->info('Dry run complete');
         }
     }

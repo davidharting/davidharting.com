@@ -10,6 +10,8 @@ class MediaEventType extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['name'];
+
     protected function casts(): array
     {
         return [

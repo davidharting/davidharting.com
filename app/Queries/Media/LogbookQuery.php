@@ -55,13 +55,20 @@ class LogbookQuery
      */
     public function years(): array
     {
+        $driver = DB::getDriverName();
+        $yearExpression = match ($driver) {
+            'sqlite' => "strftime('%Y', media_events.occurred_at)",
+            default => 'extract(year from media_events.occurred_at)',
+        };
+
         return DB::table('media_event_types')
             ->join('media_events', 'media_events.media_event_type_id', 'media_event_types.id')
             ->where('media_event_types.name', MediaEventTypeName::FINISHED)
-            ->selectRaw('distinct extract(year from media_events.occurred_at) as year')
+            ->selectRaw("distinct {$yearExpression} as year")
             ->orderBy('year', 'desc')
             ->get()
             ->pluck('year')
+            ->map(fn ($year) => (int) $year)
             ->toArray();
     }
 }

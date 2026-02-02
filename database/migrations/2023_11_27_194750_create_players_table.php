@@ -6,26 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('players', function (Blueprint $table) {
             $table->id();
-            $table->timestampsTz();
+            $table->timestamps();
             $table->string('name', 50);
+            $table->char('scorecard_id', 26)->index();
 
-            $table->foreignUlid('scorecard_id')
-                ->constrained();
-
-            $table->index('scorecard_id');
+            $table->foreign('scorecard_id')->references('id')->on('scorecards');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('players');
