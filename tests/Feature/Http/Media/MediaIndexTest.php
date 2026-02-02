@@ -1,15 +1,15 @@
 <?php
 
-use App\Livewire\Media\MediaPage;
 use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaEvent;
 use App\Models\User;
 use Illuminate\Support\Carbon;
-use Livewire\Livewire;
+use Tests\TestCase;
 
 test('empty state', function () {
-    Livewire::test(MediaPage::class)
+    /** @var TestCase $this */
+    $this->get('/media')
         ->assertStatus(200)
         ->assertSeeText('No items');
 });
@@ -56,7 +56,8 @@ describe('with data', function () {
     });
 
     test('Backlog', function () {
-        Livewire::withQueryParams(['list' => 'backlog'])->test(MediaPage::class)
+        /** @var TestCase $this */
+        $this->get('/media?list=backlog')
             ->assertStatus(200)
             ->assertSeeTextInOrder([
                 '2023 July 22',
@@ -73,9 +74,10 @@ describe('with data', function () {
     });
 
     test('Backlog as admin', function () {
+        /** @var TestCase $this */
         $this->actingAs(User::factory(['is_admin' => true])->create());
 
-        Livewire::withQueryParams(['list' => 'backlog'])->test(MediaPage::class)
+        $this->get('/media?list=backlog')
             ->assertStatus(200)
             ->assertSeeTextInOrder([
                 '2023 July 22',
@@ -88,7 +90,8 @@ describe('with data', function () {
     });
 
     test('In Progress', function () {
-        Livewire::withQueryParams(['list' => 'in-progress'])->test(MediaPage::class)
+        /** @var TestCase $this */
+        $this->get('/media?list=in-progress')
             ->assertStatus(200)
             ->assertSeeTextInOrder([
                 '2024 December 29',
@@ -103,9 +106,10 @@ describe('with data', function () {
     });
 
     test('In Progress as admin', function () {
+        /** @var TestCase $this */
         $this->actingAs(User::factory(['is_admin' => true])->create());
 
-        Livewire::withQueryParams(['list' => 'in-progress'])->test(MediaPage::class)
+        $this->get('/media?list=in-progress')
             ->assertStatus(200)
             ->assertSeeTextInOrder([
                 '2024 December 29',
@@ -115,7 +119,8 @@ describe('with data', function () {
     });
 
     test('Finished (default)', function () {
-        Livewire::test(MediaPage::class)
+        /** @var TestCase $this */
+        $this->get('/media')
             ->assertStatus(200)
             ->assertSeeTextInOrder([
                 '2022 January 07',
@@ -135,49 +140,55 @@ describe('with data', function () {
     });
 
     describe('admin edit link', function () {
-        test('guest user cannot set it', function () {
-            Livewire::test(MediaPage::class)
+        test('guest user cannot see it', function () {
+            /** @var TestCase $this */
+            $this->get('/media')
                 ->assertDontSeeText('Edit');
         });
 
-        test('regular users cannot set it', function () {
+        test('regular users cannot see it', function () {
+            /** @var TestCase $this */
             $this->actingAs(User::factory(['is_admin' => false])->create());
 
-            Livewire::test(MediaPage::class)
+            $this->get('/media')
                 ->assertDontSeeText('Edit');
         });
 
         test('admins can see it', function () {
+            /** @var TestCase $this */
             $this->actingAs(User::factory(['is_admin' => true])->create());
 
-            Livewire::test(MediaPage::class)
+            $this->get('/media')
                 ->assertSeeText('Edit');
         });
     });
 
     describe('clickable titles', function () {
         test('guest users see plain text titles', function () {
+            /** @var TestCase $this */
             $media = Media::where('title', 'Watched Movie')->first();
 
-            Livewire::test(MediaPage::class)
+            $this->get('/media')
                 ->assertSeeText('Watched Movie')
                 ->assertDontSee(route('media.show', $media->id));
         });
 
         test('regular users see plain text titles', function () {
+            /** @var TestCase $this */
             $this->actingAs(User::factory(['is_admin' => false])->create());
             $media = Media::where('title', 'Watched Movie')->first();
 
-            Livewire::test(MediaPage::class)
+            $this->get('/media')
                 ->assertSeeText('Watched Movie')
                 ->assertDontSee(route('media.show', $media->id));
         });
 
         test('admins see clickable titles linking to detail page', function () {
+            /** @var TestCase $this */
             $this->actingAs(User::factory(['is_admin' => true])->create());
 
             $media = Media::where('title', 'Watched Movie')->first();
-            Livewire::test(MediaPage::class)
+            $this->get('/media')
                 ->assertSeeText('Watched Movie')
                 ->assertSee(route('media.show', $media->id));
         });
@@ -185,26 +196,41 @@ describe('with data', function () {
 
     describe('notes', function () {
         test('guest users cannot see note', function () {
-            Livewire::test(MediaPage::class)
+            /** @var TestCase $this */
+            $this->get('/media')
                 ->assertDontSeeText('Recommended by George')
                 ->assertDontSeeText('It was great!');
         });
 
         test('regular users cannot see note', function () {
+            /** @var TestCase $this */
             $this->actingAs(User::factory(['is_admin' => false])->create());
 
-            Livewire::test(MediaPage::class)
+            $this->get('/media')
                 ->assertDontSeeText('Recommended by George')
                 ->assertDontSeeText('It was great!');
         });
 
         test('admin users see note', function () {
+            /** @var TestCase $this */
             $this->actingAs(User::factory(['is_admin' => true])->create());
 
-            Livewire::test(MediaPage::class)
+            $this->get('/media')
                 ->assertSeeTextInOrder(['Recommended by George', 'It was great!']);
         });
     });
 
     // TODO: Test filtering
+
+    test('invalid list parameter redirects to clean URL', function () {
+        /** @var TestCase $this */
+        $this->get('/media?list=invalid-value')
+            ->assertRedirect('/media');
+    });
+
+    test('invalid list parameter preserves other valid filters in redirect', function () {
+        /** @var TestCase $this */
+        $this->get('/media?list=invalid-value&year=2022&type=book')
+            ->assertRedirect('/media?year=2022&type=book');
+    });
 });

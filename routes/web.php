@@ -3,12 +3,12 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\MediaIndexController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScorecardController;
-use App\Livewire\Media\MediaPage;
 use App\Models\Scorecard;
 use Illuminate\Support\Facades\Route;
 
@@ -49,7 +49,7 @@ Route::get('/notes/{note}', [NoteController::class, 'show'])->name('notes.show')
 Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
 Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show')->can('view', 'page');
 
-Route::livewire('/media', MediaPage::class)->name('media.index');
+Route::get('/media', MediaIndexController::class)->name('media.index');
 Route::get('/media/log', function () {
     return redirect()->route('media.index', request()->query());
 });
