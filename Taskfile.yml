@@ -47,25 +47,66 @@ tasks:
     deps:
       - dev:preflight
       - dev:install
+    cmds:
+      - task: dev:db:start
+      - task: dev:db:migrate
+      - defer: { task: dev:db:stop }
+      - task: dev:serve:processes
+
+  dev:db:migrate:
+    desc: "Run migrations with seeding (reads DB_PORT from .dev-db-port)"
+    internal: true
     vars:
       DB_PORT:
-        sh: ./scripts/start-dev-postgres.sh
+        sh: cat .dev-db-port
     env:
       DB_HOST: "127.0.0.1"
       DB_PORT: "{{.DB_PORT}}"
       DB_USERNAME: "root"
       DB_PASSWORD: "password"
       DB_DATABASE: "laravel"
-    cmds:
-      - echo "Postgres running on port {{.DB_PORT}}"
-      - php artisan migrate:fresh --seed
-      - defer: { task: dev:db:stop }
-      - cmd: |
-          trap 'kill 0' EXIT
-          php artisan serve &
-          npm run dev &
-          php artisan queue:work --tries=3 &
-          wait
+    cmd: php artisan migrate:fresh --seed
+
+  dev:serve:processes:
+    desc: "Run development processes in parallel"
+    internal: true
+    deps:
+      - dev:serve:web
+      - dev:serve:vite
+      - dev:serve:queue
+
+  dev:serve:web:
+    desc: "Run the PHP development server"
+    internal: true
+    vars:
+      DB_PORT:
+        sh: cat .dev-db-port
+    env:
+      DB_HOST: "127.0.0.1"
+      DB_PORT: "{{.DB_PORT}}"
+      DB_USERNAME: "root"
+      DB_PASSWORD: "password"
+      DB_DATABASE: "laravel"
+    cmd: php artisan serve
+
+  dev:serve:vite:
+    desc: "Run Vite development server"
+    internal: true
+    cmd: npm run dev
+
+  dev:serve:queue:
+    desc: "Run the queue worker"
+    internal: true
+    vars:
+      DB_PORT:
+        sh: cat .dev-db-port
+    env:
+      DB_HOST: "127.0.0.1"
+      DB_PORT: "{{.DB_PORT}}"
+      DB_USERNAME: "root"
+      DB_PASSWORD: "password"
+      DB_DATABASE: "laravel"
+    cmd: php artisan queue:work --tries=3
 
   dev:docker:build:
     desc: "Builds the image containing Frankenphp and the Laravel app"

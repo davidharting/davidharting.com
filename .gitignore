@@ -37,6 +37,9 @@ PROMPT.md
 # Ignore tar files from prod:build
 davidharting*.tar
 
+# dev:serve Postgres port file
+.dev-db-port
+
 /caddy
 frankenphp
 frankenphp-worker.php
