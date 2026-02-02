@@ -5,12 +5,11 @@
  *
  * Validates that theme colors meet WCAG contrast requirements.
  *
- * - DaisyUI themes: WCAG AAA (7:1) for primary UI elements
+ * - DaisyUI themes: WCAG AAA (7:1) for body text, AA (4.5:1) for UI elements
  * - Highlight.js themes: WCAG AA (4.5:1) for syntax highlighting
  *
- * WCAG 2.1 Requirements:
- * - AA Normal text: 4.5:1
- * - AAA Normal text: 7:1
+ * Usage: node scripts/check-contrast.js [--verbose]
+ *   --verbose: Print parsed color values for debugging
  */
 
 import { parse, formatHex } from "culori";
@@ -316,6 +315,8 @@ function getHljsColorPairs(colors) {
 // Main
 // =============================================================================
 
+const verbose = process.argv.includes("--verbose");
+
 console.log(
     "\n╔════════════════════════════════════════════════════════════════╗",
 );
@@ -344,6 +345,11 @@ for (const theme of daisyThemes) {
         continue;
     }
 
+    if (verbose) {
+        console.log(`\n[verbose] DaisyUI ${theme.name}: parsed ${Object.keys(colors).length} colors`);
+        console.log(colors);
+    }
+
     const pairs = getDaisyUIColorPairs(colors);
     const results = checkColorPairs(pairs);
     const { output, allPass } = formatResults(
@@ -369,6 +375,12 @@ for (const theme of hljsThemes) {
         );
         continue;
     }
+
+    if (verbose) {
+        console.log(`\n[verbose] hljs ${theme.scheme}: parsed ${Object.keys(colors).length} colors`);
+        console.log(colors);
+    }
+
     const pairs = getHljsColorPairs(colors);
     const results = checkColorPairs(pairs, WCAG_AA);
     const { output, allPass } = formatResults(
