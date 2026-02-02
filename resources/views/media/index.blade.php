@@ -28,14 +28,14 @@
         <select
             name="year"
             class="select select-sm select-ghost max-w-32"
-            @if($disableFilters) disabled @endif
+            @disabled($disableFilters)
             onchange="this.form.submit()"
         >
             <option value="">All Years</option>
             @foreach ($years as $yearOption)
                 <option
                     value="{{ $yearOption }}"
-                    @selected($year == $yearOption)
+                    @selected($year === (string) $yearOption)
                 >
                     {{ $yearOption }}
                 </option>
@@ -45,7 +45,7 @@
         <select
             name="type"
             class="select select-sm select-ghost max-w-32"
-            @if($disableFilters) disabled @endif
+            @disabled($disableFilters)
             onchange="this.form.submit()"
         >
             <option value="">All Types</option>

@@ -23,7 +23,7 @@ class MediaIndexController extends Controller
         $listIsInvalid = ! in_array($list, $validLists);
 
         // Redirect to clean URL if list is invalid or there are empty query params
-        if ($listIsInvalid || $request->has('year') && $year === '' || $request->has('type') && $type === '') {
+        if ($listIsInvalid || ($request->has('year') && $year === '') || ($request->has('type') && $type === '')) {
             $cleanList = $listIsInvalid ? 'finished' : $list;
             $params = array_filter(['list' => $cleanList, 'year' => $year, 'type' => $type]);
             if ($cleanList === 'finished') {
