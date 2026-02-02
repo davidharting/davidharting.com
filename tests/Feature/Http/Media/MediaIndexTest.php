@@ -221,4 +221,16 @@ describe('with data', function () {
     });
 
     // TODO: Test filtering
+
+    test('invalid list parameter redirects to clean URL', function () {
+        /** @var TestCase $this */
+        $this->get('/media?list=invalid-value')
+            ->assertRedirect('/media');
+    });
+
+    test('invalid list parameter preserves other valid filters in redirect', function () {
+        /** @var TestCase $this */
+        $this->get('/media?list=invalid-value&year=2022&type=book')
+            ->assertRedirect('/media?year=2022&type=book');
+    });
 });

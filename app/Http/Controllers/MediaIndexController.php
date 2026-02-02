@@ -19,10 +19,14 @@ class MediaIndexController extends Controller
         $year = $request->input('year') ?? '';
         $type = $request->input('type') ?? '';
 
-        // Redirect to clean URL if there are empty query params
-        if ($request->has('year') && $year === '' || $request->has('type') && $type === '') {
-            $params = array_filter(['list' => $list, 'year' => $year, 'type' => $type]);
-            if ($list === 'finished') {
+        $validLists = ['finished', 'backlog', 'in-progress'];
+        $listIsInvalid = ! in_array($list, $validLists);
+
+        // Redirect to clean URL if list is invalid or there are empty query params
+        if ($listIsInvalid || $request->has('year') && $year === '' || $request->has('type') && $type === '') {
+            $cleanList = $listIsInvalid ? 'finished' : $list;
+            $params = array_filter(['list' => $cleanList, 'year' => $year, 'type' => $type]);
+            if ($cleanList === 'finished') {
                 unset($params['list']);
             }
 
