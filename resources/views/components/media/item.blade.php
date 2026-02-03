@@ -1,5 +1,5 @@
 <div>
-    <div class="text-sm text-base-content/60">{{ $getDate() }}</div>
+    <div class="text-sm text-base-content/60">{{ $item->formatted_date }}</div>
     <div>
         <span>{{ $icon() }}</span>
         @if ($canViewMedia)
