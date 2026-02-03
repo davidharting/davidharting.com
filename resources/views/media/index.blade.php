@@ -73,7 +73,12 @@
                 <ul class="space-y-4">
                     @foreach ($items as $item)
                         <li>
-                            <x-media.item :item="$item" />
+                            <x-media.item
+                                :item="$item"
+                                :can-view-media="$canViewMedia"
+                                :can-administrate="$canAdministrate"
+                                :can-see-note="$canSeeNote"
+                            />
                         </li>
                     @endforeach
                 </ul>

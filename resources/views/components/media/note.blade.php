@@ -1,4 +1,6 @@
-@can("seeNote", App\Models\Media::class)
+@props(['item', 'canSeeNote' => false])
+
+@if ($canSeeNote)
     @if ($item->note)
         <div class="text-xs text-base-content/60">
             {{ trim($item->note) }}
@@ -10,4 +12,4 @@
             {{ trim($item->finished_comment) }}
         </div>
     @endif
-@endcan
+@endif

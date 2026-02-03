@@ -11,7 +11,12 @@ use stdClass;
 
 class Item extends Component
 {
-    public function __construct(public readonly stdClass $item) {}
+    public function __construct(
+        public readonly stdClass $item,
+        public readonly bool $canViewMedia = false,
+        public readonly bool $canAdministrate = false,
+        public readonly bool $canSeeNote = false,
+    ) {}
 
     public function icon(): string
     {
