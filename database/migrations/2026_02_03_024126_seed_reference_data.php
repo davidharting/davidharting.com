@@ -10,8 +10,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Media types
-        DB::table('media_types')->insert([
+        // Media types (insertOrIgnore for idempotency - production already has this data)
+        DB::table('media_types')->insertOrIgnore([
             ['name' => 'book', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'movie', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'album', 'created_at' => now(), 'updated_at' => now()],
@@ -19,8 +19,8 @@ return new class extends Migration
             ['name' => 'video game', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
-        // Media event types
-        DB::table('media_event_types')->insert([
+        // Media event types (insertOrIgnore for idempotency - production already has this data)
+        DB::table('media_event_types')->insertOrIgnore([
             ['name' => 'started', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'finished', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'abandoned', 'created_at' => now(), 'updated_at' => now()],
