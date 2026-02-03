@@ -1,3 +1,5 @@
+@use('App\Enum\MediaTypeName')
+
 <x-layout.app
     title="David's Media Log"
     description="I track what I read, watch, and play here!"
@@ -65,6 +67,16 @@
         @endif
     </form>
 
+    @php
+        $iconMap = [
+            MediaTypeName::Book->value => '📕',
+            MediaTypeName::Movie->value => '🍿',
+            MediaTypeName::Album->value => '📀',
+            MediaTypeName::TvShow->value => '📺',
+            MediaTypeName::VideoGame->value => '🎮',
+        ];
+    @endphp
+
     <div class="my-6">
         @if ($items->isEmpty())
             No items
@@ -73,12 +85,45 @@
                 <ul class="space-y-4">
                     @foreach ($items as $item)
                         <li>
-                            <x-media.item
-                                :item="$item"
-                                :can-view-media="$canViewMedia"
-                                :can-administrate="$canAdministrate"
-                                :can-see-note="$canSeeNote"
-                            />
+                            <div>
+                                <div class="text-sm text-base-content/60">{{ $item->formatted_date }}</div>
+                                <div>
+                                    <span>{{ $iconMap[$item->type] ?? '' }}</span>
+                                    @if ($canViewMedia)
+                                        <a
+                                            href="{{ route("media.show", $item->id) }}"
+                                            class="link link-hover"
+                                        >
+                                            {{ $item->title }}
+                                        </a>
+                                    @else
+                                        <span>{{ $item->title }}</span>
+                                    @endif
+                                </div>
+                                <div class="text-sm">
+                                    {{ $item->creator }}
+                                </div>
+                                @if ($canSeeNote)
+                                    @if ($item->note)
+                                        <div class="text-xs text-base-content/60">
+                                            {{ trim($item->note) }}
+                                        </div>
+                                    @endif
+                                    @if (isset($item->finished_comment) && $item->finished_comment)
+                                        <div class="text-xs text-base-content/60">
+                                            {{ trim($item->finished_comment) }}
+                                        </div>
+                                    @endif
+                                @endif
+                                @if ($canAdministrate)
+                                    <a
+                                        class="link link-neutral text-xs text-base-content/60"
+                                        href="{{ route("filament.admin.resources.media.edit", $item->id) }}"
+                                    >
+                                        Edit
+                                    </a>
+                                @endif
+                            </div>
                         </li>
                     @endforeach
                 </ul>
