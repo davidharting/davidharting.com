@@ -1,4 +1,7 @@
-@props(['item', 'canSeeNote' => false])
+@props([
+    "item",
+    "canSeeNote" => false,
+])
 
 @if ($canSeeNote)
     @if ($item->note)

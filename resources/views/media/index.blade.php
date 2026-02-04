@@ -1,4 +1,4 @@
-@use('App\Enum\MediaTypeName')
+@use("App\Enum\MediaTypeName")
 
 <x-layout.app
     title="David's Media Log"
@@ -69,11 +69,11 @@
 
     @php
         $iconMap = [
-            MediaTypeName::Book->value => '📕',
-            MediaTypeName::Movie->value => '🍿',
-            MediaTypeName::Album->value => '📀',
-            MediaTypeName::TvShow->value => '📺',
-            MediaTypeName::VideoGame->value => '🎮',
+            MediaTypeName::Book->value => "📕",
+            MediaTypeName::Movie->value => "🍿",
+            MediaTypeName::Album->value => "📀",
+            MediaTypeName::TvShow->value => "📺",
+            MediaTypeName::VideoGame->value => "🎮",
         ];
     @endphp
 
@@ -86,9 +86,13 @@
                     @foreach ($items as $item)
                         <li>
                             <div>
-                                <div class="text-sm text-base-content/60">{{ $item->formatted_date }}</div>
+                                <div class="text-sm text-base-content/60">
+                                    {{ $item->formatted_date }}
+                                </div>
                                 <div>
-                                    <span>{{ $iconMap[$item->type] ?? '' }}</span>
+                                    <span>
+                                        {{ $iconMap[$item->type] ?? "" }}
+                                    </span>
                                     @if ($canViewMedia)
                                         <a
                                             href="{{ route("media.show", $item->id) }}"
@@ -105,16 +109,22 @@
                                 </div>
                                 @if ($canSeeNote)
                                     @if ($item->note)
-                                        <div class="text-xs text-base-content/60">
+                                        <div
+                                            class="text-xs text-base-content/60"
+                                        >
                                             {{ trim($item->note) }}
                                         </div>
                                     @endif
+
                                     @if (isset($item->finished_comment) && $item->finished_comment)
-                                        <div class="text-xs text-base-content/60">
+                                        <div
+                                            class="text-xs text-base-content/60"
+                                        >
                                             {{ trim($item->finished_comment) }}
                                         </div>
                                     @endif
                                 @endif
+
                                 @if ($canAdministrate)
                                     <a
                                         class="link link-neutral text-xs text-base-content/60"
