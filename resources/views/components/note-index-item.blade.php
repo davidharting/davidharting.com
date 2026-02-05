@@ -1,14 +1,17 @@
-<div>
+<div class="flex gap-4">
+    <div class="w-16 shrink-0 text-sm text-base-content/60">
+        {{ $note->published_at->format('M j') }}
+    </div>
     <article>
         <p>
             <a
-                class="link {{ $note->title ? "" : "link-hover" }}"
+                class="link-hover"
                 href="{{ route("notes.show", $note) }}"
             >
                 @if ($note->title)
-                    <span class="font-semibold">{{ $note->title }}</span>
+                    {{ $note->title }}
                 @else
-                    <span class="text-sm text-gray-600">Permalink</span>
+                    <span class="text-sm text-base-content/60">Permalink</span>
                 @endif
             </a>
             @if (! $note->visible)
@@ -17,10 +20,7 @@
         </p>
 
         @if ($note->lead)
-            <p>{{ $note->lead }}</p>
+            <p class="text-sm text-base-content/70">{{ $note->lead }}</p>
         @endif
     </article>
-    <div class="text-sm text-gray-600">
-        {{ $note->publicationDate() }}
-    </div>
 </div>

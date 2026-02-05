@@ -4,8 +4,13 @@
         No notes yet
     @endif
 
-    <div class="mt-12 w-full space-y-6">
+    <div class="mt-12 w-full space-y-4">
+        @php $currentYear = null @endphp
         @foreach ($notes as $note)
+            @if ($note->published_at->year !== $currentYear)
+                @php $currentYear = $note->published_at->year @endphp
+                <h2 class="text-xl {{ $loop->first ? '' : 'mt-8' }}">{{ $currentYear }}</h2>
+            @endif
             <x-note-index-item :note='$note' />
         @endforeach
     </div>
