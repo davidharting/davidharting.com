@@ -100,3 +100,38 @@ test('guest user cannot see unpublished notes', function () {
     $response->assertSeeText('Published note');
     $response->assertDontSeeText('Unpublished note');
 });
+
+test('displays year headings and abbreviated dates in correct order', function () {
+    /** @var TestCase $this */
+    Note::factory()->createMany([
+        // 2024 - two notes in same year
+        ['title' => 'Winter update', 'published_at' => Carbon::create(2024, 12, 15), 'visible' => true],
+        ['title' => 'Spring thoughts', 'published_at' => Carbon::create(2024, 3, 8), 'visible' => true],
+        // 2022 - gap year (2023 missing)
+        ['title' => 'Mid-year note', 'published_at' => Carbon::create(2022, 7, 22), 'visible' => true],
+        // 2020 - another gap (2021 missing)
+        ['title' => 'Old reflection', 'published_at' => Carbon::create(2020, 1, 5), 'visible' => true],
+    ]);
+
+    $response = $this->get('/notes');
+    $response->assertSuccessful();
+
+    // Verify year headings, dates, and titles appear in correct order
+    $response->assertSeeTextInOrder([
+        '2024',
+        'Dec 15',
+        'Winter update',
+        'Mar 8',
+        'Spring thoughts',
+        '2022',
+        'Jul 22',
+        'Mid-year note',
+        '2020',
+        'Jan 5',
+        'Old reflection',
+    ]);
+
+    // Verify gap years are not present
+    $response->assertDontSeeText('2023');
+    $response->assertDontSeeText('2021');
+});
