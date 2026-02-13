@@ -1,0 +1,35 @@
+[Unit]
+Description=davidharting.com Web Application
+# Ensure Docker is available before starting this service
+Requires=docker.service
+After=docker.service
+Documentation=https://github.com/davidharting/davidharting.com
+
+[Service]
+# Type=oneshot means this service runs a command once then exits
+# (docker compose up -d starts containers in background then returns)
+Type=oneshot
+# RemainAfterExit=yes keeps the service "active" even after the command finishes
+# This allows systemctl to track the service state and run ExecStop when stopped
+RemainAfterExit=yes
+
+# Run docker compose from the repository directory
+WorkingDirectory=WORKING_DIR_PLACEHOLDER
+
+# Start all containers (migrations, web, worker, cron, etc.)
+ExecStart=/usr/bin/docker compose up -d
+
+# Stop and remove all containers when service is stopped
+ExecStop=/usr/bin/docker compose down
+
+# Run docker compose as this Unix user (needed for permissions on secrets, volumes, etc.)
+User=USER_PLACEHOLDER
+
+# Send all output to systemd's journal (view with: journalctl -u davidharting-com)
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+# Start this service when the system reaches multi-user mode (normal boot)
+# This is what makes the service auto-start on boot after running 'systemctl enable'
+WantedBy=multi-user.target

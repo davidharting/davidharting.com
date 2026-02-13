@@ -55,7 +55,7 @@ tasks:
   prod:deploy:
     desc: "Deploy latest docker image to production server"
     cmds:
-      - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/$SSH_USER/repos/davidharting.com && docker pull ghcr.io/davidharting/davidharting.com:latest && docker compose up -d"
+      - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/$SSH_USER/repos/davidharting.com && docker compose pull && sudo systemctl restart davidharting-com"
       - echo "Deploy complete!"
 
   prod:ssh:shell:
