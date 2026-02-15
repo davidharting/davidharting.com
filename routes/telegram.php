@@ -2,7 +2,7 @@
 
 /** @var SergiX44\Nutgram\Nutgram $bot */
 
-use App\Telegram\Middleware\OnlyDavidMiddlware;
+use App\Telegram\Middleware\OnlyDavidMiddleware;
 use SergiX44\Nutgram\Nutgram;
 
 /*
@@ -17,10 +17,10 @@ use SergiX44\Nutgram\Nutgram;
 
 $bot->onCommand('example', function (Nutgram $bot) {
     $bot->sendMessage('Hello, world!');
-})->description('An example command')->middleware(OnlyDavidMiddlware::class);
+})->description('An example command')->middleware(OnlyDavidMiddleware::class);
 
 $bot->onCommand('whoami', App\Telegram\Commands\WhoamiCommand::class);
 
 $bot->onMessage(function (Nutgram $bot) {
     $bot->sendMessage('I cannot respond to general conversation yet');
-})->middleware(OnlyDavidMiddlware::class);
+})->middleware(OnlyDavidMiddleware::class);

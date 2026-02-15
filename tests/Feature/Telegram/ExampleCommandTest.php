@@ -8,7 +8,7 @@ test('example command replies with hello world', function () {
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);
     $bot->setCommonUser(User::make(
-        id: config('nutgram.david'),
+        id: config('nutgram.owner_user_id'),
         is_bot: false,
         first_name: 'David',
     ));

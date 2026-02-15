@@ -13,6 +13,6 @@ class WhoamiCommand extends Command
 
     public function handle(Nutgram $bot): void
     {
-        $bot->sendMessage(''.$bot->user()?->id);
+        $bot->sendMessage((string) $bot->user()?->id);
     }
 }

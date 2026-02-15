@@ -8,14 +8,14 @@ test('whoami command replies with user id', function () {
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);
     $bot->setCommonUser(User::make(
-        id: config('nutgram.david'),
+        id: config('nutgram.owner_user_id'),
         is_bot: false,
         first_name: 'David',
     ));
 
     $bot->hearText('/whoami')
         ->reply()
-        ->assertReplyText((string) config('nutgram.david'));
+        ->assertReplyText((string) config('nutgram.owner_user_id'));
 });
 
 test('any user can use whoami command', function () {
