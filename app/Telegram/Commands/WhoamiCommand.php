@@ -2,8 +2,8 @@
 
 namespace App\Telegram\Commands;
 
-use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Handlers\Type\Command;
+use SergiX44\Nutgram\Nutgram;
 
 class WhoamiCommand extends Command
 {
@@ -13,6 +13,6 @@ class WhoamiCommand extends Command
 
     public function handle(Nutgram $bot): void
     {
-        $bot->sendMessage('' . $bot->user()?->id);
+        $bot->sendMessage(''.$bot->user()?->id);
     }
 }

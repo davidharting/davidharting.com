@@ -12,6 +12,7 @@ class OnlyDavidMiddlware
 
         if ($bot->user()?->id !== $davidUserId) {
             $bot->sendMessage('Sorry, you are not authorized to use this bot.');
+
             return;
         }
 
