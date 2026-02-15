@@ -96,6 +96,21 @@ New env vars needed:
 
 Add to `.env.example`, and add secrets + environment entries to `docker-compose.yml`.
 
+**2.3 Disk strategy: local for dev, R2 for prod**
+
+We have 4 disks total — 2 local (dev) and 2 R2 (prod):
+
+| Purpose | Dev disk | Prod disk |
+|---------|----------|-----------|
+| Private files | `local-private` | `r2-private` |
+| Public media | `local-public` | `r2-public` |
+
+Use an env var `FILESYSTEM_DISK_PUBLIC` (mirroring the existing `FILESYSTEM_DISK_PRIVATE` pattern) to select the public disk:
+- `.env` (dev): `FILESYSTEM_DISK_PUBLIC=local-public`
+- `docker-compose.yml` (prod): `FILESYSTEM_DISK_PUBLIC=r2-public`
+
+Configure media-library's `disk_name` to read from this env var. This keeps R2 credentials out of local dev entirely.
+
 ### Phase 3: Install and Configure spatie/laravel-media-library
 
 We use a custom table name (`spatie_media`) and custom model to avoid conflicting with the existing `media` table (which tracks books/movies/etc.). No need to rename anything existing.
@@ -134,8 +149,8 @@ php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServicePr
 
 Key config changes in `config/media-library.php`:
 - Set `media_model` to `App\Models\SpatieMedia`
-- Set `disk_name` to `r2-public`
-- Set `queue_connection_name` to your queue connection so image conversions run in background
+- Set `disk_name` — see Phase 2.3 for disk strategy
+- Set `queue_connection_name` to `database` so image conversions run in background via the queue
 
 **3.5 Run migrations**
 
@@ -163,29 +178,35 @@ class Note extends Model implements HasMedia
 
     public function registerMediaConversions(?SpatieMedia $media = null): void
     {
-        // Main conversion: strip EXIF and cap width at 2000px
-        // This replaces the original — see EXIF handling below
+        // These conversions only run on image files.
+        // Non-image files (PDFs, etc.) are stored as-is.
         $this->addMediaConversion('optimized')
             ->stripExif()
             ->width(2000)
-            ->nonQueued();
+            ->queued();
 
         $this->addMediaConversion('thumb')
             ->width(300)
             ->height(300)
             ->stripExif()
-            ->nonQueued();
+            ->queued();
     }
 }
 ```
 
 Same pattern for `Page`. Consider extracting a trait or shared method if the config is identical.
 
-**4.2 EXIF handling: delete originals after conversion**
+**4.2 Mixed file types in a single collection**
 
-After conversions run, delete the original (which still has EXIF data) so it's not accessible. The `optimized` conversion becomes the version you reference in markdown.
+The `attachments` collection accepts any file type. Conversions (`optimized`, `thumb`) only apply to image files — spatie skips them for non-image files like PDFs. Non-image files are stored as-is (they don't have EXIF data to worry about). See research item R1 below to confirm this works or whether we need separate `images` and `files` collections.
 
-Use an event listener on `Spatie\MediaLibrary\Events\MediaHasBeenAdded` to delete the original file from the disk after conversions complete. Alternatively, spatie supports a `performConversionsOnOriginal` approach — we'll evaluate which is cleaner during implementation.
+**4.3 Conversions are queued**
+
+All conversions run via the queue (`->queued()`). This means after uploading an image, the `optimized` and `thumb` versions won't be available immediately — they'll be ready after the queue worker processes the job. For a personal site this is fine; the queue worker is already running in production.
+
+**4.4 EXIF handling: delete originals after conversion**
+
+After conversions run, delete the original image (which still has EXIF data) from the bucket. The `optimized` conversion becomes the canonical version you reference in markdown. See research item R2 below for the best approach.
 
 **4.3 Responsive images: deferred**
 
@@ -213,6 +234,8 @@ After uploading, each file's public URL is accessible via `$note->getFirstMediaU
 **5.2 Display public URLs for copying**
 
 Add a section to the edit form (or a custom view) that lists uploaded media with their public URLs so you can copy them into the markdown. This could be a `Placeholder` or `ViewField` component showing the URLs.
+
+**Important:** For images, always show the `optimized` conversion URL (not the original), since the original may be deleted after conversion. For non-image files, show the base URL. Alternatively, if we can copy the `optimized` file over the original path in the bucket (so both URLs resolve to the same EXIF-stripped file), we could simplify and always show the base URL. See research item R2.
 
 ### Phase 6: Production Deployment
 
@@ -247,13 +270,26 @@ echo "https://cdn.davidharting.com" > secrets/R2_PUBLIC_URL.txt
 4. **Add `SpatieMediaLibraryFileUpload` to Filament forms** — the upload UI + URL display
 5. **Docker/deployment config** — secrets and environment variables
 
+## Research Needed
+
+These items need investigation before or during implementation:
+
+**R1: Mixed file types in a single media collection.** Can spatie/laravel-media-library handle a single `attachments` collection that accepts both images and non-images, where conversions only apply to images and are skipped for other file types? Or do we need separate `images` and `files` collections on Note and Page?
+
+**R2: EXIF original deletion strategy.** After the queued `optimized` conversion runs, what's the best way to delete or replace the original image file? Options to evaluate:
+- Event listener on conversion completion that deletes the original from disk
+- Copying the `optimized` file over the original path so both URLs resolve to the stripped version (simpler for URL copying in Filament, but possibly wasteful — or maybe R2/Cloudflare deduplicates by hash)
+- `performConversionsOnOriginal` — does spatie support modifying the original in-place?
+- Accepting that originals persist but are never linked (simplest, but leaves EXIF data in the bucket)
+
+**R3: Filament spatie media library plugin v5 compatibility.** Packagist shows v5.2.1 released Feb 2026, which looks right. Confirm that the `SpatieMediaLibraryFileUpload` component works with Filament v5's form API (the import path may have changed, e.g. from `Filament\Forms\Components\SpatieMediaLibraryFileUpload` to a different namespace). Check for any migration guides or breaking changes.
+
 ## Resolved Decisions
 
 - **Table naming:** Use custom table name `spatie_media` with custom model `App\Models\SpatieMedia`. No need to rename existing `media` table.
-- **EXIF handling:** Delete the original after conversion. The `optimized` conversion (EXIF-stripped, max 2000px) replaces it.
-- **Image conversions:** `optimized` (EXIF strip + max 2000px width) and `thumb` (300x300 EXIF-stripped).
+- **EXIF handling:** Delete the original after conversion. The `optimized` conversion (EXIF-stripped, max 2000px) replaces it. Exact mechanism TBD (see R2).
+- **Image conversions:** `optimized` (EXIF strip + max 2000px width) and `thumb` (300x300 EXIF-stripped). Always queued.
 - **Responsive images:** Deferred — not useful when pasting single URLs in markdown. Revisit if we build Blade rendering components.
-- **File types:** No restrictions — allow images, PDFs, any file type.
-- **Filament v5 compatibility:** `filament/spatie-laravel-media-library-plugin` v5.2.1 released Feb 2026. Good to go.
-
+- **File types:** No restrictions — allow images, PDFs, any file type in a single collection. Conversions only apply to images.
+- **Disk strategy:** `local-public` for dev, `r2-public` for prod, controlled by `FILESYSTEM_DISK_PUBLIC` env var.
 - **Custom domain:** `cdn.davidharting.com`
