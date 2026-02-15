@@ -179,7 +179,13 @@ services:
 
     configure-telegram-webhook:
         <<: *laravel-config
-        command: ["php", "artisan", "nutgram:hook:set", "https://davidharting.com/api/telegram/webhook"]
+        command:
+            [
+                "php",
+                "artisan",
+                "nutgram:hook:set",
+                "https://davidharting.com/api/telegram/webhook",
+            ]
         restart: no
         depends_on:
             migrations:
