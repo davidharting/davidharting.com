@@ -177,6 +177,20 @@ services:
             timeout: 5s
             retries: 5
 
+    configure-telegram-webhook:
+        <<: *laravel-config
+        command:
+            [
+                "php",
+                "artisan",
+                "nutgram:hook:set",
+                "https://davidharting.com/api/telegram/webhook",
+            ]
+        restart: no
+        depends_on:
+            migrations:
+                condition: service_completed_successfully
+
     nightwatch-agent:
         image: laravelphp/nightwatch-agent:v1
         entrypoint: ["/bin/sh", "-c"]
