@@ -44,7 +44,7 @@ The tradeoff is that reusing the same file across multiple Notes/Pages means re-
 
 1. **Create a public R2 bucket** in Cloudflare with a custom domain
 2. **Add `r2-public` filesystem disk** to Laravel
-3. **Install spatie/laravel-media-library** with custom table name `attachments` (avoids renaming existing `media` table)
+3. **Install spatie/laravel-media-library** with custom table name `spatie_media` (avoids renaming existing `media` table)
 4. **Install `filament/spatie-laravel-media-library-plugin` v5**
 5. **Add `HasMedia` to Note and Page models** with image conversions (EXIF strip, max 2000px width, thumbnail)
 6. **Add `SpatieMediaLibraryFileUpload` to Note and Page Filament forms** — all file types allowed
@@ -216,24 +216,24 @@ Add a section to the edit form (or a custom view) that lists uploaded media with
 
 ### Phase 6: Production Deployment
 
-**7.1 Docker/secrets updates**
+**6.1 Docker/secrets updates**
 
 Add to `docker-compose.yml`:
 - New secrets: `R2_PUBLIC_BUCKET`, `R2_PUBLIC_URL`
 - New secret files in `./secrets/`
 - New environment variables referencing the secrets
 
-**7.2 Create the secret files on the server**
+**6.2 Create the secret files on the server**
 
 ```bash
 echo "your-public-bucket-name" > secrets/R2_PUBLIC_BUCKET.txt
 echo "https://cdn.davidharting.com" > secrets/R2_PUBLIC_URL.txt
 ```
 
-**7.3 Deploy and verify**
+**6.3 Deploy and verify**
 
 - Deploy the new code
-- Verify migrations run (renames existing media table, creates spatie media table)
+- Verify migrations run (creates `spatie_media` table)
 - Test uploading via Filament admin on a Note
 - Verify public URLs are accessible via the custom domain
 
@@ -255,7 +255,5 @@ echo "https://cdn.davidharting.com" > secrets/R2_PUBLIC_URL.txt
 - **Responsive images:** Deferred — not useful when pasting single URLs in markdown. Revisit if we build Blade rendering components.
 - **File types:** No restrictions — allow images, PDFs, any file type.
 - **Filament v5 compatibility:** `filament/spatie-laravel-media-library-plugin` v5.2.1 released Feb 2026. Good to go.
-
-## Resolved Decisions (continued)
 
 - **Custom domain:** `cdn.davidharting.com`
