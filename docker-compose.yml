@@ -177,14 +177,13 @@ services:
             timeout: 5s
             retries: 5
 
-    configure-telegram-webhook:
+    configure-telegram:
         <<: *laravel-config
         command:
             [
-                "php",
-                "artisan",
-                "nutgram:hook:set",
-                "https://davidharting.com/api/telegram/webhook",
+                "sh",
+                "-c",
+                "php artisan nutgram:hook:set https://davidharting.com/api/telegram/webhook && php artisan nutgram:register-commands",
             ]
         restart: no
         depends_on:
