@@ -11,6 +11,17 @@ test('404 if note not found', function () {
     $response->assertNotFound();
 });
 
+test('404 for attack-style invalid note slugs', function (string $invalidSlug) {
+    /** @var TestCase $this */
+    $response = $this->get('/notes/'.$invalidSlug);
+    $response->assertNotFound();
+})->with([
+    '.env',
+    '../etc/passwd',
+    '<script>alert(1)</script>',
+    'random-string',
+]);
+
 test('404 if note not visible', function () {
     /** @var TestCase $this */
     $note = Note::factory()->createOne(['visible' => false]);
