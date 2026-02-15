@@ -44,11 +44,12 @@ The tradeoff is that reusing the same file across multiple Notes/Pages means re-
 
 1. **Create a public R2 bucket** in Cloudflare with a custom domain
 2. **Add `r2-public` filesystem disk** to Laravel
-3. **Install spatie/laravel-media-library** with custom table name `spatie_media` (avoids renaming existing `media` table)
-4. **Install `filament/spatie-laravel-media-library-plugin` v5**
-5. **Add `HasMedia` to Note and Page models** with image conversions (EXIF strip, max 2000px width, thumbnail)
-6. **Add `SpatieMediaLibraryFileUpload` to Note and Page Filament forms** — all file types allowed
-7. **Update production deployment config** (docker secrets, env vars)
+3. **Add image processing dependencies to Docker** — Imagick, Ghostscript, optimizer binaries (jpegoptim, optipng, pngquant, gifsicle)
+4. **Install spatie/laravel-media-library** with custom table name `spatie_media` (avoids renaming existing `media` table)
+5. **Install `filament/spatie-laravel-media-library-plugin` v5**
+6. **Add `HasMedia` to Note and Page models** with image conversions (EXIF strip, max 2000px width, thumbnail for images + PDFs)
+7. **Add `SpatieMediaLibraryFileUpload` to Note and Page Filament forms** — all file types allowed
+8. **Update production deployment config** (docker secrets, env vars)
 
 ---
 
@@ -111,7 +112,39 @@ Use an env var `FILESYSTEM_DISK_PUBLIC` (mirroring the existing `FILESYSTEM_DISK
 
 Configure media-library's `disk_name` to read from this env var. This keeps R2 credentials out of local dev entirely.
 
-### Phase 3: Install and Configure spatie/laravel-media-library
+### Phase 3: Docker Image Dependencies for Image Processing
+
+Before installing the PHP packages, we need the system-level libraries they depend on. Measure Docker image size before and after to track the impact.
+
+**3.1 Add PHP Imagick extension**
+
+Add `imagick` to the `install-php-extensions` block in the Dockerfile. This is required for image conversions and PDF-to-image support.
+
+**3.2 Add system packages for image processing**
+
+Add to the `apt-get install` block in the Dockerfile:
+
+```dockerfile
+ghostscript libmagickwand-dev jpegoptim optipng pngquant gifsicle
+```
+
+- `ghostscript` — PDF-to-image conversion (used by spatie's PDF image generator)
+- `libmagickwand-dev` — Imagick dependency
+- `jpegoptim` — JPEG optimization
+- `optipng` — PNG optimization
+- `pngquant` — PNG quantization (lossy, significant size reduction)
+- `gifsicle` — GIF optimization
+
+**3.3 Add composer packages for optimization**
+
+```bash
+composer require spatie/image-optimizer
+composer require spatie/pdf-to-image
+```
+
+`spatie/image-optimizer` automatically detects and uses whichever optimizer binaries are available on the system. `spatie/pdf-to-image` enables PDF thumbnail generation.
+
+### Phase 4: Install and Configure spatie/laravel-media-library (was Phase 3)
 
 We use a custom table name (`spatie_media`) and custom model to avoid conflicting with the existing `media` table (which tracks books/movies/etc.). No need to rename anything existing.
 
@@ -158,7 +191,7 @@ Key config changes in `config/media-library.php`:
 php artisan migrate
 ```
 
-### Phase 4: Add HasMedia to Note and Page Models
+### Phase 5: Add HasMedia to Note and Page Models
 
 **4.1 Implement the interface on both models**
 
@@ -178,17 +211,20 @@ class Note extends Model implements HasMedia
 
     public function registerMediaConversions(?SpatieMedia $media = null): void
     {
-        // These conversions only run on image files.
-        // Non-image files (PDFs, etc.) are stored as-is.
-        $this->addMediaConversion('optimized')
-            ->stripExif()
-            ->width(2000)
-            ->queued();
+        // 'optimized' only applies to actual images (EXIF strip + resize).
+        // PDFs and other files don't get this conversion.
+        if ($media && str_starts_with($media->mime_type, 'image/')) {
+            $this->addMediaConversion('optimized')
+                ->stripExif()
+                ->width(2000)
+                ->queued();
+        }
 
+        // 'thumb' applies to images and PDFs (spatie's PDF generator
+        // converts page 1 to a JPG thumbnail automatically).
         $this->addMediaConversion('thumb')
             ->width(300)
             ->height(300)
-            ->stripExif()
             ->queued();
     }
 }
@@ -196,9 +232,9 @@ class Note extends Model implements HasMedia
 
 Same pattern for `Page`. Consider extracting a trait or shared method if the config is identical.
 
-**4.2 Mixed file types in a single collection**
+**4.2 Mixed file types in a single collection (R1 resolved)**
 
-The `attachments` collection accepts any file type. Conversions (`optimized`, `thumb`) only apply to image files — spatie skips them for non-image files like PDFs. Non-image files are stored as-is (they don't have EXIF data to worry about). See research item R1 below to confirm this works or whether we need separate `images` and `files` collections.
+The `attachments` collection accepts any file type. Spatie uses "image generators" to decide whether conversions apply — when no generator matches, conversions are silently skipped. The `optimized` conversion is gated behind a MIME type check so it only applies to actual images. The `thumb` conversion applies to both images and PDFs (spatie's PDF generator converts page 1 to a JPG thumbnail via Imagick + Ghostscript). Non-visual files (`.docx`, `.zip`, `.txt`, etc.) get no conversions and are stored as-is. Note: `getUrl('optimized')` returns an empty string for files that didn't get that conversion — always fall back to `getUrl()` for non-images.
 
 **4.3 Conversions are queued**
 
@@ -212,7 +248,7 @@ After conversions run, delete the original image (which still has EXIF data) fro
 
 Spatie supports automatic responsive image generation via `withResponsiveImages()`, which generates `srcset` markup with a blur-up SVG placeholder. However, since we're referencing single URLs in markdown (not using Blade's `{{ $media }}` rendering), responsive images aren't useful yet. This could be revisited if we build Blade components for rendering note content.
 
-### Phase 5: Add File Upload to Filament Forms
+### Phase 6: Add File Upload to Filament Forms
 
 **5.1 Add `SpatieMediaLibraryFileUpload` to NoteResource and PageResource forms**
 
@@ -237,7 +273,7 @@ Add a section to the edit form (or a custom view) that lists uploaded media with
 
 **Important:** For images, always show the `optimized` conversion URL (not the original), since the original may be deleted after conversion. For non-image files, show the base URL. Alternatively, if we can copy the `optimized` file over the original path in the bucket (so both URLs resolve to the same EXIF-stripped file), we could simplify and always show the base URL. See research item R2.
 
-### Phase 6: Production Deployment
+### Phase 7: Production Deployment
 
 **6.1 Docker/secrets updates**
 
@@ -265,16 +301,17 @@ echo "https://cdn.davidharting.com" > secrets/R2_PUBLIC_URL.txt
 ## Implementation Order (suggested commit sequence)
 
 1. **Add `r2-public` filesystem disk** — just config, no behavior change
-2. **Install spatie/laravel-media-library + Filament plugin** — packages, custom `SpatieMedia` model with `spatie_media` table, config
-3. **Add `HasMedia` to Note and Page models** — media collections, `optimized` + `thumb` conversions, EXIF strip + 2000px max width
-4. **Add `SpatieMediaLibraryFileUpload` to Filament forms** — the upload UI + URL display
-5. **Docker/deployment config** — secrets and environment variables
+2. **Add image processing deps to Dockerfile** — Imagick ext, ghostscript, jpegoptim, optipng, pngquant, gifsicle. Measure image size before/after.
+3. **Install spatie/laravel-media-library + Filament plugin + optimizer packages** — packages, custom `SpatieMedia` model with `spatie_media` table, config
+4. **Add `HasMedia` to Note and Page models** — media collections, `optimized` (images only) + `thumb` (images + PDFs) conversions
+5. **Add `SpatieMediaLibraryFileUpload` to Filament forms** — the upload UI + URL display
+6. **Docker/deployment config** — secrets and environment variables
 
 ## Research Needed
 
 These items need investigation before or during implementation:
 
-**R1: Mixed file types in a single media collection.** Can spatie/laravel-media-library handle a single `attachments` collection that accepts both images and non-images, where conversions only apply to images and are skipped for other file types? Or do we need separate `images` and `files` collections on Note and Page?
+~~**R1: Mixed file types in a single media collection.**~~ Resolved — see Resolved Decisions below.
 
 **R2: EXIF original deletion strategy.** After the queued `optimized` conversion runs, what's the best way to delete or replace the original image file? Options to evaluate:
 - Event listener on conversion completion that deletes the original from disk
@@ -293,3 +330,5 @@ These items need investigation before or during implementation:
 - **File types:** No restrictions — allow images, PDFs, any file type in a single collection. Conversions only apply to images.
 - **Disk strategy:** `local-public` for dev, `r2-public` for prod, controlled by `FILESYSTEM_DISK_PUBLIC` env var.
 - **Custom domain:** `cdn.davidharting.com`
+- **R1 — Mixed file types in a single collection:** Confirmed working. Spatie uses "image generators" to decide whether conversions apply. When no generator matches a file type (e.g., `.docx`, `.zip`, `.txt`), conversions are silently skipped. PDFs *do* have a generator — with Imagick + Ghostscript + `spatie/pdf-to-image` installed, PDFs get a page-1 thumbnail via the `thumb` conversion. Use a MIME type check in `registerMediaConversions` to limit `stripExif` to actual images (PDFs don't have EXIF but shouldn't get the `optimized` conversion meant for photos). If `getUrl('optimized')` is called on a file that didn't get that conversion, it returns an empty string — fall back to `getUrl()`.
+- **Dependencies:** Install Imagick (PHP extension), Ghostscript, and all spatie image optimizer binaries (jpegoptim, optipng, pngquant, gifsicle). Measure Docker image size before and after to track bloat.
