@@ -5,4 +5,5 @@ for secret in /run/secrets/*; do
     fi
 done
 
-exec "$@" 
+exec "$@"
+
