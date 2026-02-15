@@ -19,7 +19,7 @@ $bot->onCommand('example', function (Nutgram $bot) {
     $bot->sendMessage('Hello, world!');
 })->description('An example command')->middleware(OnlyDavidMiddleware::class);
 
-$bot->onCommand('whoami', App\Telegram\Commands\WhoamiCommand::class);
+$bot->registerCommand(App\Telegram\Commands\WhoamiCommand::class);
 
 $bot->onMessage(function (Nutgram $bot) {
     $bot->sendMessage('I cannot respond to general conversation yet');
