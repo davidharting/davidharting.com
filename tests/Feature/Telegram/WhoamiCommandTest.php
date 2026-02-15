@@ -18,7 +18,7 @@ test('whoami command replies with user id', function () {
         ->assertReplyText((string) config('nutgram.david'));
 });
 
-test('unauthorized user is rejected from whoami command', function () {
+test('any user can use whoami command', function () {
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);
     $bot->setCommonUser(User::make(
@@ -29,5 +29,5 @@ test('unauthorized user is rejected from whoami command', function () {
 
     $bot->hearText('/whoami')
         ->reply()
-        ->assertReplyText('Sorry, you are not authorized to use this bot.');
+        ->assertReplyText('99999');
 });
