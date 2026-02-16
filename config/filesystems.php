@@ -12,7 +12,7 @@ $localPrivateDisk = [
 $localPublicDisk = [
     'driver' => 'local',
     'root' => storage_path('app/public'),
-    'url' => env('APP_URL').'/storage',
+    'url' => env('APP_URL') . '/storage',
     'visibility' => 'public',
     'throw' => false,
 ];
@@ -29,6 +29,25 @@ $r2PrivateDisk = [
     'throw' => false,
 ];
 
+$r2PublicDisk = [
+    'driver' => 's3',
+    'key' => env('R2_ACCESS_KEY_ID'),
+    'secret' => env('R2_SECRET_ACCESS_KEY'),
+    'region' => 'auto',
+    'bucket' => env('R2_PUBLIC_BUCKET'),
+    'endpoint' => env('R2_ENDPOINT'),
+    'url' => env('R2_PUBLIC_URL'), // e.g. https://cdn.davidharting.com
+    'use_path_style_endpoint' => true,
+    'visibility' => 'public',
+    'throw' => false,
+];
+
+$publicDisk = match (env('FILESYSTEM_DISK_PUBLIC', 'local-public')) {
+    'r2-public' => $r2PublicDisk,
+    default => $localPublicDisk,
+};
+
+
 return [
 
     /*
@@ -43,6 +62,7 @@ return [
     */
 
     'default' => env('FILESYSTEM_DISK_PRIVATE', 'local-private'),
+
 
     /*
     |--------------------------------------------------------------------------
@@ -61,6 +81,8 @@ return [
         'local-private' => $localPrivateDisk,
         'local-public' => $localPublicDisk,
         'r2-private' => $r2PrivateDisk,
+        'r2-public' => $r2PublicDisk,
+        'public' => $publicDisk,
     ],
 
     /*

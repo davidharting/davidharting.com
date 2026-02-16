@@ -56,6 +56,9 @@ x-laravel-config: &laravel-config
         DB_PORT: 5432
         DB_USERNAME: laravel
         FILESYSTEM_DISK_PRIVATE: r2-private
+        FILESYSTEM_DISK_PUBLIC: r2-public
+        R2_PUBLIC_BUCKET: davidhartingdotcom-public
+        R2_PUBLIC_URL: https://cdn.davidharting.com
         LOG_CHANNEL: stack
         LOG_STACK: stderr,nightwatch
         LOG_DEPRECATIONS_CHANNEL: null
