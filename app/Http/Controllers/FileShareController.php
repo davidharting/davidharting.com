@@ -10,54 +10,49 @@ class FileShareController extends Controller
 {
     public function create()
     {
-        Log::info('Received /fileshare/create request');
-
         return view('fileshare.create');
     }
 
     public function store(Request $request)
     {
-        Log::info('Received store request. Using this config:', [
-            'default_disk' => config('filesystems.default'),
-            'available_disks' => array_keys(config('filesystems.disks')),
-            'r2_private_config' => config('filesystems.disks.r2-private'),
-            'environment_vars' => [
-                'FILESYSTEM_DISK_PRIVATE' => env('FILESYSTEM_DISK_PRIVATE'),
-                'FILESYSTEM_DISK_PUBLIC' => env('FILESYSTEM_DISK_PUBLIC'),
-                'R2_ACCESS_KEY_ID' => env('R2_ACCESS_KEY_ID') ? 'SET' : 'NOT_SET',
-                'R2_SECRET_ACCESS_KEY' => env('R2_SECRET_ACCESS_KEY') ? 'SET' : 'NOT_SET',
-                'R2_ENDPOINT' => env('R2_ENDPOINT'),
-                'R2_PRIVATE_BUCKET' => env('R2_PRIVATE_BUCKET'),
-            ],
-            'storage_facade_default' => Storage::getDefaultDriver(),
-            'request_info' => [
-                'method' => $request->method(),
-                'has_file' => $request->hasFile('file'),
-                'file_size' => $request->hasFile('file') ? $request->file('file')->getSize() : null,
-                'file_name' => $request->hasFile('file') ? $request->file('file')->getClientOriginalName() : null,
-            ],
+        $diskName = $request->input('disk') === 'public' ? 'public' : 'private';
 
+        Log::info('Fileshare store request', [
+            'disk' => $diskName,
+            'file_name' => $request->file('file')->getClientOriginalName(),
         ]);
-        $path = $request->file('file')->store('fileshare', ['visibility' => 'private']);
-        Log::info('File stored. Redirecting.', ['path' => $path]);
 
-        return redirect()->route('fileshare.show', ['path' => $path]);
+        $path = $request->file('file')->store('fileshare', $diskName);
+
+        Log::info('File stored', ['path' => $path, 'disk' => $diskName]);
+
+        return redirect()->route('fileshare.show', [
+            'path' => $path,
+            'disk' => $diskName,
+        ]);
     }
 
-    public function show(string $path)
+    public function show(Request $request, string $path)
     {
-        Log::info("Checking file at path: $path");
-        $exists = Storage::disk()->exists($path);
-        Log::info('does it exist?', ['exists' => $exists]);
+        $diskName = $request->query('disk', 'private');
+        $disk = Storage::disk($diskName);
 
-        if (! $exists) {
+        if (! $disk->exists($path)) {
             abort(404);
         }
 
-        $size = Storage::disk()->size($path);
+        $size = $disk->size($path);
+        $url = $diskName === 'public' ? $disk->url($path) : null;
+
+        $temporaryUrl = $diskName !== 'public'
+            ? $disk->temporaryUrl($path, now()->addMinutes(5))
+            : null;
 
         return view('fileshare.show', [
             'size' => $size,
+            'url' => $url,
+            'temporaryUrl' => $temporaryUrl,
+            'disk' => $diskName,
         ]);
     }
 }

@@ -48,13 +48,21 @@ Run migrations:
 php artisan migrate
 ```
 
-### 4. Build Frontend Assets
+### 4. Create Storage Symlink
+
+```bash
+php artisan storage:link
+```
+
+This creates a symlink from `public/storage` to `storage/app/public` so the local-public disk is accessible via the web server.
+
+### 5. Build Frontend Assets
 
 ```bash
 npm run build
 ```
 
-### 5. Run Tests
+### 6. Run Tests
 
 ```bash
 php artisan test
