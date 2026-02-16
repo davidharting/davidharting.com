@@ -1,7 +1,5 @@
 <?php
 
-$privateDisk = env('FILESYSTEM_DISK_PRIVATE', 'local-private');
-
 $localPrivateDisk = [
     'driver' => 'local',
     'root' => storage_path('app/private'),
@@ -43,6 +41,11 @@ $r2PublicDisk = [
     'throw' => false,
 ];
 
+$privateDisk = match (env('FILESYSTEM_DISK_PRIVATE', 'local-private')) {
+    'r2-private' => $r2PrivateDisk,
+    default => $localPrivateDisk,
+};
+
 $publicDisk = match (env('FILESYSTEM_DISK_PUBLIC', 'local-public')) {
     'r2-public' => $r2PublicDisk,
     default => $localPublicDisk,
@@ -61,7 +64,7 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DISK_PRIVATE', 'local-private'),
+    'default' => 'private',
 
     /*
     |--------------------------------------------------------------------------
@@ -81,6 +84,7 @@ return [
         'local-public' => $localPublicDisk,
         'r2-private' => $r2PrivateDisk,
         'r2-public' => $r2PublicDisk,
+        'private' => $privateDisk,
         'public' => $publicDisk,
     ],
 

@@ -15,16 +15,14 @@ class FileShareController extends Controller
 
     public function store(Request $request)
     {
-        $diskName = $request->input('disk') === 'public' ? 'public' : null;
+        $diskName = $request->input('disk') === 'public' ? 'public' : 'private';
 
         Log::info('Fileshare store request', [
-            'disk' => $diskName ?? config('filesystems.default'),
+            'disk' => $diskName,
             'file_name' => $request->file('file')->getClientOriginalName(),
         ]);
 
-        $path = $diskName
-            ? $request->file('file')->store('fileshare', $diskName)
-            : $request->file('file')->store('fileshare');
+        $path = $request->file('file')->store('fileshare', $diskName);
 
         Log::info('File stored', ['path' => $path, 'disk' => $diskName]);
 
@@ -36,8 +34,8 @@ class FileShareController extends Controller
 
     public function show(Request $request, string $path)
     {
-        $diskName = $request->query('disk');
-        $disk = $diskName ? Storage::disk($diskName) : Storage::disk();
+        $diskName = $request->query('disk', 'private');
+        $disk = Storage::disk($diskName);
 
         if (! $disk->exists($path)) {
             abort(404);
