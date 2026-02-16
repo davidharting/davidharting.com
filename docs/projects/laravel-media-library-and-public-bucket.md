@@ -12,7 +12,7 @@ status: in-progress
 - **Laravel:** 12.x
 - **Filament:** 5.x (with Livewire 4.x)
 - **Existing `media` table:** Tracks books, movies, etc. via `App\Models\Media` — completely unrelated to file uploads. This is why spatie's table must be named `spatie_media`.
-- **Existing disk config (`config/filesystems.php`):** `local-private`, `local-public`, and `r2-private` disks are already defined. `FILESYSTEM_DISK_PRIVATE` env var already controls private disk selection. `FILESYSTEM_DISK_PUBLIC` env var already exists in `.env.example` but there is no `r2-public` disk yet and the `FILESYSTEM_DISK_PUBLIC` value is not yet wired into any config that reads it.
+- **Existing disk config (`config/filesystems.php`):** `local-private`, `local-public`, `r2-private`, and `r2-public` disks are defined. A `public` disk alias resolves to the correct config via a `match` on `FILESYSTEM_DISK_PUBLIC` env var. `FILESYSTEM_DISK_PRIVATE` controls private disk selection. Public bucket name (`davidhartingdotcom-public`) and URL (`https://cdn.davidharting.com`) are set as plain environment variables in docker-compose (not secrets, since they're public values).
 - **Queue:** `database` driver, queue worker already running in production.
 
 ## Background
@@ -402,8 +402,8 @@ Work through these in order. Each item may result in multiple small, focused com
 
 ## Milestones
 
-- [ ] Public R2 bucket created with `cdn.davidharting.com` custom domain
-- [ ] `r2-public` filesystem disk configured in Laravel
+- [x] Public R2 bucket created with `cdn.davidharting.com` custom domain
+- [x] `r2-public` filesystem disk configured in Laravel
 - [ ] Docker image updated with image processing dependencies (Imagick, Ghostscript, optimizer binaries)
 - [ ] spatie/laravel-media-library installed and configured (custom `spatie_media` table, `SpatieMedia` model)
 - [ ] Filament spatie media library plugin installed

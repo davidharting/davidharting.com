@@ -10,7 +10,13 @@
         <fieldset class="mb-4">
             <legend class="font-bold mb-2">Disk</legend>
             <label class="flex items-center gap-2">
-                <input type="radio" name="disk" value="private" checked class="radio" />
+                <input
+                    type="radio"
+                    name="disk"
+                    value="private"
+                    checked
+                    class="radio"
+                />
                 Private
             </label>
             <label class="flex items-center gap-2">
