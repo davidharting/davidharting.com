@@ -5,6 +5,7 @@ $privateDisk = env('FILESYSTEM_DISK_PRIVATE', 'local-private');
 $localPrivateDisk = [
     'driver' => 'local',
     'root' => storage_path('app/private'),
+    'serve' => true,
     'visibility' => 'private',
     'throw' => false,
 ];

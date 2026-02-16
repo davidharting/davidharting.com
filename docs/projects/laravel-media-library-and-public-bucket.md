@@ -423,6 +423,8 @@ These items need investigation before or during implementation:
 
 ~~**R3: Filament spatie media library plugin v5 compatibility.**~~ Resolved — see Resolved Decisions below.
 
+**R4: Upload size limits and client-side uploads.** PHP's default `upload_max_filesize` (2M) and `post_max_size` limits mean large files fail silently when uploaded via standard HTML forms. Filament's `SpatieMediaLibraryFileUpload` uses Livewire's chunked upload mechanism which may handle larger files, but this needs verification. If large uploads are needed (e.g., high-res photos), investigate: increasing PHP limits in the Docker image, Livewire's chunked upload behavior, or direct-to-R2 client-side uploads (presigned URLs).
+
 ## Resolved Decisions
 
 - **Table naming:** Use custom table name `spatie_media` with custom model `App\Models\SpatieMedia`. No need to rename existing `media` table.
