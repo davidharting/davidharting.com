@@ -6,6 +6,15 @@ status: in-progress
 
 # Laravel Media Library and Public Bucket
 
+## Prerequisites / Current State
+
+- **PHP:** 8.3 (platform config in `composer.json`; 8.4 locally)
+- **Laravel:** 12.x
+- **Filament:** 5.x (with Livewire 4.x)
+- **Existing `media` table:** Tracks books, movies, etc. via `App\Models\Media` — completely unrelated to file uploads. This is why spatie's table must be named `spatie_media`.
+- **Existing disk config (`config/filesystems.php`):** `local-private`, `local-public`, and `r2-private` disks are already defined. `FILESYSTEM_DISK_PRIVATE` env var already controls private disk selection. `FILESYSTEM_DISK_PUBLIC` env var already exists in `.env.example` but there is no `r2-public` disk yet and the `FILESYSTEM_DISK_PUBLIC` value is not yet wired into any config that reads it.
+- **Queue:** `database` driver, queue worker already running in production.
+
 ## Background
 
 I want to be able to reference / include media on my Notes and Pages. For instance, I might want to include a PDF on a Page for user's to donwload, or to include a transformed image on a Note to share pictures of a trip.
@@ -120,7 +129,7 @@ Configure media-library's `disk_name` to read from this env var. This keeps R2 c
 
 ### Phase 3: Docker Image Dependencies for Image Processing
 
-Before installing the PHP packages, we need the system-level libraries they depend on. Measure Docker image size before and after to track the impact.
+Before installing the PHP packages, we need the system-level libraries they depend on. Measure Docker image size before and after to track the impact — figure out the appropriate `docker build` and `docker images` commands at implementation time using the project's existing `Dockerfile`.
 
 **3.1 Add PHP Imagick extension**
 
@@ -189,7 +198,7 @@ php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServicePr
 Key config changes in `config/media-library.php`:
 
 - Set `media_model` to `App\Models\SpatieMedia`
-- Set `disk_name` — see Phase 2.3 for disk strategy
+- Set `disk_name` to `env('FILESYSTEM_DISK_PUBLIC', 'local-public')`
 - Set `queue_connection_name` to `database` so image conversions run in background via the queue
 
 **4.5 Run migrations**
@@ -296,18 +305,26 @@ class StripExifFromOriginal
 }
 ```
 
-**5A.2 Register the listener in `EventServiceProvider`**
+**5A.2 Register the listener**
+
+Use Laravel's modern event discovery (no `EventServiceProvider` needed). Add an `Event` attribute to the listener's `handle` method, or register it in `AppServiceProvider::boot()`:
 
 ```php
+// Option A: Event attribute on the listener (preferred, Laravel 11+)
+use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 use Spatie\MediaLibrary\MediaCollections\Events\MediaHasBeenAddedEvent;
-use App\Listeners\StripExifFromOriginal;
 
-protected $listen = [
-    MediaHasBeenAddedEvent::class => [
-        StripExifFromOriginal::class,
-    ],
-];
+class StripExifFromOriginal
+{
+    #[\Illuminate\Contracts\Events\Attribute\ListenTo(MediaHasBeenAddedEvent::class)]
+    public function handle(MediaHasBeenAddedEvent $event): void { ... }
+}
+
+// Option B: Register in AppServiceProvider::boot() if attribute discovery doesn't work
+Event::listen(MediaHasBeenAddedEvent::class, StripExifFromOriginal::class);
 ```
+
+Check which approach the project uses at implementation time and follow the existing pattern. If there are no existing listeners, prefer whichever approach Laravel auto-discovers — typically just having the correct type-hint on the `handle` method is enough with event auto-discovery enabled.
 
 **Key properties of this approach:**
 
@@ -337,7 +354,7 @@ No `.image()` restriction — allow any file type (PDFs, images, etc.).
 
 **6.2 Display public URLs for copying**
 
-Add a section to the edit form (or a custom view) that lists uploaded media with their public URLs so you can copy them into the markdown. This could be a `Placeholder` or `ViewField` component showing the URLs.
+**This needs to be figured out during implementation.** The goal is to show uploaded media's public URLs somewhere on the edit form so they can be copied into the markdown. One option is a read-only text field or `Placeholder` component below the upload that lists URLs. Explore what works best with Filament's form components at implementation time.
 
 Since originals are already EXIF-stripped at upload time (Phase 5A), **always use `getUrl()`** — no need to worry about which conversion URL to show. This simplifies the URL display to a single call for all file types.
 
@@ -367,15 +384,34 @@ echo "https://cdn.davidharting.com" > secrets/R2_PUBLIC_URL.txt
 
 ---
 
-## Implementation Order (suggested commit sequence)
+## Implementation Order
 
-1. **Add `r2-public` filesystem disk** — just config, no behavior change
-2. **Add image processing deps to Dockerfile** — Imagick ext, ghostscript, jpegoptim, optipng, pngquant, gifsicle. Measure image size before/after.
-3. **Install spatie/laravel-media-library + Filament plugin + optimizer packages** — packages, custom `SpatieMedia` model with `spatie_media` table, config
-4. **Add `HasMedia` to Note and Page models** — media collections, `thumb` conversion (images + PDFs)
-5. **Add `StripExifFromOriginal` listener** — process images at upload time via `MediaHasBeenAddedEvent`, strip EXIF + resize to max 2000px + optimize
-6. **Add `SpatieMediaLibraryFileUpload` to Filament forms** — the upload UI + URL display (always use `getUrl()`)
-7. **Docker/deployment config** — secrets and environment variables
+Work through these in order. Each item may result in multiple small, focused commits — use as many as needed.
+
+1. **Create public R2 bucket in Cloudflare** (manual — David does this)
+2. **Add `r2-public` filesystem disk + update `.env.example`** — just config, no behavior change
+3. **Add image processing deps to Dockerfile** — Imagick ext, ghostscript, jpegoptim, optipng, pngquant, gifsicle. Measure image size before/after.
+4. **Install spatie/laravel-media-library** — package, published migration (rename table to `spatie_media`), custom `SpatieMedia` model, published config
+5. **Install `filament/spatie-laravel-media-library-plugin` + optimizer packages** (`spatie/image-optimizer`, `spatie/pdf-to-image`)
+6. **Add `HasMedia` to Note and Page models** — media collections, `thumb` conversion (images + PDFs)
+7. **Add `StripExifFromOriginal` listener** — process images at upload time via `MediaHasBeenAddedEvent`, strip EXIF + resize to max 2000px + optimize
+8. **Add `SpatieMediaLibraryFileUpload` to Filament forms** — the upload UI + URL display (always use `getUrl()`)
+9. **Docker/deployment config** — secrets and environment variables
+
+---
+
+## Milestones
+
+- [ ] Public R2 bucket created with `cdn.davidharting.com` custom domain
+- [ ] `r2-public` filesystem disk configured in Laravel
+- [ ] Docker image updated with image processing dependencies (Imagick, Ghostscript, optimizer binaries)
+- [ ] spatie/laravel-media-library installed and configured (custom `spatie_media` table, `SpatieMedia` model)
+- [ ] Filament spatie media library plugin installed
+- [ ] Note and Page models implement `HasMedia` with `attachments` collection and `thumb` conversion
+- [ ] `StripExifFromOriginal` listener strips EXIF + resizes originals at upload time
+- [ ] Filament forms have file upload fields with URL display for copying into markdown
+- [ ] Production deployment updated (secrets, env vars)
+- [ ] End-to-end test: upload an image via Filament, verify public URL works, verify EXIF is stripped
 
 ## Research Needed
 
