@@ -145,18 +145,18 @@ composer require spatie/pdf-to-image
 
 `spatie/image-optimizer` automatically detects and uses whichever optimizer binaries are available on the system. `spatie/pdf-to-image` enables PDF thumbnail generation.
 
-### Phase 4: Install and Configure spatie/laravel-media-library (was Phase 3)
+### Phase 4: Install and Configure spatie/laravel-media-library
 
 We use a custom table name (`spatie_media`) and custom model to avoid conflicting with the existing `media` table (which tracks books/movies/etc.). No need to rename anything existing.
 
-**3.1 Install the packages**
+**4.1 Install the packages**
 
 ```bash
 composer require spatie/laravel-media-library
-composer require filament/spatie-laravel-media-library-plugin:"^5.2"
+composer require filament/spatie-laravel-media-library-plugin:"^5.0"
 ```
 
-**3.2 Publish migration and change table name**
+**4.2 Publish migration and change table name**
 
 ```bash
 php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServiceProvider" --tag="medialibrary-migrations"
@@ -164,7 +164,7 @@ php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServicePr
 
 Edit the published migration to use `spatie_media` instead of `media` as the table name.
 
-**3.3 Create a custom spatie Media model**
+**4.3 Create a custom spatie Media model**
 
 Create `app/Models/SpatieMedia.php` extending `Spatie\MediaLibrary\MediaCollections\Models\Media`:
 
@@ -175,7 +175,7 @@ class SpatieMedia extends \Spatie\MediaLibrary\MediaCollections\Models\Media
 }
 ```
 
-**3.4 Publish and configure media-library config**
+**4.4 Publish and configure media-library config**
 
 ```bash
 php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServiceProvider" --tag="medialibrary-config"
@@ -186,7 +186,7 @@ Key config changes in `config/media-library.php`:
 - Set `disk_name` — see Phase 2.3 for disk strategy
 - Set `queue_connection_name` to `database` so image conversions run in background via the queue
 
-**3.5 Run migrations**
+**4.5 Run migrations**
 
 ```bash
 php artisan migrate
@@ -335,21 +335,21 @@ Since originals are already EXIF-stripped at upload time (Phase 5A), **always us
 
 ### Phase 7: Production Deployment
 
-**6.1 Docker/secrets updates**
+**7.1 Docker/secrets updates**
 
 Add to `docker-compose.yml`:
 - New secrets: `R2_PUBLIC_BUCKET`, `R2_PUBLIC_URL`
 - New secret files in `./secrets/`
 - New environment variables referencing the secrets
 
-**6.2 Create the secret files on the server**
+**7.2 Create the secret files on the server**
 
 ```bash
 echo "your-public-bucket-name" > secrets/R2_PUBLIC_BUCKET.txt
 echo "https://cdn.davidharting.com" > secrets/R2_PUBLIC_URL.txt
 ```
 
-**6.3 Deploy and verify**
+**7.3 Deploy and verify**
 
 - Deploy the new code
 - Verify migrations run (creates `spatie_media` table)
@@ -387,7 +387,7 @@ These items need investigation before or during implementation:
 - **File types:** No restrictions — allow images, PDFs, any file type in a single collection. Conversions only apply to images.
 - **Disk strategy:** `local-public` for dev, `r2-public` for prod, controlled by `FILESYSTEM_DISK_PUBLIC` env var.
 - **Custom domain:** `cdn.davidharting.com`
-- **R1 — Mixed file types in a single collection:** Confirmed working. Spatie uses "image generators" to decide whether conversions apply. When no generator matches a file type (e.g., `.docx`, `.zip`, `.txt`), conversions are silently skipped. PDFs *do* have a generator — with Imagick + Ghostscript + `spatie/pdf-to-image` installed, PDFs get a page-1 thumbnail via the `thumb` conversion. Use a MIME type check in `registerMediaConversions` to limit `stripExif` to actual images (PDFs don't have EXIF but shouldn't get the `optimized` conversion meant for photos). If `getUrl('optimized')` is called on a file that didn't get that conversion, it returns an empty string — fall back to `getUrl()`.
+- **R1 — Mixed file types in a single collection:** Confirmed working. Spatie uses "image generators" to decide whether conversions apply. When no generator matches a file type (e.g., `.docx`, `.zip`, `.txt`), conversions are silently skipped. PDFs *do* have a generator — with Imagick + Ghostscript + `spatie/pdf-to-image` installed, PDFs get a page-1 thumbnail via the `thumb` conversion. Non-visual files get no conversions and are stored as-is. No separate collections needed.
 - **Dependencies:** Install Imagick (PHP extension), Ghostscript, and all spatie image optimizer binaries (jpegoptim, optipng, pngquant, gifsicle). Measure Docker image size before and after to track bloat.
 - **R2 — EXIF original deletion strategy:** Process originals at upload time via a `StripExifFromOriginal` listener on `MediaHasBeenAddedEvent`. This is the [maintainer-endorsed approach](https://github.com/spatie/laravel-medialibrary/discussions/3447). The listener downloads the image to a temp file, uses `Spatie\Image\Image` to strip EXIF + resize to max 2000px + optimize, then re-uploads over the original path. This fires synchronously (no queued event bugs), keeps `getUrl()` working, keeps `media-library:regenerate` working, and means the original in the bucket never has EXIF data. The `optimized` conversion is no longer needed — just `thumb` for preview thumbnails. URL display in Filament is simplified to always using `getUrl()`.
 - **R3 — Filament spatie media library plugin v5 compatibility:** Confirmed compatible. The plugin has stable v5 releases on Packagist (v5.2.0 as of Jan 29, 2026), tracking Filament v5 releases. The Filament plugins website incorrectly shows "Not compatible with v5" but this is outdated. Install with `filament/spatie-laravel-media-library-plugin:"^5.0"`. Import path is unchanged from v4: `use Filament\Forms\Components\SpatieMediaLibraryFileUpload;`. Filament v5 itself has no breaking API changes from v4 — it exists solely to support Livewire v4. No code changes needed compared to v4 usage.
