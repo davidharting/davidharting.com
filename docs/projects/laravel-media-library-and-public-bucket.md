@@ -33,6 +33,7 @@ We considered a standalone `Attachment` model vs. adding media-library directly 
 The tradeoff is that reusing the same file across multiple Notes/Pages means re-uploading, but that's acceptable for a personal site.
 
 **Workflow in practice:**
+
 1. Edit a Note or Page in Filament admin
 2. Upload files via the `SpatieMediaLibraryFileUpload` field on the form
 3. Copy the public URL from the uploaded file
@@ -59,13 +60,15 @@ The tradeoff is that reusing the same file across multiple Notes/Pages means re-
 ### Phase 1: Cloudflare R2 Public Bucket Setup
 
 **1.1 Create the public bucket in Cloudflare dashboard**
+
 - Go to Cloudflare dashboard → R2 → Create Bucket
 - Name: `davidharting-public` (or similar)
 - Set up a custom domain like `cdn.davidharting.com` for clean public URLs
-  - In Cloudflare R2 settings → Public Access → Custom Domain → `cdn.davidharting.com`
-  - This automatically sets up the DNS and Cloudflare CDN caching
+    - In Cloudflare R2 settings → Public Access → Custom Domain → `cdn.davidharting.com`
+    - This automatically sets up the DNS and Cloudflare CDN caching
 
 **1.2 Create R2 API credentials (or reuse existing)**
+
 - If your existing R2 API token already has access to all buckets, you can reuse `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`
 - Otherwise, create a new token with read/write access to the public bucket
 
@@ -93,6 +96,7 @@ Add to the `disks` array: `'r2-public' => $r2PublicDisk`
 **2.2 Add environment variables**
 
 New env vars needed:
+
 - `R2_PUBLIC_BUCKET` — the bucket name
 - `R2_PUBLIC_URL` — the public-facing URL (e.g. `https://cdn.davidharting.com`)
 
@@ -102,12 +106,13 @@ Add to `.env.example`, and add secrets + environment entries to `docker-compose.
 
 We have 4 disks total — 2 local (dev) and 2 R2 (prod):
 
-| Purpose | Dev disk | Prod disk |
-|---------|----------|-----------|
+| Purpose       | Dev disk        | Prod disk    |
+| ------------- | --------------- | ------------ |
 | Private files | `local-private` | `r2-private` |
-| Public media | `local-public` | `r2-public` |
+| Public media  | `local-public`  | `r2-public`  |
 
 Use an env var `FILESYSTEM_DISK_PUBLIC` (mirroring the existing `FILESYSTEM_DISK_PRIVATE` pattern) to select the public disk:
+
 - `.env` (dev): `FILESYSTEM_DISK_PUBLIC=local-public`
 - `docker-compose.yml` (prod): `FILESYSTEM_DISK_PUBLIC=r2-public`
 
@@ -182,6 +187,7 @@ php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServicePr
 ```
 
 Key config changes in `config/media-library.php`:
+
 - Set `media_model` to `App\Models\SpatieMedia`
 - Set `disk_name` — see Phase 2.3 for disk strategy
 - Set `queue_connection_name` to `database` so image conversions run in background via the queue
@@ -243,6 +249,7 @@ Spatie supports automatic responsive image generation via `withResponsiveImages(
 Rather than trying to delete or replace originals after a queued conversion, we process images **at upload time** via a synchronous event listener. This is the [approach endorsed by the spatie maintainer](https://github.com/spatie/laravel-medialibrary/discussions/3447).
 
 **Why not post-conversion cleanup?**
+
 - `ConversionHasBeenCompletedEvent` has an [unresolved bug](https://github.com/spatie/laravel-medialibrary/discussions/3678) where it may not fire for queued conversions.
 - Deleting the original breaks `getUrl()`, breaks `media-library:regenerate`, and leaves DB metadata mismatched.
 - Originals in a public bucket with EXIF GPS data are a privacy risk — URLs are guessable even if not linked.
@@ -303,6 +310,7 @@ protected $listen = [
 ```
 
 **Key properties of this approach:**
+
 - `MediaHasBeenAddedEvent` fires **synchronously** right after the file is saved to disk — no race conditions with queued jobs.
 - The original in the bucket **never** has EXIF data. `getUrl()` always returns a clean file.
 - `media-library:regenerate` works because the original is a valid, clean file.
@@ -338,6 +346,7 @@ Since originals are already EXIF-stripped at upload time (Phase 5A), **always us
 **7.1 Docker/secrets updates**
 
 Add to `docker-compose.yml`:
+
 - New secrets: `R2_PUBLIC_BUCKET`, `R2_PUBLIC_URL`
 - New secret files in `./secrets/`
 - New environment variables referencing the secrets
@@ -387,7 +396,7 @@ These items need investigation before or during implementation:
 - **File types:** No restrictions — allow images, PDFs, any file type in a single collection. Conversions only apply to images.
 - **Disk strategy:** `local-public` for dev, `r2-public` for prod, controlled by `FILESYSTEM_DISK_PUBLIC` env var.
 - **Custom domain:** `cdn.davidharting.com`
-- **R1 — Mixed file types in a single collection:** Confirmed working. Spatie uses "image generators" to decide whether conversions apply. When no generator matches a file type (e.g., `.docx`, `.zip`, `.txt`), conversions are silently skipped. PDFs *do* have a generator — with Imagick + Ghostscript + `spatie/pdf-to-image` installed, PDFs get a page-1 thumbnail via the `thumb` conversion. Non-visual files get no conversions and are stored as-is. No separate collections needed.
+- **R1 — Mixed file types in a single collection:** Confirmed working. Spatie uses "image generators" to decide whether conversions apply. When no generator matches a file type (e.g., `.docx`, `.zip`, `.txt`), conversions are silently skipped. PDFs _do_ have a generator — with Imagick + Ghostscript + `spatie/pdf-to-image` installed, PDFs get a page-1 thumbnail via the `thumb` conversion. Non-visual files get no conversions and are stored as-is. No separate collections needed.
 - **Dependencies:** Install Imagick (PHP extension), Ghostscript, and all spatie image optimizer binaries (jpegoptim, optipng, pngquant, gifsicle). Measure Docker image size before and after to track bloat.
 - **R2 — EXIF original deletion strategy:** Process originals at upload time via a `StripExifFromOriginal` listener on `MediaHasBeenAddedEvent`. This is the [maintainer-endorsed approach](https://github.com/spatie/laravel-medialibrary/discussions/3447). The listener downloads the image to a temp file, uses `Spatie\Image\Image` to strip EXIF + resize to max 2000px + optimize, then re-uploads over the original path. This fires synchronously (no queued event bugs), keeps `getUrl()` working, keeps `media-library:regenerate` working, and means the original in the bucket never has EXIF data. The `optimized` conversion is no longer needed — just `thumb` for preview thumbnails. URL display in Filament is simplified to always using `getUrl()`.
 - **R3 — Filament spatie media library plugin v5 compatibility:** Confirmed compatible. The plugin has stable v5 releases on Packagist (v5.2.0 as of Jan 29, 2026), tracking Filament v5 releases. The Filament plugins website incorrectly shows "Not compatible with v5" but this is outdated. Install with `filament/spatie-laravel-media-library-plugin:"^5.0"`. Import path is unchanged from v4: `use Filament\Forms\Components\SpatieMediaLibraryFileUpload;`. Filament v5 itself has no breaking API changes from v4 — it exists solely to support Livewire v4. No code changes needed compared to v4 usage.
