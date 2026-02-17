@@ -25,6 +25,7 @@
         "livewire/livewire": "^4.0",
         "mailersend/laravel-driver": "^2.7",
         "nutgram/laravel": "^1.6",
+        "spatie/image": "^3.9",
         "spatie/laravel-backup": "^9.3",
         "spatie/laravel-feed": "^4.4"
     },
