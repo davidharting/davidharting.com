@@ -9,9 +9,12 @@ RUN apt-get update \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y unzip libnss3-tools procps postgresql-client-17 nodejs \
+    # Image optimizer binaries for spatie/image-optimizer
+    jpegoptim optipng pngquant gifsicle webp libavif-bin \
     && rm -rf /var/lib/apt/lists/*
 
 RUN install-php-extensions \
+    gd \
     intl \
     pcntl \
     pdo \

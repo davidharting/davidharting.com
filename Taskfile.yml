@@ -73,3 +73,21 @@ tasks:
   prod:web:shell:
     desc: "Open an interactive shell in the production web container with secrets loaded"
     cmd: ssh -t -p $SSH_PORT $SSH_USER@$SSH_HOST "cd /home/$SSH_USER/repos/davidharting.com && docker compose exec web bash /entrypoint.sh bash"
+
+  prod:upload:
+    desc: "Upload a local file to production storage (usage: task prod:upload FILE=./photo.jpg NAME=notes/sunset [DISK=public])"
+    requires:
+      vars: [FILE, NAME]
+    vars:
+      DISK: '{{.DISK | default "public"}}'
+      BASENAME:
+        sh: basename "{{.FILE}}"
+      REMOTE_TMP: '/tmp/artisan-upload-{{.BASENAME}}'
+      REPO_DIR: '/home/$SSH_USER/repos/davidharting.com'
+    cmds:
+      - echo "Uploading {{.BASENAME}} as {{.NAME}} to {{.DISK}} disk..."
+      - scp -P $SSH_PORT "{{.FILE}}" $SSH_USER@$SSH_HOST:{{.REMOTE_TMP}}
+      - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd {{.REPO_DIR}} && docker compose cp {{.REMOTE_TMP}} web:{{.REMOTE_TMP}}"
+      - ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd {{.REPO_DIR}} && docker compose exec -T web bash /entrypoint.sh php artisan file:upload {{.REMOTE_TMP}} {{.NAME}} --disk={{.DISK}}"
+      - defer: ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "rm -f {{.REMOTE_TMP}}"
+      - defer: ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd {{.REPO_DIR}} && docker compose exec -T web rm -f {{.REMOTE_TMP}}"
