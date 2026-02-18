@@ -1,59 +1,51 @@
 ---
 name: laravel-media-library-and-public-bucket
-description: Set up a public bucket, a FileUpload model with spatie/laravel-media-library, and a Filament admin UI for uploading files with client-side transformations
+description: Wire up MarkdownEditor file attachments to R2, and build a standalone in-browser EXIF-strip tool
 status: in-progress
 ---
 
-# Laravel Media Library and Public Bucket
+# Image Uploads and EXIF Stripping
 
 ## Prerequisites / Current State
 
 - **PHP:** 8.3 (platform config in `composer.json`; 8.4 locally)
 - **Laravel:** 12.x
 - **Filament:** 5.x (with Livewire 4.x)
-- **Existing `media` table:** Tracks books, movies, etc. via `App\Models\Media` — completely unrelated to file uploads. This is why spatie's table must be named `spatie_media`.
-- **Existing disk config (`config/filesystems.php`):** `local-private`, `local-public`, `r2-private`, and `r2-public` disks are defined. A `public` disk alias resolves to the correct config via a `match` on `FILESYSTEM_DISK_PUBLIC` env var. `FILESYSTEM_DISK_PRIVATE` controls private disk selection. Public bucket name (`davidhartingdotcom-public`) and URL (`https://cdn.davidharting.com`) are set as plain environment variables in docker-compose (not secrets, since they're public values).
-- **Queue:** `database` driver, queue worker already running in production.
+- **Existing disk config (`config/filesystems.php`):** `local-private`, `local-public`, `r2-private`, and `r2-public` disks are defined. A `public` disk alias resolves to the correct disk via `FILESYSTEM_DISK_PUBLIC` env var (`local-public` in dev, `r2-public` in prod). Public bucket name (`davidhartingdotcom-public`) and URL (`https://cdn.davidharting.com`) are set as plain environment variables in `docker-compose.yml`.
 
 ## Background
 
-I want to be able to reference / include media on my Notes and Pages. For instance, I might want to include a PDF on a Page for users to download, or to include an image on a Note to share pictures of a trip.
+I want to include images and other media in my Notes and Pages — e.g. photos from a trip embedded in a note. Filament's `MarkdownEditor` already supports dragging images directly into the editor; they get uploaded and the permanent URL is embedded in the markdown automatically.
 
-Whenever I upload an image, I want to ensure that EXIF data (especially GPS location) is stripped before the file reaches the server or the public bucket.
+The main concern: EXIF data (especially GPS location) must be stripped from photos before they reach the server or the public bucket. Since `MarkdownEditor` uploads are server-proxied through Livewire, the raw file — GPS data and all — would pass through PHP and land on R2 unchanged.
 
-I also want a centralized place to browse all uploaded files and copy URLs to paste into markdown content.
+## Decision: MarkdownEditor for Uploads + Standalone EXIF-Strip Tool
 
-## Decision: Standalone `FileUpload` Model with Client-Side Transformations
+Rather than building a separate file upload model, admin resource, and presigned URL infrastructure, the simpler approach:
 
-We considered adding `HasMedia` directly to Note and Page vs. having a standalone upload model. We chose a **standalone `FileUpload` model** because:
+1. **Configure `MarkdownEditor` with `fileAttachmentsDisk`** pointing to the public R2 bucket. Dragged images are uploaded via Livewire → PHP → R2, and the permanent R2 URL is embedded in the markdown automatically.
 
-- A centralized index of all uploads is more useful than files buried inside Note/Page edit forms — easier to find a URL uploaded weeks ago
-- Files can be reused across multiple Notes/Pages without re-uploading
-- Client-side image transformation (resize + EXIF strip) is cleaner than server-side: no Imagick, no Ghostscript, no optimizer binaries in Docker, no event listener complexity
-- EXIF is stripped before the file ever leaves the browser — the bucket never sees raw GPS data
-- The "social preview image" problem (picking an OG image per note) is best solved with an explicit `og_image_url` field anyway — the "first attached image" heuristic is fragile regardless of architecture
+2. **Build a standalone in-browser EXIF-strip tool** — a Filament custom page that accepts an image, runs `browser-image-compression` entirely in the browser (strips EXIF, resizes, compresses), and offers the clean file as a download. The user downloads the clean image and then drags it into the MarkdownEditor.
+
+No spatie/laravel-media-library, no FileUpload model, no presigned URL endpoints, no Filament resource. The EXIF tool is pure client-side JS — the server is never involved.
 
 **Workflow in practice:**
 
-1. Go to the FileUpload section in Filament admin
-2. Select a file — the browser transforms it (strips EXIF, resizes, compresses) before upload
-3. The processed file is uploaded to the `FileUpload` model via spatie/laravel-media-library
-4. Spatie stores the file to the public R2 disk
-5. Copy the public URL from the index page
-6. Paste the URL into Note/Page markdown (`![alt](url)` for images, `[text](url)` for downloads)
+1. Open the EXIF-strip tool in the Filament admin sidebar
+2. Pick a photo — the browser strips EXIF and resizes it
+3. Download the clean image
+4. Open a Note (or Page), drag the clean image onto the MarkdownEditor
+5. Filament uploads it to R2 and embeds the permanent URL in the markdown
 
 ---
 
 ## High-Level Plan
 
-1. **Create a public R2 bucket** in Cloudflare with a custom domain *(already done)*
+1. **Create a public R2 bucket** with a custom domain *(already done)*
 2. **Add `r2-public` filesystem disk** to Laravel *(already done)*
-3. **Install spatie/laravel-media-library** with custom table name `spatie_media`
-4. **Create `FileUpload` model and migration**
-5. **Add a presign endpoint** — authenticated Laravel route that generates a presigned PUT URL for R2
-6. **Add an upload-complete endpoint** — registers the uploaded file with spatie via `addMediaFromDisk()`
-7. **Create `FileUploadResource` in Filament** — index with thumbnails and copyable URLs, custom Alpine.js upload component that transforms client-side then PUTs directly to R2
-8. **Update production deployment config** (env vars)
+3. **Configure `MarkdownEditor` file attachments** — set `fileAttachmentsDisk`, `fileAttachmentsDirectory`, and `fileAttachmentsVisibility` on all relevant editors
+4. **Build the EXIF-strip tool** — Filament custom page with Alpine.js + `browser-image-compression`
+5. **Production deployment** — verify env vars, deploy, test end-to-end
 
 ---
 
@@ -63,176 +55,67 @@ We considered adding `HasMedia` directly to Note and Page vs. having a standalon
 
 - Public R2 bucket created with `cdn.davidharting.com` as the custom domain
 - `r2-public` filesystem disk is already configured in `config/filesystems.php`
-- `FILESYSTEM_DISK_PUBLIC` env var selects `local-public` in dev and `r2-public` in prod
+- `FILESYSTEM_DISK_PUBLIC` env var selects `local-public` in dev and `r2-public` in prod via the `public` disk alias
 
-### Phase 2: Install and Configure spatie/laravel-media-library
+### Phase 2: Configure MarkdownEditor File Attachments
 
-We use a custom table name (`spatie_media`) and custom model to avoid conflicting with the existing `media` table (which tracks books/movies/etc.).
-
-**2.1 Install the package**
-
-```bash
-composer require spatie/laravel-media-library
-```
-
-**2.2 Publish migration and change table name**
-
-```bash
-php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServiceProvider" --tag="medialibrary-migrations"
-```
-
-Edit the published migration to use `spatie_media` instead of `media` as the table name.
-
-**2.3 Create a custom spatie Media model**
-
-Create `app/Models/SpatieMedia.php` extending `Spatie\MediaLibrary\MediaCollections\Models\Media`:
+On all `MarkdownEditor` instances where file attachments should be allowed (currently `NoteResource` and any `PageResource` with a content editor), add:
 
 ```php
-class SpatieMedia extends \Spatie\MediaLibrary\MediaCollections\Models\Media
-{
-    protected $table = 'spatie_media';
-}
+MarkdownEditor::make('content')
+    ->fileAttachmentsDisk(config('filesystems.default_public')) // or env('FILESYSTEM_DISK_PUBLIC', 'local-public')
+    ->fileAttachmentsDirectory('attachments')
+    ->fileAttachmentsVisibility('public'),
 ```
 
-**2.4 Publish and configure media-library config**
+`fileAttachmentsVisibility('public')` ensures Filament embeds the permanent public URL rather than a short-lived presigned URL (which would expire before the markdown is rendered).
 
-```bash
-php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServiceProvider" --tag="medialibrary-config"
-```
+The `fileAttachmentsDirectory` can be anything — `attachments` is fine. Files land at `cdn.davidharting.com/attachments/<uuid>.<ext>` in production.
 
-Key config changes in `config/media-library.php`:
+Determine the correct way to reference the `public` disk alias at implementation time — either the env var directly or a config helper.
 
-- Set `media_model` to `App\Models\SpatieMedia`
-- Set `disk_name` to `env('FILESYSTEM_DISK_PUBLIC', 'local-public')`
-- No conversions, no queue needed — client handles image processing
+### Phase 3: EXIF-Strip Tool
 
-**2.5 Run migrations**
+A Filament custom page — accessible in the admin sidebar — that is entirely client-side. No server action, no model, no database.
 
-```bash
-php artisan migrate
-```
+**The page does:**
 
-### Phase 3: `FileUpload` Model and Migration
+1. File input (image files only)
+2. On select, `browser-image-compression` runs in the browser:
+   - Strips EXIF (the canvas round-trip removes it)
+   - Resizes to max 2000px on the longest side
+   - Compresses to a target output size (e.g. 2MB max)
+3. Shows a before/after size comparison and a preview of the processed image
+4. Offers a download button for the clean file
 
-**3.1 Create the migration**
+Non-image files are out of scope for this tool — the MarkdownEditor handles non-image attachments (PDFs, etc.) as-is.
 
-```php
-Schema::create('file_uploads', function (Blueprint $table) {
-    $table->id();
-    $table->string('name')->nullable();
-    $table->text('description')->nullable();
-    $table->timestamps();
-});
-```
+**Implementation notes:**
 
-**3.2 Create the model**
+- Install `browser-image-compression` via npm
+- The Filament custom page needs a Blade view — wire the JS via Alpine.js
+- No Livewire state needed; Alpine handles all interactivity
+- The page should be registered in the Filament panel provider's `pages()` array and appear in the sidebar
 
-```php
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
+### Phase 4: Production Deployment
 
-class FileUpload extends Model implements HasMedia
-{
-    use InteractsWithMedia;
-
-    public function registerMediaCollections(): void
-    {
-        $this->addMediaCollection('file')->singleFile();
-    }
-
-    // No registerMediaConversions — client handles transformations
-}
-```
-
-A single `file` collection with `singleFile()` keeps it simple: one file per `FileUpload` record.
-
-### Phase 4: Server Endpoints for Signed Upload
-
-The `filament/spatie-laravel-media-library-plugin` is **not needed** — its main value is the `SpatieMediaLibraryFileUpload` Livewire component, which we're bypassing entirely. Spatie itself is still used for the data model and `addMediaFromDisk()`.
-
-**4.1 Presign endpoint**
-
-An authenticated route (Filament admin middleware) that generates a presigned PUT URL for R2:
-
-```
-POST /admin/file-uploads/presign
-Body: { filename, content_type }
-Response: { upload_url, object_key }
-```
-
-The controller uses the S3 client (R2 is S3-compatible) to generate a presigned PUT URL with a short TTL (e.g. 5 minutes). The `object_key` should be a UUID-based path to avoid collisions and guessability.
-
-**4.2 Upload-complete endpoint**
-
-After the client successfully PUTs to R2, it notifies the server:
-
-```
-POST /admin/file-uploads
-Body: { object_key, name, description }
-Response: { id, url }
-```
-
-The controller:
-1. Creates a `FileUpload` record
-2. Calls `$fileUpload->addMediaFromDisk($objectKey, 'r2-public')` — tells spatie the file is already on the disk, creating the `spatie_media` row without re-uploading
-
-### Phase 5: Filament `FileUploadResource`
-
-**5.1 Index table**
-
-Built as a standard Filament resource table. Columns:
-- Image thumbnail (for images — access via `$record->getFirstMedia('file')?->getUrl()`, lazy loaded)
-- Name
-- MIME type and file size (from the spatie media record via `$record->getFirstMedia('file')`)
-- Public URL (copyable — click-to-copy action)
-- Uploaded at
-
-**5.2 Create form — custom Alpine.js upload component**
-
-The create page uses a custom Alpine.js component instead of any Livewire file upload. The full client-side flow:
-
-1. User selects a file
-2. If it's an image, `browser-image-compression` runs in the browser:
-   - Strips EXIF (canvas round-trip removes it)
-   - Resizes to max 2000px
-   - Compresses to a target size (e.g. 2MB max)
-3. Non-image files are passed through unchanged
-4. Component POSTs to the presign endpoint → receives `{ upload_url, object_key }`
-5. Component PUTs the file (or blob) directly to `upload_url` — bypasses Laravel entirely
-6. On success, component POSTs to the upload-complete endpoint with `object_key` + form fields
-7. Redirects to the index page
-
-The form fields (`name`, `description`) are plain inputs handled by the same Alpine component or a surrounding Livewire form — determine the cleanest integration at implementation time.
-
-### Phase 6: Production Deployment
-
-**6.1 Docker/secrets updates**
-
-The public bucket and URL env vars are already set as plain environment variables in `docker-compose.yml` (not secrets). No new secrets needed for the bucket config.
+The public bucket and URL env vars are already set in `docker-compose.yml`. No new secrets needed.
 
 If any new env vars are added during implementation, add them to `.env.example` and `docker-compose.yml`.
 
-**6.2 Deploy and verify**
+**Verify after deploy:**
 
-- Deploy the new code
-- Verify migrations run (creates `file_uploads` and `spatie_media` tables)
-- Test uploading an image via Filament admin
-- Verify the public URL is accessible via `cdn.davidharting.com`
-- Verify EXIF/GPS data is absent from the uploaded file
+- Drag an image into the MarkdownEditor on a Note — confirm the permanent R2 URL is embedded
+- Use the EXIF-strip tool on a GPS-tagged photo, download the result, inspect with exiftool — confirm GPS data is absent
+- Drag the clean image into the MarkdownEditor — confirm it uploads and renders correctly
 
 ---
 
 ## Implementation Order
 
-Work through these in order. Each item may result in multiple small, focused commits — use as many as needed.
-
-1. **Install spatie/laravel-media-library** — package, published migration (rename table to `spatie_media`), custom `SpatieMedia` model, published config
-2. **Create `FileUpload` model and migration**
-3. **Add presign endpoint** — authenticated route returning a presigned R2 PUT URL and object key
-4. **Add upload-complete endpoint** — creates `FileUpload` record and registers media with `addMediaFromDisk()`
-5. **Create `FileUploadResource` in Filament** — index table with thumbnails and copyable URLs
-6. **Build custom Alpine.js upload component** — client-side transform + presigned PUT + completion POST
-7. **Deployment config** — verify env vars are in place, update as needed
+1. **Configure MarkdownEditor** — add `fileAttachmentsDisk`, `fileAttachmentsDirectory`, `fileAttachmentsVisibility` to all relevant editors; write a feature test confirming file attachments work
+2. **Build EXIF-strip tool** — Filament custom page + Alpine.js + `browser-image-compression`
+3. **Deployment config** — verify env vars, deploy, test end-to-end
 
 ---
 
@@ -240,24 +123,18 @@ Work through these in order. Each item may result in multiple small, focused com
 
 - [x] Public R2 bucket created with `cdn.davidharting.com` custom domain
 - [x] `r2-public` filesystem disk configured in Laravel
-- [ ] spatie/laravel-media-library installed and configured (custom `spatie_media` table, `SpatieMedia` model)
-- [ ] `FileUpload` model and migration created
-- [ ] Presign endpoint — returns presigned R2 PUT URL + object key
-- [ ] Upload-complete endpoint — creates `FileUpload` record and registers media with spatie
-- [ ] `FileUploadResource` in Filament — index with thumbnails and copyable URLs
-- [ ] Custom Alpine.js upload component — client-side transform + direct PUT to R2 + completion POST
+- [ ] MarkdownEditor configured with R2 file attachments (public visibility, permanent URLs)
+- [ ] EXIF-strip tool built (Filament custom page, client-side only)
 - [ ] Production deployment verified end-to-end
 
 ## Resolved Decisions
 
-- **Table naming:** Use custom table name `spatie_media` with custom model `App\Models\SpatieMedia`. No need to rename existing `media` table.
-- **Upload mechanism:** Browser uploads directly to R2 via a presigned PUT URL. The file never passes through the Laravel server, eliminating PHP upload size limits entirely.
-- **EXIF handling:** Strip EXIF client-side in the browser before upload using `browser-image-compression`. The server and bucket never see raw EXIF data. No server-side listener needed.
-- **Image conversions:** None. Client handles resizing and compression. No Imagick, Ghostscript, or optimizer binaries needed in Docker.
-- **Server-side processing packages:** Not needed. `spatie/image-optimizer` and `spatie/pdf-to-image` are not required.
-- **Filament spatie plugin:** Not needed. `filament/spatie-laravel-media-library-plugin` is designed around Livewire-proxied uploads (`SpatieMediaLibraryFileUpload`), which we're bypassing. Spatie itself is still used for the data model and `addMediaFromDisk()`.
-- **File types:** Images are transformed client-side; non-image files (PDFs, etc.) are uploaded as-is.
+- **Upload mechanism:** `MarkdownEditor` file attachments — server-proxied via Livewire → PHP → R2. Simpler than presigned URLs for this use case; file sizes after client-side compression are well within PHP limits.
+- **No media library model:** `spatie/laravel-media-library`, a `FileUpload` model, and a Filament resource are not needed. Filament's built-in file attachment handling is sufficient.
+- **EXIF handling:** Strip EXIF client-side using `browser-image-compression` in a dedicated tool before the file is dragged into the editor. The server never sees raw EXIF data.
+- **Image conversions:** None server-side. No Imagick, Ghostscript, or optimizer binaries needed in Docker.
+- **File types in EXIF tool:** Images only. Non-image files (PDFs, etc.) can be dragged into the MarkdownEditor directly — no processing needed.
+- **fileAttachmentsVisibility:** `public` — permanent URLs must be embedded in markdown because short-lived presigned URLs expire before the content is rendered.
 - **Disk strategy:** `local-public` for dev, `r2-public` for prod, controlled by `FILESYSTEM_DISK_PUBLIC` env var.
 - **Custom domain:** `cdn.davidharting.com`
-- **OG/social preview images:** Best handled with an explicit `og_image_url` field on Note/Page rather than inferring from content. The "first image in the post" heuristic is fragile regardless of architecture. This is a separate future feature.
-- **File reuse:** Upload once, copy URL, paste anywhere. No re-uploading the same file per Note/Page.
+- **OG/social preview images:** Best handled with an explicit `og_image_url` field on Note/Page rather than inferring from content. Separate future feature.
