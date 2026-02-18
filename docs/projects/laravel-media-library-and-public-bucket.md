@@ -111,6 +111,10 @@ If any new env vars are added during implementation, add them to `.env.example` 
 
 ---
 
+## Open Questions
+
+- **Disk alias in `fileAttachmentsDisk`:** The `public` disk alias in `filesystems.php` resolves to the correct disk via `FILESYSTEM_DISK_PUBLIC`. It's unclear whether Filament/Livewire resolves this alias the same way Laravel's `Storage` facade does, or whether the disk name must be passed explicitly (e.g. `env('FILESYSTEM_DISK_PUBLIC', 'local-public')`). Verify at implementation time before wiring this up.
+
 ## Implementation Order
 
 1. **Configure MarkdownEditor** — add `fileAttachmentsDisk`, `fileAttachmentsDirectory`, `fileAttachmentsVisibility` to all relevant editors; write a feature test confirming file attachments work
