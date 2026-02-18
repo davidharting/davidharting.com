@@ -74,6 +74,40 @@ The `fileAttachmentsDirectory` can be anything — `attachments` is fine. Files 
 
 Determine the correct way to reference the `public` disk alias at implementation time — either the env var directly or a config helper.
 
+### Phase 2.5: Raise Upload Size Limits
+
+`MarkdownEditor` file attachments are server-proxied through Livewire → PHP → R2. PHP's defaults (`upload_max_filesize = 2M`, `post_max_size = 8M`) will reject anything larger. Since non-image files (PDFs, etc.) skip the EXIF tool and go straight through the editor, they need generous limits.
+
+**Memory vs. disk:** PHP streams file uploads directly to a temporary file on disk (`/tmp` by default, controlled by `upload_tmp_dir`). File content is **not held in memory** — only normal PHP process overhead applies regardless of file size.
+
+**Two places to configure:**
+
+**1. PHP ini — set in the Dockerfile**
+
+```dockerfile
+RUN echo "upload_max_filesize = 50M\npost_max_size = 52M" \
+    > /usr/local/etc/php/conf.d/uploads.ini
+```
+
+`post_max_size` must be slightly larger than `upload_max_filesize` (it covers the entire POST body including multipart boundaries).
+
+**2. Caddy — request body limit in `Caddyfile`**
+
+FrankenPHP embeds Caddy, so Caddy also needs to allow large bodies. Add inside the `route` block:
+
+```
+route {
+    request_body {
+        max_size 50MB
+    }
+    # ... existing directives
+}
+```
+
+Without this, Caddy will reject large requests before PHP ever sees them.
+
+**Choosing a limit:** 50MB is a reasonable cap for a personal site. Compressed images from the EXIF tool will be well under 2MB; this headroom is mainly for PDFs and other non-image files. Tune if needed.
+
 ### Phase 3: EXIF-Strip Tool
 
 A Filament custom page — accessible in the admin sidebar — that is entirely client-side. No server action, no model, no database.
@@ -117,9 +151,10 @@ If any new env vars are added during implementation, add them to `.env.example` 
 
 ## Implementation Order
 
-1. **Configure MarkdownEditor** — add `fileAttachmentsDisk`, `fileAttachmentsDirectory`, `fileAttachmentsVisibility` to all relevant editors; write a feature test confirming file attachments work
-2. **Build EXIF-strip tool** — Filament custom page + Alpine.js + `browser-image-compression`
-3. **Deployment config** — verify env vars, deploy, test end-to-end
+1. **Raise upload size limits** — PHP ini (`upload_max_filesize`, `post_max_size`) in Dockerfile + Caddy `request_body max_size` in Caddyfile
+2. **Configure MarkdownEditor** — add `fileAttachmentsDisk`, `fileAttachmentsDirectory`, `fileAttachmentsVisibility` to all relevant editors; write a feature test confirming file attachments work
+3. **Build EXIF-strip tool** — Filament custom page + Alpine.js + `browser-image-compression`
+4. **Deployment config** — verify env vars, deploy, test end-to-end
 
 ---
 
@@ -127,13 +162,14 @@ If any new env vars are added during implementation, add them to `.env.example` 
 
 - [x] Public R2 bucket created with `cdn.davidharting.com` custom domain
 - [x] `r2-public` filesystem disk configured in Laravel
+- [ ] PHP ini and Caddy upload size limits raised (50MB)
 - [ ] MarkdownEditor configured with R2 file attachments (public visibility, permanent URLs)
 - [ ] EXIF-strip tool built (Filament custom page, client-side only)
 - [ ] Production deployment verified end-to-end
 
 ## Resolved Decisions
 
-- **Upload mechanism:** `MarkdownEditor` file attachments — server-proxied via Livewire → PHP → R2. Simpler than presigned URLs for this use case; file sizes after client-side compression are well within PHP limits.
+- **Upload mechanism:** `MarkdownEditor` file attachments — server-proxied via Livewire → PHP → R2. Simpler than presigned URLs for this use case. PHP streams uploads to a temp file on disk (not in-memory), so large files don't affect memory. PHP ini limits (`upload_max_filesize`, `post_max_size`) and Caddy's body size limit must both be raised — see Phase 2.5.
 - **No media library model:** `spatie/laravel-media-library`, a `FileUpload` model, and a Filament resource are not needed. Filament's built-in file attachment handling is sufficient.
 - **EXIF handling:** Strip EXIF client-side using `browser-image-compression` in a dedicated tool before the file is dragged into the editor. The server never sees raw EXIF data.
 - **Image conversions:** None server-side. No Imagick, Ghostscript, or optimizer binaries needed in Docker.
@@ -142,3 +178,4 @@ If any new env vars are added during implementation, add them to `.env.example` 
 - **Disk strategy:** `local-public` for dev, `r2-public` for prod, controlled by `FILESYSTEM_DISK_PUBLIC` env var.
 - **Custom domain:** `cdn.davidharting.com`
 - **OG/social preview images:** Best handled with an explicit `og_image_url` field on Note/Page rather than inferring from content. Separate future feature.
+- **Attachment filename customization:** `MarkdownEditor` does not expose a filename hook equivalent to `FileUpload`'s `getUploadedFileNameForStorageUsing()`. The available methods are limited to disk, directory, visibility, accepted file types, and max size. Customizing filenames to a pattern like `{note-slug}-{ulid}.{ext}` would require either a post-upload rename observer or a fully custom editor component — not worth the complexity for a personal site. Accept UUID-based filenames.
