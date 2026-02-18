@@ -64,13 +64,18 @@ On all `MarkdownEditor` instances where file attachments should be allowed (curr
 ```php
 MarkdownEditor::make('content')
     ->fileAttachmentsDisk(config('filesystems.default_public')) // or env('FILESYSTEM_DISK_PUBLIC', 'local-public')
-    ->fileAttachmentsDirectory('attachments')
+    ->fileAttachmentsDirectory(fn ($record) => $record
+        ? 'notes/' . $record->slug
+        : 'notes/draft'
+    )
     ->fileAttachmentsVisibility('public'),
 ```
 
 `fileAttachmentsVisibility('public')` ensures Filament embeds the permanent public URL rather than a short-lived presigned URL (which would expire before the markdown is rendered).
 
-The `fileAttachmentsDirectory` can be anything — `attachments` is fine. Files land at `cdn.davidharting.com/attachments/<uuid>.<ext>` in production.
+`fileAttachmentsDirectory()` accepts a closure with injected Filament utilities — `$record` gives access to the current model instance. This organizes uploads into per-note directories (`notes/{slug}/{uuid}.jpg`) rather than a flat `attachments/` bucket. The `'notes/draft'` fallback handles the case where a new record hasn't been saved yet (no slug). Use equivalent `pages/{slug}` for `PageResource`.
+
+The filenames themselves remain UUID-based (see Resolved Decisions), but the directory structure provides meaningful organization and makes it easy to identify or clean up attachments for a given note.
 
 Determine the correct way to reference the `public` disk alias at implementation time — either the env var directly or a config helper.
 
@@ -178,4 +183,4 @@ If any new env vars are added during implementation, add them to `.env.example` 
 - **Disk strategy:** `local-public` for dev, `r2-public` for prod, controlled by `FILESYSTEM_DISK_PUBLIC` env var.
 - **Custom domain:** `cdn.davidharting.com`
 - **OG/social preview images:** Best handled with an explicit `og_image_url` field on Note/Page rather than inferring from content. Separate future feature.
-- **Attachment filename customization:** `MarkdownEditor` does not expose a filename hook equivalent to `FileUpload`'s `getUploadedFileNameForStorageUsing()`. The available methods are limited to disk, directory, visibility, accepted file types, and max size. Customizing filenames to a pattern like `{note-slug}-{ulid}.{ext}` would require either a post-upload rename observer or a fully custom editor component — not worth the complexity for a personal site. Accept UUID-based filenames.
+- **Attachment filename customization:** `MarkdownEditor` does not expose a filename hook equivalent to `FileUpload`'s `getUploadedFileNameForStorageUsing()` — filenames remain UUID-based. However, `fileAttachmentsDirectory()` accepts a closure with injected utilities including `$record`, so files can be organized into per-record directories (`notes/{slug}/{uuid}.jpg`, `pages/{slug}/{uuid}.pdf`). This is good enough: the slug is in the URL path, and cleanup by record is straightforward.
