@@ -18,6 +18,9 @@ RUN install-php-extensions \
     pdo_pgsql \
     zip
 
+RUN echo "upload_max_filesize = 25M\npost_max_size = 27M" \
+    > /usr/local/etc/php/conf.d/uploads.ini
+
 
 COPY docker-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

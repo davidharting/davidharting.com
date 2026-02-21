@@ -25,7 +25,14 @@
             </label>
         </fieldset>
 
-        <input name="file" type="file" class="file-input" />
+        <input
+            name="file"
+            type="file"
+            class="file-input @error("file") file-input-error @enderror"
+        />
+        @error("file")
+            <p class="text-error mt-1">{{ $message }}</p>
+        @enderror
 
         <input type="submit" class="btn mt-4" />
     </form>
