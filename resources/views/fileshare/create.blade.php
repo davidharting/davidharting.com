@@ -25,8 +25,12 @@
             </label>
         </fieldset>
 
-        <input name="file" type="file" class="file-input @error('file') file-input-error @enderror" />
-        @error('file')
+        <input
+            name="file"
+            type="file"
+            class="file-input @error("file") file-input-error @enderror"
+        />
+        @error("file")
             <p class="text-error mt-1">{{ $message }}</p>
         @enderror
 
