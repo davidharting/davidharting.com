@@ -15,6 +15,10 @@ class FileShareController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'file' => ['required', 'file', 'max:25600'],
+        ]);
+
         $diskName = $request->input('disk') === 'public' ? 'public' : 'private';
 
         Log::info('Fileshare store request', [
