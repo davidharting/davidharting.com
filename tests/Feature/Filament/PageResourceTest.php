@@ -5,6 +5,7 @@ use App\Filament\Resources\Pages\Pages\EditPage;
 use App\Filament\Resources\Pages\Pages\ListPages;
 use App\Models\Page;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -107,4 +108,35 @@ test('admin can toggle page publication status', function () {
         'slug' => $page->slug,
         'is_published' => false,
     ]);
+});
+
+test('markdown editor uses public disk and page slug directory for file attachments', function () {
+    Storage::fake('public');
+
+    $admin = User::factory()->create(['is_admin' => true]);
+    $page = Page::factory()->create(['slug' => 'my-page']);
+
+    $instance = Livewire::actingAs($admin)
+        ->test(EditPage::class, ['record' => $page->slug])
+        ->instance();
+
+    $editor = $instance->getSchema('form')->getComponentByStatePath('markdown_content');
+
+    expect($editor->getFileAttachmentsDiskName())->toBe('public');
+    expect($editor->getFileAttachmentsDirectory())->toBe('pages/my-page');
+});
+
+test('markdown editor uses draft directory for file attachments on new page', function () {
+    Storage::fake('public');
+
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $instance = Livewire::actingAs($admin)
+        ->test(CreatePage::class)
+        ->instance();
+
+    $editor = $instance->getSchema('form')->getComponentByStatePath('markdown_content');
+
+    expect($editor->getFileAttachmentsDiskName())->toBe('public');
+    expect($editor->getFileAttachmentsDirectory())->toBe('pages/draft');
 });
