@@ -22,7 +22,12 @@ class PageForm
                 MarkdownEditor::make('markdown_content')
                     ->label('Content')
                     ->required()
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->fileAttachmentsDisk('public')
+                    ->fileAttachmentsDirectory(fn ($record) => $record
+                        ? 'pages/'.$record->slug
+                        : 'pages/draft'
+                    ),
             ]);
     }
 }
