@@ -41,8 +41,8 @@ No spatie/laravel-media-library, no FileUpload model, no presigned URL endpoints
 
 ## High-Level Plan
 
-1. **Create a public R2 bucket** with a custom domain *(already done)*
-2. **Add `r2-public` filesystem disk** to Laravel *(already done)*
+1. **Create a public R2 bucket** with a custom domain _(already done)_
+2. **Add `r2-public` filesystem disk** to Laravel _(already done)_
 3. **Configure `MarkdownEditor` file attachments** — set `fileAttachmentsDisk`, `fileAttachmentsDirectory`, and `fileAttachmentsVisibility` on all relevant editors
 4. **Build the EXIF-strip tool** — Filament custom page with Alpine.js + `browser-image-compression`
 5. **Production deployment** — verify env vars, deploy, test end-to-end
@@ -51,7 +51,7 @@ No spatie/laravel-media-library, no FileUpload model, no presigned URL endpoints
 
 ## Detailed Implementation Plan
 
-### Phase 1: Cloudflare R2 Public Bucket Setup *(complete)*
+### Phase 1: Cloudflare R2 Public Bucket Setup _(complete)_
 
 - Public R2 bucket created with `cdn.davidharting.com` as the custom domain
 - `r2-public` filesystem disk is already configured in `config/filesystems.php`
@@ -121,9 +121,9 @@ A Filament custom page — accessible in the admin sidebar — that is entirely 
 
 1. File input (image files only)
 2. On select, `browser-image-compression` runs in the browser:
-   - Strips EXIF (the canvas round-trip removes it)
-   - Resizes to max 2000px on the longest side
-   - Compresses to a target output size (e.g. 2MB max)
+    - Strips EXIF (the canvas round-trip removes it)
+    - Resizes to max 2000px on the longest side
+    - Compresses to a target output size (e.g. 2MB max)
 3. Shows a before/after size comparison and a preview of the processed image
 4. Offers a download button for the clean file
 
