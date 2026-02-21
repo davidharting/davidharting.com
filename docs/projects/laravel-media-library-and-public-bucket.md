@@ -25,13 +25,13 @@ Rather than building a separate file upload model, admin resource, and presigned
 
 1. **Configure `MarkdownEditor` with `fileAttachmentsDisk`** pointing to the public R2 bucket. Dragged images are uploaded via Livewire → PHP → R2, and the permanent R2 URL is embedded in the markdown automatically.
 
-2. **Build a standalone in-browser EXIF-strip tool** — a Filament custom page that accepts an image, runs `browser-image-compression` entirely in the browser (strips EXIF, resizes, compresses), and offers the clean file as a download. The user downloads the clean image and then drags it into the MarkdownEditor.
+2. **Build a standalone in-browser EXIF-strip tool** — a separate static site that accepts an image, runs `browser-image-compression` entirely in the browser (strips EXIF, resizes, compresses), and offers the clean file as a download. The user downloads the clean image and then drags it into the MarkdownEditor. _(Built and deployed at <https://davidharting.github.io/image-resizer/>)_
 
 No spatie/laravel-media-library, no FileUpload model, no presigned URL endpoints, no Filament resource. The EXIF tool is pure client-side JS — the server is never involved.
 
 **Workflow in practice:**
 
-1. Open the EXIF-strip tool in the Filament admin sidebar
+1. Open the EXIF-strip tool at <https://davidharting.github.io/image-resizer/>
 2. Pick a photo — the browser strips EXIF and resizes it
 3. Download the clean image
 4. Open a Note (or Page), drag the clean image onto the MarkdownEditor
@@ -113,11 +113,11 @@ Without this, Caddy will reject large requests before PHP ever sees them.
 
 **Choosing a limit:** 50MB is a reasonable cap for a personal site. Compressed images from the EXIF tool will be well under 2MB; this headroom is mainly for PDFs and other non-image files. Tune if needed.
 
-### Phase 3: EXIF-Strip Tool
+### Phase 3: EXIF-Strip Tool _(complete)_
 
-A Filament custom page — accessible in the admin sidebar — that is entirely client-side. No server action, no model, no database.
+Built and deployed as a standalone static site at <https://davidharting.github.io/image-resizer/> (source: <https://github.com/davidharting/image-resizer>). Entirely client-side — no server action, no model, no database, and no integration with the Laravel app.
 
-**The page does:**
+**The tool does:**
 
 1. File input (image files only)
 2. On select, `browser-image-compression` runs in the browser:
@@ -128,13 +128,6 @@ A Filament custom page — accessible in the admin sidebar — that is entirely 
 4. Offers a download button for the clean file
 
 Non-image files are out of scope for this tool — the MarkdownEditor handles non-image attachments (PDFs, etc.) as-is.
-
-**Implementation notes:**
-
-- Install `browser-image-compression` via npm
-- The Filament custom page needs a Blade view — wire the JS via Alpine.js
-- No Livewire state needed; Alpine handles all interactivity
-- The page should be registered in the Filament panel provider's `pages()` array and appear in the sidebar
 
 ### Phase 4: Production Deployment
 
@@ -169,14 +162,14 @@ If any new env vars are added during implementation, add them to `.env.example` 
 - [x] `r2-public` filesystem disk configured in Laravel
 - [ ] PHP ini and Caddy upload size limits raised (50MB)
 - [ ] MarkdownEditor configured with R2 file attachments (public visibility, permanent URLs)
-- [ ] EXIF-strip tool built (Filament custom page, client-side only)
+- [x] EXIF-strip tool built — standalone static site at <https://davidharting.github.io/image-resizer/>
 - [ ] Production deployment verified end-to-end
 
 ## Resolved Decisions
 
 - **Upload mechanism:** `MarkdownEditor` file attachments — server-proxied via Livewire → PHP → R2. Simpler than presigned URLs for this use case. PHP streams uploads to a temp file on disk (not in-memory), so large files don't affect memory. PHP ini limits (`upload_max_filesize`, `post_max_size`) and Caddy's body size limit must both be raised — see Phase 2.5.
 - **No media library model:** `spatie/laravel-media-library`, a `FileUpload` model, and a Filament resource are not needed. Filament's built-in file attachment handling is sufficient.
-- **EXIF handling:** Strip EXIF client-side using `browser-image-compression` in a dedicated tool before the file is dragged into the editor. The server never sees raw EXIF data.
+- **EXIF handling:** Strip EXIF client-side using `browser-image-compression` in a dedicated standalone tool (<https://davidharting.github.io/image-resizer/>) before the file is dragged into the editor. The server never sees raw EXIF data. Built as a GitHub Pages static site rather than a Filament custom page — keeps it completely decoupled from the Laravel app.
 - **Image conversions:** None server-side. No Imagick, Ghostscript, or optimizer binaries needed in Docker.
 - **File types in EXIF tool:** Images only. Non-image files (PDFs, etc.) can be dragged into the MarkdownEditor directly — no processing needed.
 - **fileAttachmentsVisibility:** `public` — permanent URLs must be embedded in markdown because short-lived presigned URLs expire before the content is rendered.
