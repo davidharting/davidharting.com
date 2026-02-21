@@ -17,6 +17,9 @@ class FileShareController extends Controller
     {
         $request->validate([
             'file' => ['required', 'file', 'max:25600'],
+        ], [
+            'file.file' => 'The file failed to upload. Files must be 25MB or smaller.',
+            'file.max' => 'The file must be 25MB or smaller.',
         ]);
 
         $diskName = $request->input('disk') === 'public' ? 'public' : 'private';

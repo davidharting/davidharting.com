@@ -39,7 +39,7 @@ test('store rejects oversized file', function () {
     $store->assertSessionHasErrors('file');
 
     $create = $this->actingAs($user)->get('/fileshare/create');
-    $create->assertSeeText('The file field must not be greater than 25600 kilobytes.');
+    $create->assertSeeText('The file must be 25MB or smaller.');
 });
 
 test('happy path', function () {
