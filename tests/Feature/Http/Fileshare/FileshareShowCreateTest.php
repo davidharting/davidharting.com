@@ -15,11 +15,14 @@ test('store rejects missing file', function () {
     /** @var TestCase $this */
     $user = User::factory()->createOne();
 
-    $response = $this->actingAs($user)->post('/fileshare', [
+    $store = $this->actingAs($user)->post('/fileshare', [
         '_token' => csrf_token(),
     ]);
 
-    $response->assertSessionHasErrors('file');
+    $store->assertSessionHasErrors('file');
+
+    $create = $this->actingAs($user)->get('/fileshare/create');
+    $create->assertSeeText('The file field is required.');
 });
 
 test('store rejects oversized file', function () {
@@ -28,12 +31,15 @@ test('store rejects oversized file', function () {
 
     $file = UploadedFile::fake()->create('big.pdf', 25601); // 1KB over 25MB limit
 
-    $response = $this->actingAs($user)->post('/fileshare', [
+    $store = $this->actingAs($user)->post('/fileshare', [
         '_token' => csrf_token(),
         'file' => $file,
     ]);
 
-    $response->assertSessionHasErrors('file');
+    $store->assertSessionHasErrors('file');
+
+    $create = $this->actingAs($user)->get('/fileshare/create');
+    $create->assertSeeText('The file field must not be greater than 25600 kilobytes.');
 });
 
 test('happy path', function () {
