@@ -39,7 +39,12 @@ class NoteResource extends Resource
                     ->columnSpanFull(),
                 MarkdownEditor::make('markdown_content')
                     ->label('Content')
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->fileAttachmentsDisk('public')
+                    ->fileAttachmentsDirectory(fn ($record) => $record
+                        ? 'notes/'.$record->slug
+                        : 'notes/draft'
+                    ),
                 Toggle::make('visible')->default(true)
                     ->required(),
             ]);
