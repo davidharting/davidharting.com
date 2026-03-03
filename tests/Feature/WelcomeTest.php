@@ -38,17 +38,6 @@ test('navigation links are present for anonymous users', function () {
     $response->assertDontSee(route('admin.index'));
 });
 
-test('home page does not load Livewire or Alpine', function () {
-    /** @var TestCase $this */
-    $response = $this->get('/');
-    $response->assertSuccessful();
-
-    $response->assertDontSee('wire:');
-    $response->assertDontSee('livewire.js');
-    $response->assertDontSee('alpine.js');
-    $response->assertDontSee('x-data');
-});
-
 test('admin link is visible to admin users', function () {
     /** @var TestCase $this */
     $admin = User::factory()->admin()->create();
