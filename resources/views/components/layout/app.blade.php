@@ -21,6 +21,14 @@
         <meta name="description" content="{{ $pageDescription }}" />
         <meta property="og:description" content="{{ $pageDescription }}" />
 
+        {{-- PWA --}}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1a1a2e" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-title" content="David Harting" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
         @vite(["resources/css/app.css", "resources/js/app.js"])
 
         <x-feed-links />
