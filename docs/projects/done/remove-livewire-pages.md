@@ -1,3 +1,9 @@
+---
+name: remove-livewire-pages
+description: Remove all usage of Livewire from the public site
+status: done
+---
+
 # Project: Remove Livewire Content Pages
 
 **What**: A multiple PR, small project to get rid of full-page Livewire components for content-focused pages
