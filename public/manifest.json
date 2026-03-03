@@ -1,6 +1,6 @@
 {
     "name": "David Harting",
-    "short_name": "davidharting",
+    "short_name": "DH",
     "description": "David's Corner of the Internet",
     "start_url": "/",
     "display": "standalone",
@@ -16,7 +16,13 @@
             "src": "/icons/icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ]
 }
