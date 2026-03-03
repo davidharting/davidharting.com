@@ -70,6 +70,7 @@ test('admin can edit a note', function () {
 });
 
 test('markdown editor uses public disk and note slug directory for file attachments', function () {
+    /** @var TestCase $this */
     Storage::fake('public');
 
     $admin = User::factory()->create(['is_admin' => true]);
@@ -85,7 +86,8 @@ test('markdown editor uses public disk and note slug directory for file attachme
     expect($editor->getFileAttachmentsDirectory())->toBe('notes/my-note');
 });
 
-test('markdown editor uses draft directory for file attachments on new note', function () {
+test('markdown editor uses date-based directory for file attachments on new note', function () {
+    /** @var TestCase $this */
     Storage::fake('public');
 
     $admin = User::factory()->create(['is_admin' => true]);
@@ -97,5 +99,5 @@ test('markdown editor uses draft directory for file attachments on new note', fu
     $editor = $instance->getSchema('form')->getComponentByStatePath('markdown_content');
 
     expect($editor->getFileAttachmentsDiskName())->toBe('public');
-    expect($editor->getFileAttachmentsDirectory())->toBe('notes/draft');
+    expect($editor->getFileAttachmentsDirectory())->toBe('notes/'.now()->toDateString());
 });

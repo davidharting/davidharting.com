@@ -111,6 +111,7 @@ test('admin can toggle page publication status', function () {
 });
 
 test('markdown editor uses public disk and page slug directory for file attachments', function () {
+    /** @var TestCase $this */
     Storage::fake('public');
 
     $admin = User::factory()->create(['is_admin' => true]);
@@ -126,7 +127,8 @@ test('markdown editor uses public disk and page slug directory for file attachme
     expect($editor->getFileAttachmentsDirectory())->toBe('pages/my-page');
 });
 
-test('markdown editor uses draft directory for file attachments on new page', function () {
+test('markdown editor uses date-based directory for file attachments on new page', function () {
+    /** @var TestCase $this */
     Storage::fake('public');
 
     $admin = User::factory()->create(['is_admin' => true]);
@@ -138,5 +140,5 @@ test('markdown editor uses draft directory for file attachments on new page', fu
     $editor = $instance->getSchema('form')->getComponentByStatePath('markdown_content');
 
     expect($editor->getFileAttachmentsDiskName())->toBe('public');
-    expect($editor->getFileAttachmentsDirectory())->toBe('pages/draft');
+    expect($editor->getFileAttachmentsDirectory())->toBe('pages/'.now()->toDateString());
 });

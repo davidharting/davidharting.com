@@ -43,7 +43,7 @@ class NoteResource extends Resource
                     ->fileAttachmentsDisk('public')
                     ->fileAttachmentsDirectory(fn ($record) => $record
                         ? 'notes/'.$record->slug
-                        : 'notes/draft'
+                        : 'notes/'.now()->toDateString()
                     ),
                 Toggle::make('visible')->default(true)
                     ->required(),

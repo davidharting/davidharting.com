@@ -26,7 +26,7 @@ class PageForm
                     ->fileAttachmentsDisk('public')
                     ->fileAttachmentsDirectory(fn ($record) => $record
                         ? 'pages/'.$record->slug
-                        : 'pages/draft'
+                        : 'pages/'.now()->toDateString()
                     ),
             ]);
     }

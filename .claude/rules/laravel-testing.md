@@ -4,6 +4,17 @@ globs: tests/**/*Test.php
 
 # Laravel Testing Rules
 
+## Pest tests that use `$this`
+
+Always add `/** @var TestCase $this */` as the first line inside every Pest test closure. This enables IDE type resolution for `$this` and makes it easy to use `$this` assertions at any point without needing to add the annotation later.
+
+```php
+test('example', function () {
+    /** @var TestCase $this */
+    $this->assertDatabaseHas('notes', ['slug' => 'foo']);
+});
+```
+
 ## assertSee vs assertSeeText
 
 Use the appropriate assertion based on what you're testing:
