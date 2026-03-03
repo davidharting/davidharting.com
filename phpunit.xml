@@ -28,5 +28,6 @@
         <env name="SESSION_DRIVER" value="database"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="APP_URL" value="http://davidharting-dot-com.test" />
+        <env name="TELEGRAM_DAVID_ID" value="123456789" />
     </php>
 </phpunit>

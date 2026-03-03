@@ -22,6 +22,10 @@ davidharting.com {
 	}
 
 	route {
+		request_body {
+			max_size 27MB
+		}
+
 		root * "{$APP_PUBLIC_PATH}"
 		encode zstd br gzip
 

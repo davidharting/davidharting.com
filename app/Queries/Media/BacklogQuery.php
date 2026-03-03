@@ -26,6 +26,7 @@ class BacklogQuery
                 'creators.name as creator',
                 'media_types.name as type',
                 'media.created_at as occurred_at',
+                DB::raw("TO_CHAR(media.created_at, 'YYYY FMMonth DD') as formatted_date"),
                 'media.note as note'
             )
 

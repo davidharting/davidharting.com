@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enum\MediaTypeName;
+use App\Models\Media;
 use App\Queries\Media\BacklogQuery;
 use App\Queries\Media\InProgressQuery;
 use App\Queries\Media\LogbookQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class MediaIndexController extends Controller
@@ -43,6 +45,9 @@ class MediaIndexController extends Controller
             'year' => $year,
             'type' => $type,
             'disableFilters' => $disableFilters,
+            'canViewMedia' => Gate::allows('viewAny', Media::class),
+            'canAdministrate' => Gate::allows('administrate'),
+            'canSeeNote' => Gate::allows('seeNote', Media::class),
         ]);
     }
 

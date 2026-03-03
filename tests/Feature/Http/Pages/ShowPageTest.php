@@ -10,6 +10,17 @@ test('404 if page not found', function () {
     $response->assertNotFound();
 });
 
+test('404 for attack-style invalid page slugs', function (string $invalidSlug) {
+    /** @var TestCase $this */
+    $response = $this->get('/pages/'.$invalidSlug);
+    $response->assertNotFound();
+})->with([
+    '.env',
+    '../etc/passwd',
+    '<script>alert(1)</script>',
+    'random-string',
+]);
+
 test('404 if page not published for non-admin', function () {
     /** @var TestCase $this */
     $page = Page::factory()->unpublished()->create();

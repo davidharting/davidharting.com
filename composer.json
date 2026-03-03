@@ -22,6 +22,7 @@
         "league/flysystem-aws-s3-v3": "^3.0",
         "league/html-to-markdown": "^5.1",
         "mailersend/laravel-driver": "^2.7",
+        "nutgram/laravel": "^1.6",
         "spatie/laravel-backup": "^9.3",
         "spatie/laravel-feed": "^4.4"
     },

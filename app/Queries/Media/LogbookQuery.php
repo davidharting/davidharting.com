@@ -31,6 +31,7 @@ class LogbookQuery
                 'creators.name as creator',
                 'media_types.name as type',
                 'media_events.occurred_at as occurred_at',
+                DB::raw("TO_CHAR(media_events.occurred_at, 'YYYY FMMonth DD') as formatted_date"),
                 'media_events.comment as finished_comment',
                 'media.note as note'
             )

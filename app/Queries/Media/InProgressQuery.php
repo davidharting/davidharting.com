@@ -35,6 +35,7 @@ class InProgressQuery
             'creators.name as creator',
             'media_types.name as type',
             'started_events.occurred_at as occurred_at',
+            DB::raw("TO_CHAR(started_events.occurred_at, 'YYYY FMMonth DD') as formatted_date"),
             'media.note as note'
         );
 

@@ -22,6 +22,10 @@ secrets:
         file: ./secrets/R2_PRIVATE_BUCKET.txt
     NIGHTWATCH_TOKEN:
         file: ./secrets/NIGHTWATCH_TOKEN.txt
+    TELEGRAM_TOKEN:
+        file: ./secrets/TELEGRAM_TOKEN.txt
+    TELEGRAM_DAVID_ID:
+        file: ./secrets/TELEGRAM_DAVID_ID.txt
 
 x-laravel-config: &laravel-config
     image: ghcr.io/davidharting/davidharting.com:latest
@@ -35,6 +39,8 @@ x-laravel-config: &laravel-config
         - R2_ENDPOINT
         - R2_PRIVATE_BUCKET
         - NIGHTWATCH_TOKEN
+        - TELEGRAM_TOKEN
+        - TELEGRAM_DAVID_ID
     environment:
         APP_DEBUG: "false"
         APP_ENV: production
@@ -50,6 +56,9 @@ x-laravel-config: &laravel-config
         DB_PORT: 5432
         DB_USERNAME: laravel
         FILESYSTEM_DISK_PRIVATE: r2-private
+        FILESYSTEM_DISK_PUBLIC: r2-public
+        R2_PUBLIC_BUCKET: davidhartingdotcom-public
+        R2_PUBLIC_URL: https://cdn.davidharting.com
         LOG_CHANNEL: stack
         LOG_STACK: stderr,nightwatch
         LOG_DEPRECATIONS_CHANNEL: null
@@ -170,6 +179,19 @@ services:
             interval: 30s
             timeout: 5s
             retries: 5
+
+    configure-telegram:
+        <<: *laravel-config
+        command:
+            [
+                "sh",
+                "-c",
+                "php artisan nutgram:hook:set https://davidharting.com/api/telegram/webhook && php artisan nutgram:register-commands",
+            ]
+        restart: no
+        depends_on:
+            migrations:
+                condition: service_completed_successfully
 
     nightwatch-agent:
         image: laravelphp/nightwatch-agent:v1

@@ -48,7 +48,7 @@ Route::get('/media', MediaIndexController::class)->name('media.index');
 Route::get('/media/log', function () {
     return redirect()->route('media.index', request()->query());
 });
-Route::get('/media/{media}', [MediaController::class, 'show'])->name('media.show')->can('view', 'media');
+Route::get('/media/{media}', [MediaController::class, 'show'])->name('media.show')->can('view', 'media')->whereNumber('media');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

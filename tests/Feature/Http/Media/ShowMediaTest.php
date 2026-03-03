@@ -105,6 +105,19 @@ test('timeline shows all event types sorted oldest-first with dates and comments
     ]);
 });
 
+test('404 for non-numeric media ID', function (string $invalidId) {
+    /** @var TestCase $this */
+    $response = $this->get('/media/'.$invalidId);
+
+    $response->assertNotFound();
+})->with([
+    '.env',
+    '../etc/passwd',
+    '<script>alert(1)</script>',
+    'random-string',
+    'abc',
+]);
+
 test('page includes back link to media index', function () {
     /** @var TestCase $this */
     $admin = User::factory()->admin()->create();
