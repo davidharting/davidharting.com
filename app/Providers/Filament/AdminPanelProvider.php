@@ -35,8 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->navigationItems([
                 NavigationItem::make('davidharting.com')
                     ->url(fn () => route('home'))
-                    ->icon('heroicon-o-globe-alt')
-                    ->openUrlInNewTab(),
+                    ->icon('heroicon-o-globe-alt'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
