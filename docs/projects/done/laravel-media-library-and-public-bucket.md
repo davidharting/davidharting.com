@@ -1,7 +1,7 @@
 ---
 name: laravel-media-library-and-public-bucket
 description: Wire up MarkdownEditor file attachments to R2, and build a standalone in-browser EXIF-strip tool
-status: in-progress
+status: done
 ---
 
 # Image Uploads and EXIF Stripping
@@ -160,10 +160,10 @@ If any new env vars are added during implementation, add them to `.env.example` 
 
 - [x] Public R2 bucket created with `cdn.davidharting.com` custom domain
 - [x] `r2-public` filesystem disk configured in Laravel
-- [ ] PHP ini and Caddy upload size limits raised (50MB)
-- [ ] MarkdownEditor configured with R2 file attachments (public visibility, permanent URLs)
+- [x] PHP ini and Caddy upload size limits raised (25MB)
+- [x] MarkdownEditor configured with R2 file attachments (public visibility, permanent URLs)
 - [x] EXIF-strip tool built — standalone static site at <https://davidharting.github.io/image-resizer/>
-- [ ] Production deployment verified end-to-end
+- [x] Production deployment verified end-to-end
 
 ## Resolved Decisions
 
