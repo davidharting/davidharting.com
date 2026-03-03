@@ -60,10 +60,14 @@ describe('with data', function () {
         $this->get('/media?list=backlog')
             ->assertStatus(200)
             ->assertSeeTextInOrder([
-                '2023 July 22',
+                '2023',
+                'July',
+                '22',
                 'Backlogged Album',
                 'Artist One',
-                '2022 January 01',
+                '2022',
+                'January',
+                '1',
                 'Backlogged Book',
                 'Author One',
             ])
@@ -80,10 +84,14 @@ describe('with data', function () {
         $this->get('/media?list=backlog')
             ->assertStatus(200)
             ->assertSeeTextInOrder([
-                '2023 July 22',
+                '2023',
+                'July',
+                '22',
                 'Backlogged Album',
                 'Artist One',
-                '2022 January 01',
+                '2022',
+                'January',
+                '1',
                 'Backlogged Book',
                 'Author One',
             ]);
@@ -94,7 +102,9 @@ describe('with data', function () {
         $this->get('/media?list=in-progress')
             ->assertStatus(200)
             ->assertSeeTextInOrder([
-                '2024 December 29',
+                '2024',
+                'December',
+                '29',
                 'Reading Book',
                 'Author Three',
             ])
@@ -112,7 +122,9 @@ describe('with data', function () {
         $this->get('/media?list=in-progress')
             ->assertStatus(200)
             ->assertSeeTextInOrder([
-                '2024 December 29',
+                '2024',
+                'December',
+                '29',
                 'Reading Book',
                 'Author Three',
             ]);
@@ -123,14 +135,20 @@ describe('with data', function () {
         $this->get('/media')
             ->assertStatus(200)
             ->assertSeeTextInOrder([
-                '2022 January 07',
+                '2022',
+                'January',
+                '7',
                 'Watched Movie',
 
-                '2019 December 26',
+                '2019',
+                'December',
+                '26',
                 'Read Book',
                 'Author Two',
 
-                '2018 September 06',
+                '2018',
+                'September',
+                '6',
                 'Listened Album',
                 'Artist Two',
             ])
@@ -218,6 +236,61 @@ describe('with data', function () {
             $this->get('/media')
                 ->assertSeeTextInOrder(['Recommended by George', 'It was great!']);
         });
+    });
+
+    test('displays year and month headings for finished items', function () {
+        /** @var TestCase $this */
+        // Clear existing data
+        MediaEvent::query()->delete();
+        Media::query()->delete();
+
+        // Create items spanning multiple years and months
+        Media::factory()
+            ->movie()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2024, 3, 15)), 'events')
+            ->create(['title' => 'March Movie']);
+
+        Media::factory()
+            ->book()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2024, 3, 8)), 'events')
+            ->create(['title' => 'March Book']);
+
+        Media::factory()
+            ->album()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2024, 1, 20)), 'events')
+            ->create(['title' => 'January Album']);
+
+        Media::factory()
+            ->movie()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2022, 12, 25)), 'events')
+            ->create(['title' => 'December Movie']);
+
+        $response = $this->get('/media');
+        $response->assertSuccessful();
+
+        // Verify year and month headings appear in correct order with items
+        $response->assertSeeTextInOrder([
+            '2024',      // Year heading
+            'March',     // Month heading
+            '15',        // Day
+            'March Movie',
+            '8',         // Day
+            'March Book',
+            'January',   // Month heading (same year, no year repeat)
+            '20',        // Day
+            'January Album',
+            '2022',      // Year heading
+            'December',  // Month heading
+            '25',        // Day
+            'December Movie',
+        ]);
+
+        // Verify gap year is not present
+        $response->assertDontSeeText('2023');
+
+        // Verify months without items are not present
+        $response->assertDontSeeText('February');
+        $response->assertDontSeeText('November');
     });
 
     // TODO: Test filtering

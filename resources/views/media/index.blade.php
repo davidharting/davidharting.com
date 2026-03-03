@@ -75,68 +75,105 @@
             MediaTypeName::TvShow->value => "📺",
             MediaTypeName::VideoGame->value => "🎮",
         ];
+        $currentYear = null;
+        $currentMonth = null;
     @endphp
 
-    <div class="my-6">
+    <div class="mt-12">
         @if ($items->isEmpty())
             No items
         @else
-            <div>
-                <ul class="space-y-4">
-                    @foreach ($items as $item)
-                        <li>
-                            <div>
-                                <div class="text-sm text-base-content/60">
-                                    {{ $item->formatted_date }}
-                                </div>
-                                <div>
-                                    <span>
-                                        {{ $iconMap[$item->type] ?? "" }}
-                                    </span>
-                                    @if ($canViewMedia)
-                                        <a
-                                            href="{{ route("media.show", $item->id) }}"
-                                            class="link link-hover"
-                                        >
-                                            {{ $item->title }}
-                                        </a>
-                                    @else
-                                        <span>{{ $item->title }}</span>
-                                    @endif
-                                </div>
-                                <div class="text-sm">
-                                    {{ $item->creator }}
-                                </div>
-                                @if ($canSeeNote)
-                                    @if ($item->note)
-                                        <div
-                                            class="text-xs text-base-content/60"
-                                        >
-                                            {{ trim($item->note) }}
-                                        </div>
-                                    @endif
+            <div class="space-y-3">
+                @foreach ($items as $item)
+                    @php
+                        $date = \Carbon\Carbon::parse($item->occurred_at);
+                        $itemYear = $date->year;
+                        $itemMonth = $date->month;
+                    @endphp
 
-                                    @if (isset($item->finished_comment) && $item->finished_comment)
-                                        <div
-                                            class="text-xs text-base-content/60"
-                                        >
-                                            {{ trim($item->finished_comment) }}
-                                        </div>
-                                    @endif
-                                @endif
+                    @if ($itemYear !== $currentYear)
+                        @php
+                            $currentYear = $itemYear;
+                            $currentMonth = null;
+                        @endphp
 
-                                @if ($canAdministrate)
+                        <h2 class="text-xl {{ $loop->first ? "" : "mt-10" }}">
+                            {{ $currentYear }}
+                        </h2>
+                    @endif
+
+                    @if ($itemMonth !== $currentMonth)
+                        @php
+                            $currentMonth = $itemMonth;
+                        @endphp
+
+                        <h3
+                            class="text-base text-base-content/70 {{ $loop->first ? "" : "mt-6" }}"
+                        >
+                            {{ $date->format("F") }}
+                        </h3>
+                    @endif
+
+                    <div class="flex gap-2 sm:gap-4">
+                        <div
+                            class="w-6 sm:w-10 shrink-0 text-sm text-base-content/50 text-right tabular-nums"
+                        >
+                            {{ $date->format("j") }}
+                        </div>
+                        <div>
+                            <div class="flex items-baseline gap-2">
+                                <span
+                                    class="text-sm"
+                                    title="{{ $item->type }}"
+                                >
+                                    {{ $iconMap[$item->type] ?? "" }}
+                                </span>
+                                @if ($canViewMedia)
                                     <a
-                                        class="link link-neutral text-xs text-base-content/60"
-                                        href="{{ route("filament.admin.resources.media.edit", $item->id) }}"
+                                        href="{{ route("media.show", $item->id) }}"
+                                        class="link-hover"
                                     >
-                                        Edit
+                                        {{ $item->title }}
                                     </a>
+                                @else
+                                    <span>{{ $item->title }}</span>
                                 @endif
                             </div>
-                        </li>
-                    @endforeach
-                </ul>
+                            @if ($item->creator)
+                                <div class="text-sm text-base-content/60">
+                                    {{ $item->creator }}
+                                </div>
+                            @endif
+
+                            @if ($canSeeNote)
+                                @if ($item->note)
+                                    <div
+                                        class="text-sm text-base-content/50 mt-1"
+                                    >
+                                        {{ trim($item->note) }}
+                                    </div>
+                                @endif
+
+                                @if (isset($item->finished_comment) && $item->finished_comment)
+                                    <div
+                                        class="text-sm text-base-content/50 mt-1"
+                                    >
+                                        {{ trim($item->finished_comment) }}
+                                    </div>
+                                @endif
+                            @endif
+
+                            @if ($canAdministrate)
+                                <a
+                                    class="link link-neutral text-xs text-base-content/50"
+                                    href="{{ route("filament.admin.resources.media.edit", $item->id) }}"
+                                >
+                                    Edit
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
             </div>
         @endif
     </div>
