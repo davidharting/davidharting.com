@@ -27,7 +27,8 @@ class PageForm
                     ->fileAttachmentsDirectory(fn ($record) => $record
                         ? 'pages/'.$record->slug
                         : 'pages/'.now()->toDateString()
-                    ),
+                    )
+                    ->fileAttachmentsVisibility('public'),
             ]);
     }
 }
