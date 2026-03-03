@@ -27,6 +27,7 @@ The containers are:
 - Use `ripgrep` to search files and `fd` to find files
 - Use `php artisan` for Laravel commands
 - Run tests: `php artisan test` (pass a file path to run one file)
+- Run tests with previously failed tests first, stopping on first failure: `php artisan test --compact --retry --bail`
 - Format code: `task format`
 
 ## Rules
