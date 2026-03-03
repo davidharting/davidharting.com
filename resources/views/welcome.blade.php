@@ -38,32 +38,14 @@
                         fortunate enough to enjoy leisure time, which is filled
                         with walks, wine, books, and games.
                     </p>
-                    <p
-                        x-data="{
-                            email: 'connect@davidharting.com',
-                            showFeedback: false,
-                            tooltipText: 'Copy 📋',
-                            copy() {
-                                navigator.clipboard.writeText(this.email)
-
-                                this.showFeedback = true
-                                setTimeout(() => (this.showFeedback = false), 1500)
-                            },
-                        }"
-                    >
+                    <p>
                         You can email me at
-                        <span
-                            class="tooltip tooltip-primary"
-                            x-bind:class="showFeedback && 'tooltip-open'"
-                            x-bind:data-tip="showFeedback ? 'Copied ✅' : 'Copy 📋'"
+                        <a
+                            href="mailto:connect@davidharting.com"
+                            class="link link-primary"
                         >
-                            <span
-                                class="link link-primary"
-                                x-on:click="copy()"
-                            >
-                                connect@davidharting.com
-                            </span>
-                        </span>
+                            connect@davidharting.com
+                        </a>
 
                         Or, find me on
                         <a
