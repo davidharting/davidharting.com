@@ -60,6 +60,15 @@ test('admin can view unpublished note', function () {
     $response->assertSeeText('Draft post');
 });
 
+test('responds to .md extension with markdown content type', function () {
+    /** @var TestCase $this */
+    $note = Note::factory()->create(['visible' => true, 'title' => 'My Markdown Note']);
+    $response = $this->get('/notes/'.$note->slug.'.md');
+    $response->assertSuccessful();
+    expect($response->headers->get('Content-Type'))->toContain('text/markdown');
+    $response->assertSee('My Markdown Note');
+});
+
 test('code blocks are rendered for syntax highlighting', function () {
     /** @var TestCase $this */
     $note = Note::factory()->create([

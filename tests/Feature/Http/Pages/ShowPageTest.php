@@ -91,6 +91,15 @@ test('show page has correct meta tags', function () {
     $response->assertSeeHtml('<title>About Us</title>');
 });
 
+test('responds to .md extension with markdown content type', function () {
+    /** @var TestCase $this */
+    $page = Page::factory()->create(['is_published' => true, 'title' => 'My Markdown Page']);
+    $response = $this->get('/pages/'.$page->slug.'.md');
+    $response->assertSuccessful();
+    expect($response->headers->get('Content-Type'))->toContain('text/markdown');
+    $response->assertSee('My Markdown Page');
+});
+
 test('code blocks are rendered for syntax highlighting', function () {
     /** @var TestCase $this */
     $page = Page::factory()->create([

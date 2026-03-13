@@ -9,6 +9,7 @@ use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Spatie\MarkdownResponse\Middleware\ProvideMarkdownResponse;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,7 +30,7 @@ Route::get('/healthz', function () {
 
 Route::get('/', function () {
     return view('welcome');
-})->name('home');
+})->name('home')->middleware(ProvideMarkdownResponse::class);
 
 Route::get('/backend', [AdminController::class, 'index'])->name('admin.index')->middleware('can:administrate');
 Route::post('/backend/backup', [AdminController::class, 'backupDatabase'])->name('admin.backup')->middleware('can:administrate');
@@ -38,13 +39,13 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/notes', NotesIndexController::class)->name('notes.index');
-Route::get('/notes/{note}', [NoteController::class, 'show'])->name('notes.show')->can('view', 'note');
+Route::get('/notes', NotesIndexController::class)->name('notes.index')->middleware(ProvideMarkdownResponse::class);
+Route::get('/notes/{note}', [NoteController::class, 'show'])->name('notes.show')->can('view', 'note')->middleware(ProvideMarkdownResponse::class);
 
-Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
-Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show')->can('view', 'page');
+Route::get('/pages', [PageController::class, 'index'])->name('pages.index')->middleware(ProvideMarkdownResponse::class);
+Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show')->can('view', 'page')->middleware(ProvideMarkdownResponse::class);
 
-Route::get('/media', MediaIndexController::class)->name('media.index');
+Route::get('/media', MediaIndexController::class)->name('media.index')->middleware(ProvideMarkdownResponse::class);
 Route::get('/media/log', function () {
     return redirect()->route('media.index', request()->query());
 });

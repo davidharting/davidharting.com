@@ -4,6 +4,19 @@ use App\Models\Page;
 use App\Models\User;
 use Tests\TestCase;
 
+test('responds to .md extension with markdown content type', function () {
+    /** @var TestCase $this */
+    $page1 = Page::factory()->create(['is_published' => true, 'title' => 'First Markdown Page']);
+    $page2 = Page::factory()->create(['is_published' => true, 'title' => 'Second Markdown Page']);
+    $response = $this->get('/pages.md');
+    $response->assertSuccessful();
+    expect($response->headers->get('Content-Type'))->toContain('text/markdown');
+    $response->assertSee('First Markdown Page');
+    $response->assertSee(route('pages.show', $page1->slug));
+    $response->assertSee('Second Markdown Page');
+    $response->assertSee(route('pages.show', $page2->slug));
+});
+
 test('shows pages index', function () {
     /** @var TestCase $this */
     $response = $this->get('/pages');

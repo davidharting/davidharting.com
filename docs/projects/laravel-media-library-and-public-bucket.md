@@ -8,7 +8,7 @@ status: in-progress
 
 ## Prerequisites / Current State
 
-- **PHP:** 8.3 (platform config in `composer.json`; 8.4 locally)
+- **PHP:** 8.4
 - **Laravel:** 12.x
 - **Filament:** 5.x (with Livewire 4.x)
 - **Existing disk config (`config/filesystems.php`):** `local-private`, `local-public`, `r2-private`, and `r2-public` disks are defined. A `public` disk alias resolves to the correct disk via `FILESYSTEM_DISK_PUBLIC` env var (`local-public` in dev, `r2-public` in prod). Public bucket name (`davidhartingdotcom-public`) and URL (`https://cdn.davidharting.com`) are set as plain environment variables in `docker-compose.yml`.

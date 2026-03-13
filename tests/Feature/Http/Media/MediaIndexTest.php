@@ -7,6 +7,17 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
+test('responds to .md extension with markdown content type', function () {
+    /** @var TestCase $this */
+    Media::factory()->book()->for(Creator::factory(['name' => 'Author One']))->create(['title' => 'First Markdown Book']);
+    Media::factory()->album()->for(Creator::factory(['name' => 'Artist One']))->create(['title' => 'Second Markdown Album']);
+    $response = $this->get('/media.md?list=backlog');
+    $response->assertSuccessful();
+    expect($response->headers->get('Content-Type'))->toContain('text/markdown');
+    $response->assertSee('First Markdown Book');
+    $response->assertSee('Second Markdown Album');
+});
+
 test('empty state', function () {
     /** @var TestCase $this */
     $this->get('/media')

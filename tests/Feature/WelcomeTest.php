@@ -3,6 +3,15 @@
 use App\Models\User;
 use Tests\TestCase;
 
+test('responds to markdown accept header with markdown content type', function () {
+    /** @var TestCase $this */
+    $response = $this->get('/', ['Accept' => 'text/markdown']);
+    $response->assertSuccessful();
+    expect($response->headers->get('Content-Type'))->toContain('text/markdown');
+    $response->assertSee('Hi! I am David Harting');
+    $response->assertSee('https://github.com/davidharting');
+});
+
 test('Welcome page contains link to atom feed', function () {
     /** @var TestCase $this */
     $response = $this->get('/');
