@@ -88,6 +88,19 @@ test('non-admin user cannot see unpublished notes', function () {
     $response->assertDontSeeText('Unpublished note');
 });
 
+test('responds to .md extension with markdown content type', function () {
+    /** @var TestCase $this */
+    $note1 = Note::factory()->create(['visible' => true, 'title' => 'First Markdown Note']);
+    $note2 = Note::factory()->create(['visible' => true, 'title' => 'Second Markdown Note']);
+    $response = $this->get('/notes.md');
+    $response->assertSuccessful();
+    expect($response->headers->get('Content-Type'))->toContain('text/markdown');
+    $response->assertSee('First Markdown Note');
+    $response->assertSee(route('notes.show', $note1->slug));
+    $response->assertSee('Second Markdown Note');
+    $response->assertSee(route('notes.show', $note2->slug));
+});
+
 test('guest user cannot see unpublished notes', function () {
     /** @var TestCase $this */
     Note::factory()->createMany([
