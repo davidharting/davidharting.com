@@ -95,6 +95,4 @@ Add the inline keyboard and write to DB on confirm.
 ## Out of Scope
 
 - Editing or deleting existing events
-- Custom `occurred_at` dates
 - Browsing/searching the library via bot
-- Multiple DB matches for the same title
