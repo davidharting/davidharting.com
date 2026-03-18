@@ -26,6 +26,8 @@ secrets:
         file: ./secrets/TELEGRAM_TOKEN.txt
     TELEGRAM_DAVID_ID:
         file: ./secrets/TELEGRAM_DAVID_ID.txt
+    ANTHROPIC_API_KEY:
+        file: ./secrets/ANTHROPIC_API_KEY.txt
 
 x-laravel-config: &laravel-config
     image: ghcr.io/davidharting/davidharting.com:latest
@@ -41,6 +43,7 @@ x-laravel-config: &laravel-config
         - NIGHTWATCH_TOKEN
         - TELEGRAM_TOKEN
         - TELEGRAM_DAVID_ID
+        - ANTHROPIC_API_KEY
     environment:
         APP_DEBUG: "false"
         APP_ENV: production
