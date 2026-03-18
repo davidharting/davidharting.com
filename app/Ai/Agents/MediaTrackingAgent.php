@@ -3,6 +3,7 @@
 namespace App\Ai\Agents;
 
 use Laravel\Ai\Attributes\Provider;
+use Laravel\Ai\Attributes\UseCheapestModel;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
@@ -11,6 +12,7 @@ use Laravel\Ai\Promptable;
 use Stringable;
 
 #[Provider('anthropic')]
+#[UseCheapestModel]
 class MediaTrackingAgent implements Agent, HasTools
 {
     use Promptable;
