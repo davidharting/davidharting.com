@@ -2,6 +2,7 @@
 
 use App\Ai\Agents\MediaTrackingAgent;
 use Illuminate\Foundation\Testing\TestCase;
+use Laravel\Ai\Exceptions\InsufficientCreditsException;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\User\User;
 use SergiX44\Nutgram\Testing\FakeNutgram;
@@ -39,6 +40,23 @@ test('track command without text falls through to fallback handler', function ()
     $bot->hearText('/track')
         ->reply()
         ->assertReplyText('I cannot respond to general conversation yet');
+});
+
+test('track command replies with error message when AI provider fails', function () {
+    /** @var TestCase $this */
+    MediaTrackingAgent::fake(fn () => throw InsufficientCreditsException::forProvider('anthropic'));
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(User::make(
+        id: config('nutgram.owner_user_id'),
+        is_bot: false,
+        first_name: 'David',
+    ));
+
+    $bot->hearText('/track Add The Hobbit to my backlog')
+        ->reply()
+        ->assertReplyText('Sorry, I ran into an issue processing your request. Please try again later.');
 });
 
 test('unauthorized user is rejected from track command', function () {
