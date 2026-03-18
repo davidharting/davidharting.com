@@ -40,12 +40,11 @@ class MediaTrackingAgent implements Agent, HasTools
         Always use web search to confirm the publication year and primary creator before responding.
 
         Primary creator by media type:
+        - Album → artist
         - Book → author
         - Movie → director
         - TV show → creator or showrunner
-        - Game → developer studio
-        - Podcast → host
-        - Album → artist
+        - Video game → developer studio
 
         One creator only. Pick the single most relevant primary creator. For example, for a movie with multiple directors, pick the lead.
 
