@@ -26,6 +26,7 @@ class TrackCommand extends Command
             $bot->sendMessage($response->text);
         } catch (AiException $e) {
             Log::error('MediaTrackingAgent failed', ['exception' => $e]);
+            // Okay to surface exception details — only David can use this command (OnlyDavidMiddleware)
             $bot->sendMessage("Error: {$e->getMessage()}");
         }
     }

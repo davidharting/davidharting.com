@@ -4,13 +4,6 @@ use App\Ai\Agents\MediaTrackingAgent;
 use Illuminate\Foundation\Testing\TestCase;
 use Laravel\Ai\Attributes\Provider;
 
-test('MediaTrackingAgent can be instantiated', function () {
-    /** @var TestCase $this */
-    $agent = MediaTrackingAgent::make();
-
-    $this->assertInstanceOf(MediaTrackingAgent::class, $agent);
-});
-
 test('MediaTrackingAgent uses the anthropic provider', function () {
     /** @var TestCase $this */
     $reflection = new ReflectionClass(MediaTrackingAgent::class);
@@ -20,9 +13,9 @@ test('MediaTrackingAgent uses the anthropic provider', function () {
     $this->assertSame('anthropic', $attributes[0]->newInstance()->value);
 });
 
-test('MediaTrackingAgent has instructions', function () {
+test('MediaTrackingAgent instructions mention media tracking', function () {
     /** @var TestCase $this */
     $agent = MediaTrackingAgent::make();
 
-    $this->assertNotEmpty($agent->instructions());
+    $this->assertStringContainsString('media', strtolower((string) $agent->instructions()));
 });
