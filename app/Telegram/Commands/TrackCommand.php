@@ -12,20 +12,10 @@ class TrackCommand extends Command
 
     protected ?string $description = 'Track media with AI assistance';
 
-    public function handle(Nutgram $bot): void
+    public function handle(Nutgram $bot, string $text): void
     {
-        $text = $bot->getMessage()?->getText() ?? '';
-
-        // Strip the /track prefix to get the user's message
-        $text = trim(preg_replace('/^\/track\s*/i', '', $text));
-
-        if ($text === '') {
-            $bot->sendMessage('Please provide something to track. Example: /track Add The Hobbit to my backlog');
-
-            return;
-        }
-
-        $response = MediaTrackingAgent::make()->prompt($text);
+        // Should we make() in a way that the container can inject dependencies if we have them in the future?
+        $response = MediaTrackingAgent::make()->prompt(trim($text));
 
         $bot->sendMessage($response->text);
     }
