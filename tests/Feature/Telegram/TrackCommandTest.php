@@ -26,7 +26,7 @@ test('track command sends user text to MediaTrackingAgent and replies with respo
     MediaTrackingAgent::assertPrompted('Add The Hobbit to my backlog');
 });
 
-test('track command without text falls through to fallback handler', function () {
+test('track command without text replies with usage hint', function () {
     /** @var TestCase $this */
 
     /** @var FakeNutgram $bot */
@@ -39,7 +39,7 @@ test('track command without text falls through to fallback handler', function ()
 
     $bot->hearText('/track')
         ->reply()
-        ->assertReplyText('I cannot respond to general conversation yet');
+        ->assertReplyText('Usage: /track <description>'."\n".'Example: /track Add The Hobbit to my backlog');
 });
 
 test('track command replies with error message when AI provider fails', function () {
@@ -56,7 +56,7 @@ test('track command replies with error message when AI provider fails', function
 
     $bot->hearText('/track Add The Hobbit to my backlog')
         ->reply()
-        ->assertReplyText('Sorry, I ran into an issue processing your request. Please try again later.');
+        ->assertReplyText('Error: AI provider [anthropic] has insufficient credits or quota.');
 });
 
 test('unauthorized user is rejected from track command', function () {

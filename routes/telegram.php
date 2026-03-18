@@ -22,6 +22,9 @@ $bot->onCommand('example', function (Nutgram $bot) {
 $bot->registerCommand(App\Telegram\Commands\WhoamiCommand::class);
 $bot->registerCommand(App\Telegram\Commands\TrackCommand::class)
     ->middleware(OnlyDavidMiddleware::class);
+$bot->onCommand('track', function (Nutgram $bot) {
+    $bot->sendMessage(App\Telegram\Commands\TrackCommand::usageMessage());
+})->middleware(OnlyDavidMiddleware::class);
 
 $bot->onMessage(function (Nutgram $bot) {
     $bot->sendMessage('I cannot respond to general conversation yet');

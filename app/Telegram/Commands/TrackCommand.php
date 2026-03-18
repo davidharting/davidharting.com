@@ -14,6 +14,11 @@ class TrackCommand extends Command
 
     protected ?string $description = 'Track media with AI assistance';
 
+    public static function usageMessage(): string
+    {
+        return "Usage: /track <description>\nExample: /track Add The Hobbit to my backlog";
+    }
+
     public function handle(Nutgram $bot, string $text): void
     {
         try {
@@ -21,7 +26,7 @@ class TrackCommand extends Command
             $bot->sendMessage($response->text);
         } catch (AiException $e) {
             Log::error('MediaTrackingAgent failed', ['exception' => $e]);
-            $bot->sendMessage('Sorry, I ran into an issue processing your request. Please try again later.');
+            $bot->sendMessage("Error: {$e->getMessage()}");
         }
     }
 }
