@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $year
  * @property string|null $media_type
  * @property string|null $creator
- * @property string $current_status  backlog | started | finished | abandoned
+ * @property string $current_status backlog | started | finished | abandoned
  * @property Carbon|null $started_at
  * @property Carbon|null $finished_at
  * @property Carbon|null $abandoned_at
