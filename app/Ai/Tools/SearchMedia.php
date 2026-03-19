@@ -15,7 +15,7 @@ class SearchMedia implements Tool
      */
     public function description(): Stringable|string
     {
-        return 'Search for a media item in the library by title. Returns matching records including the title, year, media type, creator, current tracking status (backlog, started, finished, or abandoned), and the dates each status was reached. Use this after identifying the media item to check if it is already in the library and what its current status is.';
+        return 'Search for a media item in the library by title. Optionally filter by media_type (album, book, movie, tv show, video game) to disambiguate when multiple items share a title. Returns matching records including the title, year, media type, creator, current tracking status (backlog, started, finished, or abandoned), and the dates each status was reached. Use this after identifying the media item to check if it is already in the library and what its current status is.';
     }
 
     /**
@@ -29,10 +29,10 @@ class SearchMedia implements Tool
         ))->execute();
 
         if ($results->isEmpty()) {
-            return json_encode(['found' => false, 'results' => []]);
+            return json_encode(['found' => false, 'results' => []], JSON_THROW_ON_ERROR);
         }
 
-        return json_encode(['found' => true, 'results' => $results->toArray()]);
+        return json_encode(['found' => true, 'results' => $results->toArray()], JSON_THROW_ON_ERROR);
     }
 
     /**

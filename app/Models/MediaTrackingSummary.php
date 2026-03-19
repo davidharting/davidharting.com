@@ -26,6 +26,9 @@ class MediaTrackingSummary extends Model
 
     public $timestamps = false;
 
+    // This model is backed by a PostgreSQL view — it is read-only.
+    protected $guarded = ['*'];
+
     protected $casts = [
         'started_at' => 'datetime',
         'finished_at' => 'datetime',

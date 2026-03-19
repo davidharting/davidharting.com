@@ -43,6 +43,7 @@ test('result includes all expected fields', function () {
     $this->assertSame(1965, (int) $item->year);
     $this->assertSame('book', $item->media_type);
     $this->assertNotNull($item->creator);
+    $this->assertSame('book', $item->media_type);
     $this->assertSame('backlog', $item->current_status);
     $this->assertNull($item->started_at);
     $this->assertNull($item->finished_at);
@@ -122,4 +123,36 @@ test('media type filter is case-insensitive', function () {
     $results = (new SearchMediaQuery(title: 'Dune', mediaType: 'BOOK'))->execute();
 
     $this->assertCount(1, $results);
+});
+
+test('returns all matching items when multiple media share a partial title', function () {
+    /** @var TestCase $this */
+    Media::factory()->book()->create(['title' => 'Dune']);
+    Media::factory()->book()->create(['title' => 'Dune Messiah']);
+    Media::factory()->book()->create(['title' => 'Children of Dune']);
+
+    $results = (new SearchMediaQuery(title: 'dune'))->execute();
+
+    $this->assertCount(3, $results);
+});
+
+test('media type filter returns empty collection when no items match the type', function () {
+    /** @var TestCase $this */
+    Media::factory()->book()->create(['title' => 'Dune']);
+    Media::factory()->movie()->create(['title' => 'Dune']);
+
+    $results = (new SearchMediaQuery(title: 'Dune', mediaType: 'album'))->execute();
+
+    $this->assertEmpty($results);
+});
+
+test('titles containing LIKE wildcard characters are matched literally', function () {
+    /** @var TestCase $this */
+    Media::factory()->book()->create(['title' => '100% Unofficial Guide']);
+    Media::factory()->book()->create(['title' => 'Something Else']);
+
+    $results = (new SearchMediaQuery(title: '100%'))->execute();
+
+    $this->assertCount(1, $results);
+    $this->assertSame('100% Unofficial Guide', $results->first()->title);
 });

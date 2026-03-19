@@ -17,7 +17,8 @@ class SearchMediaQuery
      */
     public function execute(): Collection
     {
-        $query = MediaTrackingSummary::whereRaw('LOWER(title) LIKE LOWER(?)', ['%'.$this->title.'%']);
+        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $this->title);
+        $query = MediaTrackingSummary::whereRaw('LOWER(title) LIKE LOWER(?) ESCAPE \'\\\'', ['%'.$escaped.'%']);
 
         if ($this->mediaType !== null) {
             $query->whereRaw('LOWER(media_type) = LOWER(?)', [$this->mediaType]);
