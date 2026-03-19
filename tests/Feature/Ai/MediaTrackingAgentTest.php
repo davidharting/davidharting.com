@@ -33,3 +33,18 @@ test('MediaTrackingAgent has WebSearch tool', function () {
 
     $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof WebSearch));
 });
+
+test('MediaTrackingAgent has SearchMedia tool', function () {
+    /** @var TestCase $this */
+    $agent = MediaTrackingAgent::make();
+    $tools = collect($agent->tools());
+
+    $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof \App\Ai\Tools\SearchMedia));
+});
+
+test('MediaTrackingAgent instructions mention library status', function () {
+    /** @var TestCase $this */
+    $agent = MediaTrackingAgent::make();
+
+    $this->assertStringContainsStringIgnoringCase('status', (string) $agent->instructions());
+});

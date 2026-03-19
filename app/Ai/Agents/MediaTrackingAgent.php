@@ -2,6 +2,7 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\SearchMedia;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
 use Laravel\Ai\Contracts\Agent;
@@ -50,7 +51,16 @@ class MediaTrackingAgent implements Agent, HasTools
 
         Flag ambiguity. If search results reveal more than one plausible match — such as a remake, an adaptation, or multiple works with the same title — tell David and ask which one he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
 
-        Once you have identified the item with confidence, confirm back concisely: title, year, primary creator, and media type.
+        Once you have identified the item with confidence, use the SearchMedia tool to look it up in David's library by title (and media type if known).
+
+        Interpret the SearchMedia result as follows:
+        - If no results are found: the item is not in the library. Confirm the item's identity (title, year, creator, type) and let David know it is not yet in his library.
+        - If found and current_status is "backlog": it is in the library but not yet started.
+        - If found and current_status is "started": David is currently working through it.
+        - If found and current_status is "finished": David has already finished it.
+        - If found and current_status is "abandoned": David previously abandoned it.
+
+        Once you have identified the item and checked the library, confirm back concisely: title, year, primary creator, media type, and current library status.
         PROMPT;
     }
 
@@ -73,6 +83,7 @@ class MediaTrackingAgent implements Agent, HasTools
     {
         return [
             new WebSearch,
+            new SearchMedia,
         ];
     }
 }
