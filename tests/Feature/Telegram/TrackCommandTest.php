@@ -4,6 +4,7 @@ use App\Ai\Agents\MediaTrackingAgent;
 use Illuminate\Foundation\Testing\TestCase;
 use Laravel\Ai\Exceptions\InsufficientCreditsException;
 use SergiX44\Nutgram\Nutgram;
+use SergiX44\Nutgram\Telegram\Properties\ParseMode;
 use SergiX44\Nutgram\Telegram\Types\User\User;
 use SergiX44\Nutgram\Testing\FakeNutgram;
 
@@ -24,6 +25,23 @@ test('track command sends user text to MediaTrackingAgent and replies with respo
         ->assertReplyText('Got it! I\'ll add The Hobbit to your backlog.');
 
     MediaTrackingAgent::assertPrompted('Add The Hobbit to my backlog');
+});
+
+test('track command sends reply with HTML parse mode', function () {
+    /** @var TestCase $this */
+    MediaTrackingAgent::fake(['<b>The Hobbit</b> added.']);
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(User::make(
+        id: config('nutgram.owner_user_id'),
+        is_bot: false,
+        first_name: 'David',
+    ));
+
+    $bot->hearText('/track Add The Hobbit to my backlog')
+        ->reply()
+        ->assertReplyMessage(['parse_mode' => ParseMode::HTML->value]);
 });
 
 test('track command without text replies with usage hint', function () {

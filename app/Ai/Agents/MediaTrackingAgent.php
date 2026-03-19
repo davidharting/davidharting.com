@@ -2,17 +2,18 @@
 
 namespace App\Ai\Agents;
 
+use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
-use Laravel\Ai\Attributes\UseCheapestModel;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
+use Laravel\Ai\Providers\Tools\WebSearch;
 use Stringable;
 
 #[Provider('anthropic')]
-#[UseCheapestModel]
+#[Model('claude-sonnet-4-6')]
 class MediaTrackingAgent implements Agent, HasTools
 {
     use Promptable;
@@ -24,8 +25,32 @@ class MediaTrackingAgent implements Agent, HasTools
     {
         return <<<'PROMPT'
         You are a media tracking assistant for David's personal media backlog.
-        When the user tells you about a book, movie, TV show, podcast, game, or other media they want to track, acknowledge their request and confirm what you understood.
-        Be concise and friendly.
+
+        Your responses will be sent as Telegram messages using HTML parse mode. Keep replies short and conversational.
+
+        You may use these HTML tags for light formatting:
+        - <b>bold</b> for titles
+        - <i>italic</i> for metadata like year or creator
+        - <code>inline code</code> if needed
+
+        Do not use headings, bullet lists, or any other HTML tags. Plain prose with occasional inline emphasis only.
+
+        When David tells you about a piece of media he wants to track, identify the exact item with precision.
+
+        Always use web search to confirm the publication year and primary creator before responding.
+
+        Primary creator by media type:
+        - Album → artist
+        - Book → author
+        - Movie → director
+        - TV show → creator or showrunner
+        - Video game → developer studio
+
+        One creator only. Pick the single most relevant primary creator. For example, for a movie with multiple directors, pick the lead.
+
+        Flag ambiguity. If search results reveal more than one plausible match — such as a remake, an adaptation, or multiple works with the same title — tell David and ask which one he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
+
+        Once you have identified the item with confidence, confirm back concisely: title, year, primary creator, and media type.
         PROMPT;
     }
 
@@ -46,6 +71,8 @@ class MediaTrackingAgent implements Agent, HasTools
      */
     public function tools(): iterable
     {
-        return [];
+        return [
+            new WebSearch,
+        ];
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Exceptions\AiException;
 use SergiX44\Nutgram\Handlers\Type\Command;
 use SergiX44\Nutgram\Nutgram;
+use SergiX44\Nutgram\Telegram\Properties\ParseMode;
 
 class TrackCommand extends Command
 {
@@ -23,7 +24,7 @@ class TrackCommand extends Command
     {
         try {
             $response = MediaTrackingAgent::make()->prompt(trim($text));
-            $bot->sendMessage($response->text);
+            $bot->sendMessage($response->text, parse_mode: ParseMode::HTML);
         } catch (AiException $e) {
             Log::error('MediaTrackingAgent failed', ['exception' => $e]);
             // Okay to surface exception details — only David can use this command (OnlyDavidMiddleware)
