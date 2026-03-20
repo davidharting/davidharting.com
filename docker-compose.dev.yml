@@ -29,6 +29,6 @@ services:
   cron:
     <<: *laravel-dev-env
 
-  migrations:
+  post-deploy:
     <<: *laravel-dev-env
     command: ["php", "artisan", "migrate:fresh", "--seed"]

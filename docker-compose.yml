@@ -123,9 +123,9 @@ services:
                     cpus: "0.1"
                     memory: 128M
 
-    migrations:
+    post-deploy:
         <<: *laravel-config
-        command: ["php", "artisan", "migrate", "--force"]
+        command: ["php", "artisan", "app:post-deploy"]
         restart: no
 
     web:
@@ -147,7 +147,7 @@ services:
                 "davidharting.com",
             ]
         depends_on:
-            migrations:
+            post-deploy:
                 condition: service_completed_successfully
 
         volumes:
@@ -162,7 +162,7 @@ services:
         <<: *laravel-config
         command: ["php", "artisan", "schedule:work"]
         depends_on:
-            migrations:
+            post-deploy:
                 condition: service_completed_successfully
         healthcheck:
             test: ["CMD-SHELL", 'pgrep -fl "php artisan schedule:work"']
@@ -174,7 +174,7 @@ services:
         <<: *laravel-config
         command: ["php", "artisan", "queue:work", "-v"]
         depends_on:
-            migrations:
+            post-deploy:
                 condition: service_completed_successfully
 
         healthcheck:
@@ -182,19 +182,6 @@ services:
             interval: 30s
             timeout: 5s
             retries: 5
-
-    configure-telegram:
-        <<: *laravel-config
-        command:
-            [
-                "sh",
-                "-c",
-                "php artisan nutgram:hook:set https://davidharting.com/api/telegram/webhook && php artisan nutgram:register-commands",
-            ]
-        restart: no
-        depends_on:
-            migrations:
-                condition: service_completed_successfully
 
     nightwatch-agent:
         image: laravelphp/nightwatch-agent:v1
