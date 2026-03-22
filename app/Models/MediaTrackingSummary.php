@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
  * @property int $media_id
  * @property string $title
  * @property int|null $year
- * @property string|null $media_type
+ * @property string $media_type
  * @property string|null $creator
  * @property string $current_status backlog | started | finished | abandoned
  * @property Carbon|null $started_at
