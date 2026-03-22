@@ -17,12 +17,20 @@ test('SearchMedia has a meaningful description', function () {
     $this->assertStringContainsStringIgnoringCase('status', $description);
 });
 
-test('SearchMedia schema defines title and media_type fields', function () {
+test('SearchMedia schema defines title, media_type, and creator fields', function () {
     /** @var TestCase $this */
     $fields = (new SearchMedia)->schema(new JsonSchemaTypeFactory);
 
     $this->assertArrayHasKey('title', $fields);
     $this->assertArrayHasKey('media_type', $fields);
+    $this->assertArrayHasKey('creator', $fields);
+});
+
+test('SearchMedia returns error when no search fields are provided', function () {
+    /** @var TestCase $this */
+    $result = json_decode((new SearchMedia)->handle(new Request([])), true);
+
+    $this->assertArrayHasKey('error', $result);
 });
 
 test('SearchMedia returns JSON with found=false when no results', function () {

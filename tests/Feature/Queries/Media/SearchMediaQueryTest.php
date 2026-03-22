@@ -160,3 +160,37 @@ test('titles containing LIKE wildcard characters are matched literally', functio
     $this->assertCount(1, $results);
     $this->assertSame('100% Unofficial Guide', $results->sole()->title);
 });
+
+test('filters by creator partial match (case-insensitive)', function () {
+    /** @var TestCase $this */
+    $creator = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
+    Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $creator->id]);
+    Media::factory()->book()->create(['title' => 'Other Book']);
+
+    $results = (new SearchMediaQuery(title: 'Dune', creator: 'FRANK'))->execute();
+
+    $this->assertCount(1, $results);
+    $this->assertSame('Dune', $results->sole()->title);
+});
+
+test('creator filter excludes non-matching creator', function () {
+    /** @var TestCase $this */
+    $creator = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
+    Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $creator->id]);
+
+    $results = (new SearchMediaQuery(title: 'Dune', creator: 'Tolkien'))->execute();
+
+    $this->assertEmpty($results);
+});
+
+test('can search by creator alone without a title', function () {
+    /** @var TestCase $this */
+    $creator = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
+    Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $creator->id]);
+    Media::factory()->book()->create(['title' => 'Unrelated Book']);
+
+    $results = (new SearchMediaQuery(creator: 'Herbert'))->execute();
+
+    $this->assertCount(1, $results);
+    $this->assertSame('Dune', $results->sole()->title);
+});

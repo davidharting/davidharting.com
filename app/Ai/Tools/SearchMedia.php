@@ -15,7 +15,16 @@ class SearchMedia implements Tool
      */
     public function description(): Stringable|string
     {
-        return 'Search for a media item in the library by title. Optionally filter by media_type (album, book, movie, tv show, video game) to disambiguate when multiple items share a title. Returns matching records including the title, year, media type, creator, current tracking status (backlog, started, finished, or abandoned), and the dates each status was reached. Use this after identifying the media item to check if it is already in the library and what its current status is.';
+        return <<<'TEXT'
+            Search for media items in the library by title and/or creator. Optionally
+            filter by media_type (album, book, movie, tv show, video game) to
+            disambiguate when multiple items share a title. At least one of title or
+            creator must be provided. Returns matching records including the title,
+            year, media type, creator, current tracking status (backlog, started,
+            finished, or abandoned), and the dates each status was reached. Use this
+            after identifying the media item to check if it is already in the library
+            and what its current status is.
+            TEXT;
     }
 
     /**
@@ -23,9 +32,21 @@ class SearchMedia implements Tool
      */
     public function handle(Request $request): Stringable|string
     {
+        $title = ((string) $request->string('title')) ?: null;
+        $creator = ((string) $request->string('creator')) ?: null;
+        $mediaType = ((string) $request->string('media_type')) ?: null;
+
+        if ($title === null && $creator === null) {
+            return json_encode(
+                ['error' => 'At least one of title or creator must be provided.'],
+                JSON_THROW_ON_ERROR,
+            );
+        }
+
         $results = (new SearchMediaQuery(
-            title: (string) $request->string('title'),
-            mediaType: ((string) $request->string('media_type')) ?: null,
+            title: $title,
+            mediaType: $mediaType,
+            creator: $creator,
         ))->execute();
 
         if ($results->isEmpty()) {
@@ -42,8 +63,9 @@ class SearchMedia implements Tool
     {
         return [
             'title' => $schema->string()
-                ->description('The title of the media item to search for (case-insensitive, partial match).')
-                ->required(),
+                ->description('The title of the media item to search for (case-insensitive, partial match).'),
+            'creator' => $schema->string()
+                ->description('The creator (author, director, artist, etc.) to search for (case-insensitive, partial match).'),
             'media_type' => $schema->string()
                 ->description('Optional media type filter. One of: album, book, movie, tv show, video game.'),
         ];
