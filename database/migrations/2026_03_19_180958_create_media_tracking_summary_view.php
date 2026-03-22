@@ -33,7 +33,7 @@ return new class extends Migration
                     JOIN media_event_types met ON me.media_event_type_id = met.id
                     WHERE me.media_id = m.id
                       AND met.name = 'started'
-                    -- ASC: we want the original start date, not the most recent restart
+                    -- ASC: we want the earliest start date, not the most recent restart
                     ORDER BY me.occurred_at ASC
                     LIMIT 1
                 )                                                   AS started_at,
