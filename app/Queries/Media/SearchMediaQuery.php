@@ -8,8 +8,9 @@ use Illuminate\Support\Collection;
 class SearchMediaQuery
 {
     public function __construct(
-        public string $title,
+        public ?string $title = null,
         public ?string $mediaType = null,
+        public ?string $creator = null,
     ) {}
 
     /**
@@ -17,8 +18,21 @@ class SearchMediaQuery
      */
     public function execute(): Collection
     {
-        $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $this->title);
-        $query = MediaTrackingSummary::whereRaw('LOWER(title) LIKE LOWER(?) ESCAPE \'\\\'', ['%'.$escaped.'%']);
+        $query = MediaTrackingSummary::query();
+
+        if ($this->title !== null) {
+            $query->whereRaw(
+                'title ILIKE ? ESCAPE ?',
+                ['%'.$this->escapeLikeWildcards($this->title).'%', '\\'],
+            );
+        }
+
+        if ($this->creator !== null) {
+            $query->whereRaw(
+                'creator ILIKE ? ESCAPE ?',
+                ['%'.$this->escapeLikeWildcards($this->creator).'%', '\\'],
+            );
+        }
 
         if ($this->mediaType !== null) {
             $query->whereRaw('LOWER(media_type) = LOWER(?)', [$this->mediaType]);
@@ -35,5 +49,14 @@ class SearchMediaQuery
             'finished_at',
             'abandoned_at',
         ]);
+    }
+
+    /**
+     * Escape LIKE/ILIKE wildcard characters so user input is matched literally.
+     * Without this, '%' and '_' in the search term would be treated as wildcards.
+     */
+    private function escapeLikeWildcards(string $value): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
     }
 }
