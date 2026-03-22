@@ -24,7 +24,7 @@ test('MediaTrackingAgent instructions mention media tracking and library status'
     $agent = MediaTrackingAgent::make();
     $instructions = $agent->instructions();
 
-    $this->assertStringContainsStringIgnoringCase('media',  $instructions);
+    $this->assertStringContainsStringIgnoringCase('media', $instructions);
     $this->assertStringContainsStringIgnoringCase('status', $instructions);
 });
 
@@ -33,6 +33,6 @@ test('MediaTrackingAgent has correct tools', function () {
     $agent = MediaTrackingAgent::make();
     $tools = collect($agent->tools());
 
-    $this->assertTrue($tools->contains(fn($tool) => $tool instanceof WebSearch));
-    $this->assertTrue($tools->contains(fn($tool) => $tool instanceof \App\Ai\Tools\SearchMedia));
+    $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof WebSearch));
+    $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof \App\Ai\Tools\SearchMedia));
 });

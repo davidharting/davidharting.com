@@ -74,7 +74,6 @@ test('reports finished status when last non-comment event is finished', function
     /** @var TestCase $this */
     $media = Media::factory()->book()->create(['title' => 'Neuromancer']);
 
-
     // TODO: Is there a way to more easily create a collection of three media events under one media item than this?
 
     MediaEvent::factory()->started()->at(now()->subDays(10))->create(['media_id' => $media->id]);
