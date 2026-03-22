@@ -19,8 +19,8 @@ test('finds a media item by partial title match', function () {
     $results = (new SearchMediaQuery(title: 'hobbit'))->execute();
 
     $this->assertCount(1, $results);
-    $this->assertSame($media->id, $results->first()->media_id);
-    $this->assertSame('The Hobbit', $results->first()->title);
+    $this->assertSame($media->id, $results->sole()->media_id);
+    $this->assertSame('The Hobbit', $results->sole()->title);
 });
 
 test('search is case-insensitive', function () {
@@ -36,7 +36,7 @@ test('result includes all expected fields', function () {
     /** @var TestCase $this */
     Media::factory()->book()->create(['title' => 'Dune', 'year' => 1965]);
 
-    $item = (new SearchMediaQuery(title: 'Dune'))->execute()->first();
+    $item = (new SearchMediaQuery(title: 'Dune'))->execute()->sole();
 
     $this->assertNotNull($item->media_id);
     $this->assertSame('Dune', $item->title);
@@ -54,7 +54,7 @@ test('reports backlog status when media has no events', function () {
     /** @var TestCase $this */
     Media::factory()->book()->create(['title' => 'Foundation']);
 
-    $item = (new SearchMediaQuery(title: 'Foundation'))->execute()->first();
+    $item = (new SearchMediaQuery(title: 'Foundation'))->execute()->sole();
 
     $this->assertSame('backlog', $item->current_status);
 });
@@ -64,7 +64,7 @@ test('reports started status when last non-comment event is started', function (
     $media = Media::factory()->book()->create(['title' => 'Neuromancer']);
     MediaEvent::factory()->started()->create(['media_id' => $media->id]);
 
-    $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->first();
+    $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->sole();
 
     $this->assertSame('started', $item->current_status);
     $this->assertNotNull($item->started_at);
@@ -73,10 +73,15 @@ test('reports started status when last non-comment event is started', function (
 test('reports finished status when last non-comment event is finished', function () {
     /** @var TestCase $this */
     $media = Media::factory()->book()->create(['title' => 'Neuromancer']);
+
+
+    // TODO: Is there a way to more easily create a collection of three media events under one media item than this?
+
     MediaEvent::factory()->started()->at(now()->subDays(10))->create(['media_id' => $media->id]);
+    MediaEvent::factory()->comment('Distractor event')->at(now()->subDays(8))->create(['media_id' => $media->id]);
     MediaEvent::factory()->finished()->at(now())->create(['media_id' => $media->id]);
 
-    $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->first();
+    $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->sole();
 
     $this->assertSame('finished', $item->current_status);
     $this->assertNotNull($item->finished_at);
@@ -88,7 +93,7 @@ test('reports abandoned status when last non-comment event is abandoned', functi
     MediaEvent::factory()->started()->at(now()->subDays(10))->create(['media_id' => $media->id]);
     MediaEvent::factory()->abandoned()->at(now())->create(['media_id' => $media->id]);
 
-    $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->first();
+    $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->sole();
 
     $this->assertSame('abandoned', $item->current_status);
     $this->assertNotNull($item->abandoned_at);
@@ -100,7 +105,7 @@ test('comment events do not affect current status', function () {
     MediaEvent::factory()->started()->at(now()->subDays(10))->create(['media_id' => $media->id]);
     MediaEvent::factory()->comment('Good so far')->at(now())->create(['media_id' => $media->id]);
 
-    $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->first();
+    $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->sole();
 
     $this->assertSame('started', $item->current_status);
 });
@@ -113,7 +118,7 @@ test('filters by media type', function () {
     $results = (new SearchMediaQuery(title: 'Dune', mediaType: 'book'))->execute();
 
     $this->assertCount(1, $results);
-    $this->assertSame('book', $results->first()->media_type);
+    $this->assertSame('book', $results->sole()->media_type);
 });
 
 test('media type filter is case-insensitive', function () {
@@ -154,5 +159,5 @@ test('titles containing LIKE wildcard characters are matched literally', functio
     $results = (new SearchMediaQuery(title: '100%'))->execute();
 
     $this->assertCount(1, $results);
-    $this->assertSame('100% Unofficial Guide', $results->first()->title);
+    $this->assertSame('100% Unofficial Guide', $results->sole()->title);
 });

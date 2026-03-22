@@ -10,9 +10,11 @@ test('SearchMedia has a meaningful description', function () {
     /** @var TestCase $this */
     $tool = new SearchMedia;
 
-    $this->assertStringContainsStringIgnoringCase('media', $tool->description());
-    $this->assertStringContainsStringIgnoringCase('title', $tool->description());
-    $this->assertStringContainsStringIgnoringCase('status', $tool->description());
+    $description = $tool->description();
+
+    $this->assertStringContainsStringIgnoringCase('media', $description);
+    $this->assertStringContainsStringIgnoringCase('title', $description);
+    $this->assertStringContainsStringIgnoringCase('status', $description);
 });
 
 test('SearchMedia schema defines title and media_type fields', function () {
@@ -40,4 +42,5 @@ test('SearchMedia returns JSON with found=true and results when media matches', 
     $this->assertTrue($result['found']);
     $this->assertCount(1, $result['results']);
     $this->assertSame($media->id, $result['results'][0]['media_id']);
+    $this->assertSame('The Hobbit', $result['results'][0]['title']);
 });
