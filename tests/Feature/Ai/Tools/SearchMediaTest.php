@@ -26,6 +26,28 @@ test('SearchMedia schema defines title, media_type, and creator fields', functio
     $this->assertArrayHasKey('creator', $fields);
 });
 
+test('SearchMedia schema enumerates valid media_type values', function () {
+    /** @var TestCase $this */
+    $schema = (new SearchMedia)->schema(new JsonSchemaTypeFactory);
+    $compiled = $schema['media_type']->toArray();
+
+    $this->assertEqualsCanonicalizing(
+        ['album', 'book', 'movie', 'tv show', 'video game'],
+        $compiled['enum'],
+    );
+});
+
+test('SearchMedia returns error when an invalid media_type is provided', function () {
+    /** @var TestCase $this */
+    $result = json_decode(
+        (new SearchMedia)->handle(new Request(['title' => 'Dune', 'media_type' => 'podcast'])),
+        true,
+    );
+
+    $this->assertArrayHasKey('error', $result);
+    $this->assertStringContainsString('podcast', $result['error']);
+});
+
 test('SearchMedia returns error when no search fields are provided', function () {
     /** @var TestCase $this */
     $result = json_decode((new SearchMedia)->handle(new Request([])), true);

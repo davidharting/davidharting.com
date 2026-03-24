@@ -38,6 +38,15 @@ class SearchMedia implements Tool
         $mediaTypeString = ((string) $request->string('media_type')) ?: null;
         $mediaType = $mediaTypeString !== null ? MediaTypeName::tryFrom(strtolower($mediaTypeString)) : null;
 
+        if ($mediaTypeString !== null && $mediaType === null) {
+            $valid = implode(', ', array_column(MediaTypeName::cases(), 'value'));
+
+            return json_encode(
+                ['error' => "Invalid media_type \"{$mediaTypeString}\". Must be one of: {$valid}."],
+                JSON_THROW_ON_ERROR,
+            );
+        }
+
         if ($title === null && $creator === null) {
             return json_encode(
                 ['error' => 'At least one of title or creator must be provided.'],
@@ -69,7 +78,8 @@ class SearchMedia implements Tool
             'creator' => $schema->string()
                 ->description('The creator (author, director, artist, etc.) to search for (case-insensitive, partial match).'),
             'media_type' => $schema->string()
-                ->description('Optional media type filter. One of: album, book, movie, tv show, video game.'),
+                ->enum(array_column(MediaTypeName::cases(), 'value'))
+                ->description('Optional media type filter.'),
         ];
     }
 }
