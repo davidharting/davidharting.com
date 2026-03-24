@@ -1,5 +1,6 @@
 <?php
 
+use App\Enum\MediaTypeName;
 use App\Models\Media;
 use App\Models\MediaEvent;
 use App\Queries\Media\SearchMediaQuery;
@@ -114,19 +115,10 @@ test('filters by media type', function () {
     Media::factory()->book()->create(['title' => 'Dune']);
     Media::factory()->movie()->create(['title' => 'Dune']);
 
-    $results = (new SearchMediaQuery(title: 'Dune', mediaType: 'book'))->execute();
+    $results = (new SearchMediaQuery(title: 'Dune', mediaType: MediaTypeName::Book))->execute();
 
     $this->assertCount(1, $results);
     $this->assertSame('book', $results->sole()->media_type);
-});
-
-test('media type filter is case-insensitive', function () {
-    /** @var TestCase $this */
-    Media::factory()->book()->create(['title' => 'Dune']);
-
-    $results = (new SearchMediaQuery(title: 'Dune', mediaType: 'BOOK'))->execute();
-
-    $this->assertCount(1, $results);
 });
 
 test('returns all matching items when multiple media share a partial title', function () {
@@ -145,7 +137,7 @@ test('media type filter returns empty collection when no items match the type', 
     Media::factory()->book()->create(['title' => 'Dune']);
     Media::factory()->movie()->create(['title' => 'Dune']);
 
-    $results = (new SearchMediaQuery(title: 'Dune', mediaType: 'album'))->execute();
+    $results = (new SearchMediaQuery(title: 'Dune', mediaType: MediaTypeName::Album))->execute();
 
     $this->assertEmpty($results);
 });

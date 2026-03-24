@@ -52,3 +52,15 @@ test('SearchMedia returns JSON with found=true and results when media matches', 
     $this->assertSame($media->id, $result['results'][0]['media_id']);
     $this->assertSame('The Hobbit', $result['results'][0]['title']);
 });
+
+test('SearchMedia media_type filter is case-insensitive', function () {
+    /** @var TestCase $this */
+    Media::factory()->book()->create(['title' => 'Dune']);
+    Media::factory()->movie()->create(['title' => 'Dune']);
+
+    $result = json_decode((new SearchMedia)->handle(new Request(['title' => 'Dune', 'media_type' => 'BOOK'])), true);
+
+    $this->assertTrue($result['found']);
+    $this->assertCount(1, $result['results']);
+    $this->assertSame('book', $result['results'][0]['media_type']);
+});

@@ -2,6 +2,7 @@
 
 namespace App\Ai\Tools;
 
+use App\Enum\MediaTypeName;
 use App\Queries\Media\SearchMediaQuery;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
@@ -34,7 +35,8 @@ class SearchMedia implements Tool
     {
         $title = ((string) $request->string('title')) ?: null;
         $creator = ((string) $request->string('creator')) ?: null;
-        $mediaType = ((string) $request->string('media_type')) ?: null;
+        $mediaTypeString = ((string) $request->string('media_type')) ?: null;
+        $mediaType = $mediaTypeString !== null ? MediaTypeName::tryFrom(strtolower($mediaTypeString)) : null;
 
         if ($title === null && $creator === null) {
             return json_encode(

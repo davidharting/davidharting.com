@@ -2,6 +2,7 @@
 
 namespace App\Queries\Media;
 
+use App\Enum\MediaTypeName;
 use App\Models\MediaTrackingSummary;
 use App\Support\LikePattern;
 use Illuminate\Support\Collection;
@@ -10,8 +11,7 @@ class SearchMediaQuery
 {
     public function __construct(
         public ?string $title = null,
-        // This is not AI agent code here... relaly we should expect a MediaType enum here, not string
-        public ?string $mediaType = null,
+        public ?MediaTypeName $mediaType = null,
         public ?string $creator = null,
     ) {}
 
@@ -31,7 +31,7 @@ class SearchMediaQuery
         }
 
         if ($this->mediaType !== null) {
-            $query->whereRaw('LOWER(media_type) = LOWER(?)', [$this->mediaType]);
+            $query->where('media_type', $this->mediaType->value);
         }
 
         return $query->get([
