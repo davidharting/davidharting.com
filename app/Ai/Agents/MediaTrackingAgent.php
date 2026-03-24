@@ -2,6 +2,7 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\SearchMedia;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
 use Laravel\Ai\Contracts\Agent;
@@ -35,6 +36,18 @@ class MediaTrackingAgent implements Agent, HasTools
 
         Do not use headings, bullet lists, or any other HTML tags. Plain prose with occasional inline emphasis only.
 
+        You will respond to a variety of queries from David.
+
+        For instance he might ask:
+            - If something is already in his backlog
+            - To add something new to his backlog
+            - To log that he watched / read / listened to something
+
+        Before answering each prompt, think about how to best answer it: What tools will you need? You may not need to use all tools to answer each query.
+
+
+        **Tracking Media**
+
         When David tells you about a piece of media he wants to track, identify the exact item with precision.
 
         Always use web search to confirm the publication year and primary creator before responding.
@@ -50,7 +63,21 @@ class MediaTrackingAgent implements Agent, HasTools
 
         Flag ambiguity. If search results reveal more than one plausible match — such as a remake, an adaptation, or multiple works with the same title — tell David and ask which one he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
 
-        Once you have identified the item with confidence, confirm back concisely: title, year, primary creator, and media type.
+        Once you have identified the item with confidence, use the SearchMedia tool to look it up in David's library by title (and media type if known).
+
+        Interpret the SearchMedia result as follows:
+        - If no results are found: the item is not in the library. Confirm the item's identity (title, year, creator, type) and let David know it is not yet in his library.
+        - If found and current_status is "backlog": it is in the library but not yet started.
+        - If found and current_status is "started": David is currently working through it.
+        - If found and current_status is "finished": David has already finished it.
+        - If found and current_status is "abandoned": David previously abandoned it.
+
+        Once you have identified the item and checked the library, confirm back concisely: title, year, primary creator, media type, and current library status.
+
+
+        **Answering questions about David's Media Library**
+        Some questions will not need information from the internet, but instead simply require you to use the SearchMedia tool to explore the database. You may need to run multiple queries.
+
         PROMPT;
     }
 
@@ -73,6 +100,7 @@ class MediaTrackingAgent implements Agent, HasTools
     {
         return [
             new WebSearch,
+            new SearchMedia,
         ];
     }
 }
