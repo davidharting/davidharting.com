@@ -153,7 +153,8 @@ test('media type filter returns empty collection when no items match the type', 
 test('titles containing LIKE wildcard characters are matched literally', function () {
     /** @var TestCase $this */
     Media::factory()->book()->create(['title' => '100% Unofficial Guide']);
-    Media::factory()->book()->create(['title' => 'Something Else']);
+    // "100 Things" contains "100" and would match if '%' were treated as a wildcard
+    Media::factory()->book()->create(['title' => '100 Things']);
 
     $results = (new SearchMediaQuery(title: '100%'))->execute();
 
