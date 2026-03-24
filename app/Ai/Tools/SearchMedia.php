@@ -5,6 +5,7 @@ namespace App\Ai\Tools;
 use App\Enum\MediaTypeName;
 use App\Queries\Media\SearchMediaQuery;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Stringable;
@@ -59,6 +60,15 @@ class SearchMedia implements Tool
             mediaType: $mediaType,
             creator: $creator,
         ))->execute();
+
+        Log::info('SearchMedia tool called', [
+            'input' => [
+                'title' => $title,
+                'creator' => $creator,
+                'media_type' => $mediaType?->value,
+            ],
+            'result_count' => $results->count(),
+        ]);
 
         if ($results->isEmpty()) {
             return json_encode(['found' => false, 'results' => []], JSON_THROW_ON_ERROR);
