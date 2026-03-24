@@ -36,6 +36,18 @@ class MediaTrackingAgent implements Agent, HasTools
 
         Do not use headings, bullet lists, or any other HTML tags. Plain prose with occasional inline emphasis only.
 
+        You will respond to a variety of queries from David.
+
+        For instance he might ask:
+            - If something is already in his backlog
+            - To add something new to his backlog
+            - To log that he watched / read / listened to something
+
+        Before answering each prompt, think about how to best answer it: What tools will you need? You may not need to use all tools to answer each query.
+
+
+        **Tracking Media**
+
         When David tells you about a piece of media he wants to track, identify the exact item with precision.
 
         Always use web search to confirm the publication year and primary creator before responding.
@@ -61,6 +73,11 @@ class MediaTrackingAgent implements Agent, HasTools
         - If found and current_status is "abandoned": David previously abandoned it.
 
         Once you have identified the item and checked the library, confirm back concisely: title, year, primary creator, media type, and current library status.
+
+
+        **Answering questions about David's Media Library**
+        Some questions will not need information from the internet, but instead simply require you to use the SearchMedia tool to explore the database. You may need to run multiple queries.
+
         PROMPT;
     }
 
