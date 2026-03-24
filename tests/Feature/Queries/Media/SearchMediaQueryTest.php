@@ -72,13 +72,11 @@ test('reports started status when last non-comment event is started', function (
 
 test('reports finished status when last non-comment event is finished', function () {
     /** @var TestCase $this */
-    $media = Media::factory()->book()->create(['title' => 'Neuromancer']);
-
-    // TODO: Is there a way to more easily create a collection of three media events under one media item than this?
-
-    MediaEvent::factory()->started()->at(now()->subDays(10))->create(['media_id' => $media->id]);
-    MediaEvent::factory()->comment('Distractor event')->at(now()->subDays(8))->create(['media_id' => $media->id]);
-    MediaEvent::factory()->finished()->at(now())->create(['media_id' => $media->id]);
+    Media::factory()->book()
+        ->has(MediaEvent::factory()->started()->at(now()->subDays(10)), 'events')
+        ->has(MediaEvent::factory()->comment('Distractor event')->at(now()->subDays(8)), 'events')
+        ->has(MediaEvent::factory()->finished()->at(now()), 'events')
+        ->create(['title' => 'Neuromancer']);
 
     $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->sole();
 
@@ -88,9 +86,10 @@ test('reports finished status when last non-comment event is finished', function
 
 test('reports abandoned status when last non-comment event is abandoned', function () {
     /** @var TestCase $this */
-    $media = Media::factory()->book()->create(['title' => 'Neuromancer']);
-    MediaEvent::factory()->started()->at(now()->subDays(10))->create(['media_id' => $media->id]);
-    MediaEvent::factory()->abandoned()->at(now())->create(['media_id' => $media->id]);
+    Media::factory()->book()
+        ->has(MediaEvent::factory()->started()->at(now()->subDays(10)), 'events')
+        ->has(MediaEvent::factory()->abandoned()->at(now()), 'events')
+        ->create(['title' => 'Neuromancer']);
 
     $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->sole();
 
@@ -100,9 +99,10 @@ test('reports abandoned status when last non-comment event is abandoned', functi
 
 test('comment events do not affect current status', function () {
     /** @var TestCase $this */
-    $media = Media::factory()->book()->create(['title' => 'Neuromancer']);
-    MediaEvent::factory()->started()->at(now()->subDays(10))->create(['media_id' => $media->id]);
-    MediaEvent::factory()->comment('Good so far')->at(now())->create(['media_id' => $media->id]);
+    Media::factory()->book()
+        ->has(MediaEvent::factory()->started()->at(now()->subDays(10)), 'events')
+        ->has(MediaEvent::factory()->comment('Good so far')->at(now()), 'events')
+        ->create(['title' => 'Neuromancer']);
 
     $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->sole();
 
