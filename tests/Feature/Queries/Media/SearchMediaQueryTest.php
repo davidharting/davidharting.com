@@ -133,6 +133,59 @@ describe('media type filter', function () {
     });
 });
 
+describe('filter combinations', function () {
+    test('title and creator both must match', function () {
+        /** @var TestCase $this */
+        $herbert = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
+        $tolkien = \App\Models\Creator::factory()->create(['name' => 'J.R.R. Tolkien']);
+        Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $herbert->id]);
+        Media::factory()->book()->create(['title' => 'Dune (fan retelling)', 'creator_id' => $tolkien->id]);
+
+        $results = (new SearchMediaQuery(title: 'Dune', creator: 'Herbert'))->execute();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Dune', $results->sole()->title);
+    });
+
+    test('title and media type both must match', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Dune']);
+        Media::factory()->movie()->create(['title' => 'Dune']);
+
+        $results = (new SearchMediaQuery(title: 'Dune', mediaType: MediaTypeName::Movie))->execute();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('movie', $results->sole()->media_type);
+    });
+
+    test('creator and media type both must match', function () {
+        /** @var TestCase $this */
+        $herbert = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
+        Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $herbert->id]);
+        Media::factory()->movie()->create(['title' => 'Dune', 'creator_id' => $herbert->id]);
+
+        $results = (new SearchMediaQuery(creator: 'Herbert', mediaType: MediaTypeName::Book))->execute();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('book', $results->sole()->media_type);
+    });
+
+    test('title, creator, and media type all must match', function () {
+        /** @var TestCase $this */
+        $herbert = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
+        $tolkien = \App\Models\Creator::factory()->create(['name' => 'J.R.R. Tolkien']);
+        Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $herbert->id]);
+        Media::factory()->movie()->create(['title' => 'Dune', 'creator_id' => $herbert->id]);
+        Media::factory()->book()->create(['title' => 'Dune (unofficial)', 'creator_id' => $tolkien->id]);
+
+        $results = (new SearchMediaQuery(title: 'Dune', creator: 'Herbert', mediaType: MediaTypeName::Book))->execute();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Dune', $results->sole()->title);
+        $this->assertSame('book', $results->sole()->media_type);
+    });
+});
+
 describe('status', function () {
     test('reports backlog status when media has no events', function () {
         /** @var TestCase $this */
