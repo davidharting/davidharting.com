@@ -38,13 +38,14 @@ test('MediaTrackingAgent has correct tools', function () {
 
     $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof WebSearch));
     $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof \App\Ai\Tools\SearchMedia));
+    $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof \App\Ai\Tools\RequestConfirmation));
 });
 
 test('MediaTrackingAgent messages() returns empty array by default', function () {
     /** @var TestCase $this */
     $agent = new MediaTrackingAgent();
 
-    $this->assertSame([], iterator_to_array($agent->messages()));
+    $this->assertSame([], $agent->messages());
 });
 
 test('MediaTrackingAgent messages() returns injected history', function () {
@@ -56,7 +57,7 @@ test('MediaTrackingAgent messages() returns injected history', function () {
 
     $agent = new MediaTrackingAgent(history: $history);
 
-    $this->assertSame($history, iterator_to_array($agent->messages()));
+    $this->assertSame($history, $agent->messages());
 });
 
 test('MediaTrackingAgent tools() includes injected RequestConfirmation instance', function () {
