@@ -124,3 +124,18 @@ test('stray text while awaiting confirmation sends a reminder and stays active',
         ->assertReplyText('Please tap Confirm or Cancel.')
         ->assertActiveConversation();
 });
+
+test('/track ends conversation with error message when AI provider fails', function () {
+    /** @var TestCase $this */
+    MediaTrackingAgent::fake(fn () => throw \Laravel\Ai\Exceptions\InsufficientCreditsException::forProvider('anthropic'));
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track Add The Hobbit')
+        ->reply()
+        ->assertReplyText('Error: AI provider [anthropic] has insufficient credits or quota.')
+        ->assertNoConversation();
+});
