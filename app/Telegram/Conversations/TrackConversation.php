@@ -31,7 +31,22 @@ class TrackConversation extends Conversation
 
     public function awaitConfirmation(Nutgram $bot): void
     {
-        // Implemented in Task 5
+        if (! $bot->isCallbackQuery()) {
+            $bot->sendMessage('Please tap Confirm or Cancel.');
+            $this->next('awaitConfirmation');
+
+            return;
+        }
+
+        $bot->answerCallbackQuery();
+
+        if ($bot->callbackQuery()?->data === 'confirm') {
+            $bot->sendMessage('✓ Done. (DB writes coming in next milestone)');
+        } else {
+            $bot->sendMessage('Cancelled. Nothing was changed.');
+        }
+
+        $this->end();
     }
 
     private function runAgentTurn(Nutgram $bot, string $userText): void

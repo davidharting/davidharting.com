@@ -70,3 +70,57 @@ test('/track sends message with inline keyboard when agent calls RequestConfirma
         ])
         ->assertActiveConversation();
 });
+
+test('tapping Confirm ends the conversation with acknowledgement', function () {
+    /** @var TestCase $this */
+    MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
+    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation(), fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track Add The Hobbit')->reply();
+
+    $bot->hearCallbackQueryData('confirm')
+        ->reply()
+        ->assertReplyText('✓ Done. (DB writes coming in next milestone)', index: 1)
+        ->assertNoConversation();
+});
+
+test('tapping Cancel ends the conversation with cancellation message', function () {
+    /** @var TestCase $this */
+    MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
+    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation(), fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track Add The Hobbit')->reply();
+
+    $bot->hearCallbackQueryData('cancel')
+        ->reply()
+        ->assertReplyText('Cancelled. Nothing was changed.', index: 1)
+        ->assertNoConversation();
+});
+
+test('stray text while awaiting confirmation sends a reminder and stays active', function () {
+    /** @var TestCase $this */
+    MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
+    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation(), fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track Add The Hobbit')->reply();
+
+    $bot->hearText('actually wait')
+        ->reply()
+        ->assertReplyText('Please tap Confirm or Cancel.')
+        ->assertActiveConversation();
+});
