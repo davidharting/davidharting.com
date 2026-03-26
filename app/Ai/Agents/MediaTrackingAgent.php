@@ -2,6 +2,7 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\RequestConfirmation;
 use App\Ai\Tools\SearchMedia;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
@@ -18,6 +19,11 @@ use Stringable;
 class MediaTrackingAgent implements Agent, HasTools
 {
     use Promptable;
+
+    public function __construct(
+        private array $history = [],
+        private ?RequestConfirmation $confirmationTool = null,
+    ) {}
 
     /**
      * Get the instructions that the agent should follow.
@@ -78,6 +84,21 @@ class MediaTrackingAgent implements Agent, HasTools
         **Answering questions about David's Media Library**
         Some questions will not need information from the internet, but instead simply require you to use the SearchMedia tool to explore the database. You may need to run multiple queries.
 
+
+        **Requesting Confirmation**
+
+        When you are ready to take an action — such as adding a new item to the library or logging a media event — call the RequestConfirmation tool. This signals to the interface to present a Confirm/Cancel button to David.
+
+        Only call RequestConfirmation when:
+        - You have identified the exact media item (title, year, creator, type confirmed via web search)
+        - You have checked the library via SearchMedia
+        - All ambiguity is resolved (if there were multiple matches, David has clarified which one)
+        - You know exactly what actions are needed (create media record, add event, etc.)
+
+        Do not call RequestConfirmation for questions about the library — only for actions.
+
+        In your response text (written at the same time as calling RequestConfirmation), describe the plan clearly and concisely. Example: "Add <b>The Hobbit</b> (1937) by J.R.R. Tolkien — Book to your library, and log a <i>started</i> event."
+
         PROMPT;
     }
 
@@ -88,7 +109,7 @@ class MediaTrackingAgent implements Agent, HasTools
      */
     public function messages(): iterable
     {
-        return [];
+        return $this->history;
     }
 
     /**
@@ -101,6 +122,7 @@ class MediaTrackingAgent implements Agent, HasTools
         return [
             new WebSearch,
             new SearchMedia,
+            $this->confirmationTool ?? new RequestConfirmation,
         ];
     }
 }
