@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Telegram\Conversations;
+
+use App\Ai\Agents\MediaTrackingAgent;
+use App\Ai\Tools\RequestConfirmation;
+use Illuminate\Support\Facades\Log;
+use Laravel\Ai\Exceptions\AiException;
+use Laravel\Ai\Messages\Message;
+use Laravel\Ai\Messages\MessageRole;
+use SergiX44\Nutgram\Conversations\Conversation;
+use SergiX44\Nutgram\Nutgram;
+use SergiX44\Nutgram\Telegram\Properties\ParseMode;
+use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
+use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardMarkup;
+
+class TrackConversation extends Conversation
+{
+    /** @var Message[] */
+    protected array $messageHistory = [];
+
+    public function start(Nutgram $bot, string $text): void
+    {
+        $this->runAgentTurn($bot, $text);
+    }
+
+    public function converse(Nutgram $bot): void
+    {
+        $this->runAgentTurn($bot, $bot->message()->text ?? '');
+    }
+
+    public function awaitConfirmation(Nutgram $bot): void
+    {
+        // Implemented in Task 5
+    }
+
+    private function runAgentTurn(Nutgram $bot, string $userText): void
+    {
+        try {
+            $confirmationTool = app(RequestConfirmation::class);
+            $agent = new MediaTrackingAgent($this->messageHistory, $confirmationTool);
+            $response = $agent->prompt($userText);
+
+            $this->messageHistory[] = new Message(MessageRole::User, $userText);
+            $this->messageHistory[] = new Message(MessageRole::Assistant, $response->text);
+
+            $bot->sendMessage($response->text, parse_mode: ParseMode::HTML);
+            $this->next('converse');
+        } catch (AiException $e) {
+            Log::error('MediaTrackingAgent failed', ['exception' => $e]);
+            $bot->sendMessage("Error: {$e->getMessage()}");
+            $this->end();
+        }
+    }
+}
