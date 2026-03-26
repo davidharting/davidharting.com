@@ -46,3 +46,27 @@ test('/track keeps conversation active for follow-up after plain text response',
         ->assertReplyText('Got it.')
         ->assertActiveConversation();
 });
+
+test('/track sends message with inline keyboard when agent calls RequestConfirmation', function () {
+    /** @var TestCase $this */
+    MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
+    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation(), fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track Add The Hobbit to my backlog')
+        ->reply()
+        ->assertReplyText('Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.')
+        ->assertReplyMessage([
+            'reply_markup' => [
+                'inline_keyboard' => [[
+                    ['text' => '✓ Confirm', 'callback_data' => 'confirm'],
+                    ['text' => '✗ Cancel', 'callback_data' => 'cancel'],
+                ]],
+            ],
+        ])
+        ->assertActiveConversation();
+});

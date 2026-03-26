@@ -44,8 +44,20 @@ class TrackConversation extends Conversation
             $this->messageHistory[] = new Message(MessageRole::User, $userText);
             $this->messageHistory[] = new Message(MessageRole::Assistant, $response->text);
 
-            $bot->sendMessage($response->text, parse_mode: ParseMode::HTML);
-            $this->next('converse');
+            if ($confirmationTool->wasRequested()) {
+                $bot->sendMessage(
+                    $response->text,
+                    reply_markup: InlineKeyboardMarkup::make()->addRow(
+                        InlineKeyboardButton::make('✓ Confirm', callback_data: 'confirm'),
+                        InlineKeyboardButton::make('✗ Cancel', callback_data: 'cancel'),
+                    ),
+                    parse_mode: ParseMode::HTML,
+                );
+                $this->next('awaitConfirmation');
+            } else {
+                $bot->sendMessage($response->text, parse_mode: ParseMode::HTML);
+                $this->next('converse');
+            }
         } catch (AiException $e) {
             Log::error('MediaTrackingAgent failed', ['exception' => $e]);
             $bot->sendMessage("Error: {$e->getMessage()}");
