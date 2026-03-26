@@ -17,30 +17,32 @@ Convert the `/track` command from a single-turn `TrackCommand` into a multi-turn
 Replaces `TrackCommand`. Extends `Conversation`. Has three steps:
 
 - **`start`** — entry point, triggered by `/track <text>`
-- **`planningTurn`** — handles free-text follow-ups; loops back to itself until confirmation is ready
+- **`converse`** — handles free-text follow-ups; loops back to itself until confirmation is ready
 - **`awaitConfirmation`** — handles the inline keyboard button tap
 
-Both `start` and `planningTurn` run the same core logic (extracted into a private `runAgentTurn(string $userText)` method) and branch based on whether the `RequestConfirmation` tool was called. `start()` receives the text via the command parameter (same as `TrackCommand` today). `planningTurn()` reads it from `$bot->message()->text`.
+Both `start` and `converse` run the same core logic (extracted into a private `runAgentTurn(string $userText)` method) and branch based on whether the `RequestConfirmation` tool was called. `start()` receives the text via the command parameter (same as `TrackCommand` today). `converse()` reads it from `$bot->message()->text`.
 
 Registered in `routes/telegram.php` in place of `TrackCommand`, with `OnlyDavidMiddleware`.
 
 ### 2. `RequestConfirmation` tool (new)
 
-A Laravel AI tool the agent calls when it has enough information to present a plan. It does not send anything — it only sets an internal flag and is inspected by `TrackConversation` after `prompt()` returns.
+A Laravel AI tool the agent calls when it has enough information to present a plan. It does not send anything — it only sets an internal flag on the tool instance itself.
+
+`TrackConversation` creates the tool instance, passes it to the agent constructor, and inspects it after `prompt()` returns. The agent includes it in `tools()` — no accessor needed on the agent.
 
 Public interface:
 - `wasRequested(): bool` — whether the agent called this tool during the last `prompt()` call
-- `handle(Request $request): string` — records the call, returns a brief acknowledgement string to the agent
+- `handle(Request $request): string` — sets the flag, returns a brief acknowledgement string to the agent
 
 Schema: no required parameters. The agent calls it when ready; the content of the confirmation message comes from the agent's text response.
 
 ### 3. `MediaTrackingAgent` (updated)
 
 Gains a constructor accepting:
-- `array $history = []` — plain `['role' => ..., 'content' => ...]` arrays
+- `Message[] $history = []` — Laravel AI `Message` objects
 - `?RequestConfirmation $confirmationTool = null` — injected tool instance
 
-`messages()` maps history through `Message::tryFrom()`. `tools()` includes the injected `RequestConfirmation` instance (falling back to `new RequestConfirmation()` if null). `WebSearch` and `SearchMedia` are unchanged.
+`messages()` returns `$history` directly. `tools()` includes the injected `RequestConfirmation` instance (falling back to `new RequestConfirmation()` if null). `WebSearch` and `SearchMedia` are unchanged.
 
 The agent instructions gain a new section explaining when to call `RequestConfirmation`: once it has identified the media item (via web search + SearchMedia), resolved any ambiguity, and is ready to present a plan.
 
@@ -55,19 +57,20 @@ Replaced entirely by `TrackConversation`.
 `TrackConversation` declares one serialized property:
 
 ```php
+/** @var Message[] */
 protected array $messageHistory = [];
 ```
 
-Nutgram's `__serialize()` captures all instance properties (via `get_object_vars($this)`) and stores the full object in Laravel cache between turns. No manual `setData`/`getData` needed.
+Nutgram's `__serialize()` captures all instance properties (via `get_object_vars($this)`) and stores the full object in Laravel cache between turns. No manual `setData`/`getData` needed. `Message` objects serialize cleanly — they hold only a backed enum (`MessageRole`) and a nullable string.
 
-After each `prompt()` call, the Conversation appends two entries to `$messageHistory`:
+After each `prompt()` call, the Conversation appends two `Message` objects to `$messageHistory`:
 
 ```php
-$this->messageHistory[] = ['role' => 'user',      'content' => $userText];
-$this->messageHistory[] = ['role' => 'assistant',  'content' => $response->text];
+$this->messageHistory[] = new Message(MessageRole::User,      $userText);
+$this->messageHistory[] = new Message(MessageRole::Assistant, $response->text);
 ```
 
-Plain arrays are used (not `Message` objects) so the history serializes cleanly. They are converted to `Message` objects only when passed to the agent.
+These are passed directly to the agent constructor — no conversion step needed.
 
 ---
 
@@ -78,13 +81,13 @@ Plain arrays are used (not `Message` objects) so the history serializes cleanly.
     └─ start()
          └─ runAgentTurn($text)
               ├─ confirmation requested  →  send text + buttons, next('awaitConfirmation')
-              └─ not requested           →  send plain text,     next('planningTurn')
+              └─ not requested           →  send plain text,     next('converse')
 
 user sends free text
-    └─ planningTurn()
+    └─ converse()
          └─ runAgentTurn($bot->message()->text)
               ├─ confirmation requested  →  send text + buttons, next('awaitConfirmation')
-              └─ not requested           →  send plain text,     next('planningTurn')
+              └─ not requested           →  send plain text,     next('converse')
 
 user taps button
     └─ awaitConfirmation()
@@ -104,7 +107,7 @@ user taps button
 5. `$agent->prompt($userText)` is called — agent uses WebSearch and SearchMedia internally
 6. History is updated with user + assistant messages
 7. `$confirmationTool->wasRequested()` is checked:
-   - **False:** send `$response->text` as plain text, `next('planningTurn')`
+   - **False:** send `$response->text` as plain text, `next('converse')`
    - **True:** send `$response->text` + inline keyboard, `next('awaitConfirmation')`
 
 ---
