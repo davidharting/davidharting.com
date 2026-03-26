@@ -20,18 +20,13 @@ $bot->onCommand('example', function (Nutgram $bot) {
 })->description('An example command')->middleware(OnlyDavidMiddleware::class);
 
 $bot->registerCommand(App\Telegram\Commands\WhoamiCommand::class);
-$bot->registerCommand(App\Telegram\Commands\TrackCommand::class)
-    ->middleware(OnlyDavidMiddleware::class);
-$bot->registerCommand(
-    new \SergiX44\Nutgram\Handlers\Type\Command(
-        function (Nutgram $bot, string $text) {
-            App\Telegram\Conversations\TrackConversation::begin($bot, data: [trim($text)]);
-        },
-        'track {text}'
-    )
-)->middleware(App\Telegram\Middleware\OnlyDavidMiddleware::class);
+
+$bot->onCommand('track {text}', function (Nutgram $bot, string $text) {
+    App\Telegram\Conversations\TrackConversation::begin($bot, data: [trim($text)]);
+})->middleware(OnlyDavidMiddleware::class);
+
 $bot->onCommand('track', function (Nutgram $bot) {
-    $bot->sendMessage(App\Telegram\Commands\TrackCommand::usageMessage());
+    $bot->sendMessage("Usage: /track <description>\nExample: /track Add The Hobbit to my backlog");
 })->middleware(OnlyDavidMiddleware::class);
 
 $bot->onMessage(function (Nutgram $bot) {

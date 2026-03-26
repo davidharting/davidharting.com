@@ -139,3 +139,19 @@ test('/track ends conversation with error message when AI provider fails', funct
         ->assertReplyText('Error: AI provider [anthropic] has insufficient credits or quota.')
         ->assertNoConversation();
 });
+
+test('unauthorized user is rejected from /track', function () {
+    /** @var TestCase $this */
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(User::make(
+        id: 99999,
+        is_bot: false,
+        first_name: 'Stranger',
+    ));
+
+    $bot->hearText('/track Add something')
+        ->reply()
+        ->assertReplyText('Sorry, you are not authorized to use this bot.');
+});
