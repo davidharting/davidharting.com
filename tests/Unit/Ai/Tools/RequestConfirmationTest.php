@@ -7,14 +7,14 @@ use Laravel\Ai\Tools\Request;
 
 test('wasRequested() returns false before handle() is called', function () {
     /** @var TestCase $this */
-    $tool = new RequestConfirmation();
+    $tool = new RequestConfirmation;
 
     $this->assertFalse($tool->wasRequested());
 });
 
 test('wasRequested() returns true after handle() is called', function () {
     /** @var TestCase $this */
-    $tool = new RequestConfirmation();
+    $tool = new RequestConfirmation;
     $tool->handle(new Request([]));
 
     $this->assertTrue($tool->wasRequested());
@@ -22,7 +22,7 @@ test('wasRequested() returns true after handle() is called', function () {
 
 test('handle() returns a non-empty acknowledgement string', function () {
     /** @var TestCase $this */
-    $tool = new RequestConfirmation();
+    $tool = new RequestConfirmation;
     $result = $tool->handle(new Request([]));
 
     $this->assertNotEmpty((string) $result);
@@ -30,8 +30,8 @@ test('handle() returns a non-empty acknowledgement string', function () {
 
 test('schema() returns an empty array', function () {
     /** @var TestCase $this */
-    $tool = new RequestConfirmation();
-    $schema = $tool->schema(new JsonSchemaTypeFactory());
+    $tool = new RequestConfirmation;
+    $schema = $tool->schema(new JsonSchemaTypeFactory);
 
     $this->assertSame([], $schema);
 });

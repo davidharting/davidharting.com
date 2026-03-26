@@ -50,7 +50,7 @@ test('/track keeps conversation active for follow-up after plain text response',
 test('/track sends message with inline keyboard when agent calls RequestConfirmation', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
-    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation(), fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation, fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
 
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);
@@ -74,7 +74,7 @@ test('/track sends message with inline keyboard when agent calls RequestConfirma
 test('tapping Confirm ends the conversation with acknowledgement', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
-    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation(), fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation, fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
 
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);
@@ -92,7 +92,7 @@ test('tapping Confirm ends the conversation with acknowledgement', function () {
 test('tapping Cancel ends the conversation with cancellation message', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
-    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation(), fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation, fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
 
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);
@@ -110,7 +110,7 @@ test('tapping Cancel ends the conversation with cancellation message', function 
 test('stray text while awaiting confirmation sends a reminder and stays active', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
-    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation(), fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation, fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
 
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);

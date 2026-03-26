@@ -43,7 +43,7 @@ test('MediaTrackingAgent has correct tools', function () {
 
 test('MediaTrackingAgent messages() returns empty array by default', function () {
     /** @var TestCase $this */
-    $agent = new MediaTrackingAgent();
+    $agent = new MediaTrackingAgent;
 
     $this->assertSame([], $agent->messages());
 });
@@ -62,7 +62,7 @@ test('MediaTrackingAgent messages() returns injected history', function () {
 
 test('MediaTrackingAgent tools() includes injected RequestConfirmation instance', function () {
     /** @var TestCase $this */
-    $confirmationTool = new RequestConfirmation();
+    $confirmationTool = new RequestConfirmation;
     $agent = new MediaTrackingAgent(confirmationTool: $confirmationTool);
 
     $tools = collect($agent->tools());
@@ -71,7 +71,7 @@ test('MediaTrackingAgent tools() includes injected RequestConfirmation instance'
 
 test('MediaTrackingAgent tools() includes a RequestConfirmation when none injected', function () {
     /** @var TestCase $this */
-    $agent = new MediaTrackingAgent();
+    $agent = new MediaTrackingAgent;
 
     $tools = collect($agent->tools());
     $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RequestConfirmation));

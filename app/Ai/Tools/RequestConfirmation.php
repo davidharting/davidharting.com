@@ -19,8 +19,8 @@ class RequestConfirmation implements Tool
     public function description(): Stringable|string
     {
         return 'Call this tool when you have identified the media item and resolved all ambiguity. '
-            . 'It signals that you are ready to present a confirmation plan. '
-            . 'Do not call it until you are confident about the title, year, creator, and intended action.';
+            .'It signals that you are ready to present a confirmation plan. '
+            .'Do not call it until you are confident about the title, year, creator, and intended action.';
     }
 
     public function handle(Request $request): Stringable|string
