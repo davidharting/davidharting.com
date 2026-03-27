@@ -28,7 +28,7 @@ class RequestConfirmation implements Tool
     {
         $this->requested = true;
 
-        Log::info('RequestConfirmation tool called', ['tool' => 'RequestConfirmation']);
+        Log::info('RequestConfirmation tool called');
 
         return 'Confirmation signalled. Write your confirmation message as your response text.';
     }
