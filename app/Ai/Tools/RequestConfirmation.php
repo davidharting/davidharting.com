@@ -3,6 +3,7 @@
 namespace App\Ai\Tools;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Stringable;
@@ -26,6 +27,8 @@ class RequestConfirmation implements Tool
     public function handle(Request $request): Stringable|string
     {
         $this->requested = true;
+
+        Log::info('RequestConfirmation tool called');
 
         return 'Confirmation signalled. Write your confirmation message as your response text.';
     }

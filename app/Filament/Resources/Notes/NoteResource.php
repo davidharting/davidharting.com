@@ -6,6 +6,7 @@ use App\Filament\Resources\Notes\Pages\CreateNote;
 use App\Filament\Resources\Notes\Pages\EditNote;
 use App\Filament\Resources\Notes\Pages\ListNotes;
 use App\Models\Note;
+use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -25,7 +26,7 @@ class NoteResource extends Resource
 {
     protected static ?string $model = Note::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Schema $schema): Schema
     {

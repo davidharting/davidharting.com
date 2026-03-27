@@ -21,6 +21,7 @@ class MediaTrackingAgent implements Agent, HasTools
     use Promptable;
 
     public function __construct(
+        /** @var array<int, \Laravel\Ai\Messages\Message> */
         private array $history = [],
         private ?RequestConfirmation $confirmationTool = null,
     ) {}
