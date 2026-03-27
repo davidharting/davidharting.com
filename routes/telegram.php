@@ -2,6 +2,7 @@
 
 /** @var SergiX44\Nutgram\Nutgram $bot */
 
+use App\Telegram\Conversations\TrackConversation;
 use App\Telegram\Middleware\OnlyDavidMiddleware;
 use SergiX44\Nutgram\Nutgram;
 
@@ -21,9 +22,7 @@ $bot->onCommand('example', function (Nutgram $bot) {
 
 $bot->registerCommand(App\Telegram\Commands\WhoamiCommand::class);
 
-$bot->onCommand('track {text}', function (Nutgram $bot, string $text) {
-    App\Telegram\Conversations\TrackConversation::begin($bot, data: [trim($text)]);
-})->middleware(OnlyDavidMiddleware::class);
+$bot->onCommand('track {text}', TrackConversation::class)->middleware(OnlyDavidMiddleware::class);
 
 $bot->onCommand('track', function (Nutgram $bot) {
     $bot->sendMessage("Usage: /track <description>\nExample: /track Add The Hobbit to my backlog");
