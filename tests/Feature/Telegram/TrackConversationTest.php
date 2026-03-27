@@ -3,6 +3,7 @@
 use App\Ai\Agents\MediaTrackingAgent;
 use App\Ai\Tools\RequestConfirmation;
 use Illuminate\Foundation\Testing\TestCase;
+use Laravel\Ai\Tools\Request;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\User\User;
 use SergiX44\Nutgram\Testing\FakeNutgram;
@@ -14,6 +15,25 @@ function davidUser(): User
         is_bot: false,
         first_name: 'David',
     );
+}
+
+/**
+ * Binds a RequestConfirmation instance to the container that has already been
+ * triggered, simulating the agent having called the tool during its turn.
+ * This allows TrackConversation (which resolves the tool via app()) to receive
+ * an already-fired instance in tests without going through a real agent call.
+ */
+class PreTriggeredConfirmation
+{
+    public static function bind(): void
+    {
+        app()->bind(RequestConfirmation::class, function () {
+            $tool = new RequestConfirmation;
+            $tool->handle(new Request([]));
+
+            return $tool;
+        });
+    }
 }
 
 test('/track sends agent response as plain text when confirmation not requested', function () {
@@ -50,7 +70,7 @@ test('/track keeps conversation active for follow-up after plain text response',
 test('/track sends message with inline keyboard when agent calls RequestConfirmation', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
-    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation, fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+    PreTriggeredConfirmation::bind();
 
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);
@@ -74,7 +94,7 @@ test('/track sends message with inline keyboard when agent calls RequestConfirma
 test('tapping Confirm ends the conversation with acknowledgement', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
-    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation, fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+    PreTriggeredConfirmation::bind();
 
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);
@@ -92,7 +112,7 @@ test('tapping Confirm ends the conversation with acknowledgement', function () {
 test('tapping Cancel ends the conversation with cancellation message', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
-    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation, fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+    PreTriggeredConfirmation::bind();
 
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);
@@ -107,10 +127,10 @@ test('tapping Cancel ends the conversation with cancellation message', function 
         ->assertNoConversation();
 });
 
-test('stray text while awaiting confirmation sends a reminder and stays active', function () {
+test('stray text while awaiting confirmation sends a reminder and conversation stays active', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
-    app()->bind(RequestConfirmation::class, fn () => tap(new RequestConfirmation, fn ($t) => $t->handle(new \Laravel\Ai\Tools\Request([]))));
+    PreTriggeredConfirmation::bind();
 
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);
