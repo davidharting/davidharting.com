@@ -38,6 +38,8 @@ class TrackConversation extends Conversation
             return;
         }
 
+        // We send the outcome as a chat message (rather than answerCallbackQuery text)
+        // so that it's persistent in the conversation and easily assertable in tests.
         $bot->answerCallbackQuery();
 
         if ($bot->callbackQuery()?->data === 'confirm') {
@@ -52,10 +54,14 @@ class TrackConversation extends Conversation
     private function runAgentTurn(Nutgram $bot, string $userText): void
     {
         try {
+            // We resolve RequestConfirmation via the container (rather than new-ing it up)
+            // so tests can swap in a pre-triggered instance via app()->bind(). We pass it
+            // through the constructor so we can read its state after the agent turn ends.
             $confirmationTool = app(RequestConfirmation::class);
             $agent = new MediaTrackingAgent($this->messageHistory, $confirmationTool);
             $response = $agent->prompt($userText);
 
+            // Append both sides of the exchange to maintain multi-turn context.
             $this->messageHistory[] = new Message(MessageRole::User, $userText);
             $this->messageHistory[] = new Message(MessageRole::Assistant, $response->text);
 
@@ -74,6 +80,7 @@ class TrackConversation extends Conversation
                 $this->next('converse');
             }
         } catch (AiException $e) {
+            // TODO: Retry with exponential backoff before giving up (consider adding to the agent itself).
             Log::error('MediaTrackingAgent failed', ['exception' => $e]);
             $bot->sendMessage("Error: {$e->getMessage()}");
             $this->end();
