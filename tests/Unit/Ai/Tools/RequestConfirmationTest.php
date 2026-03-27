@@ -5,6 +5,9 @@ use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Laravel\Ai\Tools\Request;
 
+// RequestConfirmation::handle() logs via the Log facade, so we need the app booted.
+uses(Tests\TestCase::class);
+
 test('wasRequested() returns false before handle() is called', function () {
     /** @var TestCase $this */
     $tool = new RequestConfirmation;
