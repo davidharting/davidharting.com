@@ -145,7 +145,8 @@ test('tapping Confirm calls MediaTrackingAgent with the confirmed plan and sends
 
     $bot->hearCallbackQueryData('confirm')
         ->reply()
-        ->assertReplyText('✓ Added The Hobbit (1937) by J.R.R. Tolkien — Book.', index: 1)
+        ->assertReplyText('On it! I\'ll report back when it\'s done.', index: 2)
+        ->assertReplyText('✓ Added The Hobbit (1937) by J.R.R. Tolkien — Book.', index: 3)
         ->assertNoConversation();
 });
 
@@ -163,7 +164,7 @@ test('tapping Cancel ends the conversation with cancellation message and no DB r
 
     $bot->hearCallbackQueryData('cancel')
         ->reply()
-        ->assertReplyText('Cancelled. Nothing was changed.', index: 1)
+        ->assertReplyText('Cancelled. Nothing was changed.', index: 2)
         ->assertNoConversation();
 
     $this->assertDatabaseCount('media', 0);

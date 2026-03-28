@@ -66,8 +66,10 @@ class TrackConversation extends Conversation
         // We send the outcome as a chat message (rather than answerCallbackQuery text)
         // so that it's persistent in the conversation and easily assertable in tests.
         $bot->answerCallbackQuery();
+        $bot->editMessageReplyMarkup();
 
         if ($bot->callbackQuery()?->data === 'confirm') {
+            $bot->sendMessage('On it! I\'ll report back when it\'s done.');
             $writingTool = new MediaWritingAgentTool;
             $agent = (new MediaTrackingAgent(writingTool: $writingTool))
                 ->continue($this->aiConversationId, $this->conversationUser());
