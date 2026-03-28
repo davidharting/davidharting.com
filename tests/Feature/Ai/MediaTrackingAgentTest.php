@@ -1,12 +1,14 @@
 <?php
 
 use App\Ai\Agents\MediaTrackingAgent;
+use App\Ai\Tools\RequestConfirmation;
+use App\Ai\Tools\SearchMedia;
 use Illuminate\Foundation\Testing\TestCase;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
 use Laravel\Ai\Providers\Tools\WebSearch;
 
-test("MediaTrackingAgent uses Anthropic's Sonnet 4.6", function () {
+test("uses Anthropic's Sonnet 4.6", function () {
     /** @var TestCase $this */
     $reflection = new ReflectionClass(MediaTrackingAgent::class);
 
@@ -19,7 +21,7 @@ test("MediaTrackingAgent uses Anthropic's Sonnet 4.6", function () {
     $this->assertSame('claude-sonnet-4-6', $modelAttributes[0]->newInstance()->value);
 });
 
-test('MediaTrackingAgent instructions mention media tracking and library status', function () {
+test('instructions mention media tracking and library status', function () {
     /** @var TestCase $this */
     $agent = MediaTrackingAgent::make();
     $instructions = $agent->instructions();
@@ -28,11 +30,31 @@ test('MediaTrackingAgent instructions mention media tracking and library status'
     $this->assertStringContainsStringIgnoringCase('status', $instructions);
 });
 
-test('MediaTrackingAgent has correct tools', function () {
-    /** @var TestCase $this */
-    $agent = MediaTrackingAgent::make();
-    $tools = collect($agent->tools());
+describe('tools()', function () {
+    test('includes WebSearch, SearchMedia, and RequestConfirmation by default', function () {
+        /** @var TestCase $this */
+        $agent = MediaTrackingAgent::make();
+        $tools = collect($agent->tools());
 
-    $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof WebSearch));
-    $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof \App\Ai\Tools\SearchMedia));
+        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof WebSearch));
+        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof SearchMedia));
+        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RequestConfirmation));
+    });
+
+    test('includes injected RequestConfirmation instance', function () {
+        /** @var TestCase $this */
+        $confirmationTool = new RequestConfirmation;
+        $agent = new MediaTrackingAgent(confirmationTool: $confirmationTool);
+
+        $tools = collect($agent->tools());
+        $this->assertTrue($tools->contains($confirmationTool));
+    });
+
+    test('includes a RequestConfirmation when none injected', function () {
+        /** @var TestCase $this */
+        $agent = new MediaTrackingAgent;
+
+        $tools = collect($agent->tools());
+        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RequestConfirmation));
+    });
 });

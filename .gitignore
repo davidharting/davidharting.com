@@ -34,6 +34,9 @@ PLAN.md
 prompt.md
 PROMPT.md
 
+# Superpowers planning docs
+docs/superpowers/
+
 # Ignore tar files from prod:build
 davidharting*.tar
 

@@ -8,6 +8,7 @@ use App\Filament\Resources\Creators\Pages\ListCreators;
 use App\Filament\Resources\Creators\Pages\ViewCreator;
 use App\Filament\Resources\Creators\RelationManagers\MediaRelationManager;
 use App\Models\Creator;
+use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -22,7 +23,7 @@ class CreatorResource extends Resource
 {
     protected static ?string $model = Creator::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Schema $schema): Schema
     {

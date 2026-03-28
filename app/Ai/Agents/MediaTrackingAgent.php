@@ -2,22 +2,28 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\RequestConfirmation;
 use App\Ai\Tools\SearchMedia;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
+use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
-use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Laravel\Ai\Providers\Tools\WebSearch;
 use Stringable;
 
 #[Provider('anthropic')]
 #[Model('claude-sonnet-4-6')]
-class MediaTrackingAgent implements Agent, HasTools
+class MediaTrackingAgent implements Agent, Conversational, HasTools
 {
-    use Promptable;
+    use Promptable, RemembersConversations;
+
+    public function __construct(
+        private ?RequestConfirmation $confirmationTool = null,
+    ) {}
 
     /**
      * Get the instructions that the agent should follow.
@@ -78,17 +84,29 @@ class MediaTrackingAgent implements Agent, HasTools
         **Answering questions about David's Media Library**
         Some questions will not need information from the internet, but instead simply require you to use the SearchMedia tool to explore the database. You may need to run multiple queries.
 
-        PROMPT;
-    }
 
-    /**
-     * Get the list of messages comprising the conversation so far.
-     *
-     * @return Message[]
-     */
-    public function messages(): iterable
-    {
-        return [];
+        **Requesting Confirmation**
+
+        When you are ready to take an action — such as adding a new item to the library or logging a media event — call the RequestConfirmation tool. This signals to the interface to present a Confirm/Cancel button to David.
+
+        Only call RequestConfirmation when:
+        - You have identified the exact media item (title, year, creator, type confirmed via web search)
+        - You have checked the library via SearchMedia
+        - All ambiguity is resolved (if there were multiple matches, David has clarified which one)
+        - You know exactly what actions are needed (create media record, add event, etc.)
+
+        Do not call RequestConfirmation for questions about the library — only for actions.
+
+        Your response text (written at the same time as calling RequestConfirmation) MUST be the action summary — not instructions to the user about buttons. The interface handles the Confirm/Cancel buttons automatically; you do not need to mention them.
+
+        The response text should be a first-person declaration of intent in the format "I'll [action]. Sound good?" Be concise and specific. Examples:
+        - "I'll add <b>Ghostwritten</b> (1999) by David Mitchell — Book to your library. Sound good?"
+        - "I'll log a <i>finished</i> event for <b>Dune</b> (1965) by Frank Herbert — Book. Sound good?"
+        - "I'll add <b>Blood Meridian</b> (1985) by Cormac McCarthy — Book to your library and log a <i>started</i> event. Sound good?"
+
+        Do not write anything like "Please confirm" or "Use the buttons to confirm". Just state the plan.
+
+        PROMPT;
     }
 
     /**
@@ -101,6 +119,7 @@ class MediaTrackingAgent implements Agent, HasTools
         return [
             new WebSearch,
             new SearchMedia,
+            $this->confirmationTool ?? new RequestConfirmation,
         ];
     }
 }
