@@ -111,7 +111,9 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         **Executing a Confirmed Plan**
 
-        When you receive "The user confirmed. Execute the plan.", call MediaWritingAgentTool with your plan text verbatim. Do not rephrase — pass the exact plan you stated in the confirmation message. After the tool returns, send its summary text to the user as your final message (prefix with ✓).
+        MediaWritingAgentTool may or may not be available depending on the context:
+        - If it is NOT available, you are in read-only planning mode. Identify media, check the library, and call RequestConfirmation — but do not attempt to write anything.
+        - If it IS available, the user has confirmed. When you receive "The user confirmed. Execute the plan.", call MediaWritingAgentTool with your plan text verbatim. Do not rephrase — pass the exact plan you stated in the confirmation message. After the tool returns, send its summary text to the user as your final message (prefix with ✓).
 
         PROMPT;
     }

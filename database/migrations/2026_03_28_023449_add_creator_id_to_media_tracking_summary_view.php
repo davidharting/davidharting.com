@@ -7,13 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('DROP VIEW IF EXISTS media_tracking_summary');
-
         DB::statement(<<<'SQL'
-            CREATE VIEW media_tracking_summary AS
+            CREATE OR REPLACE VIEW media_tracking_summary AS
             SELECT
                 m.id        AS media_id,
-                m.creator_id,
                 m.title,
                 m.year,
                 mt.name     AS media_type,
@@ -32,7 +29,8 @@ return new class extends Migration
                 )           AS current_status,
                 agg.started_at,
                 agg.finished_at,
-                agg.abandoned_at
+                agg.abandoned_at,
+                m.creator_id
             FROM media m
             LEFT JOIN media_types mt ON m.media_type_id = mt.id
             LEFT JOIN creators c ON m.creator_id = c.id

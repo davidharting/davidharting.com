@@ -1,11 +1,7 @@
 <?php
 
 use App\Ai\Agents\MediaTrackingAgent;
-use App\Ai\Tools\MediaWritingAgentTool;
 use App\Ai\Tools\RequestConfirmation;
-use App\Models\Creator;
-use App\Models\Media;
-use App\Models\MediaEvent;
 use Illuminate\Foundation\Testing\TestCase;
 use Laravel\Ai\Tools\Request;
 use SergiX44\Nutgram\Nutgram;
@@ -153,7 +149,7 @@ test('tapping Confirm calls MediaTrackingAgent with the confirmed plan and sends
         ->assertNoConversation();
 });
 
-test('tapping Cancel ends the conversation with cancellation message', function () {
+test('tapping Cancel ends the conversation with cancellation message and no DB rows are created', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
     PreTriggeredConfirmation::bind();
@@ -169,6 +165,9 @@ test('tapping Cancel ends the conversation with cancellation message', function 
         ->reply()
         ->assertReplyText('Cancelled. Nothing was changed.', index: 1)
         ->assertNoConversation();
+
+    $this->assertDatabaseCount('media', 0);
+    $this->assertDatabaseCount('media_events', 0);
 });
 
 test('stray text while awaiting confirmation sends a reminder and conversation stays active', function () {
@@ -227,27 +226,6 @@ test('/track persists the conversation to the database', function () {
         'role' => 'assistant',
         'content' => 'Which Dune did you mean?',
     ]);
-});
-
-test('tapping Cancel ends the conversation and no DB rows are created', function () {
-    /** @var TestCase $this */
-    MediaTrackingAgent::fake(['I\'ll add <b>The Hobbit</b> (1937) by J.R.R. Tolkien — Book to your library. Sound good?']);
-    PreTriggeredConfirmation::bind();
-
-    /** @var FakeNutgram $bot */
-    $bot = app(Nutgram::class);
-    $bot->setCommonUser(davidUser());
-    $bot->willStartConversation();
-
-    $bot->hearText('/track Add The Hobbit')->reply();
-
-    $bot->hearCallbackQueryData('cancel')
-        ->reply()
-        ->assertReplyText('Cancelled. Nothing was changed.', index: 1)
-        ->assertNoConversation();
-
-    $this->assertDatabaseCount('media', 0);
-    $this->assertDatabaseCount('media_events', 0);
 });
 
 test('unauthorized user is rejected from /track', function () {

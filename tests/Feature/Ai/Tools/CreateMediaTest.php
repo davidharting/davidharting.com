@@ -20,6 +20,7 @@ test('CreateMedia creates media with a new creator by name', function () {
     );
 
     $this->assertTrue($result['created']);
+    $this->assertTrue($result['creator_created']);
     $this->assertSame('Dune', $result['title']);
     $this->assertSame(1965, $result['year']);
     $this->assertSame('Frank Herbert', $result['creator']);
@@ -43,6 +44,7 @@ test('CreateMedia creates media with an existing creator by id', function () {
     );
 
     $this->assertTrue($result['created']);
+    $this->assertFalse($result['creator_created']);
     $this->assertSame('Dune Messiah', $result['title']);
     $this->assertSame('Frank Herbert', $result['creator']);
     $this->assertDatabaseCount('creators', 1);
@@ -64,6 +66,24 @@ test('CreateMedia returns created=false when media already exists (firstOrCreate
 
     $this->assertFalse($result['created']);
     $this->assertDatabaseCount('media', 1);
+});
+
+test('CreateMedia returns creator_created=false when creator already exists and found by name', function () {
+    /** @var TestCase $this */
+    Creator::factory()->create(['name' => 'Frank Herbert']);
+
+    $result = json_decode(
+        (new CreateMedia)->handle(new Request([
+            'title' => 'Children of Dune',
+            'creator_name' => 'Frank Herbert',
+            'media_type' => 'book',
+        ])),
+        true,
+    );
+
+    $this->assertTrue($result['created']);
+    $this->assertFalse($result['creator_created']);
+    $this->assertDatabaseCount('creators', 1);
 });
 
 test('CreateMedia returns error JSON when neither creator_id nor creator_name provided', function () {

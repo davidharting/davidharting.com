@@ -18,9 +18,9 @@ class CreateMediaEvent implements Tool
     {
         return <<<'TEXT'
             Log a media tracking event (started, finished, abandoned, or comment) for a
-            media item. The occurred_at date must be an absolute ISO 8601 datetime —
-            resolve any relative references ("yesterday", "last Saturday") before calling
-            this tool.
+            media item. occurred_at accepts any date string Carbon can parse — ISO 8601,
+            natural language ("yesterday", "last Saturday"), or a plain date ("2026-03-15").
+            If no specific time was mentioned, default to noon (12:00:00) of the relevant day.
             TEXT;
     }
 
@@ -77,7 +77,7 @@ class CreateMediaEvent implements Tool
                 ->enum(array_column(MediaEventTypeName::cases(), 'value'))
                 ->description('The type of event to log.'),
             'occurred_at' => $schema->string()->required()
-                ->description('The absolute ISO 8601 datetime when the event occurred. Resolve any relative dates before calling this tool.'),
+                ->description('When the event occurred. Accepts ISO 8601, plain dates, or natural language Carbon can parse. If no time was mentioned, use noon (12:00:00) of the relevant day, e.g. "2026-03-15T12:00:00".'),
             'comment' => $schema->string()
                 ->description('An optional comment for comment-type events or annotations.'),
         ];

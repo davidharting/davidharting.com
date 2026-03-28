@@ -21,6 +21,13 @@ class MediaWritingAgentTool implements Tool
     {
         $plan = (string) $request->string('plan');
 
+        if ($plan === '') {
+            return json_encode(
+                ['error' => 'plan must not be empty. Pass the exact plan text you stated in the confirmation message.'],
+                JSON_THROW_ON_ERROR,
+            );
+        }
+
         Log::info('MediaWritingAgentTool called', ['plan' => $plan]);
 
         $response = agent(
@@ -50,11 +57,14 @@ class MediaWritingAgentTool implements Tool
 
         **Creator resolution**
         Always call SearchMedia with the creator name first to get creator_id before calling CreateMedia.
-        Use partial/fuzzy matching (e.g. "JRR Tolkien" may match "J.R.R. Tolkien").
-        If found, pass creator_id to CreateMedia. If not found, pass creator_name — the tool will create the creator.
+        Use partial search — for example, to find J.R.R. Tolkien search for "Tolkien" and inspect the results.
+        If a matching creator is found, pass creator_id to CreateMedia.
+        If not found, pass creator_name — the tool will create the creator.
 
-        **Relative dates**
-        Resolve any relative date references ("last Saturday", "yesterday") to an absolute ISO 8601 datetime before calling CreateMediaEvent.
+        **Dates**
+        Resolve relative date references ("last Saturday", "yesterday") to a specific date.
+        If no time of day was mentioned by the user, use noon (12:00:00) of the relevant day,
+        e.g. "2026-03-15T12:00:00".
 
         **Backlog only**
         If the plan is to add to the library with no event, call CreateMedia only.

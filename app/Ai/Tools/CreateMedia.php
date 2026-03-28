@@ -7,6 +7,7 @@ use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaType;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Facades\DB;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Stringable;
@@ -17,10 +18,11 @@ class CreateMedia implements Tool
     {
         return <<<'TEXT'
             Find or create a media item in the library. Provide either creator_id (when the
-            creator was found via SearchMedia) or creator_name (when the creator is new —
-            the tool will create the creator automatically). Exactly one of creator_id or
-            creator_name must be provided. Returns the media record details and whether it
-            was newly created.
+            creator was found via SearchMedia) or creator_name (when the creator is new or
+            not yet known — the tool will double-check if it's already in the DB and if not,
+            create the creator automatically). Exactly one of creator_id or creator_name must
+            be provided. Returns the media record details and whether the media and/or creator
+            were newly created.
             TEXT;
     }
 
@@ -55,43 +57,49 @@ class CreateMedia implements Tool
             );
         }
 
-        $creator = $creatorId !== null
-            ? Creator::find($creatorId)
-            : Creator::firstOrCreate(['name' => $creatorName]);
-
-        if ($creator === null) {
-            return json_encode(
-                ['error' => "Creator with id {$creatorId} not found."],
-                JSON_THROW_ON_ERROR,
-            );
-        }
-
-        $mediaType = MediaType::where('name', $mediaTypeName)->sole();
-
         $title = (string) $request->string('title');
         $year = $request->integer('year') ?: null;
         $note = ((string) $request->string('note')) ?: null;
 
-        $media = Media::firstOrCreate(
-            [
-                'title' => $title,
-                'media_type_id' => $mediaType->id,
-                'creator_id' => $creator->id,
-            ],
-            [
-                'year' => $year,
-                'note' => $note,
-            ],
-        );
+        $result = DB::transaction(function () use ($creatorId, $creatorName, $mediaTypeName, $title, $year, $note) {
+            $creator = $creatorId !== null
+                ? Creator::find($creatorId)
+                : Creator::firstOrCreate(['name' => $creatorName]);
 
-        return json_encode([
-            'media_id' => $media->id,
-            'title' => $media->title,
-            'year' => $media->year,
-            'creator' => $creator->name,
-            'media_type' => $mediaTypeName->value,
-            'created' => $media->wasRecentlyCreated,
-        ], JSON_THROW_ON_ERROR);
+            if ($creator === null) {
+                return ['error' => "Creator with id {$creatorId} not found."];
+            }
+
+            $mediaType = MediaType::where('name', $mediaTypeName)->sole();
+
+            $media = Media::firstOrCreate(
+                [
+                    'title' => $title,
+                    'media_type_id' => $mediaType->id,
+                    'creator_id' => $creator->id,
+                ],
+                [
+                    'year' => $year,
+                    'note' => $note,
+                ],
+            );
+
+            return [
+                'media_id' => $media->id,
+                'title' => $media->title,
+                'year' => $media->year,
+                'creator' => $creator->name,
+                'creator_created' => $creator->wasRecentlyCreated,
+                'media_type' => $mediaTypeName->value,
+                'created' => $media->wasRecentlyCreated,
+            ];
+        });
+
+        if (isset($result['error'])) {
+            return json_encode($result, JSON_THROW_ON_ERROR);
+        }
+
+        return json_encode($result, JSON_THROW_ON_ERROR);
     }
 
     public function schema(JsonSchema $schema): array
@@ -104,12 +112,12 @@ class CreateMedia implements Tool
             'creator_id' => $schema->integer()
                 ->description('The creator\'s ID as returned by SearchMedia. Use when the creator already exists in the library.'),
             'creator_name' => $schema->string()
-                ->description('The creator\'s name. Use when the creator is new — the tool will call firstOrCreate on Creator.'),
+                ->description('The creator\'s name. Use when the creator is new or not yet known in the library — the tool will call firstOrCreate on Creator.'),
             'media_type' => $schema->string()->required()
                 ->enum(array_column(MediaTypeName::cases(), 'value'))
                 ->description('The type of media.'),
             'note' => $schema->string()
-                ->description('An optional personal note about the media item.'),
+                ->description('An optional note about the media item provided by the human user.'),
         ];
     }
 }
