@@ -6,8 +6,6 @@ use App\Ai\Tools\SearchMedia;
 use Illuminate\Foundation\Testing\TestCase;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
-use Laravel\Ai\Messages\Message;
-use Laravel\Ai\Messages\MessageRole;
 use Laravel\Ai\Providers\Tools\WebSearch;
 
 test("uses Anthropic's Sonnet 4.6", function () {
@@ -30,27 +28,6 @@ test('instructions mention media tracking and library status', function () {
 
     $this->assertStringContainsStringIgnoringCase('media', $instructions);
     $this->assertStringContainsStringIgnoringCase('status', $instructions);
-});
-
-describe('messages()', function () {
-    test('returns empty array by default', function () {
-        /** @var TestCase $this */
-        $agent = new MediaTrackingAgent;
-
-        $this->assertSame([], $agent->messages());
-    });
-
-    test('returns injected history', function () {
-        /** @var TestCase $this */
-        $history = [
-            new Message(MessageRole::User, 'Add The Hobbit'),
-            new Message(MessageRole::Assistant, 'Got it!'),
-        ];
-
-        $agent = new MediaTrackingAgent(history: $history);
-
-        $this->assertSame($history, $agent->messages());
-    });
 });
 
 describe('tools()', function () {

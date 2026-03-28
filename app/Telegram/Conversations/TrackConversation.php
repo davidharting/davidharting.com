@@ -5,9 +5,9 @@ namespace App\Telegram\Conversations;
 use App\Ai\Agents\MediaTrackingAgent;
 use App\Ai\Tools\RequestConfirmation;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Laravel\Ai\Contracts\ConversationStore;
 use Laravel\Ai\Exceptions\AiException;
-use Laravel\Ai\Messages\Message;
-use Laravel\Ai\Messages\MessageRole;
 use SergiX44\Nutgram\Conversations\Conversation;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Properties\ParseMode;
@@ -16,11 +16,27 @@ use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardMarkup;
 
 class TrackConversation extends Conversation
 {
-    /** @var Message[] */
-    protected array $messageHistory = [];
+    protected ?string $aiConversationId = null;
+
+    // Provides a ->id property for RemembersConversations. We use null so the DB stores
+    // NULL for user_id — this avoids conflating Telegram user IDs with system user IDs.
+    private function conversationUser(): object
+    {
+        return new class
+        {
+            public ?int $id = null;
+        };
+    }
 
     public function start(Nutgram $bot, string $text): void
     {
+        // Pre-create the conversation so runAgentTurn() can always call continue() uniformly,
+        // regardless of whether this is the first turn or a follow-up. This also avoids
+        // spending tokens on a Haiku-generated title that is never shown to the user —
+        // we use the first message text as the title instead.
+        $this->aiConversationId = app(ConversationStore::class)
+            ->storeConversation(null, Str::limit($text, 100, preserveWords: true));
+
         $this->runAgentTurn($bot, $text);
     }
 
@@ -58,12 +74,14 @@ class TrackConversation extends Conversation
             // so tests can swap in a pre-triggered instance via app()->bind(). We pass it
             // through the constructor so we can read its state after the agent turn ends.
             $confirmationTool = app(RequestConfirmation::class);
-            $agent = new MediaTrackingAgent($this->messageHistory, $confirmationTool);
-            $response = $agent->prompt($userText);
 
-            // Append both sides of the exchange to maintain multi-turn context.
-            $this->messageHistory[] = new Message(MessageRole::User, $userText);
-            $this->messageHistory[] = new Message(MessageRole::Assistant, $response->text);
+            // continue() requires a non-nullable object for the second arg even though the
+            // middleware accesses it with ?->id. conversationUser() provides a null-id object
+            // so the DB stores NULL for user_id (Telegram IDs ≠ system user IDs).
+            $agent = (new MediaTrackingAgent($confirmationTool))
+                ->continue($this->aiConversationId, $this->conversationUser());
+
+            $response = $agent->prompt($userText);
 
             if ($confirmationTool->wasRequested()) {
                 $bot->sendMessage(

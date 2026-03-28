@@ -6,23 +6,22 @@ use App\Ai\Tools\RequestConfirmation;
 use App\Ai\Tools\SearchMedia;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
+use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
-use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Laravel\Ai\Providers\Tools\WebSearch;
 use Stringable;
 
 #[Provider('anthropic')]
 #[Model('claude-sonnet-4-6')]
-class MediaTrackingAgent implements Agent, HasTools
+class MediaTrackingAgent implements Agent, Conversational, HasTools
 {
-    use Promptable;
+    use Promptable, RemembersConversations;
 
     public function __construct(
-        /** @var array<int, \Laravel\Ai\Messages\Message> */
-        private array $history = [],
         private ?RequestConfirmation $confirmationTool = null,
     ) {}
 
@@ -101,16 +100,6 @@ class MediaTrackingAgent implements Agent, HasTools
         In your response text (written at the same time as calling RequestConfirmation), describe the plan clearly and concisely. Example: "Add <b>The Hobbit</b> (1937) by J.R.R. Tolkien — Book to your library, and log a <i>started</i> event."
 
         PROMPT;
-    }
-
-    /**
-     * Get the list of messages comprising the conversation so far.
-     *
-     * @return Message[]
-     */
-    public function messages(): iterable
-    {
-        return $this->history;
     }
 
     /**

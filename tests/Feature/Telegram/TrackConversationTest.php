@@ -160,6 +160,31 @@ test('/track ends conversation with error message when AI provider fails', funct
         ->assertNoConversation();
 });
 
+test('/track persists the conversation to the database', function () {
+    /** @var TestCase $this */
+    MediaTrackingAgent::fake(['Which Dune did you mean?']);
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track mark dune as finished')->reply();
+
+    $this->assertDatabaseCount('agent_conversations', 1);
+    $this->assertDatabaseCount('agent_conversation_messages', 2);
+    $this->assertDatabaseHas('agent_conversation_messages', [
+        'agent' => MediaTrackingAgent::class,
+        'role' => 'user',
+        'content' => 'mark dune as finished',
+    ]);
+    $this->assertDatabaseHas('agent_conversation_messages', [
+        'agent' => MediaTrackingAgent::class,
+        'role' => 'assistant',
+        'content' => 'Which Dune did you mean?',
+    ]);
+});
+
 test('unauthorized user is rejected from /track', function () {
     /** @var TestCase $this */
 
