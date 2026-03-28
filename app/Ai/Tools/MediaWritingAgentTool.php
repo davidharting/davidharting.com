@@ -19,7 +19,7 @@ class MediaWritingAgentTool implements Tool
 
     public function handle(Request $request): Stringable|string
     {
-        $plan = (string) $request->string('plan');
+        $plan =  $request->string('plan', '');
 
         if ($plan === '') {
             return json_encode(
