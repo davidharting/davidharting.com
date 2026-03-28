@@ -97,7 +97,14 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         Do not call RequestConfirmation for questions about the library — only for actions.
 
-        In your response text (written at the same time as calling RequestConfirmation), describe the plan clearly and concisely. Example: "Add <b>The Hobbit</b> (1937) by J.R.R. Tolkien — Book to your library, and log a <i>started</i> event."
+        Your response text (written at the same time as calling RequestConfirmation) MUST be the action summary — not instructions to the user about buttons. The interface handles the Confirm/Cancel buttons automatically; you do not need to mention them.
+
+        The response text should be a first-person declaration of intent in the format "I'll [action]. Sound good?" Be concise and specific. Examples:
+        - "I'll add <b>Ghostwritten</b> (1999) by David Mitchell — Book to your library. Sound good?"
+        - "I'll log a <i>finished</i> event for <b>Dune</b> (1965) by Frank Herbert — Book. Sound good?"
+        - "I'll add <b>Blood Meridian</b> (1985) by Cormac McCarthy — Book to your library and log a <i>started</i> event. Sound good?"
+
+        Do not write anything like "Please confirm" or "Use the buttons to confirm". Just state the plan.
 
         PROMPT;
     }
