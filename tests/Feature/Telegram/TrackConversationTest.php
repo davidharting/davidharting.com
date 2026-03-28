@@ -65,7 +65,7 @@ test('/track plain text response includes an End button', function () {
         ->assertReplyMessage([
             'reply_markup' => [
                 'inline_keyboard' => [[
-                    ['text' => '✓ End', 'callback_data' => 'end'],
+                    ['text' => 'End', 'callback_data' => 'end'],
                 ]],
             ],
         ]);
@@ -184,7 +184,7 @@ test('stray text while awaiting confirmation sends a reminder and conversation s
 
 test('/track ends conversation with error message when AI provider fails', function () {
     /** @var TestCase $this */
-    MediaTrackingAgent::fake(fn () => throw \Laravel\Ai\Exceptions\InsufficientCreditsException::forProvider('anthropic'));
+    MediaTrackingAgent::fake(fn() => throw \Laravel\Ai\Exceptions\InsufficientCreditsException::forProvider('anthropic'));
 
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);

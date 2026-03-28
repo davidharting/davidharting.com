@@ -17,10 +17,10 @@ The site has a media tracking system with `Media` and `MediaEvent` models. Event
 - Existing commands: `/whoami`, `/example`.
 - `laravel/ai` installed with Anthropic as the default provider. `ANTHROPIC_API_KEY` in `.env`.
 - `/track` is live as a multi-turn `TrackConversation` (Nutgram Conversation state machine).
-  - Agent can ask clarifying questions before presenting the confirmation UI.
-  - Plain-text (non-confirmation) responses include a `✓ End` inline button to close the conversation.
-  - Full conversation history (including tool calls and results) is persisted to `agent_conversations` / `agent_conversation_messages` via `RemembersConversations`.
-  - DB writes on confirm are not yet implemented (placeholder acknowledgement sent).
+    - Agent can ask clarifying questions before presenting the confirmation UI.
+    - Plain-text (non-confirmation) responses include a `End` inline button to close the conversation.
+    - Full conversation history (including tool calls and results) is persisted to `agent_conversations` / `agent_conversation_messages` via `RemembersConversations`.
+    - DB writes on confirm are not yet implemented (placeholder acknowledgement sent).
 
 ## Data Model
 
