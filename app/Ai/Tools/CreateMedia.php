@@ -91,7 +91,7 @@ class CreateMedia implements Tool
                 'creator' => $creator->name,
                 'creator_created' => $creator->wasRecentlyCreated,
                 'media_type' => $mediaTypeName->value,
-                'created' => $media->wasRecentlyCreated,
+                'media_created' => $media->wasRecentlyCreated,
             ];
         });
 

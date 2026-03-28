@@ -31,7 +31,7 @@ class MediaWritingAgentTool implements Tool
         Log::info('MediaWritingAgentTool called', ['plan' => $plan]);
 
         $response = agent(
-            instructions: $this->workerInstructions(),
+            instructions: $this->instructions(),
             tools: [new SearchMedia, new CreateMedia, new CreateMediaEvent],
         )->prompt($plan, provider: 'anthropic', model: 'claude-sonnet-4-6');
 
@@ -46,7 +46,7 @@ class MediaWritingAgentTool implements Tool
         ];
     }
 
-    private function workerInstructions(): string
+    private function instructions(): string
     {
         $today = now()->toDateString();
 
@@ -60,11 +60,6 @@ class MediaWritingAgentTool implements Tool
         Use partial search — for example, to find J.R.R. Tolkien search for "Tolkien" and inspect the results.
         If a matching creator is found, pass creator_id to CreateMedia.
         If not found, pass creator_name — the tool will create the creator.
-
-        **Dates**
-        Resolve relative date references ("last Saturday", "yesterday") to a specific date.
-        If no time of day was mentioned by the user, use noon (12:00:00) of the relevant day,
-        e.g. "2026-03-15T12:00:00".
 
         **Backlog only**
         If the plan is to add to the library with no event, call CreateMedia only.

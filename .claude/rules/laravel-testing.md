@@ -15,6 +15,26 @@ test('example', function () {
 });
 ```
 
+## Test naming and describe blocks
+
+Do not include the class under test in test string names — that is implied by the test file name.
+
+When a test file covers multiple methods, group tests into `describe` blocks named after the method being tested.
+
+```php
+// ❌ Bad
+test('SearchMedia returns found=false when no results', function () { ... });
+
+// ✓ Good
+describe('handle()', function () {
+    test('returns found=false when no results', function () { ... });
+});
+
+describe('schema()', function () {
+    test('enumerates valid media_type values', function () { ... });
+});
+```
+
 ## assertSee vs assertSeeText
 
 Use the appropriate assertion based on what you're testing:
