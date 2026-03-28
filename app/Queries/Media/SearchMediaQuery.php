@@ -36,6 +36,7 @@ class SearchMediaQuery
 
         return $query->get([
             'media_id',
+            'creator_id',
             'title',
             'year',
             'media_type',

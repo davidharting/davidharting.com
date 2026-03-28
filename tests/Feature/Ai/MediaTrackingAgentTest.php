@@ -1,6 +1,7 @@
 <?php
 
 use App\Ai\Agents\MediaTrackingAgent;
+use App\Ai\Tools\MediaWritingAgentTool;
 use App\Ai\Tools\RequestConfirmation;
 use App\Ai\Tools\SearchMedia;
 use Illuminate\Foundation\Testing\TestCase;
@@ -56,5 +57,22 @@ describe('tools()', function () {
 
         $tools = collect($agent->tools());
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RequestConfirmation));
+    });
+
+    test('does not include MediaWritingAgentTool by default', function () {
+        /** @var TestCase $this */
+        $agent = new MediaTrackingAgent;
+
+        $tools = collect($agent->tools());
+        $this->assertFalse($tools->contains(fn ($tool) => $tool instanceof MediaWritingAgentTool));
+    });
+
+    test('includes injected MediaWritingAgentTool when provided', function () {
+        /** @var TestCase $this */
+        $writingTool = new MediaWritingAgentTool;
+        $agent = new MediaTrackingAgent(writingTool: $writingTool);
+
+        $tools = collect($agent->tools());
+        $this->assertTrue($tools->contains($writingTool));
     });
 });

@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
  * Read-only Eloquent model backed by the media_tracking_summary view.
  *
  * @property int $media_id
+ * @property int|null $creator_id
  * @property string $title
  * @property int|null $year
  * @property string $media_type

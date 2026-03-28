@@ -3,6 +3,7 @@
 namespace App\Telegram\Conversations;
 
 use App\Ai\Agents\MediaTrackingAgent;
+use App\Ai\Tools\MediaWritingAgentTool;
 use App\Ai\Tools\RequestConfirmation;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -67,7 +68,11 @@ class TrackConversation extends Conversation
         $bot->answerCallbackQuery();
 
         if ($bot->callbackQuery()?->data === 'confirm') {
-            $bot->sendMessage('✓ Done. (DB writes coming in next milestone)');
+            $writingTool = new MediaWritingAgentTool;
+            $agent = (new MediaTrackingAgent(writingTool: $writingTool))
+                ->continue($this->aiConversationId, $this->conversationUser());
+            $response = $agent->prompt('The user confirmed. Execute the plan.');
+            $bot->sendMessage($response->text, parse_mode: ParseMode::HTML);
         } else {
             $bot->sendMessage('Cancelled. Nothing was changed.');
         }

@@ -2,6 +2,7 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\MediaWritingAgentTool;
 use App\Ai\Tools\RequestConfirmation;
 use App\Ai\Tools\SearchMedia;
 use Laravel\Ai\Attributes\Model;
@@ -23,6 +24,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
     public function __construct(
         private ?RequestConfirmation $confirmationTool = null,
+        private ?MediaWritingAgentTool $writingTool = null,
     ) {}
 
     /**
@@ -106,6 +108,11 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         Do not write anything like "Please confirm" or "Use the buttons to confirm". Just state the plan.
 
+
+        **Executing a Confirmed Plan**
+
+        When you receive "The user confirmed. Execute the plan.", call MediaWritingAgentTool with your plan text verbatim. Do not rephrase — pass the exact plan you stated in the confirmation message. After the tool returns, send its summary text to the user as your final message (prefix with ✓).
+
         PROMPT;
     }
 
@@ -116,10 +123,16 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
      */
     public function tools(): iterable
     {
-        return [
+        $tools = [
             new WebSearch,
             new SearchMedia,
             $this->confirmationTool ?? new RequestConfirmation,
         ];
+
+        if ($this->writingTool !== null) {
+            $tools[] = $this->writingTool;
+        }
+
+        return $tools;
     }
 }
