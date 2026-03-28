@@ -105,7 +105,7 @@ class TrackConversation extends Conversation
                 $bot->sendMessage(
                     $response->text,
                     reply_markup: InlineKeyboardMarkup::make()->addRow(
-                        InlineKeyboardButton::make('✓ End', callback_data: 'end'),
+                        InlineKeyboardButton::make('End', callback_data: 'end'),
                     ),
                     parse_mode: ParseMode::HTML,
                 );
