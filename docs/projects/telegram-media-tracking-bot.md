@@ -16,7 +16,11 @@ The site has a media tracking system with `Media` and `MediaEvent` models. Event
 - Telegram bot is live using **Nutgram**. Only David can use it (`OnlyDavidMiddleware`).
 - Existing commands: `/whoami`, `/example`.
 - `laravel/ai` installed with Anthropic as the default provider. `ANTHROPIC_API_KEY` in `.env`.
-- Nutgram supports multi-turn **Conversations** (state machines) — used for the confirmation step.
+- `/track` is live as a multi-turn `TrackConversation` (Nutgram Conversation state machine).
+  - Agent can ask clarifying questions before presenting the confirmation UI.
+  - Plain-text (non-confirmation) responses include a `✓ End` inline button to close the conversation.
+  - Full conversation history (including tool calls and results) is persisted to `agent_conversations` / `agent_conversation_messages` via `RemembersConversations`.
+  - DB writes on confirm are not yet implemented (placeholder acknowledgement sent).
 
 ## Data Model
 
@@ -30,7 +34,7 @@ Creator         — name
 
 ## Design
 
-**One back-and-forth.** The user sends a natural-language message. The bot figures everything out — parses intent, identifies the media item (web search + DB lookup), checks current state, plans the actions — then presents a single confirmation. The user taps Confirm or Cancel.
+**Multi-turn conversation.** The user sends a natural-language message. The agent may ask clarifying questions (e.g. to resolve ambiguity between two works with the same title) before presenting a confirmation. Once ready, it presents a single confirmation. The user taps Confirm or Cancel. Informational queries (no action needed) receive a plain-text response with a `✓ End` button to close the conversation.
 
 ## Examples
 
@@ -60,15 +64,9 @@ Bot:  Add "Blood Meridian" (1985) by Cormac McCarthy — Book to your library.
 
 ## Milestones
 
-### 1 — NL intent parsing (current)
+### ✓ 1 — NL intent parsing
 
-Implement `/track` using a Laravel AI Agent. The agent parses the user's message, uses the `WebSearch` tool to identify the media item, and returns a structured plan. No DB interaction or confirmation UI yet.
-
-- `TrackCommand` at `app/Telegram/Commands/TrackCommand.php`
-- `MediaTrackingAgent` at `app/Ai/Agents/MediaTrackingAgent.php` with `#[Provider('anthropic')]` and `WebSearch` enabled
-- Agent returns structured output: `intent`, `media` (title/type/creator/year), `comment` (if any) via `HasStructuredOutput`
-- Command sends the plan back as plain text (no buttons yet)
-- Register in `routes/telegram.php` with `OnlyDavidMiddleware`
+`/track` implemented using `MediaTrackingAgent` (Anthropic Sonnet, `WebSearch` + `SearchMedia` tools). Agent returns a plain-text response. Registered in `routes/telegram.php` with `OnlyDavidMiddleware`.
 
 ### 2 — DB state resolution
 
@@ -80,12 +78,14 @@ After the agent identifies the media item and intent, cross-reference against th
 
 ### 3 — Confirmation UI and execution
 
-Add the inline keyboard and write to DB on confirm.
+#### ✓ 3a — Confirmation UI and multi-turn conversation
 
-- Convert `/track` into a Nutgram **Conversation** to hold state across the button tap
-- Send confirmation with `[✓ Confirm]  [✗ Cancel]` inline keyboard
+`/track` converted to a Nutgram `TrackConversation`. Agent signals readiness via a `RequestConfirmation` tool; conversation sends `[✓ Confirm] [✗ Cancel]` inline keyboard. Agent may ask clarifying questions before reaching confirmation. Plain-text responses include a `✓ End` button. Full history (including tool calls) persisted via `RemembersConversations`.
+
+#### 3b — DB writes on confirm (current)
+
 - **Confirm:** resolve or create `MediaType`, `Creator`, `Media` as needed; insert `MediaEvent`(s) with `occurred_at = now()`; reply with summary
-- **Cancel:** reply "Cancelled. Nothing was changed."
+- **Cancel:** already implemented ("Cancelled. Nothing was changed.")
 
 ### 4 — Ambiguity handling
 
