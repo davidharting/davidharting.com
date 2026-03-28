@@ -92,6 +92,29 @@ Add the inline keyboard and write to DB on confirm.
 - If the agent can't identify the media item or intent is unclear, ask for clarification rather than guessing
 - Retry up to 2 times before giving up
 
+## Optimizations
+
+### ResolveMediaAgent — cheap Haiku sub-agent for media identification
+
+Web search burns a lot of input tokens, making the main agent expensive even during testing. Extract media identification into a dedicated sub-agent that runs on **Claude Haiku** — the task is narrow enough (tool calling + structured output) that Haiku can handle it.
+
+This follows the [Orchestrator-Worker pattern](https://laravel.com/blog/building-multi-agent-workflows-with-the-laravel-ai-sdk): `MediaTrackingAgent` is the orchestrator; `ResolveMediaAgent` is the worker. In the Laravel AI SDK, workers are implemented as a pair of classes: an **Agent** class (the worker logic) and a **Tool** class (the adapter that lets the orchestrator invoke it). Here that's `ResolveMediaAgent` + `ResolveMediaTool`.
+
+**Responsibility:** Given a raw media reference (extracted by the orchestrator from the user's message), perform a web search to confirm the exact title, year, primary creator, and media type.
+
+**Output:** An array of matches (to handle ambiguity), each with:
+
+- `title` — official title
+- `year` — publication/release year
+- `creator` — primary creator (author, director, etc.)
+- `media_type` — Book, Movie, etc.
+
+**Integration:** The primary `MediaTrackingAgent` calls `ResolveMediaTool` and inspects the result:
+
+- **One match:** proceed with the plan
+- **Multiple matches:** present options to the user for disambiguation (ties into Milestone 4)
+- **No matches:** fall through to ambiguity handling
+
 ## Out of Scope
 
 - Editing or deleting existing events
