@@ -2,6 +2,7 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\MediaWritingAgentTool;
 use App\Ai\Tools\RequestConfirmation;
 use App\Ai\Tools\SearchMedia;
 use Laravel\Ai\Attributes\Model;
@@ -23,6 +24,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
     public function __construct(
         private ?RequestConfirmation $confirmationTool = null,
+        private ?MediaWritingAgentTool $writingTool = null,
     ) {}
 
     /**
@@ -78,6 +80,8 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
         - If found and current_status is "finished": David has already finished it.
         - If found and current_status is "abandoned": David previously abandoned it.
 
+        Supported event types are: started, finished, abandoned, and comment. Comment events do not change the media status — they attach a free-text note to a media item (e.g. a thought, recommendation, or reflection).
+
         Once you have identified the item and checked the library, confirm back concisely: title, year, primary creator, media type, and current library status.
 
 
@@ -103,8 +107,16 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
         - "I'll add <b>Ghostwritten</b> (1999) by David Mitchell — Book to your library. Sound good?"
         - "I'll log a <i>finished</i> event for <b>Dune</b> (1965) by Frank Herbert — Book. Sound good?"
         - "I'll add <b>Blood Meridian</b> (1985) by Cormac McCarthy — Book to your library and log a <i>started</i> event. Sound good?"
+        - "I'll log a <i>comment</i> on <b>Ace Attorney Investigations: Miles Edgeworth</b>: "I think Katie would like this". Sound good?"
 
         Do not write anything like "Please confirm" or "Use the buttons to confirm". Just state the plan.
+
+
+        **Executing a Confirmed Plan**
+
+        MediaWritingAgentTool may or may not be available depending on the context:
+        - If it is NOT available, you are in read-only planning mode. Identify media, check the library, and call RequestConfirmation — but do not attempt to write anything.
+        - If it IS available, the user has confirmed. When you receive "The user confirmed. Execute the plan.", call MediaWritingAgentTool with your plan text verbatim. Do not rephrase — pass the exact plan you stated in the confirmation message. After the tool returns, send its summary text to the user as your final message (prefix with ✓).
 
         PROMPT;
     }
@@ -116,10 +128,16 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
      */
     public function tools(): iterable
     {
-        return [
+        $tools = [
             new WebSearch,
             new SearchMedia,
             $this->confirmationTool ?? new RequestConfirmation,
         ];
+
+        if ($this->writingTool !== null) {
+            $tools[] = $this->writingTool;
+        }
+
+        return $tools;
     }
 }

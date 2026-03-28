@@ -1,6 +1,7 @@
 <?php
 
 use App\Ai\Tools\SearchMedia;
+use App\Models\Creator;
 use App\Models\Media;
 use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
@@ -73,6 +74,29 @@ test('SearchMedia returns JSON with found=true and results when media matches', 
     $this->assertCount(1, $result['results']);
     $this->assertSame($media->id, $result['results'][0]['media_id']);
     $this->assertSame('The Hobbit', $result['results'][0]['title']);
+});
+
+test('SearchMedia results include creator_id', function () {
+    /** @var TestCase $this */
+    $creator = Creator::factory()->create(['name' => 'Frank Herbert']);
+    Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $creator->id]);
+
+    $result = json_decode((new SearchMedia)->handle(new Request(['title' => 'Dune'])), true);
+
+    $this->assertTrue($result['found']);
+    $this->assertArrayHasKey('creator_id', $result['results'][0]);
+    $this->assertSame($creator->id, $result['results'][0]['creator_id']);
+});
+
+test('SearchMedia results include null creator_id when creator is not set', function () {
+    /** @var TestCase $this */
+    Media::factory()->book()->create(['title' => 'Unknown Origin', 'creator_id' => null]);
+
+    $result = json_decode((new SearchMedia)->handle(new Request(['title' => 'Unknown Origin'])), true);
+
+    $this->assertTrue($result['found']);
+    $this->assertArrayHasKey('creator_id', $result['results'][0]);
+    $this->assertNull($result['results'][0]['creator_id']);
 });
 
 test('SearchMedia media_type filter is case-insensitive', function () {

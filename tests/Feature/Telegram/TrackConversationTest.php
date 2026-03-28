@@ -128,9 +128,12 @@ test('/track sends message with inline keyboard when agent calls RequestConfirma
         ->assertActiveConversation();
 });
 
-test('tapping Confirm ends the conversation with acknowledgement', function () {
+test('tapping Confirm calls MediaTrackingAgent with the confirmed plan and sends summary', function () {
     /** @var TestCase $this */
-    MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
+    MediaTrackingAgent::fake([
+        'I\'ll add <b>The Hobbit</b> (1937) by J.R.R. Tolkien — Book to your library. Sound good?',
+        '✓ Added The Hobbit (1937) by J.R.R. Tolkien — Book.',
+    ]);
     PreTriggeredConfirmation::bind();
 
     /** @var FakeNutgram $bot */
@@ -142,11 +145,12 @@ test('tapping Confirm ends the conversation with acknowledgement', function () {
 
     $bot->hearCallbackQueryData('confirm')
         ->reply()
-        ->assertReplyText('✓ Done. (DB writes coming in next milestone)', index: 1)
+        ->assertReplyText('On it! I\'ll report back when it\'s done.', index: 2)
+        ->assertReplyText('✓ Added The Hobbit (1937) by J.R.R. Tolkien — Book.', index: 3)
         ->assertNoConversation();
 });
 
-test('tapping Cancel ends the conversation with cancellation message', function () {
+test('tapping Cancel ends the conversation with cancellation message and no DB rows are created', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
     PreTriggeredConfirmation::bind();
@@ -160,8 +164,11 @@ test('tapping Cancel ends the conversation with cancellation message', function 
 
     $bot->hearCallbackQueryData('cancel')
         ->reply()
-        ->assertReplyText('Cancelled. Nothing was changed.', index: 1)
+        ->assertReplyText('Cancelled. Nothing was changed.', index: 2)
         ->assertNoConversation();
+
+    $this->assertDatabaseCount('media', 0);
+    $this->assertDatabaseCount('media_events', 0);
 });
 
 test('stray text while awaiting confirmation sends a reminder and conversation stays active', function () {
