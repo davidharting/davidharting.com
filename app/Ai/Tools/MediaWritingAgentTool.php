@@ -19,9 +19,9 @@ class MediaWritingAgentTool implements Tool
 
     public function handle(Request $request): Stringable|string
     {
-        $plan =  $request->string('plan', '');
+        $plan = $request->string('plan', '');
 
-        if ($plan === '') {
+        if ($plan->isEmpty()) {
             return json_encode(
                 ['error' => 'plan must not be empty. Pass the exact plan text you stated in the confirmation message.'],
                 JSON_THROW_ON_ERROR,
