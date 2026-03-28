@@ -78,27 +78,30 @@ After the agent identifies the media item and intent, cross-reference against th
 
 ### 3 — Confirmation UI and execution
 
-#### ✓ 3a — Confirmation UI and multi-turn conversation
+#### ✓ 2 — DB State Resolution
+
+Agent uses `SearchMedia` after identifying the item to check library status and surface it in the confirmation message.
+
+### ✓ 3a — Confirmation UI and multi-turn conversation
 
 `/track` converted to a Nutgram `TrackConversation`. Agent signals readiness via a `RequestConfirmation` tool; conversation sends `[✓ Confirm] [✗ Cancel]` inline keyboard. Agent may ask clarifying questions before reaching confirmation. Plain-text responses include a `✓ End` button. Full history (including tool calls) persisted via `RemembersConversations`.
 
-#### 3b — DB writes on confirm (current)
+#### ✓ 3b — DB writes on confirm
 
 - **Confirm:** resolve or create `MediaType`, `Creator`, `Media` as needed; insert `MediaEvent`(s) with `occurred_at = now()`; reply with summary
 - **Cancel:** already implemented ("Cancelled. Nothing was changed.")
 
-### 4 — Ambiguity handling
+### ✓ 4 — Ambiguity handling
 
-- If the agent can't identify the media item or intent is unclear, ask for clarification rather than guessing
-- Retry up to 2 times before giving up
+Handled naturally by model quality + instructions. The agent asks clarifying questions before presenting confirmation when multiple matches exist.
 
 ## Optimizations
 
-### ResolveMediaAgent — cheap Haiku sub-agent for media identification
+### ✓ ResolveMediaAgent — cheap Haiku sub-agent for media identification
 
 Web search burns a lot of input tokens, making the main agent expensive even during testing. Extract media identification into a dedicated sub-agent that runs on **Claude Haiku** — the task is narrow enough (tool calling + structured output) that Haiku can handle it.
 
-This follows the [Orchestrator-Worker pattern](https://laravel.com/blog/building-multi-agent-workflows-with-the-laravel-ai-sdk): `MediaTrackingAgent` is the orchestrator; `ResolveMediaAgent` is the worker. In the Laravel AI SDK, workers are implemented as a pair of classes: an **Agent** class (the worker logic) and a **Tool** class (the adapter that lets the orchestrator invoke it). Here that's `ResolveMediaAgent` + `ResolveMediaTool`.
+This follows the [Orchestrator-Worker pattern](https://laravel.com/blog/building-multi-agent-workflows-with-the-laravel-ai-sdk): `MediaTrackingAgent` is the orchestrator; the Haiku sub-agent is the worker. The sub-agent logic lives inside `ResolveMediaTool` using the `agent()` helper — no separate Agent class needed.
 
 **Responsibility:** Given a raw media reference (extracted by the orchestrator from the user's message), perform a web search to confirm the exact title, year, primary creator, and media type.
 

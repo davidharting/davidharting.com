@@ -4,6 +4,7 @@ namespace App\Ai\Agents;
 
 use App\Ai\Tools\MediaWritingAgentTool;
 use App\Ai\Tools\RequestConfirmation;
+use App\Ai\Tools\ResolveMediaTool;
 use App\Ai\Tools\SearchMedia;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
@@ -13,7 +14,6 @@ use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Promptable;
-use Laravel\Ai\Providers\Tools\WebSearch;
 use Stringable;
 
 #[Provider('anthropic')]
@@ -58,18 +58,12 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         When David tells you about a piece of media he wants to track, identify the exact item with precision.
 
-        Always use web search to confirm the publication year and primary creator before responding.
+        Use the ResolveMediaTool to identify the exact media item. Pass the raw reference from David's message (e.g. "Dune 2021 movie" or "The Hobbit book").
 
-        Primary creator by media type:
-        - Album → artist
-        - Book → author
-        - Movie → director
-        - TV show → creator or showrunner
-        - Video game → developer studio
-
-        One creator only. Pick the single most relevant primary creator. For example, for a movie with multiple directors, pick the lead.
-
-        Flag ambiguity. If search results reveal more than one plausible match — such as a remake, an adaptation, or multiple works with the same title — tell David and ask which one he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
+        Interpret the ResolveMediaTool result:
+        - One match: proceed with that item.
+        - Multiple matches: present options to David and ask which he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
+        - No matches: tell David you couldn't identify the item and ask for clarification.
 
         Once you have identified the item with confidence, use the SearchMedia tool to look it up in David's library by title (and media type if known).
 
@@ -129,7 +123,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
     public function tools(): iterable
     {
         $tools = [
-            new WebSearch,
+            new ResolveMediaTool,
             new SearchMedia,
             $this->confirmationTool ?? new RequestConfirmation,
         ];
