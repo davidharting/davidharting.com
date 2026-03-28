@@ -51,6 +51,43 @@ test('/track sends agent response as plain text when confirmation not requested'
         ->assertActiveConversation();
 });
 
+test('/track plain text response includes an End button', function () {
+    /** @var TestCase $this */
+    MediaTrackingAgent::fake(['Which Dune did you mean?']);
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track mark dune as finished')
+        ->reply()
+        ->assertReplyMessage([
+            'reply_markup' => [
+                'inline_keyboard' => [[
+                    ['text' => '✓ End', 'callback_data' => 'end'],
+                ]],
+            ],
+        ]);
+});
+
+test('tapping End sends acknowledgement and ends the conversation', function () {
+    /** @var TestCase $this */
+    MediaTrackingAgent::fake(['Which Dune did you mean?']);
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track mark dune as finished')->reply();
+
+    $bot->hearCallbackQueryData('end')
+        ->reply()
+        ->assertReplyText('Conversation ended.', index: 1)
+        ->assertNoConversation();
+});
+
 test('/track keeps conversation active for follow-up after plain text response', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Which Dune did you mean?', 'Got it.']);

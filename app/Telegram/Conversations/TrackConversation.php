@@ -42,6 +42,14 @@ class TrackConversation extends Conversation
 
     public function converse(Nutgram $bot): void
     {
+        if ($bot->isCallbackQuery() && $bot->callbackQuery()?->data === 'end') {
+            $bot->answerCallbackQuery();
+            $bot->sendMessage('Conversation ended.');
+            $this->end();
+
+            return;
+        }
+
         $this->runAgentTurn($bot, $bot->message()->text ?? '');
     }
 
@@ -94,7 +102,13 @@ class TrackConversation extends Conversation
                 );
                 $this->next('awaitConfirmation');
             } else {
-                $bot->sendMessage($response->text, parse_mode: ParseMode::HTML);
+                $bot->sendMessage(
+                    $response->text,
+                    reply_markup: InlineKeyboardMarkup::make()->addRow(
+                        InlineKeyboardButton::make('✓ End', callback_data: 'end'),
+                    ),
+                    parse_mode: ParseMode::HTML,
+                );
                 $this->next('converse');
             }
         } catch (AiException $e) {
