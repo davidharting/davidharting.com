@@ -3,11 +3,11 @@
 use App\Ai\Agents\MediaTrackingAgent;
 use App\Ai\Tools\MediaWritingAgentTool;
 use App\Ai\Tools\RequestConfirmation;
+use App\Ai\Tools\ResolveMediaTool;
 use App\Ai\Tools\SearchMedia;
 use Illuminate\Foundation\Testing\TestCase;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
-use Laravel\Ai\Providers\Tools\WebSearch;
 
 test("uses Anthropic's Sonnet 4.6", function () {
     /** @var TestCase $this */
@@ -32,14 +32,22 @@ test('instructions mention media tracking and library status', function () {
 });
 
 describe('tools()', function () {
-    test('includes WebSearch, SearchMedia, and RequestConfirmation by default', function () {
+    test('includes ResolveMediaTool, SearchMedia, and RequestConfirmation by default', function () {
         /** @var TestCase $this */
         $agent = MediaTrackingAgent::make();
         $tools = collect($agent->tools());
 
-        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof WebSearch));
+        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof ResolveMediaTool));
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof SearchMedia));
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RequestConfirmation));
+    });
+
+    test('does not include WebSearch directly', function () {
+        /** @var TestCase $this */
+        $agent = MediaTrackingAgent::make();
+        $tools = collect($agent->tools());
+
+        $this->assertFalse($tools->contains(fn ($tool) => $tool instanceof \Laravel\Ai\Providers\Tools\WebSearch));
     });
 
     test('includes injected RequestConfirmation instance', function () {
