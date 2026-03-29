@@ -121,7 +121,7 @@ test('/track sends message with inline keyboard when agent calls RequestConfirma
             'reply_markup' => [
                 'inline_keyboard' => [[
                     ['text' => '✓ Confirm', 'callback_data' => 'confirm'],
-                    ['text' => '✗ Cancel', 'callback_data' => 'cancel'],
+                    ['text' => 'End', 'callback_data' => 'end'],
                 ]],
             ],
         ])
@@ -150,7 +150,7 @@ test('tapping Confirm calls MediaTrackingAgent with the confirmed plan and sends
         ->assertNoConversation();
 });
 
-test('tapping Cancel ends the conversation with cancellation message and no DB rows are created', function () {
+test('tapping End while awaiting confirmation ends the conversation and no DB rows are created', function () {
     /** @var TestCase $this */
     MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
     PreTriggeredConfirmation::bind();
@@ -162,18 +162,21 @@ test('tapping Cancel ends the conversation with cancellation message and no DB r
 
     $bot->hearText('/track Add The Hobbit')->reply();
 
-    $bot->hearCallbackQueryData('cancel')
+    $bot->hearCallbackQueryData('end')
         ->reply()
-        ->assertReplyText('Cancelled. Nothing was changed.', index: 2)
+        ->assertReplyText('Conversation ended.', index: 2)
         ->assertNoConversation();
 
     $this->assertDatabaseCount('media', 0);
     $this->assertDatabaseCount('media_events', 0);
 });
 
-test('stray text while awaiting confirmation sends a reminder and conversation stays active', function () {
+test('typing text while awaiting confirmation runs a new agent turn', function () {
     /** @var TestCase $this */
-    MediaTrackingAgent::fake(['Add "The Hobbit" (1937) by J.R.R. Tolkien — Book to your library.']);
+    MediaTrackingAgent::fake([
+        'I\'ll add The Hobbit. Sound good?',
+        'Got it — I\'ll add it as started instead.',
+    ]);
     PreTriggeredConfirmation::bind();
 
     /** @var FakeNutgram $bot */
@@ -183,9 +186,12 @@ test('stray text while awaiting confirmation sends a reminder and conversation s
 
     $bot->hearText('/track Add The Hobbit')->reply();
 
-    $bot->hearText('actually wait')
+    // Unbind pre-triggered confirmation so the follow-up turn is a plain response
+    app()->bind(RequestConfirmation::class, fn () => new RequestConfirmation);
+
+    $bot->hearText('actually make it started')
         ->reply()
-        ->assertReplyText('Please tap Confirm or Cancel.')
+        ->assertReplyText('Got it — I\'ll add it as started instead.')
         ->assertActiveConversation();
 });
 
