@@ -16,6 +16,14 @@ tasks:
       - ./vendor/bin/pint
       - npm run format
 
+  dev:db:start:
+    desc: "Start an ephemeral Postgres container with laravel and laravel_test databases"
+    cmds:
+      - docker run -d --name davidharting-dev-db --rm -e POSTGRES_USER=laravel -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=laravel -p 5432:5432 postgres:17
+      - docker exec davidharting-dev-db bash -c 'until pg_isready -U laravel; do sleep 1; done'
+      - docker exec davidharting-dev-db createdb -U laravel laravel_test
+      - docker attach davidharting-dev-db
+
   dev:db:refresh:
     desc: "Migrate fresh and re-seed"
     cmds:
