@@ -54,6 +54,29 @@ describe('handle()', function () {
         ]);
     });
 
+    test('attaches comment to a non-comment event without creating a separate event', function () {
+        /** @var TestCase $this */
+        $media = Media::factory()->book()->create();
+
+        $result = json_decode(
+            (new CreateMediaEvent)->handle(new Request([
+                'media_id' => $media->id,
+                'event_type' => 'started',
+                'occurred_at' => '2026-03-15T12:00:00Z',
+                'comment' => 'Really excited for this one.',
+            ])),
+            true,
+        );
+
+        $this->assertArrayHasKey('event_id', $result);
+        $this->assertSame('started', $result['event_type']);
+        $this->assertDatabaseHas('media_events', [
+            'media_id' => $media->id,
+            'comment' => 'Really excited for this one.',
+        ]);
+        $this->assertSame(1, MediaEvent::where('media_id', $media->id)->count());
+    });
+
     test('returns error when media_id not found', function () {
         /** @var TestCase $this */
         $result = json_decode(

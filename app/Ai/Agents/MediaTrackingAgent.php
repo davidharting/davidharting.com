@@ -82,6 +82,8 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         Supported event types are: started, finished, abandoned, and comment. Comment events do not change the media status — they attach a free-text note to a media item (e.g. a thought, recommendation, or reflection).
 
+        A comment can also be attached directly to a started, finished, or abandoned event — you don't need a separate comment event for that. Use a standalone comment event only when David wants to record a note without logging any status change.
+
         Once you have identified the item and checked the library, confirm back concisely: title, year, primary creator, media type, and current library status.
 
 
@@ -107,6 +109,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
         - "I'll add <b>Ghostwritten</b> (1999) by David Mitchell — Book to your library. Sound good?"
         - "I'll log a <i>finished</i> event for <b>Dune</b> (1965) by Frank Herbert — Book. Sound good?"
         - "I'll add <b>Blood Meridian</b> (1985) by Cormac McCarthy — Book to your library and log a <i>started</i> event. Sound good?"
+        - "I'll log a <i>finished</i> event for <b>Alien: Romulus</b> (2024) by Fede Álvarez — Movie, with note: "Scary but fun". Sound good?"
         - "I'll log a <i>comment</i> on <b>Ace Attorney Investigations: Miles Edgeworth</b>: "I think Katie would like this". Sound good?"
 
         Do not write anything like "Please confirm" or "Use the buttons to confirm". Just state the plan.
