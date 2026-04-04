@@ -64,6 +64,9 @@ class MediaWritingAgentTool implements Tool
         **Backlog only**
         If the plan is to add to the library with no event, call CreateMedia only.
 
+        **Comments on events**
+        If the plan includes a remark, note, or comment alongside a started, finished, or abandoned event, pass it as the `comment` parameter to CreateMediaEvent — do NOT create a separate comment event. Only create a standalone comment event when the plan explicitly calls for logging a comment with no other event.
+
         **Return value**
         Return a concise plain-text summary of exactly what was written.
         Example: "Added The Hobbit (1937) by J.R.R. Tolkien — Book. Logged a started event on March 27, 2026."

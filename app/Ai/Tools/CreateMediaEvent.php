@@ -79,7 +79,7 @@ class CreateMediaEvent implements Tool
             'occurred_at' => $schema->string()->required()
                 ->description('When the event occurred. Accepts ISO 8601, plain dates, or natural language Carbon can parse. If no time was mentioned, use noon (12:00:00) of the relevant day, e.g. "2026-03-15T12:00:00".'),
             'comment' => $schema->string()
-                ->description('An optional comment for comment-type events or annotations.'),
+                ->description('An optional free-text note to attach to this event. Can be used with any event type (started, finished, abandoned, or comment). When logging a started or finished event with a remark, pass the remark here — do NOT create a separate comment event.'),
         ];
     }
 }
