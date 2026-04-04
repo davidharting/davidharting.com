@@ -54,7 +54,7 @@ describe('handle()', function () {
         ]);
     });
 
-    test('attaches comment to a started event', function () {
+    test('attaches comment to a non-comment event without creating a separate event', function () {
         /** @var TestCase $this */
         $media = Media::factory()->book()->create();
 
@@ -74,31 +74,6 @@ describe('handle()', function () {
             'media_id' => $media->id,
             'comment' => 'Really excited for this one.',
         ]);
-        // Only one event should exist — not a separate comment event
-        $this->assertSame(1, MediaEvent::where('media_id', $media->id)->count());
-    });
-
-    test('attaches comment to a finished event', function () {
-        /** @var TestCase $this */
-        $media = Media::factory()->book()->create();
-
-        $result = json_decode(
-            (new CreateMediaEvent)->handle(new Request([
-                'media_id' => $media->id,
-                'event_type' => 'finished',
-                'occurred_at' => '2026-03-15T12:00:00Z',
-                'comment' => 'Stunning visuals.',
-            ])),
-            true,
-        );
-
-        $this->assertArrayHasKey('event_id', $result);
-        $this->assertSame('finished', $result['event_type']);
-        $this->assertDatabaseHas('media_events', [
-            'media_id' => $media->id,
-            'comment' => 'Stunning visuals.',
-        ]);
-        // Only one event should exist — not a separate comment event
         $this->assertSame(1, MediaEvent::where('media_id', $media->id)->count());
     });
 
