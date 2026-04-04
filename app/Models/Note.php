@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Feed\NoteFeedItem;
 use Illuminate\Support\Str;
 use Spatie\Feed\Feedable;
 use Spatie\Feed\FeedItem;
@@ -75,10 +76,11 @@ class Note extends Model implements Feedable
 
     public function toFeedItem(): FeedItem
     {
-        return FeedItem::create()
+        return NoteFeedItem::create()
             ->id($this->slug)
             ->title($this->rssTitle())
-            ->summary($this->rssSummary())
+            ->summary($this->lead ?? '')
+            ->content($this->rssContent())
             ->updated($this->published_at)
             ->link(route('notes.show', $this->slug))
             ->authorName('David Harting')
@@ -99,28 +101,8 @@ class Note extends Model implements Feedable
         return 'Untitled note';
     }
 
-    /**
-     * I'm including full text of the post in the RSS feed
-     * rather than just a summary and link
-     */
-    private function rssSummary(): string
+    private function rssContent(): string
     {
-        $fullContent = Str::of('');
-
-        // Do not include title
-        // Because that will already be visible as the title of the post in the RSS reader
-
-        if ($this->lead) {
-            $fullContent = $fullContent->append('<p><i>');
-            $fullContent = $fullContent->append($this->lead);
-            $fullContent = $fullContent->append('</i></p>');
-        }
-
-        $renderedContent = $this->renderContent();
-        if ($renderedContent) {
-            $fullContent = $fullContent->append($renderedContent);
-        }
-
-        return $fullContent;
+        return $this->renderContent() ?? '';
     }
 }

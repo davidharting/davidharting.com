@@ -65,10 +65,8 @@ test('feed renders markdown as HTML', function () {
     $response->assertSeeHtml('<strong>some bold text</strong>');
 });
 
-test('feed renders linked headings without heading HTML tags', function () {
+test('feed renders linked headings in content element', function () {
     /** @var TestCase $this */
-    // Some RSS readers strip <h1>-<h6> tags AND their children (including <a> tags),
-    // making linked headings completely invisible. The feed should not use heading tags.
     Note::factory()->create([
         'visible' => true,
         'title' => 'Post with Linked Headings',
@@ -90,9 +88,61 @@ test('feed renders linked headings without heading HTML tags', function () {
     $response->assertSee('https://example.com/one');
     $response->assertSee('https://example.com/two');
 
-    // But NOT wrapped in heading elements that RSS readers may strip with their children
-    $response->assertDontSee('<h3>', false);
-    $response->assertDontSee('<h4>', false);
-    $response->assertDontSee('<h5>', false);
-    $response->assertDontSee('<h6>', false);
+    // HTML body must be in <content>, not <summary type="html">
+    $response->assertSee('<content type="html">', false);
+    $response->assertDontSee('<summary type="html">', false);
+});
+
+test('lead appears as plain-text summary element', function () {
+    /** @var TestCase $this */
+    Note::factory()->create([
+        'visible' => true,
+        'title' => 'Post with Lead',
+        'slug' => 'post-with-lead',
+        'published_at' => now(),
+        'lead' => 'A short teaser for this post.',
+        'markdown_content' => 'Body of the post.',
+    ]);
+
+    $response = $this->get('/feed');
+
+    // Lead must appear as a plain-text <summary> (no type attribute)
+    $response->assertSee('<summary>A short teaser for this post.</summary>', false);
+    // Must NOT be wrapped in type="html"
+    $response->assertDontSee('<summary type="html">', false);
+});
+
+test('feed omits summary element when note has no lead', function () {
+    /** @var TestCase $this */
+    Note::factory()->noLead()->create([
+        'visible' => true,
+        'title' => 'Post Without Lead',
+        'slug' => 'post-without-lead',
+        'published_at' => now(),
+        'markdown_content' => 'Body of the post.',
+    ]);
+
+    $response = $this->get('/feed');
+
+    // No <summary> element at all when there is no lead
+    $response->assertDontSee('<summary', false);
+});
+
+test('lead is not duplicated in content element', function () {
+    /** @var TestCase $this */
+    Note::factory()->create([
+        'visible' => true,
+        'title' => 'Post with Lead and Content',
+        'slug' => 'post-lead-and-content',
+        'published_at' => now(),
+        'lead' => 'Plain text teaser.',
+        'markdown_content' => 'Body of the post.',
+    ]);
+
+    $response = $this->get('/feed');
+
+    // Lead lives in <summary> as plain text — must NOT also appear as HTML inside <content>
+    $response->assertDontSee('<p><i>', false);
+    // But the lead text itself must still be visible (in <summary>)
+    $response->assertSeeText('Plain text teaser.');
 });
