@@ -17,6 +17,8 @@ Read the **full content** of every modified file — not just the diff. Then che
 
 **Incomplete coverage** — A fix applied in one place but not a related place that has the same problem.
 
+**Test placement** — New tests should live inside the existing `describe` block for the method they cover, not appended after it. If a suitable block exists, add to it rather than creating a new one.
+
 ## Then fix
 
 Don't just report — fix what you find. Keep fixes minimal: edit existing content rather than adding more.
