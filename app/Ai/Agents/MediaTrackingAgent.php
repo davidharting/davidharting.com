@@ -109,7 +109,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
         - "I'll add <b>Ghostwritten</b> (1999) by David Mitchell — Book to your library. Sound good?"
         - "I'll log a <i>finished</i> event for <b>Dune</b> (1965) by Frank Herbert — Book. Sound good?"
         - "I'll add <b>Blood Meridian</b> (1985) by Cormac McCarthy — Book to your library and log a <i>started</i> event. Sound good?"
-        - "I'll log a <i>finished</i> event for <b>Dune</b> (2021) by Denis Villeneuve — Movie, with note: "Stunning visuals". Sound good?"
+        - "I'll log a <i>finished</i> event for <b>Alien: Romulus</b> (2024) by Fede Álvarez — Movie, with note: "Scary but fun". Sound good?"
         - "I'll log a <i>comment</i> on <b>Ace Attorney Investigations: Miles Edgeworth</b>: "I think Katie would like this". Sound good?"
 
         Do not write anything like "Please confirm" or "Use the buttons to confirm". Just state the plan.
