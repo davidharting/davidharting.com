@@ -3,7 +3,6 @@
 $localPrivateDisk = [
     'driver' => 'local',
     'root' => storage_path('app/private'),
-    'serve' => true,
     'visibility' => 'private',
     'throw' => false,
 ];
@@ -43,7 +42,10 @@ $r2PublicDisk = [
 
 $privateDisk = match (env('FILESYSTEM_DISK_PRIVATE', 'local-private')) {
     'r2-private' => $r2PrivateDisk,
-    default => $localPrivateDisk,
+    default => array_merge($localPrivateDisk, [
+        'serve' => true,
+        'url' => env('APP_URL').'/private-storage',
+    ]),
 };
 
 $publicDisk = match (env('FILESYSTEM_DISK_PUBLIC', 'local-public')) {
