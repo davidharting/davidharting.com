@@ -3,6 +3,7 @@
 use App\Ai\Agents\MediaTrackingAgent;
 use App\Ai\Tools\RequestConfirmation;
 use Illuminate\Foundation\Testing\TestCase;
+use Laravel\Ai\Exceptions\InsufficientCreditsException;
 use Laravel\Ai\Tools\Request;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\User\User;
@@ -191,7 +192,7 @@ test('stray text while awaiting confirmation sends a reminder and conversation s
 
 test('/track ends conversation with error message when AI provider fails', function () {
     /** @var TestCase $this */
-    MediaTrackingAgent::fake(fn () => throw \Laravel\Ai\Exceptions\InsufficientCreditsException::forProvider('anthropic'));
+    MediaTrackingAgent::fake(fn () => throw InsufficientCreditsException::forProvider('anthropic'));
 
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);

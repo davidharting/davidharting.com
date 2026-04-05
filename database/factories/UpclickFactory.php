@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Upclick;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Upclick>
+ * @extends Factory<Upclick>
  */
 class UpclickFactory extends Factory
 {

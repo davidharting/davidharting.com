@@ -1,7 +1,8 @@
 <?php
 
-/** @var SergiX44\Nutgram\Nutgram $bot */
+/** @var Nutgram $bot */
 
+use App\Telegram\Commands\WhoamiCommand;
 use App\Telegram\Conversations\TrackConversation;
 use App\Telegram\Middleware\OnlyDavidMiddleware;
 use SergiX44\Nutgram\Nutgram;
@@ -20,7 +21,7 @@ $bot->onCommand('example', function (Nutgram $bot) {
     $bot->sendMessage('Hello, world!');
 })->description('An example command')->middleware(OnlyDavidMiddleware::class);
 
-$bot->registerCommand(App\Telegram\Commands\WhoamiCommand::class);
+$bot->registerCommand(WhoamiCommand::class);
 
 $bot->onCommand('track {text}', TrackConversation::class)->middleware(OnlyDavidMiddleware::class);
 
