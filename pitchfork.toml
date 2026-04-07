@@ -1,0 +1,17 @@
+[daemons.database]
+run = "task dev:db:start"
+ready_cmd = "pg_isready -h 127.0.0.1 -p 5432 -U laravel"
+
+[daemons.php]
+run = "php artisan serve"
+depends = ["database"]
+ready_output = "Development Server started"
+
+[daemons.queue]
+run = "php artisan queue:work"
+depends = ["database"]
+retry = true
+
+[daemons.vite]
+run = "npm run dev"
+ready_output = "ready in"

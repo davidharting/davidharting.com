@@ -2,8 +2,6 @@
 
 version: "3"
 
-dotenv: [".env.task"]
-
 vars:
   # This is wonky because both Taskfile and docker stats use Go text/template
   # {{`{{`}} is to produce a "{{" literal that will make it to docker stats
@@ -15,6 +13,16 @@ tasks:
     cmds:
       - ./vendor/bin/pint
       - npm run format
+
+  dev:db:start:
+    desc: "Start an ephemeral Postgres container with laravel and laravel_test databases"
+    cmds:
+      - docker rm -f davidharting-dev-db 2>/dev/null || true
+      - docker run -d --name davidharting-dev-db --rm -e POSTGRES_USER=laravel -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=laravel -p 5432:5432 postgres:17
+      - docker exec davidharting-dev-db bash -c 'until pg_isready -U laravel; do sleep 1; done'
+      - docker exec davidharting-dev-db createdb -U laravel laravel_test
+      - php artisan migrate:fresh --seed
+      - docker attach davidharting-dev-db
 
   dev:db:refresh:
     desc: "Migrate fresh and re-seed"
