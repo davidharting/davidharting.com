@@ -57,8 +57,7 @@ class TrackConversation extends Conversation
     public function awaitConfirmation(Nutgram $bot): void
     {
         if (! $bot->isCallbackQuery()) {
-            $bot->sendMessage('Please tap Confirm or Cancel.');
-            $this->next('awaitConfirmation');
+            $this->runAgentTurn($bot, $bot->message()->text ?? '');
 
             return;
         }
@@ -76,7 +75,7 @@ class TrackConversation extends Conversation
             $response = $agent->prompt('The user confirmed. Execute the plan.');
             $bot->sendMessage($response->text, parse_mode: ParseMode::HTML);
         } else {
-            $bot->sendMessage('Cancelled. Nothing was changed.');
+            $bot->sendMessage('Conversation ended.');
         }
 
         $this->end();
@@ -103,7 +102,7 @@ class TrackConversation extends Conversation
                     $response->text,
                     reply_markup: InlineKeyboardMarkup::make()->addRow(
                         InlineKeyboardButton::make('✓ Confirm', callback_data: 'confirm'),
-                        InlineKeyboardButton::make('✗ Cancel', callback_data: 'cancel'),
+                        InlineKeyboardButton::make('End', callback_data: 'end'),
                     ),
                     parse_mode: ParseMode::HTML,
                 );
