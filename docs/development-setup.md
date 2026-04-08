@@ -54,7 +54,7 @@ php artisan migrate
 php artisan storage:link
 ```
 
-This creates a symlink from `public/storage` to `storage/app/public` so the local-public disk is accessible via the web server.
+This creates a symlink from `public/storage` to `storage/app/public` so the `public` disk is accessible via the web server in local mode.
 
 ### 5. Build Frontend Assets
 

@@ -1,54 +1,48 @@
 <?php
 
-$localPrivateDisk = [
-    'driver' => 'local',
-    'root' => storage_path('app/private'),
-    'serve' => true,
-    'visibility' => 'private',
-    'throw' => false,
-];
+$mode = env('FILESYSTEM_MODE', 'local');
 
-$localPublicDisk = [
-    'driver' => 'local',
-    'root' => storage_path('app/public'),
-    'url' => env('APP_URL').'/storage',
-    'visibility' => 'public',
-    'throw' => false,
-];
-
-$r2PrivateDisk = [
-    'driver' => 's3',
-    'key' => env('R2_ACCESS_KEY_ID'),
-    'secret' => env('R2_SECRET_ACCESS_KEY'),
-    'region' => 'auto', // R2 uses 'auto' as the region
-    'bucket' => env('R2_PRIVATE_BUCKET'),
-    'endpoint' => env('R2_ENDPOINT'),
-    'use_path_style_endpoint' => true, // Required for R2
-    'visibility' => 'private',
-    'throw' => false,
-];
-
-$r2PublicDisk = [
-    'driver' => 's3',
-    'key' => env('R2_ACCESS_KEY_ID'),
-    'secret' => env('R2_SECRET_ACCESS_KEY'),
-    'region' => 'auto',
-    'bucket' => env('R2_PUBLIC_BUCKET'),
-    'endpoint' => env('R2_ENDPOINT'),
-    'url' => env('R2_PUBLIC_URL'), // e.g. https://cdn.davidharting.com
-    'use_path_style_endpoint' => true,
-    'visibility' => 'public',
-    'throw' => false,
-];
-
-$privateDisk = match (env('FILESYSTEM_DISK_PRIVATE', 'local-private')) {
-    'r2-private' => $r2PrivateDisk,
-    default => $localPrivateDisk,
+$privateDisk = match ($mode) {
+    'r2' => [
+        'driver' => 's3',
+        'key' => env('R2_ACCESS_KEY_ID'),
+        'secret' => env('R2_SECRET_ACCESS_KEY'),
+        'region' => 'auto',
+        'bucket' => env('R2_PRIVATE_BUCKET'),
+        'endpoint' => env('R2_ENDPOINT'),
+        'use_path_style_endpoint' => true,
+        'visibility' => 'private',
+        'throw' => false,
+    ],
+    default => [
+        'driver' => 'local',
+        'root' => storage_path('app/private'),
+        'serve' => true,
+        'visibility' => 'private',
+        'throw' => false,
+    ],
 };
 
-$publicDisk = match (env('FILESYSTEM_DISK_PUBLIC', 'local-public')) {
-    'r2-public' => $r2PublicDisk,
-    default => $localPublicDisk,
+$publicDisk = match ($mode) {
+    'r2' => [
+        'driver' => 's3',
+        'key' => env('R2_ACCESS_KEY_ID'),
+        'secret' => env('R2_SECRET_ACCESS_KEY'),
+        'region' => 'auto',
+        'bucket' => env('R2_PUBLIC_BUCKET'),
+        'endpoint' => env('R2_ENDPOINT'),
+        'url' => env('R2_PUBLIC_URL'),
+        'use_path_style_endpoint' => true,
+        'visibility' => 'public',
+        'throw' => false,
+    ],
+    default => [
+        'driver' => 'local',
+        'root' => storage_path('app/public'),
+        'url' => env('APP_URL').'/storage',
+        'visibility' => 'public',
+        'throw' => false,
+    ],
 };
 
 return [
@@ -80,10 +74,6 @@ return [
     */
 
     'disks' => [
-        'local-private' => $localPrivateDisk,
-        'local-public' => $localPublicDisk,
-        'r2-private' => $r2PrivateDisk,
-        'r2-public' => $r2PublicDisk,
         'private' => $privateDisk,
         'public' => $publicDisk,
     ],

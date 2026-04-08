@@ -11,7 +11,7 @@ status: in-progress
 - **PHP:** 8.4
 - **Laravel:** 12.x
 - **Filament:** 5.x (with Livewire 4.x)
-- **Existing disk config (`config/filesystems.php`):** `local-private`, `local-public`, `r2-private`, and `r2-public` disks are defined. A `public` disk alias resolves to the correct disk via `FILESYSTEM_DISK_PUBLIC` env var (`local-public` in dev, `r2-public` in prod). Public bucket name (`davidhartingdotcom-public`) and URL (`https://cdn.davidharting.com`) are set as plain environment variables in `docker-compose.yml`.
+- **Existing disk config (`config/filesystems.php`):** `private` and `public` disks are configured directly based on the `FILESYSTEM_MODE` env var (`local` in dev, `r2` in prod). Public bucket name (`davidhartingdotcom-public`) and URL (`https://cdn.davidharting.com`) are set as plain environment variables in `docker-compose.yml`.
 
 ## Background
 
@@ -42,7 +42,7 @@ No spatie/laravel-media-library, no FileUpload model, no presigned URL endpoints
 ## High-Level Plan
 
 1. **Create a public R2 bucket** with a custom domain _(already done)_
-2. **Add `r2-public` filesystem disk** to Laravel _(already done)_
+2. **Configure filesystem disks** with mode-based switching _(already done)_
 3. **Configure `MarkdownEditor` file attachments** — set `fileAttachmentsDisk`, `fileAttachmentsDirectory`, and `fileAttachmentsVisibility` on all relevant editors
 4. **Build the EXIF-strip tool** — Filament custom page with Alpine.js + `browser-image-compression`
 5. **Production deployment** — verify env vars, deploy, test end-to-end
@@ -54,8 +54,8 @@ No spatie/laravel-media-library, no FileUpload model, no presigned URL endpoints
 ### Phase 1: Cloudflare R2 Public Bucket Setup _(complete)_
 
 - Public R2 bucket created with `cdn.davidharting.com` as the custom domain
-- `r2-public` filesystem disk is already configured in `config/filesystems.php`
-- `FILESYSTEM_DISK_PUBLIC` env var selects `local-public` in dev and `r2-public` in prod via the `public` disk alias
+- `public` filesystem disk is configured in `config/filesystems.php`, switching between local and R2 backends via `FILESYSTEM_MODE`
+- `FILESYSTEM_MODE` env var selects local config in dev and R2 config in prod
 
 ### Phase 2: Configure MarkdownEditor File Attachments
 
@@ -63,7 +63,7 @@ On all `MarkdownEditor` instances where file attachments should be allowed (curr
 
 ```php
 MarkdownEditor::make('content')
-    ->fileAttachmentsDisk(config('filesystems.default_public')) // or env('FILESYSTEM_DISK_PUBLIC', 'local-public')
+    ->fileAttachmentsDisk('public')
     ->fileAttachmentsDirectory(fn ($record) => $record
         ? 'notes/' . $record->slug
         : 'notes/draft'
@@ -145,7 +145,7 @@ If any new env vars are added during implementation, add them to `.env.example` 
 
 ## Open Questions
 
-- **Disk alias in `fileAttachmentsDisk`:** The `public` disk alias in `filesystems.php` resolves to the correct disk via `FILESYSTEM_DISK_PUBLIC`. It's unclear whether Filament/Livewire resolves this alias the same way Laravel's `Storage` facade does, or whether the disk name must be passed explicitly (e.g. `env('FILESYSTEM_DISK_PUBLIC', 'local-public')`). Verify at implementation time before wiring this up.
+- **Disk alias in `fileAttachmentsDisk`:** Resolved. The `public` disk is now the only registered disk name (no separate concrete disks). Use `->fileAttachmentsDisk('public')` directly.
 
 ## Implementation Order
 
@@ -159,7 +159,7 @@ If any new env vars are added during implementation, add them to `.env.example` 
 ## Milestones
 
 - [x] Public R2 bucket created with `cdn.davidharting.com` custom domain
-- [x] `r2-public` filesystem disk configured in Laravel
+- [x] Filesystem disks configured with `FILESYSTEM_MODE` switching
 - [ ] PHP ini and Caddy upload size limits raised (50MB)
 - [ ] MarkdownEditor configured with R2 file attachments (public visibility, permanent URLs)
 - [x] EXIF-strip tool built — standalone static site at <https://davidharting.github.io/image-resizer/>
@@ -173,7 +173,7 @@ If any new env vars are added during implementation, add them to `.env.example` 
 - **Image conversions:** None server-side. No Imagick, Ghostscript, or optimizer binaries needed in Docker.
 - **File types in EXIF tool:** Images only. Non-image files (PDFs, etc.) can be dragged into the MarkdownEditor directly — no processing needed.
 - **fileAttachmentsVisibility:** `public` — permanent URLs must be embedded in markdown because short-lived presigned URLs expire before the content is rendered.
-- **Disk strategy:** `local-public` for dev, `r2-public` for prod, controlled by `FILESYSTEM_DISK_PUBLIC` env var.
+- **Disk strategy:** Local for dev, R2 for prod, controlled by `FILESYSTEM_MODE` env var. Only `private` and `public` disks are registered.
 - **Custom domain:** `cdn.davidharting.com`
 - **OG/social preview images:** Best handled with an explicit `og_image_url` field on Note/Page rather than inferring from content. Separate future feature.
 - **Attachment filename customization:** `MarkdownEditor` does not expose a filename hook equivalent to `FileUpload`'s `getUploadedFileNameForStorageUsing()` — filenames remain UUID-based. However, `fileAttachmentsDirectory()` accepts a closure with injected utilities including `$record`, so files can be organized into per-record directories (`notes/{slug}/{uuid}.jpg`, `pages/{slug}/{uuid}.pdf`). This is good enough: the slug is in the URL path, and cleanup by record is straightforward.

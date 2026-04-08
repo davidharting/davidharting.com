@@ -1,6 +1,6 @@
 <?php
 
-$privateDisk = env('FILESYSTEM_DISK_PRIVATE', 'local-private');
+$privateDisk = 'private';
 
 return [
 
