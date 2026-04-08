@@ -1,6 +1,7 @@
 <?php
 
 use App\Enum\MediaTypeName;
+use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaEvent;
 use App\Queries\Media\SearchMediaQuery;
@@ -78,7 +79,7 @@ describe('title search', function () {
 describe('creator search', function () {
     test('filters by partial creator match', function () {
         /** @var TestCase $this */
-        $creator = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
+        $creator = Creator::factory()->create(['name' => 'Frank Herbert']);
         Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $creator->id]);
         Media::factory()->book()->create(['title' => 'Other Book']);
 
@@ -90,7 +91,7 @@ describe('creator search', function () {
 
     test('is case-insensitive', function () {
         /** @var TestCase $this */
-        $creator = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
+        $creator = Creator::factory()->create(['name' => 'Frank Herbert']);
         Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $creator->id]);
         Media::factory()->book()->create(['title' => 'Other Book']);
 
@@ -101,7 +102,7 @@ describe('creator search', function () {
 
     test('excludes non-matching creator', function () {
         /** @var TestCase $this */
-        $creator = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
+        $creator = Creator::factory()->create(['name' => 'Frank Herbert']);
         Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $creator->id]);
 
         $results = (new SearchMediaQuery(creator: 'Tolkien'))->execute();
@@ -136,8 +137,8 @@ describe('media type filter', function () {
 describe('filter combinations', function () {
     test('title and creator both must match', function () {
         /** @var TestCase $this */
-        $herbert = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
-        $tolkien = \App\Models\Creator::factory()->create(['name' => 'J.R.R. Tolkien']);
+        $herbert = Creator::factory()->create(['name' => 'Frank Herbert']);
+        $tolkien = Creator::factory()->create(['name' => 'J.R.R. Tolkien']);
         Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $herbert->id]);
         Media::factory()->book()->create(['title' => 'Dune (fan retelling)', 'creator_id' => $tolkien->id]);
 
@@ -160,7 +161,7 @@ describe('filter combinations', function () {
 
     test('creator and media type both must match', function () {
         /** @var TestCase $this */
-        $herbert = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
+        $herbert = Creator::factory()->create(['name' => 'Frank Herbert']);
         Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $herbert->id]);
         Media::factory()->movie()->create(['title' => 'Dune', 'creator_id' => $herbert->id]);
 
@@ -172,8 +173,8 @@ describe('filter combinations', function () {
 
     test('title, creator, and media type all must match', function () {
         /** @var TestCase $this */
-        $herbert = \App\Models\Creator::factory()->create(['name' => 'Frank Herbert']);
-        $tolkien = \App\Models\Creator::factory()->create(['name' => 'J.R.R. Tolkien']);
+        $herbert = Creator::factory()->create(['name' => 'Frank Herbert']);
+        $tolkien = Creator::factory()->create(['name' => 'J.R.R. Tolkien']);
         Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $herbert->id]);
         Media::factory()->movie()->create(['title' => 'Dune', 'creator_id' => $herbert->id]);
         Media::factory()->book()->create(['title' => 'Dune (unofficial)', 'creator_id' => $tolkien->id]);

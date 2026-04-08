@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Enum\MediaTypeName;
+use App\Models\MediaType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\MediaType>
+ * @extends Factory<MediaType>
  */
 class MediaTypeFactory extends Factory
 {

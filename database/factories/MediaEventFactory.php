@@ -4,13 +4,14 @@ namespace Database\Factories;
 
 use App\Enum\MediaEventTypeName;
 use App\Models\Media;
+use App\Models\MediaEvent;
 use App\Models\MediaEventType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Lottery;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\MediaEvent>
+ * @extends Factory<MediaEvent>
  */
 class MediaEventFactory extends Factory
 {

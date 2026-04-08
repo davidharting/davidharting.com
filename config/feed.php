@@ -1,5 +1,7 @@
 <?php
 
+use App\Queries\FeedQuery;
+
 return [
     'feeds' => [
         'main' => [
@@ -11,7 +13,7 @@ return [
              * You can also pass an argument to that method. Note that their key must be the name of the parameter:
              * [App\Model::class, 'getAllFeedItems', 'parameterName' => 'argument']
              */
-            'items' => [App\Queries\FeedQuery::class, 'execute'],
+            'items' => [FeedQuery::class, 'execute'],
 
             /*
              * The feed will be available on this url.

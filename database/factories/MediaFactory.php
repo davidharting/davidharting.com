@@ -4,12 +4,13 @@ namespace Database\Factories;
 
 use App\Enum\MediaTypeName;
 use App\Models\Creator;
+use App\Models\Media;
 use App\Models\MediaType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Media>
+ * @extends Factory<Media>
  */
 class MediaFactory extends Factory
 {
