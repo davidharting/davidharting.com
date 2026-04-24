@@ -6,7 +6,7 @@ projects:
           - name: davidhartingdotcom-db
             databaseName: laravel
             user: laravel
-            plan: basic-1gb
+            plan: basic-256mb
             postgresMajorVersion: "17"
             region: ohio
             diskSizeGB: 1

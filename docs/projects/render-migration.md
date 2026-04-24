@@ -38,7 +38,7 @@ Reliability posture:
 |------|--------|
 | Build source | `runtime: docker`, Render builds from repo `Dockerfile` each deploy |
 | Region | `ohio` (closest to Indianapolis) |
-| Postgres | `basic-1gb`, `postgresMajorVersion: "17"`, `diskSizeGB: 1`, storage autoscaling on |
+| Postgres | `basic-256mb`, `postgresMajorVersion: "17"`, `diskSizeGB: 1`, storage autoscaling on — still a paid tier so PITR + 7-day logical backups are included |
 | Scheduler | Long-running `worker` running `php artisan schedule:work` (NOT a Render cron — avoids CronJobV2 cold-start risk on hourly `backup:run` ticks) |
 | Cache / session / queue | `database` driver, no Redis for v1 |
 | Logging | `LOG_CHANNEL=stderr` only |
