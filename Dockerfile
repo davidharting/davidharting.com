@@ -8,8 +8,9 @@ RUN apt-get update \
     && echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] https://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y unzip libnss3-tools procps postgresql-client-17 nodejs \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y unzip libnss3-tools procps postgresql-client-17 nodejs libcap2-bin \
+    && rm -rf /var/lib/apt/lists/* \
+    && setcap -r /usr/local/bin/frankenphp
 
 RUN install-php-extensions \
     intl \
