@@ -18,6 +18,24 @@ RUN install-php-extensions \
     pdo_pgsql \
     zip
 
+# PHP runtime config.
+#
+# memory_limit: the dunglas/frankenphp base image does not override php.ini, so
+# by default we'd inherit PHP's compile-time default of 128M. Bumped to 256M
+# to give Octane worker threads headroom for Filament exports and import
+# actions.
+#
+# Sizing rule from FrankenPHP's performance docs:
+#     num_threads × memory_limit < available_memory
+# FrankenPHP spawns 2 × CPU cores worker threads by default. On the Render
+# starter plan (0.5 CPU, 512 MB) that's ~1 thread, so 256M fits comfortably
+# alongside Caddy + Go runtime overhead. If we move to a larger Render plan,
+# revisit this — on standard (1 CPU, 2 GB) the default 2 threads × 256M = 512M
+# is still fine, but on pro (2 CPU, 4 GB) with 4 threads we'd use 1 GB for PHP.
+#
+# The worker / scheduler services run a single PHP process (queue:work /
+# schedule:work) so the thread multiplier doesn't apply — 256M is strictly
+# safe there.
 RUN printf "memory_limit = 256M\nupload_max_filesize = 25M\npost_max_size = 27M\n" \
     > /usr/local/etc/php/conf.d/php.ini
 
