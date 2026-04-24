@@ -174,8 +174,9 @@ If the new deploy misbehaves before DNS cutover:
 ## Status
 
 - [x] Phase 1: Code changes — TrustProxies, /healthz, Caddyfile, Dockerfile, CI, CLAUDE.md
-- [ ] Phase 2: Write `render.yaml`
-- [ ] Phase 3: Provision Render Blueprint + first deploy
+- [x] Phase 2: Write `render.yaml` — project + prod environment, Postgres 17 basic-256mb, three Docker services, DATABASE_URL wiring, preDeploy for migrations + Telegram webhook
+- [x] Local Dockerfile smoke test — image builds, Octane boots, `/healthz` returns 200 with no `Set-Cookie`
+- [ ] Phase 3: Provision Render Blueprint + first deploy (manual, from dashboard)
 - [ ] Phase 4: Data migration + smoke tests
 - [ ] DNS cutover (follow-up)
 - [ ] Decommission Digital Ocean droplet
