@@ -21,22 +21,29 @@ RUN install-php-extensions \
 RUN echo "upload_max_filesize = 25M\npost_max_size = 27M" \
     > /usr/local/etc/php/conf.d/uploads.ini
 
-
-COPY docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
 RUN mkdir -p /app/public/build
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
+
+# Dependency layers kept ahead of COPY . so source edits don't bust the cache.
+COPY composer.json composer.lock /app/
+RUN composer install --no-scripts --no-autoloader --no-dev --prefer-dist
+
+COPY package.json package-lock.json /app/
+RUN npm ci --no-audit
+
+# spatie/laravel-backup expects MAIL_FROM_ADDRESS at composer post-install time.
+ENV MAIL_FROM_ADDRESS=hello@davidharting.com
+# Baked into the JS bundle at Vite build time.
+ENV VITE_APP_NAME=davidharting.com
+
 COPY . /app
 
-# spatie/laravel-backup expects this to be defined in the post-install script
-ENV MAIL_FROM_ADDRESS=hello@davidharting.com
+RUN composer dump-autoload --optimize \
+    && composer run-script post-autoload-dump \
+    && npm run build \
+    && php artisan optimize:clear
 
-RUN composer install --optimize-autoloader && php artisan optimize:clear
-
-RUN npm ci --no-audit
-RUN npm run build
-
-ENTRYPOINT ["bash", "/entrypoint.sh"]
-CMD ["php", "artisan", "octane:frankenphp", "--caddyfile", "Caddyfile", "--https", "--http-redirect"]
+CMD ["php", "artisan", "octane:frankenphp", "--caddyfile", "Caddyfile"]
