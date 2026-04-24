@@ -113,6 +113,24 @@ DATABASE_URL               ← fromDatabase.connectionString (web, worker, sched
    ```
 4. Re-run smoke tests (below).
 
+## Local Dockerfile smoke test
+
+To validate the image locally before pushing:
+
+```
+docker build -t davidhartingdotcom:local .
+docker run --rm -d --name render-test \
+  -e PORT=9090 -p 9090:9090 \
+  -e APP_KEY=base64:... -e APP_ENV=production -e APP_DEBUG=false \
+  -e DB_CONNECTION=sqlite -e DB_DATABASE=:memory: \
+  -e CACHE_DRIVER=array -e SESSION_DRIVER=array -e QUEUE_CONNECTION=sync \
+  -e LOG_CHANNEL=stderr \
+  davidhartingdotcom:local
+curl -i http://localhost:9090/healthz   # expect 200 OK, body "OK", no Set-Cookie
+```
+
+**Pick a known-free port** and check `lsof -iTCP:<port> -sTCP:LISTEN` first. Common ports (8080, 8000) are often squatted by other dev tools (tilt, ssh tunnels, forwarded Docker Desktop mappings) that intercept traffic and can surface as unrelated-looking errors (e.g. spurious HTTPS redirects from whatever's actually listening).
+
 ## Smoke tests
 
 After first deploy and after `APP_URL` update:
