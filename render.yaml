@@ -25,7 +25,7 @@ projects:
               # Replace with the real generated onrender.com URL after first provision,
               # then again with https://davidharting.com after DNS cutover.
               - key: APP_URL
-                value: https://TBD.onrender.com
+                value: https://davidhartingdotcom-web.onrender.com
 
               - key: LOG_CHANNEL
                 value: stderr
