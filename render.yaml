@@ -1,0 +1,154 @@
+databases:
+  - name: davidhartingdotcom-db
+    databaseName: laravel
+    user: laravel
+    plan: basic-1gb
+    postgresMajorVersion: "17"
+    region: ohio
+    diskSizeGB: 1
+    storageAutoscalingEnabled: true
+
+envVarGroups:
+  - name: davidhartingdotcom-shared
+    envVars:
+      # ---- Non-secret runtime config ----
+      - key: APP_NAME
+        value: davidharting.com
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      # Replace with the real generated onrender.com URL after first provision,
+      # then again with https://davidharting.com after DNS cutover.
+      - key: APP_URL
+        value: https://TBD.onrender.com
+
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
+
+      - key: CACHE_DRIVER
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: "120"
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: BROADCAST_DRIVER
+        value: log
+
+      - key: DB_CONNECTION
+        value: pgsql
+
+      - key: FILESYSTEM_DISK_PRIVATE
+        value: r2-private
+      - key: FILESYSTEM_DISK_PUBLIC
+        value: r2-public
+      - key: R2_PUBLIC_BUCKET
+        value: davidhartingdotcom-public
+      - key: R2_PUBLIC_URL
+        value: https://cdn.davidharting.com
+
+      - key: MAIL_MAILER
+        value: mailersend
+      - key: MAIL_FROM_ADDRESS
+        value: hello@davidharting.com
+      - key: MAIL_FROM_NAME
+        value: davidharting.com
+
+      - key: OCTANE_SERVER
+        value: frankenphp
+      - key: OCTANE_HTTPS
+        value: "false"
+
+      # ---- Secrets (sync: false — Render prompts once at blueprint creation) ----
+      # After initial creation these are managed via the dashboard; blueprint
+      # updates IGNORE sync: false entries and will not re-prompt.
+      # Paste APP_KEY verbatim from the existing production .secrets/APP_KEY.txt —
+      # a new random value invalidates all encrypted cookies, sessions, and
+      # encrypted DB columns.
+      - key: APP_KEY
+        sync: false
+      - key: MAILERSEND_API_KEY
+        sync: false
+      - key: MAILERSEND_ADMIN_ADDRESS
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false
+      - key: R2_PRIVATE_BUCKET
+        sync: false
+      - key: TELEGRAM_TOKEN
+        sync: false
+      - key: TELEGRAM_DAVID_ID
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+services:
+  - name: davidhartingdotcom-web
+    type: web
+    runtime: docker
+    plan: starter
+    region: ohio
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    # --caddyfile=Caddyfile is kept because without it Octane generates its own
+    # stub Caddyfile and we lose the FrankenPHP worker config, body-size limit,
+    # encode, and log redaction. $PORT is substituted inside the Caddyfile via
+    # Caddy's native env syntax (:{$PORT:80}).
+    dockerCommand: php artisan octane:frankenphp --caddyfile=Caddyfile --host=0.0.0.0 --port=$PORT
+    # Migrations run once per deploy before the new version takes traffic. If
+    # any command fails, Render cancels the deploy with zero downtime.
+    # Telegram webhook registration is idempotent (setWebhook / setMyCommands
+    # are upserts on Telegram's side).
+    preDeployCommand: php artisan migrate --force && php artisan nutgram:hook:set "$APP_URL/api/telegram/webhook" && php artisan nutgram:register-commands
+    envVars:
+      - fromGroup: davidhartingdotcom-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: davidhartingdotcom-db
+          property: connectionString
+
+  - name: davidhartingdotcom-worker
+    type: worker
+    runtime: docker
+    plan: starter
+    region: ohio
+    dockerfilePath: ./Dockerfile
+    # --tries=3 --backoff=30 makes the worker resilient to the ~60s window
+    # where it might boot new code against the old DB schema (preDeploy runs
+    # only on the web service; worker has its own independent pipeline).
+    dockerCommand: php artisan queue:work -v --tries=3 --backoff=30
+    envVars:
+      - fromGroup: davidhartingdotcom-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: davidhartingdotcom-db
+          property: connectionString
+
+  - name: davidhartingdotcom-scheduler
+    # A worker (not a Render cron) so Laravel boots once and ticks every
+    # minute in-process. Render's cron service spawns a fresh Kubernetes pod
+    # per tick — with a ~700MB image and hourly pg_dump + R2 upload runs,
+    # a cold pull + boot + backup can stack toward 60s and either get
+    # skipped, overlapped, or killed depending on concurrencyPolicy.
+    type: worker
+    runtime: docker
+    plan: starter
+    region: ohio
+    dockerfilePath: ./Dockerfile
+    dockerCommand: php artisan schedule:work
+    envVars:
+      - fromGroup: davidhartingdotcom-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: davidhartingdotcom-db
+          property: connectionString
