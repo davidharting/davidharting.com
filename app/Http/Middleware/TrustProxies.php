@@ -10,9 +10,13 @@ class TrustProxies extends Middleware
     /**
      * The trusted proxies for this application.
      *
+     * Trusts any proxy because the app runs on a PaaS where the container has no
+     * direct internet path — the only inbound route is through the platform's
+     * ingress, so there is no header-spoofing surface to narrow.
+     *
      * @var array<int, string>|string|null
      */
-    protected $proxies;
+    protected $proxies = '*';
 
     /**
      * The headers that should be used to detect proxies.
