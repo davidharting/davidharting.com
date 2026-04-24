@@ -101,17 +101,49 @@ DATABASE_URL               ← fromDatabase.connectionString (web, worker, sched
 
 ## Data migration (during cutover window)
 
-1. From the DO droplet:
+### Before you open the maintenance window
+
+1. Run smoke tests 1–4 against the live Render URL with the empty database to confirm the app boots, serves HTML, and auth redirects work. This isolates any Render-specific issues from data issues.
+2. Get the Render **external** Postgres connection string: Dashboard → `davidhartingdotcom-db` → Info → External Connection String. It looks like `postgresql://laravel:<password>@dpg-xxx.ohio-postgres.render.com/laravel`. Save it as `$RENDER_DB_URL` in your shell.
+3. Confirm you can reach the DO droplet via SSH.
+4. Find the DB container name on the droplet:
    ```
-   docker exec <db-container> pg_dump -U laravel -Fc laravel > dump.dump
-   scp dump.dump $HOME/
+   ssh <droplet-ip> docker ps --format '{{.Names}}' | grep -i db
    ```
-2. Copy the external Postgres connection string from Render's DB dashboard.
-3. Restore:
+   It will be something like `davidharting-com-db-1`.
+
+### Migration window
+
+The window is the gap between the final dump and flipping traffic to Render. For a low-traffic personal site a few minutes of read-only or brief downtime is fine — no formal maintenance page needed.
+
+1. **Take the dump on the DO droplet:**
+   ```bash
+   ssh <droplet-ip> \
+     "docker exec <db-container> pg_dump -U laravel -Fc laravel" \
+     > dump.dump
    ```
-   pg_restore --clean --if-exists --no-owner -d "$RENDER_DB_URL" dump.dump
+   This pipes the dump over SSH directly to your local machine — no intermediate `scp` step.
+
+2. **Restore to Render Postgres:**
+   ```bash
+   pg_restore \
+     --clean --if-exists \
+     --no-owner --no-privileges \
+     -d "$RENDER_DB_URL" \
+     dump.dump
    ```
-4. Re-run smoke tests (below).
+   Flag rationale:
+   - `--clean --if-exists` — drops objects before recreating; handles the schema that `preDeploy` already created
+   - `--no-owner` — skips `ALTER TABLE ... OWNER TO laravel`; Render's DB user is different
+   - `--no-privileges` — skips `GRANT/REVOKE` statements that reference the DO role
+
+3. **Verify row counts look right** (quick sanity check):
+   ```bash
+   psql "$RENDER_DB_URL" -c "\dt+" | head -30
+   psql "$RENDER_DB_URL" -c "SELECT relname, n_live_tup FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10;"
+   ```
+
+4. Re-run the full smoke test checklist below.
 
 ## Local Dockerfile smoke test
 
@@ -176,7 +208,8 @@ If the new deploy misbehaves before DNS cutover:
 - [x] Phase 1: Code changes — TrustProxies, /healthz, Caddyfile, Dockerfile, CI, CLAUDE.md
 - [x] Phase 2: Write `render.yaml` — project + prod environment, Postgres 17 basic-256mb, three Docker services, DATABASE_URL wiring, preDeploy for migrations + Telegram webhook
 - [x] Local Dockerfile smoke test — image builds, Octane boots, `/healthz` returns 200 with no `Set-Cookie`
-- [ ] Phase 3: Provision Render Blueprint + first deploy (manual, from dashboard)
+- [x] Phase 3: Provision Render Blueprint + first deploy — service live at `https://davidhartingdotcom-web.onrender.com`
+  - Fixes required post-provision: shell-wrap preDeployCommand (`bash scripts/predeploy.sh`), strip `cap_net_bind_service` from frankenphp binary (`setcap -r`), manually set `sync: false` secrets in dashboard
 - [ ] Phase 4: Data migration + smoke tests
 - [ ] DNS cutover (follow-up)
 - [ ] Decommission Digital Ocean droplet
