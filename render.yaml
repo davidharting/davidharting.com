@@ -113,7 +113,7 @@ projects:
             # any command fails, Render cancels the deploy with zero downtime.
             # Telegram webhook registration is idempotent (setWebhook / setMyCommands
             # are upserts on Telegram's side).
-            preDeployCommand: php artisan migrate --force && php artisan nutgram:hook:set "$APP_URL/api/telegram/webhook" && php artisan nutgram:register-commands
+            preDeployCommand: bash /app/scripts/predeploy.sh
             envVars:
               - fromGroup: davidhartingdotcom-shared
               - key: DATABASE_URL
