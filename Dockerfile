@@ -18,8 +18,8 @@ RUN install-php-extensions \
     pdo_pgsql \
     zip
 
-RUN echo "upload_max_filesize = 25M\npost_max_size = 27M" \
-    > /usr/local/etc/php/conf.d/uploads.ini
+RUN printf "memory_limit = 256M\nupload_max_filesize = 25M\npost_max_size = 27M\n" \
+    > /usr/local/etc/php/conf.d/php.ini
 
 RUN mkdir -p /app/public/build
 
