@@ -28,6 +28,7 @@ fly.toml
 public/hot
 docker-compose.yml
 docker-compose.dev.yml
+render.yaml
 
 
 # 3. Copy over top-level .gitignore

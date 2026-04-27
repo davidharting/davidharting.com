@@ -8,19 +8,25 @@ Quick check: if `php artisan test` fails with autoload errors, run the setup.
 
 ## Architecture overview
 
-- Cloudflare DNS. Orange-checkmark reverse proxy to my Digital Ocean droplet
-- Digital Ocean droplet is running Ubuntu with Docker installed
-- I use `docker-compose up` to run the containers for my site. See docker-compose.yml
-- I run the Laravel web server Octane and Caddy. See Caddyfile.
+The site runs on Render.com, provisioned from `render.yaml` (Blueprint-as-code).
 
-So Cloudflare -> Digital Ocean droplet -> Caddy -> Laravel -> Postgres
+```
+Internet
+  └─ Render ingress (terminates TLS, region: ohio)
+       └─ web service        → FrankenPHP Octane (HTTP on $PORT)
+       └─ worker service     → php artisan queue:work
+       └─ scheduler worker   → php artisan schedule:work
+       └─ Postgres (managed) ← private network
+  └─ Cloudflare R2 (public + private buckets)
+```
 
-The containers are:
-
-- laravel web server
-- laravel queue worker
-- laravel scheduler
-- postgres database
+- All services build from the repo `Dockerfile` (`runtime: docker`). Render does not share builds across services, so each of the three services builds the image separately; Dockerfile layer ordering is tuned so dependency layers stay cached.
+- Render terminates TLS at the ingress — the container listens on plain HTTP at `$PORT`. The `Caddyfile` binds `:{$PORT:80}`.
+- Shared env vars live in an `envVarGroups` block; secrets use `sync: false` (prompted once at blueprint creation, then managed via the Render dashboard).
+- Database wiring is a single `DATABASE_URL` sourced from the managed Postgres via `fromDatabase.connectionString`.
+- Migrations + Telegram webhook registration run in the web service `preDeployCommand`. If preDeploy fails, Render keeps the prior version live (zero-downtime).
+- Cloudflare DNS is a follow-up — for now the site serves on a generated `*.onrender.com` URL.
+- Historical note: was previously Cloudflare (orange-cloud) → Digital Ocean droplet running Docker Compose. See `docs/projects/render-migration.md` for migration history and follow-ups.
 
 ## Commands
 

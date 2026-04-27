@@ -8,7 +8,12 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Spatie\MarkdownResponse\Middleware\ProvideMarkdownResponse;
 
 /*
@@ -26,7 +31,13 @@ Route::feeds();
 
 Route::get('/healthz', function () {
     return response('OK', 200);
-});
+})->withoutMiddleware([
+    EncryptCookies::class,
+    AddQueuedCookiesToResponse::class,
+    StartSession::class,
+    ShareErrorsFromSession::class,
+    VerifyCsrfToken::class,
+]);
 
 Route::get('/', function () {
     return view('welcome');
