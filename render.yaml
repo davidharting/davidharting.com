@@ -106,6 +106,7 @@ projects:
             healthCheckPath: /healthz
             domains:
               - davidharting.com
+            renderSubdomainPolicy: disabled
             # --caddyfile=Caddyfile is kept because without it Octane generates its own
             # stub Caddyfile and we lose the FrankenPHP worker config, body-size limit,
             # encode, and log redaction. $PORT is substituted inside the Caddyfile via
