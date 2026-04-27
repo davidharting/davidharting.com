@@ -140,18 +140,29 @@ projects:
                   name: davidhartingdotcom-db
                   property: connectionString
 
-          - name: davidhartingdotcom-scheduler
-            # A worker (not a Render cron) so Laravel boots once and ticks every
-            # minute in-process. Render's cron service spawns a fresh Kubernetes pod
-            # per tick — with a ~700MB image and hourly pg_dump + R2 upload runs,
-            # a cold pull + boot + backup can stack toward 60s and either get
-            # skipped, overlapped, or killed depending on concurrencyPolicy.
-            type: worker
+          - name: davidhartingdotcom-backup-run
+            type: cron
             runtime: docker
             plan: starter
             region: ohio
             dockerfilePath: ./Dockerfile
-            dockerCommand: php artisan schedule:work
+            schedule: "0 * * * *"
+            dockerCommand: php artisan backup:run --only-db
+            envVars:
+              - fromGroup: davidhartingdotcom-shared
+              - key: DATABASE_URL
+                fromDatabase:
+                  name: davidhartingdotcom-db
+                  property: connectionString
+
+          - name: davidhartingdotcom-backup-clean
+            type: cron
+            runtime: docker
+            plan: starter
+            region: ohio
+            dockerfilePath: ./Dockerfile
+            schedule: "0 0 * * *"
+            dockerCommand: php artisan backup:clean
             envVars:
               - fromGroup: davidhartingdotcom-shared
               - key: DATABASE_URL

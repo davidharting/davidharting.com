@@ -39,7 +39,7 @@ Reliability posture:
 | Build source | `runtime: docker`, Render builds from repo `Dockerfile` each deploy |
 | Region | `ohio` (closest to Indianapolis) |
 | Postgres | `basic-256mb`, `postgresMajorVersion: "17"`, `diskSizeGB: 1`, storage autoscaling on — still a paid tier so PITR + 7-day logical backups are included |
-| Scheduler | Long-running `worker` running `php artisan schedule:work` (NOT a Render cron — avoids CronJobV2 cold-start risk on hourly `backup:run` ticks) |
+| Scheduler | Two Render cron jobs: `backup:run --only-db` hourly, `backup:clean` daily (switched from always-on `schedule:work` worker to save cost; DB is small enough that cold-start + backup completes well under 60s) |
 | Cache / session / queue | `database` driver, no Redis for v1 |
 | Logging | `LOG_CHANNEL=stderr` only |
 | Nightwatch | Dropped for v1, revisit later |
