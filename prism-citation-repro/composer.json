@@ -1,0 +1,16 @@
+{
+    "name": "local/prism-citation-repro",
+    "description": "Minimal reproduction of Prism Anthropic citation index bug",
+    "require": {
+        "php": "^8.2",
+        "prism-php/prism": "^0.90",
+        "guzzlehttp/guzzle": "^7.8",
+        "illuminate/http": "^11.0",
+        "illuminate/support": "^11.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
