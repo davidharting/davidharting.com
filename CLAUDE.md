@@ -15,7 +15,8 @@ Internet
   └─ Render ingress (terminates TLS, region: ohio)
        └─ web service        → FrankenPHP Octane (HTTP on $PORT)
        └─ worker service     → php artisan queue:work
-       └─ scheduler worker   → php artisan schedule:work
+       └─ cron: backup:run   → php artisan backup:run --only-db (hourly)
+       └─ cron: backup:clean → php artisan backup:clean (daily)
        └─ Postgres (managed) ← private network
   └─ Cloudflare R2 (public + private buckets)
 ```
@@ -25,7 +26,6 @@ Internet
 - Shared env vars live in an `envVarGroups` block; secrets use `sync: false` (prompted once at blueprint creation, then managed via the Render dashboard).
 - Database wiring is a single `DATABASE_URL` sourced from the managed Postgres via `fromDatabase.connectionString`.
 - Migrations + Telegram webhook registration run in the web service `preDeployCommand`. If preDeploy fails, Render keeps the prior version live (zero-downtime).
-- Cloudflare DNS is a follow-up — for now the site serves on a generated `*.onrender.com` URL.
 - Historical note: was previously Cloudflare (orange-cloud) → Digital Ocean droplet running Docker Compose. See `docs/projects/render-migration.md` for migration history and follow-ups.
 
 ## Commands

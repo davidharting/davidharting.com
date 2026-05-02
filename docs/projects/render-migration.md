@@ -20,7 +20,8 @@ Internet
   └─ Render ingress (terminates TLS, region: ohio)
        └─ web service        → FrankenPHP Octane (HTTP on $PORT)
        └─ worker service     → php artisan queue:work
-       └─ scheduler worker   → php artisan schedule:work
+       └─ cron: backup:run   → php artisan backup:run --only-db (hourly)
+       └─ cron: backup:clean → php artisan backup:clean (daily)
        └─ Postgres (managed) ← private network
   └─ Cloudflare R2 (public + private buckets — unchanged)
 ```
@@ -175,11 +176,11 @@ After first deploy and after `APP_URL` update:
 6. `curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/getWebhookInfo"` → URL matches `$APP_URL/api/telegram/webhook`.
 7. From web shell: `php artisan backup:run --only-db` → completes, dump lands in R2 private bucket.
 8. Postgres shell: `SELECT count(*) FROM sessions;` — grows with human traffic, not healthcheck polls.
-9. Scheduler logs show `schedule:work` alive and ticking each minute; `backup:run` fires once per hour inside that.
+9. Render cron job logs show `backup:run` firing once per hour and `backup:clean` firing once per day.
 10. Worker: `php artisan tinker` → dispatch a test job → worker log shows it processed. `failed_jobs` stays empty over 5 minutes.
 11. Browse the site; confirm R2 CDN assets load from `cdn.davidharting.com`.
 
-## DNS cutover (follow-up, not v1)
+## DNS cutover
 
 1. Add `davidharting.com` as a custom domain in Render web service.
 2. In Cloudflare DNS, set the apex record as DNS-only (grey cloud) pointing at Render's CNAME target. Wait for Render to issue a cert.
@@ -210,6 +211,6 @@ If the new deploy misbehaves before DNS cutover:
 - [x] Local Dockerfile smoke test — image builds, Octane boots, `/healthz` returns 200 with no `Set-Cookie`
 - [x] Phase 3: Provision Render Blueprint + first deploy — service live at `https://davidhartingdotcom-web.onrender.com`
   - Fixes required post-provision: shell-wrap preDeployCommand (`bash scripts/predeploy.sh`), strip `cap_net_bind_service` from frankenphp binary (`setcap -r`), manually set `sync: false` secrets in dashboard
-- [ ] Phase 4: Data migration + smoke tests
-- [ ] DNS cutover (follow-up)
+- [x] Phase 4: Data migration + smoke tests
+- [x] DNS cutover — site live at `https://davidharting.com`
 - [ ] Decommission Digital Ocean droplet
