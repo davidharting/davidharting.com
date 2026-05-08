@@ -8,19 +8,29 @@ Quick check: if `php artisan test` fails with autoload errors, run the setup.
 
 ## Architecture overview
 
-- Cloudflare DNS. Orange-checkmark reverse proxy to my Digital Ocean droplet
-- Digital Ocean droplet is running Ubuntu with Docker installed
-- I use `docker-compose up` to run the containers for my site. See docker-compose.yml
-- I run the Laravel web server Octane and Caddy. See Caddyfile.
+The site runs on Render.com from `render.yaml`.
 
-So Cloudflare -> Digital Ocean droplet -> Caddy -> Laravel -> Postgres
+```
+Internet
+  -> Render ingress
+  -> web service: FrankenPHP Octane on $PORT
+  -> Render Postgres on the private network
+```
 
-The containers are:
+Supporting services:
 
-- laravel web server
-- laravel queue worker
-- laravel scheduler
-- postgres database
+- `davidhartingdotcom-worker`: runs `php artisan queue:work`.
+- `davidhartingdotcom-backup-run`: Render cron job that runs database backups.
+- `davidhartingdotcom-backup-clean`: Render cron job that prunes old backups.
+- Cloudflare DNS points `davidharting.com` at Render. Cloudflare R2 stores public and private objects.
+
+Operational notes:
+
+- Render terminates TLS; the container listens on plain HTTP at `$PORT`.
+- `render.yaml` owns service, database, worker, and cron definitions.
+- Secrets are managed in Render, not committed to git. Prefer an IaC-friendly path, such as Render secret files, over long-term dashboard-only configuration.
+- The web service `preDeployCommand` runs migrations and Telegram webhook registration before new web instances receive traffic.
+- Historical note: this previously ran on a Digital Ocean droplet with Docker Compose. See `docs/projects/render-migration.md` for migration history.
 
 ## Commands
 

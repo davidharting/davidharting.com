@@ -33,16 +33,21 @@ Start PostgreSQL:
 sudo service postgresql start
 ```
 
-Create database and user:
+Create databases and user:
 
 ```bash
 sudo -u postgres psql -c "CREATE DATABASE laravel;"
+sudo -u postgres psql -c "CREATE DATABASE laravel_test;"
 sudo -u postgres psql -c "CREATE USER root WITH PASSWORD 'password';"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE laravel TO root;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE laravel_test TO root;"
 sudo -u postgres psql -d laravel -c "GRANT ALL ON SCHEMA public TO root;"
+sudo -u postgres psql -d laravel_test -c "GRANT ALL ON SCHEMA public TO root;"
 ```
 
-Run migrations:
+`laravel` is for dev; `laravel_test` is where `php artisan test` runs (configured in `phpunit.xml`) so tests never clobber dev data.
+
+Run migrations on the dev database:
 
 ```bash
 php artisan migrate

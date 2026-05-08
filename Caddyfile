@@ -6,7 +6,7 @@
 	}
 }
 
-davidharting.com {
+:{$PORT:80} {
 	log {
 		level {$CADDY_SERVER_LOG_LEVEL}
 
