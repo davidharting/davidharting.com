@@ -8,25 +8,29 @@ Quick check: if `php artisan test` fails with autoload errors, run the setup.
 
 ## Architecture overview
 
-The site runs on Render.com, provisioned from `render.yaml` (Blueprint-as-code).
+The site runs on Render.com from `render.yaml`.
 
 ```
 Internet
-  └─ Render ingress (terminates TLS, region: ohio)
-       └─ web service        → FrankenPHP Octane (HTTP on $PORT)
-       └─ worker service     → php artisan queue:work
-       └─ scheduler worker   → php artisan schedule:work
-       └─ Postgres (managed) ← private network
-  └─ Cloudflare R2 (public + private buckets)
+  -> Render ingress
+  -> web service: FrankenPHP Octane on $PORT
+  -> Render Postgres on the private network
 ```
 
-- All services build from the repo `Dockerfile` (`runtime: docker`). Render does not share builds across services, so each of the three services builds the image separately; Dockerfile layer ordering is tuned so dependency layers stay cached.
-- Render terminates TLS at the ingress — the container listens on plain HTTP at `$PORT`. The `Caddyfile` binds `:{$PORT:80}`.
-- Shared env vars live in an `envVarGroups` block; secrets use `sync: false` (prompted once at blueprint creation, then managed via the Render dashboard).
-- Database wiring is a single `DATABASE_URL` sourced from the managed Postgres via `fromDatabase.connectionString`.
-- Migrations + Telegram webhook registration run in the web service `preDeployCommand`. If preDeploy fails, Render keeps the prior version live (zero-downtime).
-- Cloudflare DNS is a follow-up — for now the site serves on a generated `*.onrender.com` URL.
-- Historical note: was previously Cloudflare (orange-cloud) → Digital Ocean droplet running Docker Compose. See `docs/projects/render-migration.md` for migration history and follow-ups.
+Supporting services:
+
+- `davidhartingdotcom-worker`: runs `php artisan queue:work`.
+- `davidhartingdotcom-backup-run`: Render cron job that runs database backups.
+- `davidhartingdotcom-backup-clean`: Render cron job that prunes old backups.
+- Cloudflare DNS points `davidharting.com` at Render. Cloudflare R2 stores public and private objects.
+
+Operational notes:
+
+- Render terminates TLS; the container listens on plain HTTP at `$PORT`.
+- `render.yaml` owns service, database, worker, and cron definitions.
+- Secrets are managed in Render, not committed to git. Prefer an IaC-friendly path, such as Render secret files, over long-term dashboard-only configuration.
+- The web service `preDeployCommand` runs migrations and Telegram webhook registration before new web instances receive traffic.
+- Historical note: this previously ran on a Digital Ocean droplet with Docker Compose. See `docs/projects/render-migration.md` for migration history.
 
 ## Commands
 

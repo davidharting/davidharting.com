@@ -22,8 +22,7 @@ projects:
                 value: production
               - key: APP_DEBUG
                 value: "false"
-              # Replace with the real generated onrender.com URL after first provision,
-              # then again with https://davidharting.com after DNS cutover.
+              # Canonical production URL; keep this aligned with the custom domain below.
               - key: APP_URL
                 value: https://davidharting.com
 
@@ -69,32 +68,9 @@ projects:
               - key: OCTANE_HTTPS
                 value: "false"
 
-              # ---- Secrets (sync: false — Render prompts once at blueprint creation) ----
-              # After initial creation these are managed via the dashboard; blueprint
-              # updates IGNORE sync: false entries and will not re-prompt.
-              # Paste APP_KEY verbatim from the existing production .secrets/APP_KEY.txt —
-              # a new random value invalidates all encrypted cookies, sessions, and
-              # encrypted DB columns.
-              - key: APP_KEY
-                sync: false
-              - key: MAILERSEND_API_KEY
-                sync: false
-              - key: MAILERSEND_ADMIN_ADDRESS
-                sync: false
-              - key: R2_ACCESS_KEY_ID
-                sync: false
-              - key: R2_SECRET_ACCESS_KEY
-                sync: false
-              - key: R2_ENDPOINT
-                sync: false
-              - key: R2_PRIVATE_BUCKET
-                sync: false
-              - key: TELEGRAM_TOKEN
-                sync: false
-              - key: TELEGRAM_DAVID_ID
-                sync: false
-              - key: ANTHROPIC_API_KEY
-                sync: false
+              # Secrets are not listed here because Render ignores sync: false
+              # inside Blueprint-managed env groups. Follow-up: move secrets to
+              # Render secret files so they are not long-term dashboard-only config.
 
         services:
           - name: davidhartingdotcom-web
@@ -147,6 +123,7 @@ projects:
             plan: starter
             region: ohio
             dockerfilePath: ./Dockerfile
+            # Run a database-only backup at the top of every hour.
             schedule: "0 * * * *"
             dockerCommand: php artisan backup:run --only-db
             envVars:
@@ -162,6 +139,7 @@ projects:
             plan: starter
             region: ohio
             dockerfilePath: ./Dockerfile
+            # Prune old backups once per day at midnight UTC.
             schedule: "0 0 * * *"
             dockerCommand: php artisan backup:clean
             envVars:
