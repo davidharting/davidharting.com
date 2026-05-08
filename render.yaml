@@ -79,6 +79,7 @@ projects:
             plan: starter
             region: ohio
             dockerfilePath: ./Dockerfile
+            autoDeployTrigger: checksPass
             healthCheckPath: /healthz
             domains:
               - davidharting.com
@@ -106,6 +107,7 @@ projects:
             plan: starter
             region: ohio
             dockerfilePath: ./Dockerfile
+            autoDeployTrigger: checksPass
             # --tries=3 --backoff=30 makes the worker resilient to the ~60s window
             # where it might boot new code against the old DB schema (preDeploy runs
             # only on the web service; worker has its own independent pipeline).
@@ -123,6 +125,7 @@ projects:
             plan: starter
             region: ohio
             dockerfilePath: ./Dockerfile
+            autoDeployTrigger: checksPass
             # Run a database-only backup at the top of every hour.
             schedule: "0 * * * *"
             dockerCommand: php artisan backup:run --only-db
@@ -139,6 +142,7 @@ projects:
             plan: starter
             region: ohio
             dockerfilePath: ./Dockerfile
+            autoDeployTrigger: checksPass
             # Prune old backups once per day at midnight UTC.
             schedule: "0 0 * * *"
             dockerCommand: php artisan backup:clean
