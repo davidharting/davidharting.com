@@ -68,9 +68,8 @@ projects:
               - key: OCTANE_HTTPS
                 value: "false"
 
-              # Secrets are not listed here because Render ignores sync: false
-              # inside Blueprint-managed env groups. Follow-up: move secrets to
-              # Render secret files so they are not long-term dashboard-only config.
+              # Secrets are mounted as /etc/secrets/secrets.env and linked to
+              # /app/.env by scripts/render-with-secrets.sh at runtime.
 
         services:
           - name: davidhartingdotcom-web
@@ -88,12 +87,12 @@ projects:
             # stub Caddyfile and we lose the FrankenPHP worker config, body-size limit,
             # encode, and log redaction. $PORT is substituted inside the Caddyfile via
             # Caddy's native env syntax (:{$PORT:80}).
-            dockerCommand: php artisan octane:frankenphp --caddyfile=Caddyfile --host=0.0.0.0 --port=$PORT
+            dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan octane:frankenphp --caddyfile=Caddyfile --host=0.0.0.0 --port=$PORT
             # Migrations run once per deploy before the new version takes traffic. If
             # any command fails, Render cancels the deploy with zero downtime.
             # Telegram webhook registration is idempotent (setWebhook / setMyCommands
             # are upserts on Telegram's side).
-            preDeployCommand: bash /app/scripts/predeploy.sh
+            preDeployCommand: bash /app/scripts/render-with-secrets.sh bash /app/scripts/predeploy.sh
             envVars:
               - fromGroup: davidhartingdotcom-shared
               - key: DATABASE_URL
@@ -111,7 +110,7 @@ projects:
             # --tries=3 --backoff=30 makes the worker resilient to the ~60s window
             # where it might boot new code against the old DB schema (preDeploy runs
             # only on the web service; worker has its own independent pipeline).
-            dockerCommand: php artisan queue:work -v --tries=3 --backoff=30
+            dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan queue:work -v --tries=3 --backoff=30
             envVars:
               - fromGroup: davidhartingdotcom-shared
               - key: DATABASE_URL
@@ -128,7 +127,7 @@ projects:
             autoDeployTrigger: checksPass
             # Run a database-only backup at the top of every hour.
             schedule: "0 * * * *"
-            dockerCommand: php artisan backup:run --only-db
+            dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan backup:run --only-db
             envVars:
               - fromGroup: davidhartingdotcom-shared
               - key: DATABASE_URL
@@ -145,7 +144,7 @@ projects:
             autoDeployTrigger: checksPass
             # Prune old backups once per day at midnight UTC.
             schedule: "0 0 * * *"
-            dockerCommand: php artisan backup:clean
+            dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan backup:clean
             envVars:
               - fromGroup: davidhartingdotcom-shared
               - key: DATABASE_URL
