@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 test('trusts X-Forwarded-Proto from any proxy', function () {
     $request = Request::create('http://app.onrender.com/test', 'GET');
@@ -12,7 +13,7 @@ test('trusts X-Forwarded-Proto from any proxy', function () {
     (new TrustProxies)->handle($request, function (Request $req) use (&$seenSecure) {
         $seenSecure = $req->isSecure();
 
-        return new Symfony\Component\HttpFoundation\Response('ok');
+        return new Response('ok');
     });
 
     expect($seenSecure)->toBeTrue();
@@ -28,7 +29,7 @@ test('trusts X-Forwarded-Host from any proxy', function () {
     (new TrustProxies)->handle($request, function (Request $req) use (&$seenHost) {
         $seenHost = $req->getHost();
 
-        return new Symfony\Component\HttpFoundation\Response('ok');
+        return new Response('ok');
     });
 
     expect($seenHost)->toBe('davidharting.com');

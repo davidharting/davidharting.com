@@ -34,20 +34,20 @@ Reliability posture:
 
 ## Decisions
 
-| Area | Choice |
-|------|--------|
-| Build source | `runtime: docker`, Render builds from repo `Dockerfile` each deploy |
-| Region | `ohio` (closest to Indianapolis) |
-| Postgres | `basic-256mb`, `postgresMajorVersion: "17"`, `diskSizeGB: 1`, storage autoscaling on — still a paid tier so PITR + 7-day logical backups are included |
-| Scheduler | Two Render cron jobs: `backup:run --only-db` hourly, `backup:clean` daily (switched from always-on `schedule:work` worker to save cost; DB is small enough that cold-start + backup completes well under 60s) |
-| Cache / session / queue | `database` driver, no Redis for v1 |
-| Logging | `LOG_CHANNEL=stderr` only |
-| Nightwatch | Dropped for v1, revisit later |
-| DNS | Render-generated `*.onrender.com` URL for v1; Cloudflare custom domain is a follow-up |
-| Env vars | One `envVarGroups` + per-service `DATABASE_URL` via `fromDatabase.connectionString` |
-| Migrations | Web service `preDeployCommand` (Render orchestrates DB readiness, no `pg_isready` wait needed) |
-| Telegram webhook | Also in web `preDeployCommand`; idempotent |
-| CI gate | "After CI Checks Pass" auto-deploy in dashboard (post-provision); CI runs on `push: main` and `pull_request` |
+| Area                    | Choice                                                                                                                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Build source            | `runtime: docker`, Render builds from repo `Dockerfile` each deploy                                                                                                                                           |
+| Region                  | `ohio` (closest to Indianapolis)                                                                                                                                                                              |
+| Postgres                | `basic-256mb`, `postgresMajorVersion: "17"`, `diskSizeGB: 1`, storage autoscaling on — still a paid tier so PITR + 7-day logical backups are included                                                         |
+| Scheduler               | Two Render cron jobs: `backup:run --only-db` hourly, `backup:clean` daily (switched from always-on `schedule:work` worker to save cost; DB is small enough that cold-start + backup completes well under 60s) |
+| Cache / session / queue | `database` driver, no Redis for v1                                                                                                                                                                            |
+| Logging                 | `LOG_CHANNEL=stderr` only                                                                                                                                                                                     |
+| Nightwatch              | Dropped for v1, revisit later                                                                                                                                                                                 |
+| DNS                     | Render-generated `*.onrender.com` URL for v1; Cloudflare custom domain is a follow-up                                                                                                                         |
+| Env vars                | One `envVarGroups` + per-service `DATABASE_URL` via `fromDatabase.connectionString`                                                                                                                           |
+| Migrations              | Web service `preDeployCommand` (Render orchestrates DB readiness, no `pg_isready` wait needed)                                                                                                                |
+| Telegram webhook        | Also in web `preDeployCommand`; idempotent                                                                                                                                                                    |
+| CI gate                 | "After CI Checks Pass" auto-deploy in dashboard (post-provision); CI runs on `push: main` and `pull_request`                                                                                                  |
 
 ## Env var inventory
 
@@ -91,11 +91,11 @@ DATABASE_URL               ← fromDatabase.connectionString (web, worker, sched
 1. Open the Render dashboard and create a new Blueprint pointing at this repo.
 2. Render parses `render.yaml`, provisions the Postgres database, and prompts for all `sync: false` secrets. Paste values from the current DO droplet's `./secrets/*.txt` files.
 3. First deploy sequence:
-   - DB provisions and becomes available.
-   - Web service builds (Dockerfile).
-   - Web `preDeployCommand` runs: `php artisan migrate --force && php artisan nutgram:hook:set "$APP_URL/api/telegram/webhook" && php artisan nutgram:register-commands`. Migrations apply to the empty DB; Telegram webhook is registered against the placeholder `APP_URL`.
-   - Octane starts, listens on `$PORT`.
-   - Worker and scheduler services build in parallel pipelines and come up when done.
+    - DB provisions and becomes available.
+    - Web service builds (Dockerfile).
+    - Web `preDeployCommand` runs: `php artisan migrate --force && php artisan nutgram:hook:set "$APP_URL/api/telegram/webhook" && php artisan nutgram:register-commands`. Migrations apply to the empty DB; Telegram webhook is registered against the placeholder `APP_URL`.
+    - Octane starts, listens on `$PORT`.
+    - Worker and scheduler services build in parallel pipelines and come up when done.
 4. In the dashboard, set **Auto-Deploy: After CI Checks Pass** on each of the three services. This makes Render wait on GitHub Actions' `CI` workflow.
 5. Grab the generated hostname (e.g. `davidhartingdotcom-web.onrender.com`) and update `APP_URL` in the env group to `https://davidhartingdotcom-web.onrender.com`. Render redeploys; `preDeployCommand` re-registers the Telegram webhook at the real URL.
 
@@ -107,41 +107,46 @@ DATABASE_URL               ← fromDatabase.connectionString (web, worker, sched
 2. Get the Render **external** Postgres connection string: Dashboard → `davidhartingdotcom-db` → Info → External Connection String. It looks like `postgresql://laravel:<password>@dpg-xxx.ohio-postgres.render.com/laravel`. Save it as `$RENDER_DB_URL` in your shell.
 3. Confirm you can reach the DO droplet via SSH.
 4. Find the DB container name on the droplet:
-   ```
-   ssh <droplet-ip> docker ps --format '{{.Names}}' | grep -i db
-   ```
-   It will be something like `davidharting-com-db-1`.
+    ```
+    ssh <droplet-ip> docker ps --format '{{.Names}}' | grep -i db
+    ```
+    It will be something like `davidharting-com-db-1`.
 
 ### Migration window
 
 The window is the gap between the final dump and flipping traffic to Render. For a low-traffic personal site a few minutes of read-only or brief downtime is fine — no formal maintenance page needed.
 
 1. **Take the dump on the DO droplet:**
-   ```bash
-   ssh <droplet-ip> \
-     "docker exec <db-container> pg_dump -U laravel -Fc laravel" \
-     > dump.dump
-   ```
-   This pipes the dump over SSH directly to your local machine — no intermediate `scp` step.
+
+    ```bash
+    ssh <droplet-ip> \
+      "docker exec <db-container> pg_dump -U laravel -Fc laravel" \
+      > dump.dump
+    ```
+
+    This pipes the dump over SSH directly to your local machine — no intermediate `scp` step.
 
 2. **Restore to Render Postgres:**
-   ```bash
-   pg_restore \
-     --clean --if-exists \
-     --no-owner --no-privileges \
-     -d "$RENDER_DB_URL" \
-     dump.dump
-   ```
-   Flag rationale:
-   - `--clean --if-exists` — drops objects before recreating; handles the schema that `preDeploy` already created
-   - `--no-owner` — skips `ALTER TABLE ... OWNER TO laravel`; Render's DB user is different
-   - `--no-privileges` — skips `GRANT/REVOKE` statements that reference the DO role
+
+    ```bash
+    pg_restore \
+      --clean --if-exists \
+      --no-owner --no-privileges \
+      -d "$RENDER_DB_URL" \
+      dump.dump
+    ```
+
+    Flag rationale:
+    - `--clean --if-exists` — drops objects before recreating; handles the schema that `preDeploy` already created
+    - `--no-owner` — skips `ALTER TABLE ... OWNER TO laravel`; Render's DB user is different
+    - `--no-privileges` — skips `GRANT/REVOKE` statements that reference the DO role
 
 3. **Verify row counts look right** (quick sanity check):
-   ```bash
-   psql "$RENDER_DB_URL" -c "\dt+" | head -30
-   psql "$RENDER_DB_URL" -c "SELECT relname, n_live_tup FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10;"
-   ```
+
+    ```bash
+    psql "$RENDER_DB_URL" -c "\dt+" | head -30
+    psql "$RENDER_DB_URL" -c "SELECT relname, n_live_tup FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10;"
+    ```
 
 4. Re-run the full smoke test checklist below.
 
@@ -209,7 +214,7 @@ If the new deploy misbehaves before DNS cutover:
 - [x] Phase 2: Write `render.yaml` — project + prod environment, Postgres 17 basic-256mb, three Docker services, DATABASE_URL wiring, preDeploy for migrations + Telegram webhook
 - [x] Local Dockerfile smoke test — image builds, Octane boots, `/healthz` returns 200 with no `Set-Cookie`
 - [x] Phase 3: Provision Render Blueprint + first deploy — service live at `https://davidhartingdotcom-web.onrender.com`
-  - Fixes required post-provision: shell-wrap preDeployCommand (`bash scripts/predeploy.sh`), strip `cap_net_bind_service` from frankenphp binary (`setcap -r`), manually set `sync: false` secrets in dashboard
+    - Fixes required post-provision: shell-wrap preDeployCommand (`bash scripts/predeploy.sh`), strip `cap_net_bind_service` from frankenphp binary (`setcap -r`), manually set `sync: false` secrets in dashboard
 - [ ] Phase 4: Data migration + smoke tests
 - [ ] DNS cutover (follow-up)
 - [ ] Decommission Digital Ocean droplet
