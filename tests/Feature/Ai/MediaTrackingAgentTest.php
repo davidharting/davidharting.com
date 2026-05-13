@@ -8,6 +8,7 @@ use App\Ai\Tools\SearchMedia;
 use Illuminate\Foundation\Testing\TestCase;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
+use Laravel\Ai\Providers\Tools\WebSearch;
 
 test("uses Anthropic's Sonnet 4.6", function () {
     /** @var TestCase $this */
@@ -40,6 +41,17 @@ describe('tools()', function () {
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof MediaWebSearchAgentTool));
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof SearchMedia));
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RequestConfirmation));
+    });
+
+    // At time of writing, PrismPHP's Anthropic provider returns 400s when an agent mixes custom tools with provider
+    // tools (like WebSearch) across multi-turn conversations. WebSearch is wrapped in
+    // MediaWebSearchAgentTool (a sub-agent) so the orchestrator only owns custom tools.
+    test('does not expose the WebSearch provider tool directly', function () {
+        /** @var TestCase $this */
+        $agent = MediaTrackingAgent::make();
+        $tools = collect($agent->tools());
+
+        $this->assertFalse($tools->contains(fn ($tool) => $tool instanceof WebSearch));
     });
 
     test('includes injected RequestConfirmation instance', function () {
