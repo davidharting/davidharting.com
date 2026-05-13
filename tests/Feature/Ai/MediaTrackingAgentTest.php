@@ -1,6 +1,7 @@
 <?php
 
 use App\Ai\Agents\MediaTrackingAgent;
+use App\Ai\Tools\MediaWebSearchAgentTool;
 use App\Ai\Tools\MediaWritingAgentTool;
 use App\Ai\Tools\RequestConfirmation;
 use App\Ai\Tools\SearchMedia;
@@ -32,14 +33,25 @@ test('instructions mention media tracking and library status', function () {
 });
 
 describe('tools()', function () {
-    test('includes WebSearch, SearchMedia, and RequestConfirmation by default', function () {
+    test('includes MediaWebSearchAgentTool, SearchMedia, and RequestConfirmation by default', function () {
         /** @var TestCase $this */
         $agent = MediaTrackingAgent::make();
         $tools = collect($agent->tools());
 
-        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof WebSearch));
+        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof MediaWebSearchAgentTool));
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof SearchMedia));
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RequestConfirmation));
+    });
+
+    // At time of writing, PrismPHP's Anthropic provider returns 400s when an agent mixes custom tools with provider
+    // tools (like WebSearch) across multi-turn conversations. WebSearch is wrapped in
+    // MediaWebSearchAgentTool (a sub-agent) so the orchestrator only owns custom tools.
+    test('does not expose the WebSearch provider tool directly', function () {
+        /** @var TestCase $this */
+        $agent = MediaTrackingAgent::make();
+        $tools = collect($agent->tools());
+
+        $this->assertFalse($tools->contains(fn ($tool) => $tool instanceof WebSearch));
     });
 
     test('includes injected RequestConfirmation instance', function () {

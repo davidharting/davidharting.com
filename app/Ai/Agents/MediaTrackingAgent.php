@@ -2,6 +2,7 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\MediaWebSearchAgentTool;
 use App\Ai\Tools\MediaWritingAgentTool;
 use App\Ai\Tools\RequestConfirmation;
 use App\Ai\Tools\SearchMedia;
@@ -13,7 +14,6 @@ use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Promptable;
-use Laravel\Ai\Providers\Tools\WebSearch;
 use Stringable;
 
 #[Provider('anthropic')]
@@ -58,20 +58,11 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         When David tells you about a piece of media he wants to track, identify the exact item with precision.
 
-        Always use web search to confirm the publication year and primary creator before responding.
+        Use MediaWebSearchAgentTool when you need to identify a piece of media you don't already know — typically when David is adding something new, or when a library lookup turns up nothing or is ambiguous. You don't need it when David is referring to something already in his library and SearchMedia is enough to find it. Pass a condensed description of what David said (title, creator, year, type, plot hints — whatever he provided), NOT a search query string. The tool returns either "No matches found." or markdown bullets in the format: `- <title> (<year>) — <creator> — <media_type>` where media_type is one of: album, book, movie, tv show, video game.
 
-        Primary creator by media type:
-        - Album → artist
-        - Book → author
-        - Movie → director
-        - TV show → creator or showrunner
-        - Video game → developer studio
+        Flag ambiguity. If MediaWebSearchAgentTool returns more than one bullet — such as a remake, an adaptation, or multiple works with the same title — tell David and ask which one he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
 
-        One creator only. Pick the single most relevant primary creator. For example, for a movie with multiple directors, pick the lead.
-
-        Flag ambiguity. If search results reveal more than one plausible match — such as a remake, an adaptation, or multiple works with the same title — tell David and ask which one he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
-
-        Once you have identified the item with confidence, use the SearchMedia tool to look it up in David's library by title (and media type if known).
+        Use the SearchMedia tool to look up an item in David's library by title (and media type if known).
 
         Interpret the SearchMedia result as follows:
         - If no results are found: the item is not in the library. Confirm the item's identity (title, year, creator, type) and let David know it is not yet in his library.
@@ -79,6 +70,8 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
         - If found and current_status is "started": David is currently working through it.
         - If found and current_status is "finished": David has already finished it.
         - If found and current_status is "abandoned": David previously abandoned it.
+
+        If MediaWebSearchAgentTool returns "No matches found.", let David know you couldn't identify the item from the description and ask for more detail.
 
         Supported event types are: started, finished, abandoned, and comment. Comment events do not change the media status — they attach a free-text note to a media item (e.g. a thought, recommendation, or reflection).
 
@@ -132,7 +125,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
     public function tools(): iterable
     {
         $tools = [
-            new WebSearch,
+            new MediaWebSearchAgentTool,
             new SearchMedia,
             $this->confirmationTool ?? new RequestConfirmation,
         ];
