@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+    types: [opened, synchronize, reopened, labeled]
   push:
     branches:
       - main
@@ -58,6 +59,50 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
         run: php artisan test --compact --do-not-cache-result
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: laravel_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+  evals:
+    name: "Agent Evals"
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'ci:eval')
+    steps:
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Install composer dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist
+
+      - name: Generate key
+        run: php artisan key:generate
+
+      - name: Run evals
+        env:
+          DB_USERNAME: root
+          DB_PASSWORD: password
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: php artisan test tests/Evals/ --compact
 
     services:
       postgres:
