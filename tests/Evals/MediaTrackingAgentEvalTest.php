@@ -6,17 +6,26 @@ use App\Ai\Tools\RequestConfirmation;
 use App\Models\Media;
 use App\Models\MediaEventType;
 use Illuminate\Foundation\Testing\TestCase;
+use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Contracts\ConversationStore;
 use Laravel\Ai\Responses\AgentResponse;
 
 function evalMetrics(string $label, float $startedAt, AgentResponse $response): void
 {
-    $elapsed = round((microtime(true) - $startedAt) * 1000);
-    $tools = collect($response->toolCalls)->pluck('name')->join(', ') ?: '(none)';
-    $steps = count($response->steps);
     $usage = $response->usage;
 
-    dump("[{$label}] {$elapsed}ms | {$steps} steps | tools: {$tools} | tokens in={$usage->promptTokens} out={$usage->completionTokens} cache_read={$usage->cacheReadInputTokens} cache_write={$usage->cacheWriteInputTokens}");
+    Log::info('eval.turn', [
+        'turn' => $label,
+        'elapsed_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+        'steps' => count($response->steps),
+        'tools' => collect($response->toolCalls)->pluck('name')->all(),
+        'tokens' => [
+            'input' => $usage->promptTokens,
+            'output' => $usage->completionTokens,
+            'cache_read' => $usage->cacheReadInputTokens,
+            'cache_write' => $usage->cacheWriteInputTokens,
+        ],
+    ]);
 }
 
 test('happy path: user logs a finished book', function () {
