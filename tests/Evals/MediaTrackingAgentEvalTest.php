@@ -7,6 +7,17 @@ use App\Models\Media;
 use App\Models\MediaEventType;
 use Illuminate\Foundation\Testing\TestCase;
 use Laravel\Ai\Contracts\ConversationStore;
+use Laravel\Ai\Responses\AgentResponse;
+
+function evalMetrics(string $label, float $startedAt, AgentResponse $response): void
+{
+    $elapsed = round((microtime(true) - $startedAt) * 1000);
+    $tools = collect($response->toolCalls)->pluck('name')->join(', ') ?: '(none)';
+    $steps = count($response->steps);
+    $usage = $response->usage;
+
+    dump("[{$label}] {$elapsed}ms | {$steps} steps | tools: {$tools} | tokens in={$usage->promptTokens} out={$usage->completionTokens} cache_read={$usage->cacheReadInputTokens} cache_write={$usage->cacheWriteInputTokens}");
+}
 
 test('happy path: user logs a finished book', function () {
     /** @var TestCase $this */
@@ -25,7 +36,9 @@ test('happy path: user logs a finished book', function () {
     $confirmationTool = new RequestConfirmation;
     $agent = (new MediaTrackingAgent(confirmationTool: $confirmationTool))
         ->continue($conversationId, $user);
-    $agent->prompt('I just finished reading Dune by Frank Herbert');
+    $t1 = microtime(true);
+    $response1 = $agent->prompt('I just finished reading Dune by Frank Herbert');
+    evalMetrics('turn 1', $t1, $response1);
 
     expect($confirmationTool->wasRequested())->toBeTrue('Agent should have called RequestConfirmation');
 
@@ -33,7 +46,9 @@ test('happy path: user logs a finished book', function () {
     $writingTool = new MediaWritingAgentTool;
     $agent = (new MediaTrackingAgent(writingTool: $writingTool))
         ->continue($conversationId, $user);
-    $agent->prompt('The user confirmed. Execute the plan.');
+    $t2 = microtime(true);
+    $response2 = $agent->prompt('The user confirmed. Execute the plan.');
+    evalMetrics('turn 2', $t2, $response2);
 
     // Assert the media record was created
     $media = Media::where('title', 'like', '%Dune%')->first();
