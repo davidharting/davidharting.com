@@ -8,25 +8,6 @@ use App\Models\MediaEventType;
 use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Contracts\ConversationStore;
-use Laravel\Ai\Responses\AgentResponse;
-
-function evalMetrics(string $label, float $startedAt, AgentResponse $response): void
-{
-    $usage = $response->usage;
-
-    Log::info('eval.turn', [
-        'turn' => $label,
-        'elapsed_ms' => (int) round((microtime(true) - $startedAt) * 1000),
-        'steps' => count($response->steps),
-        'tools' => collect($response->toolCalls)->pluck('name')->all(),
-        'tokens' => [
-            'input' => $usage->promptTokens,
-            'output' => $usage->completionTokens,
-            'cache_read' => $usage->cacheReadInputTokens,
-            'cache_write' => $usage->cacheWriteInputTokens,
-        ],
-    ]);
-}
 
 test('happy path: user logs a finished book', function () {
     /** @var TestCase $this */
@@ -41,13 +22,13 @@ test('happy path: user logs a finished book', function () {
         public ?int $id = null;
     };
 
+    $startedAt = microtime(true);
+
     // Turn 1: agent identifies the book, checks library, requests confirmation
     $confirmationTool = new RequestConfirmation;
     $agent = (new MediaTrackingAgent(confirmationTool: $confirmationTool))
         ->continue($conversationId, $user);
-    $t1 = microtime(true);
     $response1 = $agent->prompt('I just finished reading Dune by Frank Herbert');
-    evalMetrics('turn 1', $t1, $response1);
 
     expect($confirmationTool->wasRequested())->toBeTrue('Agent should have called RequestConfirmation');
 
@@ -55,9 +36,7 @@ test('happy path: user logs a finished book', function () {
     $writingTool = new MediaWritingAgentTool;
     $agent = (new MediaTrackingAgent(writingTool: $writingTool))
         ->continue($conversationId, $user);
-    $t2 = microtime(true);
     $response2 = $agent->prompt('The user confirmed. Execute the plan.');
-    evalMetrics('turn 2', $t2, $response2);
 
     // Assert the media record was created
     $media = Media::where('title', 'like', '%Dune%')->first();
@@ -67,5 +46,18 @@ test('happy path: user logs a finished book', function () {
     $this->assertDatabaseHas('media_events', [
         'media_id' => $media->id,
         'media_event_type_id' => MediaEventType::where('name', 'finished')->value('id'),
+    ]);
+
+    $u1 = $response1->usage;
+    $u2 = $response2->usage;
+    Log::info('eval', [
+        'eval' => 'happy path: user logs a finished book',
+        'elapsed_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+        'tokens' => [
+            'input' => $u1->promptTokens + $u2->promptTokens,
+            'output' => $u1->completionTokens + $u2->completionTokens,
+            'cache_read' => $u1->cacheReadInputTokens + $u2->cacheReadInputTokens,
+            'cache_write' => $u1->cacheWriteInputTokens + $u2->cacheWriteInputTokens,
+        ],
     ]);
 });
