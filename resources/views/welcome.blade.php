@@ -27,8 +27,10 @@
                         apps that enable people to work with data and infra.
                         More recently, I've focused on other developer tools,
                         e.g., CLIs and VS Code extensions. I work at
-                        <a href="https://render.com" class="link link-primary">Render</a>, focusing on how agents can
-                        best use our platform.
+                        <a href="https://render.com" class="link link-primary">
+                            Render
+                        </a>
+                        , focusing on how agents can best use our platform.
                     </p>
                     <p>
                         At work, I am happiest working closely with product and
