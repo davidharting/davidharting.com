@@ -24,7 +24,7 @@
                     <p>
                         I am an experienced, full-stack software engineer from
                         Westfield, Indiana. My focus in my career has been web
-                        apps that enable people to work with data and infrastructure.
+                        apps that enable people to work with data and infra.
                         More recently, I've focused on other developer tools, e.g., CLIs and VS Code extensions.
 
                         I work at [Render](https://render.com), focusing on how agents can best use our platform.
@@ -38,7 +38,7 @@
                         I believe in working hard and living slow. I share life
                         with my wife Katie, my son AJ, and our dog Andi. I am
                         fortunate enough to enjoy leisure time, which is filled
-                        with walks, wine, books, games, and more recently strength trainning.
+                        with walks, wine, books, games, and more recently strength training.
                     </p>
                     <p>
                         You can email me at
