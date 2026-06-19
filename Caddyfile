@@ -1,6 +1,10 @@
 {
 	admin off
 
+	log {
+		format {$CADDY_SERVER_LOGGER}
+	}
+
 	frankenphp {
 		worker "{$APP_PUBLIC_PATH}/frankenphp-worker.php" {$CADDY_SERVER_WORKER_COUNT}
 	}
@@ -39,4 +43,3 @@
 		}
 	}
 }
-
