@@ -27,9 +27,11 @@ projects:
                 value: https://davidharting.com
 
               - key: LOG_CHANNEL
-                value: stderr
+                value: stderr-json
               - key: LOG_LEVEL
                 value: info
+              - key: CADDY_SERVER_LOGGER
+                value: json
 
               - key: CACHE_DRIVER
                 value: database
