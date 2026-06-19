@@ -45,6 +45,7 @@ Operational notes:
 ### Way of working
 
 - Work on only what I ask you to do, and one thing at a time. Focus changes to just the task at hand. Ask about refactors before doing them.
+- Run `task format` before every commit. Pint (PHP) and Prettier (JS/CSS/YAML) are both enforced in CI.
 - Make atomic commits with detailed messages
 - Include tests as you go rather than at the end. Tests should be committed with the relevant application changes.
 
