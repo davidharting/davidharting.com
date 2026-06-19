@@ -30,6 +30,8 @@ projects:
                 value: stderr
               - key: LOG_LEVEL
                 value: info
+              - key: CADDY_SERVER_LOGGER
+                value: json
 
               - key: CACHE_DRIVER
                 value: database
