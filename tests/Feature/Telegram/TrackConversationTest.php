@@ -3,7 +3,9 @@
 use App\Ai\Agents\MediaTrackingAgent;
 use App\Ai\Tools\RequestConfirmation;
 use Illuminate\Foundation\Testing\TestCase;
+use Illuminate\Support\Sleep;
 use Laravel\Ai\Exceptions\InsufficientCreditsException;
+use Laravel\Ai\Exceptions\ProviderOverloadedException;
 use Laravel\Ai\Tools\Request;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\User\User;
@@ -234,6 +236,116 @@ test('/track persists the conversation to the database', function () {
         'role' => 'assistant',
         'content' => 'Which Dune did you mean?',
     ]);
+});
+
+test('/track falls back to a default confirmation message when agent text is empty', function () {
+    /** @var TestCase $this */
+    // The agent called RequestConfirmation but emitted no response text. We must
+    // not send Telegram an empty message (it rejects it with a 400).
+    MediaTrackingAgent::fake(['']);
+    PreTriggeredConfirmation::bind();
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track Add The Hobbit')
+        ->reply()
+        ->assertReplyText('Ready to log this. Confirm?')
+        ->assertReplyMessage([
+            'reply_markup' => [
+                'inline_keyboard' => [[
+                    ['text' => '✓ Confirm', 'callback_data' => 'confirm'],
+                    ['text' => 'End', 'callback_data' => 'end'],
+                ]],
+            ],
+        ])
+        ->assertActiveConversation();
+});
+
+test('/track falls back to a default plain message when agent text is empty', function () {
+    /** @var TestCase $this */
+    MediaTrackingAgent::fake(['']);
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track mark dune as finished')
+        ->reply()
+        ->assertReplyText("Sorry, I didn't catch that. Could you say it another way?")
+        ->assertActiveConversation();
+});
+
+test('/track recovers from an unexpected error and replies instead of throwing', function () {
+    /** @var TestCase $this */
+    // A non-AiException (e.g. a bug or a Telegram API rejection) must not bubble
+    // up and 500 the webhook — that is what causes Telegram's retry storm.
+    MediaTrackingAgent::fake(fn () => throw new RuntimeException('boom'));
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track Add The Hobbit')
+        ->reply()
+        ->assertReplyText('Sorry, something went wrong on my end. Please try again.')
+        ->assertNoConversation();
+});
+
+test('/track retries a transient provider failure and then succeeds', function () {
+    /** @var TestCase $this */
+    Sleep::fake();
+
+    $calls = 0;
+    MediaTrackingAgent::fake(function () use (&$calls) {
+        $calls++;
+
+        if ($calls === 1) {
+            throw new ProviderOverloadedException('overloaded');
+        }
+
+        return 'Which Dune did you mean?';
+    });
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track mark dune as finished')
+        ->reply()
+        ->assertReplyText('Which Dune did you mean?')
+        ->assertActiveConversation();
+
+    expect($calls)->toBe(2);
+});
+
+test('/track gives up after exhausting transient retries and reports the error', function () {
+    /** @var TestCase $this */
+    Sleep::fake();
+
+    $calls = 0;
+    MediaTrackingAgent::fake(function () use (&$calls) {
+        $calls++;
+        throw new ProviderOverloadedException('overloaded');
+    });
+
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(davidUser());
+    $bot->willStartConversation();
+
+    $bot->hearText('/track mark dune as finished')
+        ->reply()
+        ->assertReplyText('Error: overloaded')
+        ->assertNoConversation();
+
+    // Three attempts total: the initial try plus two retries.
+    expect($calls)->toBe(3);
 });
 
 test('unauthorized user is rejected from /track', function () {
