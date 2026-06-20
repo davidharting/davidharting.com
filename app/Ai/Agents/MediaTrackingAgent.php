@@ -2,10 +2,9 @@
 
 namespace App\Ai\Agents;
 
-use App\Ai\Tools\MediaWebSearchAgentTool;
-use App\Ai\Tools\MediaWritingAgentTool;
 use App\Ai\Tools\RequestConfirmation;
 use App\Ai\Tools\SearchMedia;
+use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
 use Laravel\Ai\Concerns\RemembersConversations;
@@ -13,18 +12,20 @@ use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Promptable;
 use Stringable;
 
-#[Provider('anthropic')]
+#[Provider(Lab::Anthropic)]
 #[Model('claude-sonnet-4-6')]
+#[MaxSteps(10)]
 class MediaTrackingAgent implements Agent, Conversational, HasTools
 {
     use Promptable, RemembersConversations;
 
     public function __construct(
         private ?RequestConfirmation $confirmationTool = null,
-        private ?MediaWritingAgentTool $writingTool = null,
+        private bool $canWrite = false,
     ) {}
 
     /**
@@ -58,9 +59,9 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         When David tells you about a piece of media he wants to track, identify the exact item with precision.
 
-        Use MediaWebSearchAgentTool when you need to identify a piece of media you don't already know — typically when David is adding something new, or when a library lookup turns up nothing or is ambiguous. You don't need it when David is referring to something already in his library and SearchMedia is enough to find it. Pass a condensed description of what David said (title, creator, year, type, plot hints — whatever he provided), NOT a search query string. The tool returns either "No matches found." or markdown bullets in the format: `- <title> (<year>) — <creator> — <media_type>` where media_type is one of: album, book, movie, tv show, video game.
+        Use MediaWebSearchAgent when you need to identify a piece of media you don't already know — typically when David is adding something new, or when a library lookup turns up nothing or is ambiguous. You don't need it when David is referring to something already in his library and SearchMedia is enough to find it. Pass a condensed description of what David said (title, creator, year, type, plot hints — whatever he provided), NOT a search query string. The tool returns either "No matches found." or markdown bullets in the format: `- <title> (<year>) — <creator> — <media_type>` where media_type is one of: album, book, movie, tv show, video game.
 
-        Flag ambiguity. If MediaWebSearchAgentTool returns more than one bullet — such as a remake, an adaptation, or multiple works with the same title — tell David and ask which one he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
+        Flag ambiguity. If MediaWebSearchAgent returns more than one bullet — such as a remake, an adaptation, or multiple works with the same title — tell David and ask which one he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
 
         Use the SearchMedia tool to look up an item in David's library by title (and media type if known).
 
@@ -71,7 +72,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
         - If found and current_status is "finished": David has already finished it.
         - If found and current_status is "abandoned": David previously abandoned it.
 
-        If MediaWebSearchAgentTool returns "No matches found.", let David know you couldn't identify the item from the description and ask for more detail.
+        If MediaWebSearchAgent returns "No matches found.", let David know you couldn't identify the item from the description and ask for more detail.
 
         Supported event types are: started, finished, abandoned, and comment. Comment events do not change the media status — they attach a free-text note to a media item (e.g. a thought, recommendation, or reflection).
 
@@ -110,9 +111,9 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         **Executing a Confirmed Plan**
 
-        MediaWritingAgentTool may or may not be available depending on the context:
+        MediaWritingAgent may or may not be available depending on the context:
         - If it is NOT available, you are in read-only planning mode. Identify media, check the library, and call RequestConfirmation — but do not attempt to write anything.
-        - If it IS available, the user has confirmed. When you receive "The user confirmed. Execute the plan.", call MediaWritingAgentTool with your plan text verbatim. Do not rephrase — pass the exact plan you stated in the confirmation message. After the tool returns, send its summary text to the user as your final message (prefix with ✓).
+        - If it IS available, the user has confirmed. When you receive "The user confirmed. Execute the plan.", call MediaWritingAgent with your plan text verbatim. Do not rephrase — pass the exact plan you stated in the confirmation message. After the tool returns, send its summary text to the user as your final message (prefix with ✓).
 
         PROMPT;
     }
@@ -125,13 +126,13 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
     public function tools(): iterable
     {
         $tools = [
-            new MediaWebSearchAgentTool,
+            new MediaWebSearchAgent,
             new SearchMedia,
             $this->confirmationTool ?? new RequestConfirmation,
         ];
 
-        if ($this->writingTool !== null) {
-            $tools[] = $this->writingTool;
+        if ($this->canWrite) {
+            $tools[] = new MediaWritingAgent;
         }
 
         return $tools;

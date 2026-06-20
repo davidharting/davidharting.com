@@ -1,53 +1,44 @@
 <?php
 
-namespace App\Ai\Tools;
+namespace App\Ai\Agents;
 
-use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Facades\Log;
+use Laravel\Ai\Attributes\Model;
+use Laravel\Ai\Attributes\Provider;
+use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\CanActAsTool;
+use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
+use Laravel\Ai\Enums\Lab;
+use Laravel\Ai\Promptable;
 use Laravel\Ai\Providers\Tools\WebSearch;
-use Laravel\Ai\Tools\Request;
 use Stringable;
 
-use function Laravel\Ai\agent;
-
-class MediaWebSearchAgentTool implements Tool
+#[Provider(Lab::Anthropic)]
+#[Model('claude-sonnet-4-6')]
+class MediaWebSearchAgent implements Agent, CanActAsTool, HasTools
 {
+    use Promptable;
+
+    /**
+     * Get the name the parent agent uses to invoke this sub-agent as a tool.
+     */
+    public function name(): string
+    {
+        return 'MediaWebSearchAgent';
+    }
+
+    /**
+     * Get the description of the tool's purpose.
+     */
     public function description(): Stringable|string
     {
         return 'Identify a piece of media via web search. Pass a condensed description of what the user told you about the media — NOT a search query string. Returns 0, 1, or multiple candidate matches as markdown bullets.';
     }
 
-    public function handle(Request $request): Stringable|string
-    {
-        $query = $request->string('query', '');
-
-        if ($query->isEmpty()) {
-            return json_encode(
-                ['error' => 'query must not be empty. Pass a condensed description of the target media.'],
-                JSON_THROW_ON_ERROR,
-            );
-        }
-
-        Log::info('MediaWebSearchAgentTool called', ['query' => $query]);
-
-        $response = agent(
-            instructions: $this->instructions(),
-            tools: [new WebSearch],
-        )->prompt((string) $query, provider: 'anthropic', model: 'claude-sonnet-4-6');
-
-        return $response->text;
-    }
-
-    public function schema(JsonSchema $schema): array
-    {
-        return [
-            'query' => $schema->string()->required()
-                ->description('Condensed description of the target media — NOT a search query string. Include whatever the user said: title, partial title, creator name, year, media type, plot hints, etc. Examples: "novel called Ghostwritten by David Mitchell", "the 2021 Dune movie", "that sci-fi book about sandworms".'),
-        ];
-    }
-
-    private function instructions(): string
+    /**
+     * Get the instructions that the agent should follow.
+     */
+    public function instructions(): Stringable|string
     {
         return <<<'PROMPT'
         You identify a piece of media based on a condensed description provided by an orchestrator agent.
@@ -84,5 +75,15 @@ class MediaWebSearchAgentTool implements Tool
 
         Return ONLY the bullets (or the "No matches found." sentence). No preamble, no prose, no trailing summary, no explanation. The orchestrator handles disambiguation with the user.
         PROMPT;
+    }
+
+    /**
+     * Get the tools available to the agent.
+     *
+     * @return Tool[]
+     */
+    public function tools(): iterable
+    {
+        return [new WebSearch];
     }
 }
