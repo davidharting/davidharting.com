@@ -30,8 +30,6 @@ projects:
                 value: stderr-json
               - key: LOG_LEVEL
                 value: info
-              - key: CADDY_SERVER_LOGGER
-                value: json
 
               - key: CACHE_DRIVER
                 value: database
@@ -89,7 +87,18 @@ projects:
             # stub Caddyfile and we lose the FrankenPHP worker config, body-size limit,
             # encode, and log redaction. $PORT is substituted inside the Caddyfile via
             # Caddy's native env syntax (:{$PORT:80}).
-            dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan octane:frankenphp --caddyfile=Caddyfile --host=0.0.0.0 --port=$PORT
+            #
+            # --log-level=WARN is REQUIRED for structured logs. Without it,
+            # octane:frankenphp intercepts the FrankenPHP subprocess's stderr and
+            # re-renders every line through Laravel's pretty console components
+            # (StartFrankenPhpCommand::writeServerOutput). That destroys our JSON: a
+            # Monolog line uses the "message" key, but Octane reads "msg", so it falls
+            # back to the literal "unknown error" and prints "  ERROR  unknown error".
+            # With --log-level set, Octane passes the subprocess stderr through raw, so
+            # the stderr-json channel's JSON reaches Render intact. WARN matches Octane's
+            # own production default for CADDY_SERVER_LOG_LEVEL, so Caddy verbosity is
+            # unchanged; only the formatting behavior changes.
+            dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan octane:frankenphp --caddyfile=Caddyfile --host=0.0.0.0 --port=$PORT --log-level=WARN
             # Migrations run once per deploy before the new version takes traffic. If
             # any command fails, Render cancels the deploy with zero downtime.
             # Telegram webhook registration is idempotent (setWebhook / setMyCommands
