@@ -88,17 +88,24 @@ projects:
             # encode, and log redaction. $PORT is substituted inside the Caddyfile via
             # Caddy's native env syntax (:{$PORT:80}).
             #
-            # --log-level=WARN is REQUIRED for structured logs. Without it,
-            # octane:frankenphp intercepts the FrankenPHP subprocess's stderr and
-            # re-renders every line through Laravel's pretty console components
-            # (StartFrankenPhpCommand::writeServerOutput). That destroys our JSON: a
-            # Monolog line uses the "message" key, but Octane reads "msg", so it falls
-            # back to the literal "unknown error" and prints "  ERROR  unknown error".
-            # With --log-level set, Octane passes the subprocess stderr through raw, so
-            # the stderr-json channel's JSON reaches Render intact. WARN matches Octane's
-            # own production default for CADDY_SERVER_LOG_LEVEL, so Caddy verbosity is
-            # unchanged; only the formatting behavior changes.
-            dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan octane:frankenphp --caddyfile=Caddyfile --host=0.0.0.0 --port=$PORT --log-level=WARN
+            # --log-level is REQUIRED for structured logs, and the option does two
+            # separate jobs in StartFrankenPhpCommand:
+            #
+            #   1. Output handling (line ~308): if --log-level is set to ANY value,
+            #      Octane passes the FrankenPHP subprocess's stderr through raw. If it
+            #      is omitted, Octane re-renders every line through Laravel's pretty
+            #      console components, which destroys our JSON -- a Monolog line uses
+            #      the "message" key but Octane reads "msg", so it falls back to the
+            #      literal "unknown error" and prints "  ERROR  unknown error". So it
+            #      is the PRESENCE of the flag, not its value, that fixes the format.
+            #
+            #   2. Verbosity (line ~102): the value becomes CADDY_SERVER_LOG_LEVEL.
+            #      INFO makes Caddy emit access logs (full URI with the Caddyfile's
+            #      authorization redaction, headers, upstream timing). These are
+            #      additive to Render's own edge access logs but carry more detail.
+            #
+            # INFO therefore gives us JSON-formatted Caddy access logs.
+            dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan octane:frankenphp --caddyfile=Caddyfile --host=0.0.0.0 --port=$PORT --log-level=INFO
             # Migrations run once per deploy before the new version takes traffic. If
             # any command fails, Render cancels the deploy with zero downtime.
             # Telegram webhook registration is idempotent (setWebhook / setMyCommands
