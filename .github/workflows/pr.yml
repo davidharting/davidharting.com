@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+    types: [opened, synchronize, reopened, labeled]
   push:
     branches:
       - main
@@ -58,6 +59,14 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
         run: php artisan test --compact --do-not-cache-result
+
+      - name: Run evals
+        if: contains(github.event.pull_request.labels.*.name, 'ci:eval')
+        env:
+          DB_USERNAME: root
+          DB_PASSWORD: password
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: php artisan test tests/Evals/ --compact
 
     services:
       postgres:

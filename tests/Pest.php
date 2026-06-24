@@ -19,6 +19,11 @@ uses(
     RefreshDatabase::class,
 )->in('Feature');
 
+uses(
+    TestCase::class,
+    RefreshDatabase::class,
+)->in('Evals');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations
