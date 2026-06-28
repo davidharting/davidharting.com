@@ -92,6 +92,7 @@ projects:
             plan: starter
             previews:
               plan: starter
+            initialDeployHook: bash /app/scripts/render-with-secrets.sh bash /app/scripts/seed.sh
             region: ohio
             dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
