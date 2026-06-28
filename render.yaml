@@ -2,6 +2,13 @@ previews:
   generation: automatic
   expireAfterDays: 2
 
+# Workspace-level group (outside the project) so its secret file
+# (staging.secrets.env) is available to ephemeral preview services,
+# which are not part of the prod environment.
+envVarGroups:
+  - name: davidhartingdotcom-preview-env-secrets
+    envVars: []
+
 projects:
   - name: davidhartingdotcom
     environments:
@@ -130,6 +137,7 @@ projects:
             preDeployCommand: bash /app/scripts/render-with-secrets.sh bash /app/scripts/predeploy.sh
             envVars:
               - fromGroup: davidhartingdotcom-shared
+              - fromGroup: davidhartingdotcom-preview-env-secrets
               - key: DATABASE_URL
                 fromDatabase:
                   name: davidhartingdotcom-db
@@ -150,6 +158,7 @@ projects:
             dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan queue:work -v --tries=3 --backoff=30
             envVars:
               - fromGroup: davidhartingdotcom-shared
+              - fromGroup: davidhartingdotcom-preview-env-secrets
               - key: DATABASE_URL
                 fromDatabase:
                   name: davidhartingdotcom-db
@@ -169,6 +178,7 @@ projects:
             dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan backup:run --only-db
             envVars:
               - fromGroup: davidhartingdotcom-shared
+              - fromGroup: davidhartingdotcom-preview-env-secrets
               - key: DATABASE_URL
                 fromDatabase:
                   name: davidhartingdotcom-db
@@ -188,6 +198,7 @@ projects:
             dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan backup:clean
             envVars:
               - fromGroup: davidhartingdotcom-shared
+              - fromGroup: davidhartingdotcom-preview-env-secrets
               - key: DATABASE_URL
                 fromDatabase:
                   name: davidhartingdotcom-db
