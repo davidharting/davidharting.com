@@ -77,8 +77,7 @@ projects:
 
               # Secrets are mounted as secret files and linked to /app/.env by
               # scripts/render-with-secrets.sh at runtime. Production loads
-              # secrets.env; preview environments load staging.env (different
-              # R2 credentials/buckets and Telegram bot token).
+              # secrets.env; preview environments load staging.secrets.env.
               - key: RENDER_SECRETS_ENV_FILE
                 value: /etc/secrets/secrets.env
                 previewValue: /etc/secrets/staging.secrets.env
