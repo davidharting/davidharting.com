@@ -1,3 +1,7 @@
+previews:
+  generation: automatic
+  expireAfterDays: 2
+
 projects:
   - name: davidhartingdotcom
     environments:
@@ -7,6 +11,7 @@ projects:
             databaseName: laravel
             user: laravel
             plan: basic-256mb
+            previewPlan: basic-256mb
             postgresMajorVersion: "17"
             region: ohio
             diskSizeGB: 1
@@ -53,8 +58,10 @@ projects:
                 value: r2-public
               - key: R2_PUBLIC_BUCKET
                 value: davidhartingdotcom-public
+                previewValue: FIXME-preview-r2-public-bucket
               - key: R2_PUBLIC_URL
                 value: https://cdn.davidharting.com
+                previewValue: FIXME-preview-r2-public-url
 
               - key: MAIL_MAILER
                 value: mailersend
@@ -76,6 +83,8 @@ projects:
             type: web
             runtime: docker
             plan: starter
+            previews:
+              plan: starter
             region: ohio
             dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
@@ -122,6 +131,8 @@ projects:
             type: worker
             runtime: docker
             plan: starter
+            previews:
+              plan: starter
             region: ohio
             dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
@@ -140,6 +151,8 @@ projects:
             type: cron
             runtime: docker
             plan: starter
+            previews:
+              generation: off
             region: ohio
             dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
@@ -157,6 +170,8 @@ projects:
             type: cron
             runtime: docker
             plan: starter
+            previews:
+              generation: off
             region: ohio
             dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
