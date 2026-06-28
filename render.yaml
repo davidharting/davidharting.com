@@ -81,7 +81,7 @@ projects:
               # R2 credentials/buckets and Telegram bot token).
               - key: RENDER_SECRETS_ENV_FILE
                 value: /etc/secrets/secrets.env
-                previewValue: /etc/secrets/staging.env
+                previewValue: /etc/secrets/staging.secrets.env
 
         services:
           - name: davidhartingdotcom-web
