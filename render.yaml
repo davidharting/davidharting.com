@@ -58,10 +58,10 @@ projects:
                 value: r2-public
               - key: R2_PUBLIC_BUCKET
                 value: davidhartingdotcom-public
-                previewValue: FIXME-preview-r2-public-bucket
+                previewValue: staging-davidhartingdotcom-public
               - key: R2_PUBLIC_URL
                 value: https://cdn.davidharting.com
-                previewValue: FIXME-preview-r2-public-url
+                previewValue: https://staging.cdn.davidharting.com
 
               - key: MAIL_MAILER
                 value: mailersend
@@ -75,8 +75,13 @@ projects:
               - key: OCTANE_HTTPS
                 value: "false"
 
-              # Secrets are mounted as /etc/secrets/secrets.env and linked to
-              # /app/.env by scripts/render-with-secrets.sh at runtime.
+              # Secrets are mounted as secret files and linked to /app/.env by
+              # scripts/render-with-secrets.sh at runtime. Production loads
+              # secrets.env; preview environments load staging.env (different
+              # R2 credentials/buckets and Telegram bot token).
+              - key: RENDER_SECRETS_ENV_FILE
+                value: /etc/secrets/secrets.env
+                previewValue: /etc/secrets/staging.env
 
         services:
           - name: davidhartingdotcom-web
