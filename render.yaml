@@ -82,7 +82,7 @@ projects:
               - key: RENDER_SECRETS_ENV_FILE
                 value: /etc/secrets/secrets.env
                 previewValue: /etc/secrets/staging.secrets.env
-              - key: DB_SEED
+              - key: RUN_DEV_SEEDER
                 value: "false"
                 previewValue: "true"
 
