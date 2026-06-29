@@ -38,6 +38,12 @@
     </head>
 
     <body class="font-serif antialiased">
+        @if (env("IS_PULL_REQUEST"))
+            <div role="alert" class="alert alert-warning rounded-none">
+                <span>PR Preview &mdash; {{ config("app.url") }}</span>
+            </div>
+        @endif
+
         <div class="container mx-auto px-4">
             <main class="mt-8">
                 <div class="flex justify-between w-full mb-8">

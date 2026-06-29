@@ -18,7 +18,10 @@ use SergiX44\Nutgram\Nutgram;
 */
 
 $bot->onCommand('example', function (Nutgram $bot) {
-    $bot->sendMessage('Hello, world!');
+    $url = config('app.url');
+    $env = config('app.env');
+    $isPr = env('IS_PULL_REQUEST', false) ? 'yes' : 'no';
+    $bot->sendMessage("Hello! APP_URL={$url} APP_ENV={$env} IS_PULL_REQUEST={$isPr}");
 })->description('An example command')->middleware(OnlyDavidMiddleware::class);
 
 $bot->registerCommand(WhoamiCommand::class);
