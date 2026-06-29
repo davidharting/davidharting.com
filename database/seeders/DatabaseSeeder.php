@@ -25,8 +25,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        if (! App::environment('local')) {
-            throw new Exception('This seeder can only be run in the local environment');
+        if (! App::environment('local') && ! env('RUN_DEV_SEEDER')) {
+            throw new Exception('This seeder can only be run in the local environment or with RUN_DEV_SEEDER=true');
         }
         User::factory()->create([
             'name' => 'Adam Min',
