@@ -13,6 +13,8 @@
 .env.backup
 .env.production
 .env.task
+staging.secrets.env
+staging-age-key.txt
 mise.toml
 .phpactor.json
 .phpunit.result.cache
