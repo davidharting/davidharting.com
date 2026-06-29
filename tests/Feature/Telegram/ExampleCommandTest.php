@@ -3,8 +3,10 @@
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\User\User;
 use SergiX44\Nutgram\Testing\FakeNutgram;
+use Tests\TestCase;
 
-test('example command replies with hello world', function () {
+test('example command replies with environment info', function () {
+    /** @var TestCase $this */
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);
     $bot->setCommonUser(User::make(
@@ -13,9 +15,12 @@ test('example command replies with hello world', function () {
         first_name: 'David',
     ));
 
+    $url = config('app.url');
+    $env = config('app.env');
+
     $bot->hearText('/example')
         ->reply()
-        ->assertReplyText('Hello, world!');
+        ->assertReplyText("Hello! APP_URL={$url} APP_ENV={$env} IS_PULL_REQUEST=no");
 });
 
 test('unauthorized user is rejected from example command', function () {
