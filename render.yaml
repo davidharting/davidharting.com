@@ -2,17 +2,6 @@ previews:
   generation: automatic
   expireAfterDays: 2
 
-# Workspace-level group (outside the project) so its secret file
-# (staging.secrets.env) is available to ephemeral preview services,
-# which are not part of the prod environment.
-envVarGroups:
-  - name: davidhartingdotcom-preview-env-secrets
-    envVars:
-      # Value set in Render dashboard; sync: false keeps it out of git.
-      # This is a plain env var so it survives the PR env group copy.
-      - key: AGE_SECRET_KEY
-        sync: false
-
 projects:
   - name: davidhartingdotcom
     environments:
@@ -86,12 +75,15 @@ projects:
               - key: OCTANE_HTTPS
                 value: "false"
 
-              # Production secrets are mounted as a Render secret file and linked
-              # to /app/.env by scripts/render-with-secrets.sh at runtime.
-              # Preview environments decrypt staging.secrets.env.age using age
-              # with the AGE_SECRET_KEY env var instead.
+              # Secrets are mounted as a Render secret file and linked to /app/.env
+              # by scripts/render-with-secrets.sh at runtime. Production uses
+              # secrets.env; preview environments use staging.secrets.env, served
+              # from a manually-managed dashboard env group (not Blueprint-managed)
+              # so it is shared across all preview services rather than being
+              # copied per-PR (which would strip the secret file).
               - key: RENDER_SECRETS_ENV_FILE
                 value: /etc/secrets/secrets.env
+                previewValue: /etc/secrets/staging.secrets.env
               - key: RUN_DEV_SEEDER
                 value: "false"
                 previewValue: "true"
