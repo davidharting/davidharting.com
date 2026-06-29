@@ -7,7 +7,11 @@ previews:
 # which are not part of the prod environment.
 envVarGroups:
   - name: davidhartingdotcom-preview-env-secrets
-    envVars: []
+    envVars:
+      # Value set in Render dashboard; sync: false keeps it out of git.
+      # This is a plain env var so it survives the PR env group copy.
+      - key: AGE_SECRET_KEY
+        sync: false
 
 projects:
   - name: davidhartingdotcom
@@ -82,12 +86,12 @@ projects:
               - key: OCTANE_HTTPS
                 value: "false"
 
-              # Secrets are mounted as secret files and linked to /app/.env by
-              # scripts/render-with-secrets.sh at runtime. Production loads
-              # secrets.env; preview environments load staging.secrets.env.
+              # Production secrets are mounted as a Render secret file and linked
+              # to /app/.env by scripts/render-with-secrets.sh at runtime.
+              # Preview environments decrypt staging.secrets.env.age using age
+              # with the AGE_SECRET_KEY env var instead.
               - key: RENDER_SECRETS_ENV_FILE
                 value: /etc/secrets/secrets.env
-                previewValue: /etc/secrets/staging.secrets.env
               - key: RUN_DEV_SEEDER
                 value: "false"
                 previewValue: "true"
