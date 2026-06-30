@@ -11,6 +11,7 @@
         "php": "^8.1",
         "filament/filament": "^5.0",
         "filament/infolists": "^5.0",
+        "fakerphp/faker": "^1.24.1",
         "guzzlehttp/guzzle": "^7.9.2",
         "laravel/ai": "^0.4.2",
         "laravel/breeze": "^2.3.5",
@@ -29,7 +30,6 @@
         "spatie/laravel-markdown-response": "^1.1"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.24.1",
         "laravel/pint": "^1.29",
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6.12",
