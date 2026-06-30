@@ -32,6 +32,16 @@ Operational notes:
 - The web service `preDeployCommand` runs migrations and Telegram webhook registration before new web instances receive traffic.
 - Historical note: this previously ran on a Digital Ocean droplet with Docker Compose. See `docs/projects/render-migration.md` for migration history.
 
+### PR preview environments
+
+`render.yaml` has `previews.generation: automatic`, so every PR gets its own preview environment (web + worker; the cron jobs are excluded via `previews.generation: off`). The web service's preview URL is always:
+
+```
+https://davidhartingdotcom-web-pr-<PR_NUMBER>.onrender.com
+```
+
+e.g. PR #155 -> `https://davidhartingdotcom-web-pr-155.onrender.com`. Preview environments set `IS_PULL_REQUEST=true` and `RUN_DEV_SEEDER=true`, and use the staging secrets/env group rather than production.
+
 ## Commands
 
 - Use `ripgrep` to search files and `fd` to find files
