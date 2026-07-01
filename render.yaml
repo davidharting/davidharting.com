@@ -28,8 +28,11 @@ projects:
               - key: APP_DEBUG
                 value: "false"
               # Canonical production URL; keep this aligned with the custom domain below.
+              # Render auto-injects RENDER_EXTERNAL_URL per-service, so PR previews
+              # get their actual onrender.com URL rather than the production domain.
               - key: APP_URL
                 value: https://davidharting.com
+                previewValue: ${RENDER_EXTERNAL_URL}
 
               - key: LOG_CHANNEL
                 value: stderr-json
