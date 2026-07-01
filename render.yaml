@@ -28,8 +28,7 @@ projects:
               - key: APP_DEBUG
                 value: "false"
               # Canonical production URL; keep this aligned with the custom domain below.
-              # For PR previews, AppServiceProvider overrides this at boot time using
-              # RENDER_EXTERNAL_URL (Render blueprint yaml does not support interpolation).
+              # For PR previews, config/app.php prefers RENDER_EXTERNAL_URL over this value.
               - key: APP_URL
                 value: https://davidharting.com
 
