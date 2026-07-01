@@ -16,8 +16,8 @@ test('whoareyou command replies with environment info', function () {
     ));
 
     $expected = implode("\n", [
-        'APP_URL: '.config('app.url'),
-        'APP_ENV: '.config('app.env'),
+        'APP_URL: http://davidharting-dot-com.test',
+        'APP_ENV: testing',
         'IS_PULL_REQUEST: no',
         'GIT_COMMIT: abcdef1234',
         'GIT_BRANCH: my-feature-branch',
