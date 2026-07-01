@@ -60,7 +60,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => (env('IS_PULL_REQUEST') ? env('RENDER_EXTERNAL_URL') : null) ?? env('APP_URL', 'http://localhost'),
 
     'asset_url' => env('ASSET_URL'),
 

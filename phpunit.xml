@@ -33,5 +33,9 @@
         <env name="APP_URL" value="http://davidharting-dot-com.test" />
         <env name="TELEGRAM_DAVID_ID" value="123456789" />
         <env name="LOG_CHANNEL" value="null" />
+        <env name="IS_PULL_REQUEST" value="false" />
+        <env name="RENDER_GIT_COMMIT" value="abcdef1234567890abcd" />
+        <env name="RENDER_GIT_BRANCH" value="my-feature-branch" />
+        <env name="RENDER_SERVICE_NAME" value="davidhartingdotcom-web-pr-999" />
     </php>
 </phpunit>
