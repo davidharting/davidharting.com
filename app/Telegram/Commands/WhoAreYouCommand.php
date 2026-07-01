@@ -14,7 +14,7 @@ class WhoAreYouCommand extends Command
     public function handle(Nutgram $bot): void
     {
         $lines = [
-            'APP_URL: '.config('app.url'),
+            'APP_URL: '.(env('RENDER_EXTERNAL_URL') ?? config('app.url')),
             'APP_ENV: '.config('app.env'),
             'IS_PULL_REQUEST: '.(env('IS_PULL_REQUEST') ? 'yes' : 'no'),
             'GIT_COMMIT: '.(env('RENDER_GIT_COMMIT') ? substr(env('RENDER_GIT_COMMIT'), 0, 10) : 'unknown'),
