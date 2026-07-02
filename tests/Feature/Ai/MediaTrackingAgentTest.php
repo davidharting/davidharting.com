@@ -1,13 +1,15 @@
 <?php
 
 use App\Ai\Agents\MediaTrackingAgent;
-use App\Ai\Tools\MediaWebSearchAgentTool;
-use App\Ai\Tools\MediaWritingAgentTool;
+use App\Ai\Agents\MediaWebSearchAgent;
+use App\Ai\Agents\MediaWritingAgent;
 use App\Ai\Tools\RequestConfirmation;
 use App\Ai\Tools\SearchMedia;
 use Illuminate\Foundation\Testing\TestCase;
+use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Providers\Tools\WebSearch;
 
 test("uses Anthropic's Sonnet 4.6", function () {
@@ -16,11 +18,20 @@ test("uses Anthropic's Sonnet 4.6", function () {
 
     $providerAttributes = $reflection->getAttributes(Provider::class);
     $this->assertNotEmpty($providerAttributes);
-    $this->assertSame('anthropic', $providerAttributes[0]->newInstance()->value);
+    $this->assertSame(Lab::Anthropic, $providerAttributes[0]->newInstance()->value);
 
     $modelAttributes = $reflection->getAttributes(Model::class);
     $this->assertNotEmpty($modelAttributes);
     $this->assertSame('claude-sonnet-4-6', $modelAttributes[0]->newInstance()->value);
+});
+
+test('caps the tool-calling loop with a MaxSteps guardrail', function () {
+    /** @var TestCase $this */
+    $reflection = new ReflectionClass(MediaTrackingAgent::class);
+
+    $maxStepsAttributes = $reflection->getAttributes(MaxSteps::class);
+    $this->assertNotEmpty($maxStepsAttributes);
+    $this->assertGreaterThan(0, $maxStepsAttributes[0]->newInstance()->value);
 });
 
 test('instructions mention media tracking and library status', function () {
@@ -32,20 +43,28 @@ test('instructions mention media tracking and library status', function () {
     $this->assertStringContainsStringIgnoringCase('status', $instructions);
 });
 
+test('instructions include the current date', function () {
+    /** @var TestCase $this */
+    $agent = MediaTrackingAgent::make();
+    $instructions = (string) $agent->instructions();
+
+    $this->assertStringContainsString(now()->toDateString(), $instructions);
+});
+
 describe('tools()', function () {
-    test('includes MediaWebSearchAgentTool, SearchMedia, and RequestConfirmation by default', function () {
+    test('includes MediaWebSearchAgent, SearchMedia, and RequestConfirmation by default', function () {
         /** @var TestCase $this */
         $agent = MediaTrackingAgent::make();
         $tools = collect($agent->tools());
 
-        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof MediaWebSearchAgentTool));
+        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof MediaWebSearchAgent));
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof SearchMedia));
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RequestConfirmation));
     });
 
-    // At time of writing, PrismPHP's Anthropic provider returns 400s when an agent mixes custom tools with provider
-    // tools (like WebSearch) across multi-turn conversations. WebSearch is wrapped in
-    // MediaWebSearchAgentTool (a sub-agent) so the orchestrator only owns custom tools.
+    // At time of writing, the Anthropic provider returns 400s when an agent mixes custom tools with
+    // provider tools (like WebSearch) across multi-turn conversations. WebSearch lives inside the
+    // MediaWebSearchAgent sub-agent so the orchestrator only owns custom tools.
     test('does not expose the WebSearch provider tool directly', function () {
         /** @var TestCase $this */
         $agent = MediaTrackingAgent::make();
@@ -71,20 +90,19 @@ describe('tools()', function () {
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RequestConfirmation));
     });
 
-    test('does not include MediaWritingAgentTool by default', function () {
+    test('does not include MediaWritingAgent by default', function () {
         /** @var TestCase $this */
         $agent = new MediaTrackingAgent;
 
         $tools = collect($agent->tools());
-        $this->assertFalse($tools->contains(fn ($tool) => $tool instanceof MediaWritingAgentTool));
+        $this->assertFalse($tools->contains(fn ($tool) => $tool instanceof MediaWritingAgent));
     });
 
-    test('includes injected MediaWritingAgentTool when provided', function () {
+    test('includes MediaWritingAgent when canWrite is true', function () {
         /** @var TestCase $this */
-        $writingTool = new MediaWritingAgentTool;
-        $agent = new MediaTrackingAgent(writingTool: $writingTool);
+        $agent = new MediaTrackingAgent(canWrite: true);
 
         $tools = collect($agent->tools());
-        $this->assertTrue($tools->contains($writingTool));
+        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof MediaWritingAgent));
     });
 });
