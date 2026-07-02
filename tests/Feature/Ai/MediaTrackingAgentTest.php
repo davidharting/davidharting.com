@@ -43,6 +43,14 @@ test('instructions mention media tracking and library status', function () {
     $this->assertStringContainsStringIgnoringCase('status', $instructions);
 });
 
+test('instructions include the current date', function () {
+    /** @var TestCase $this */
+    $agent = MediaTrackingAgent::make();
+    $instructions = (string) $agent->instructions();
+
+    $this->assertStringContainsString(now()->toDateString(), $instructions);
+});
+
 describe('tools()', function () {
     test('includes MediaWebSearchAgent, SearchMedia, and RequestConfirmation by default', function () {
         /** @var TestCase $this */

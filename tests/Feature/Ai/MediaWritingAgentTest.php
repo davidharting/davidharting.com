@@ -39,7 +39,7 @@ test('instructions include the current date for event logging', function () {
     $this->assertStringContainsString(now()->toDateString(), $instructions);
 });
 
-test('owns the database write tools', function () {
+test('has the database write tools', function () {
     /** @var TestCase $this */
     $tools = collect((new MediaWritingAgent)->tools());
 

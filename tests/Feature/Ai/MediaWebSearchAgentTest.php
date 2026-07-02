@@ -38,7 +38,7 @@ test('instructions describe the media identification contract', function () {
     $this->assertStringContainsStringIgnoringCase('media_type', $instructions);
 });
 
-test('owns the WebSearch provider tool', function () {
+test('has the WebSearch provider tool', function () {
     /** @var TestCase $this */
     $tools = collect((new MediaWebSearchAgent)->tools());
 

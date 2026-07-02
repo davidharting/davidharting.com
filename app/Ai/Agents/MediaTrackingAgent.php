@@ -33,8 +33,12 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
      */
     public function instructions(): Stringable|string
     {
-        return <<<'PROMPT'
+        $today = now()->toDateString();
+
+        return <<<PROMPT
         You are a media tracking assistant for David's personal media backlog.
+
+        Today's date is {$today}.
 
         Your responses will be sent as Telegram messages using HTML parse mode. Keep replies short and conversational.
 
