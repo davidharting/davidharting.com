@@ -1,3 +1,7 @@
+previews:
+  generation: automatic
+  expireAfterDays: 2
+
 projects:
   - name: davidhartingdotcom
     environments:
@@ -7,6 +11,7 @@ projects:
             databaseName: laravel
             user: laravel
             plan: basic-256mb
+            previewPlan: basic-256mb
             postgresMajorVersion: "17"
             region: ohio
             diskSizeGB: 1
@@ -23,6 +28,7 @@ projects:
               - key: APP_DEBUG
                 value: "false"
               # Canonical production URL; keep this aligned with the custom domain below.
+              # For PR previews, config/app.php prefers RENDER_EXTERNAL_URL over this value.
               - key: APP_URL
                 value: https://davidharting.com
 
@@ -53,8 +59,10 @@ projects:
                 value: r2-public
               - key: R2_PUBLIC_BUCKET
                 value: davidhartingdotcom-public
+                previewValue: staging-davidhartingdotcom-public
               - key: R2_PUBLIC_URL
                 value: https://cdn.davidharting.com
+                previewValue: https://staging.cdn.davidharting.com
 
               - key: MAIL_MAILER
                 value: mailersend
@@ -68,21 +76,33 @@ projects:
               - key: OCTANE_HTTPS
                 value: "false"
 
-              # Secrets are mounted as /etc/secrets/secrets.env and linked to
-              # /app/.env by scripts/render-with-secrets.sh at runtime.
+              # Secrets are mounted as a Render secret file and linked to /app/.env
+              # by scripts/render-with-secrets.sh at runtime. Production uses
+              # secrets.env; preview environments use staging.secrets.env, served
+              # from a manually-managed dashboard env group (not Blueprint-managed)
+              # so it is shared across all preview services rather than being
+              # copied per-PR (which would strip the secret file).
+              - key: RENDER_SECRETS_ENV_FILE
+                value: /etc/secrets/secrets.env
+                previewValue: /etc/secrets/staging.secrets.env
+              - key: RUN_DEV_SEEDER
+                value: "false"
+                previewValue: "true"
 
         services:
           - name: davidhartingdotcom-web
             type: web
             runtime: docker
             plan: starter
+            previews:
+              plan: starter
+            initialDeployHook: bash /app/scripts/render-with-secrets.sh bash /app/scripts/seed.sh
             region: ohio
             dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
             healthCheckPath: /healthz
             domains:
               - davidharting.com
-            renderSubdomainPolicy: disabled
             # --caddyfile=Caddyfile is kept because without it Octane generates its own
             # stub Caddyfile and we lose the FrankenPHP worker config, body-size limit,
             # encode, and log redaction. $PORT is substituted inside the Caddyfile via
@@ -113,6 +133,7 @@ projects:
             preDeployCommand: bash /app/scripts/render-with-secrets.sh bash /app/scripts/predeploy.sh
             envVars:
               - fromGroup: davidhartingdotcom-shared
+              - fromGroup: davidhartingdotcom-preview-env-secrets
               - key: DATABASE_URL
                 fromDatabase:
                   name: davidhartingdotcom-db
@@ -122,6 +143,8 @@ projects:
             type: worker
             runtime: docker
             plan: starter
+            previews:
+              plan: starter
             region: ohio
             dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
@@ -131,6 +154,7 @@ projects:
             dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan queue:work -v --tries=3 --backoff=30
             envVars:
               - fromGroup: davidhartingdotcom-shared
+              - fromGroup: davidhartingdotcom-preview-env-secrets
               - key: DATABASE_URL
                 fromDatabase:
                   name: davidhartingdotcom-db
@@ -140,6 +164,8 @@ projects:
             type: cron
             runtime: docker
             plan: starter
+            previews:
+              generation: off
             region: ohio
             dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
@@ -148,6 +174,7 @@ projects:
             dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan backup:run --only-db
             envVars:
               - fromGroup: davidhartingdotcom-shared
+              - fromGroup: davidhartingdotcom-preview-env-secrets
               - key: DATABASE_URL
                 fromDatabase:
                   name: davidhartingdotcom-db
@@ -157,6 +184,8 @@ projects:
             type: cron
             runtime: docker
             plan: starter
+            previews:
+              generation: off
             region: ohio
             dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
@@ -165,6 +194,7 @@ projects:
             dockerCommand: bash /app/scripts/render-with-secrets.sh php artisan backup:clean
             envVars:
               - fromGroup: davidhartingdotcom-shared
+              - fromGroup: davidhartingdotcom-preview-env-secrets
               - key: DATABASE_URL
                 fromDatabase:
                   name: davidhartingdotcom-db
