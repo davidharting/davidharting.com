@@ -15,17 +15,17 @@
         "guzzlehttp/guzzle": "^7.9.2",
         "laravel/ai": "^0.8",
         "laravel/breeze": "^2.3.5",
-        "laravel/framework": "^12.3",
+        "laravel/framework": "^13.14",
         "laravel/nightwatch": "^1.19",
         "laravel/octane": "^2.8.1",
         "laravel/sanctum": "^4.0.8",
-        "laravel/tinker": "^2.10.1",
+        "laravel/tinker": "^3.0",
         "league/csv": "^9.22.0",
         "league/flysystem-aws-s3-v3": "^3.0",
         "league/html-to-markdown": "^5.1",
-        "mailersend/laravel-driver": "^2.7",
+        "mailersend/laravel-driver": "^3.2",
         "nutgram/laravel": "^1.6",
-        "spatie/laravel-backup": "^9.3",
+        "spatie/laravel-backup": "^10.3",
         "spatie/laravel-feed": "^4.4",
         "spatie/laravel-markdown-response": "^1.1"
     },
@@ -35,7 +35,7 @@
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6.12",
         "nunomaduro/collision": "^8.6.1",
-        "pestphp/pest": "^3.7.4"
+        "pestphp/pest": "^4.0"
     },
     "autoload": {
         "psr-4": {
