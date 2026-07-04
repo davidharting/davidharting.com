@@ -12,8 +12,6 @@ use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays;
 use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumStorageInMegabytes;
 use Spatie\DbDumper\Compressors\GzipCompressor;
 
-$privateDisk = env('FILESYSTEM_DISK_PRIVATE', 'local-private');
-
 return [
 
     'backup' => [
@@ -163,7 +161,7 @@ return [
              * The disk names on which the backups will be stored.
              */
             'disks' => [
-                $privateDisk,
+                'private',
             ],
         ],
 
@@ -267,7 +265,7 @@ return [
     'monitor_backups' => [
         [
             'name' => 'laravel-backup',
-            'disks' => [$privateDisk],
+            'disks' => ['private'],
             'health_checks' => [
                 MaximumAgeInDays::class => 1,
                 MaximumStorageInMegabytes::class => 5000,
