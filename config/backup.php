@@ -12,8 +12,6 @@ use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays;
 use Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumStorageInMegabytes;
 use Spatie\DbDumper\Compressors\GzipCompressor;
 
-$privateDisk = env('FILESYSTEM_DISK_PRIVATE', 'local-private');
-
 return [
 
     'backup' => [
@@ -163,7 +161,7 @@ return [
              * The disk names on which the backups will be stored.
              */
             'disks' => [
-                $privateDisk,
+                'private',
             ],
         ],
 
@@ -180,12 +178,12 @@ return [
 
         /*
          * The encryption algorithm to be used for archive encryption.
-         * You can set it to `null` or `false` to disable encryption.
+         * You can set it to `'none'` to disable encryption.
          *
          * When set to 'default', we'll use ZipArchive::EM_AES_256 if it is
          * available on your system.
          */
-        'encryption' => false,
+        'encryption' => 'none',
 
         /*
          * The number of attempts, in case the backup command encounters an exception
@@ -267,7 +265,7 @@ return [
     'monitor_backups' => [
         [
             'name' => 'laravel-backup',
-            'disks' => [$privateDisk],
+            'disks' => ['private'],
             'health_checks' => [
                 MaximumAgeInDays::class => 1,
                 MaximumStorageInMegabytes::class => 5000,
