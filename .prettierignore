@@ -1,5 +1,6 @@
 package-lock.json
 composer.lock
+mise.lock
 
 resources/views/emails
 

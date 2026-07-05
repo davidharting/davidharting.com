@@ -51,10 +51,7 @@ run = "pitchfork stop --group dev"
 
 [tasks.format]
 description = "Format all backend and frontend code"
-run = [
-    "./vendor/bin/pint",
-    "npm run format",
-]
+run = ["./vendor/bin/pint", "npm run format"]
 
 [tasks."db:seed"]
 description = "Seed the dev database (one-off)"
@@ -62,7 +59,4 @@ run = "php artisan db:seed"
 
 [tasks."db:refresh"]
 description = "Drop, re-migrate, and re-seed the dev database"
-run = [
-    "php artisan migrate:fresh",
-    "php artisan db:seed",
-]
+run = ["php artisan migrate:fresh", "php artisan db:seed"]
