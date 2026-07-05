@@ -1,6 +1,34 @@
-# mise tasks for local development.
-# Tool versions live in .tool-versions (node) and ~/repos/.config/mise/config.toml
-# (postgres). PHP is provided by Herd, not mise.
+# mise config for local macOS development: tools + dev tasks.
+#
+# PHP and Composer are installed as Herd's prebuilt binaries via mise's http
+# backend (below) -- a prebuilt binary with the full extension set, but
+# mise-managed.
+#
+# postgres is also provided by the global mise config, but pinned here too so
+# this repo is self-documenting about the versions it targets.
+#
+# This targets Apple Silicon (macos-arm64) only. Remote/CI Linux uses system
+# tools, not mise -- see docs/development-setup.md. Add more [platforms.*]
+# entries here if another host ever needs them.
+#
+# PHP 8.4 matches composer.json's config.platform.php (8.4.1), so the runtime
+# lines up with how Composer resolves dependencies.
+
+[settings]
+lockfile = true
+
+[tools]
+node = "20.5.1"
+postgres = "17"
+
+[tools."http:php"]
+version = "8.4"
+[tools."http:php".platforms.macos-arm64]
+url = "https://download.herdphp.com/herd-lite/macos/arm64/8.4/php"
+
+[tools."http:composer"]
+version = "2"
+url = "https://download.herdphp.com/herd-lite/composer"
 
 [tasks.setup]
 description = "One-time/occasional dev bootstrap: install tools & dependencies (not per-startup)"
