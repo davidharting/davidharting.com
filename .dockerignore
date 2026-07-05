@@ -26,8 +26,6 @@ fly.toml
 **/.DS_Store
 **/Thumbs.db
 public/hot
-docker-compose.yml
-docker-compose.dev.yml
 render.yaml
 
 
