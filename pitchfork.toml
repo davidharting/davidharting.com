@@ -10,6 +10,10 @@
 #
 # Visibility: `pitchfork list`, `pitchfork status`, `pitchfork logs <name>`.
 #
+# The app daemons run with `mise = true`, so php/node/composer resolve from
+# this repo's mise.toml (PHP is mise-managed now, not Herd). The postgres
+# scripts manage their own PATH since they also need initdb/PGDATA handling.
+#
 # postgres is owned by pitchfork here -- do not also start it manually with
 # pg_ctl, or the port 5432 / data-dir lock will collide.
 
@@ -20,23 +24,27 @@ run = "scripts/dev/pg-server.sh"
 ready_cmd = "scripts/dev/db-bootstrap.sh"
 
 [daemons.octane]
-run = "scripts/dev/with-path.sh php artisan octane:frankenphp --watch --host=127.0.0.1 --port=8000"
+run = "php artisan octane:frankenphp --watch --host=127.0.0.1 --port=8000"
+mise = true
 depends = ["postgres"]
 ready_port = 8000
 
 [daemons.queue]
-run = "scripts/dev/with-path.sh php artisan queue:work"
+run = "php artisan queue:work"
+mise = true
 depends = ["postgres"]
 
 [daemons.vite]
-run = "scripts/dev/with-path.sh npm run dev"
+run = "npm run dev"
+mise = true
 # Vite binds IPv6 ([::1]) only, so a 127.0.0.1 port probe never connects;
 # key off its startup output instead.
 ready_output = "ready in"
 
 # Optional: not part of [groups.dev]. Start on demand with `pitchfork start nutgram`.
 [daemons.nutgram]
-run = "scripts/dev/with-path.sh php artisan nutgram:listen"
+run = "php artisan nutgram:listen"
+mise = true
 depends = ["postgres"]
 
 [groups.dev]

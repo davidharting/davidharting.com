@@ -9,7 +9,7 @@
 # are missing, then runs migrations. Safe to re-run on every startup.
 set -euo pipefail
 
-export PATH="$HOME/.config/herd-lite/bin:$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 
 PG_HOME="$(mise where postgres)"
 export PATH="$PG_HOME/bin:$PATH"
