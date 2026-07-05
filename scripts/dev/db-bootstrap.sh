@@ -16,9 +16,14 @@ export PATH="$PG_HOME/bin:$PATH"
 
 # Server must be accepting connections. If not, exit non-zero so pitchfork
 # retries this readiness probe (~every 500ms) until the server is up.
-pg_isready -q -h 127.0.0.1 || exit 1
+# -U/-d avoid pg_isready defaulting to the OS user's role/db (which don't
+# exist yet) and logging a spurious FATAL on every probe.
+pg_isready -q -h 127.0.0.1 -U postgres -d postgres || exit 1
 
-psql_su() { psql -U postgres -h 127.0.0.1 -d postgres -v ON_ERROR_STOP=1 "$@"; }
+# -X (--no-psqlrc): never source the interactive ~/.psqlrc. It can echo \set
+# feedback to stdout, which would pollute the -tA boolean checks below and
+# break idempotency (role/db "exists" checks would always read false).
+psql_su() { psql -X -U postgres -h 127.0.0.1 -d postgres -v ON_ERROR_STOP=1 "$@"; }
 role_exists() { [ "$(psql_su -tAc "SELECT 1 FROM pg_roles WHERE rolname='$1'")" = "1" ]; }
 db_exists() { [ "$(psql_su -tAc "SELECT 1 FROM pg_database WHERE datname='$1'")" = "1" ]; }
 
