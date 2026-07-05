@@ -1,0 +1,40 @@
+# mise tasks for local development.
+# Tool versions live in .tool-versions (node) and ~/repos/.config/mise/config.toml
+# (postgres). PHP is provided by Herd, not mise.
+
+[tasks.setup]
+description = "One-time/occasional dev bootstrap: install tools & dependencies (not per-startup)"
+run = [
+    "mise install",
+    "test -f .env || (cp .env.example .env && php artisan key:generate)",
+    "composer install",
+    "npm install",
+    "test -e public/storage || php artisan storage:link",
+    "npm run build",
+]
+
+[tasks.dev]
+description = "Start the core dev stack (postgres, octane, queue, vite) via pitchfork"
+run = "pitchfork start --group dev"
+
+[tasks.down]
+description = "Stop the core dev stack"
+run = "pitchfork stop --group dev"
+
+[tasks.format]
+description = "Format all backend and frontend code"
+run = [
+    "./vendor/bin/pint",
+    "npm run format",
+]
+
+[tasks."db:seed"]
+description = "Seed the dev database (one-off)"
+run = "php artisan db:seed"
+
+[tasks."db:refresh"]
+description = "Drop, re-migrate, and re-seed the dev database"
+run = [
+    "php artisan migrate:fresh",
+    "php artisan db:seed",
+]

@@ -48,14 +48,14 @@ e.g. PR #155 -> `https://davidhartingdotcom-web-pr-155.onrender.com`. Preview en
 - Use `php artisan` for Laravel commands
 - Run tests: `php artisan test` (pass a file path to run one file)
 - Run tests with previously failed tests first, stopping on first failure: `php artisan test --compact --retry --bail`
-- Format code: `task format`
+- Format code: `mise run format`
 
 ## Rules
 
 ### Way of working
 
 - Work on only what I ask you to do, and one thing at a time. Focus changes to just the task at hand. Ask about refactors before doing them.
-- Run `task format` before every commit. Pint (PHP) and Prettier (JS/CSS/YAML) are both enforced in CI.
+- Run `mise run format` before every commit. Pint (PHP) and Prettier (JS/CSS/YAML) are both enforced in CI.
 - Make atomic commits with detailed messages
 - Include tests as you go rather than at the end. Tests should be committed with the relevant application changes.
 
