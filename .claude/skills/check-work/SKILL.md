@@ -9,7 +9,7 @@ Run these checks before every commit.
 
 ## Required Steps
 
-1. **Format code**: Run `mise run format`
+1. **Format code**: Run `mise run format` (or `vendor/bin/pint && npm run format` where mise isn't available)
 2. **Run tests**: Run `php artisan test` and ensure all tests pass
 3. **Review for debug code**: Check for leftover `dd()`, `dump()`, `console.log()`, etc.
 

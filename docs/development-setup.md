@@ -27,6 +27,8 @@ php artisan key:generate
 
 ### 3. PostgreSQL Setup
 
+Pick the path for your environment. **Remote / CI / sandboxed Linux containers** (including cloud coding agents) use the Linux section and drive PostgreSQL directly. **Local macOS** development uses the pitchfork-managed workflow. mise + pitchfork are a macOS-local convenience, not a requirement anywhere else.
+
 #### Linux / sandboxed environments
 
 Start PostgreSQL:
