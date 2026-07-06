@@ -1,0 +1,54 @@
+#:schema https://pitchfork.jdx.dev/schema.json
+#
+# Local development daemons, managed by pitchfork (https://pitchfork.jdx.dev).
+#
+# Quick start:
+#   mise run setup    # one-time/occasional: install tools & deps
+#   mise run dev       # start the core stack (postgres, octane, queue, vite)
+#   pitchfork start nutgram   # optional Telegram bot listener, on demand
+#   mise run down      # stop the core stack
+#
+# Visibility: `pitchfork list`, `pitchfork status`, `pitchfork logs <name>`.
+#
+# The app daemons run with `mise = true`, so php/node/composer resolve from
+# this repo's mise.toml (PHP is mise-managed now, not Herd). The postgres
+# scripts manage their own PATH since they also need initdb/PGDATA handling.
+#
+# postgres is owned by pitchfork here -- do not also start it manually with
+# pg_ctl, or the port 5432 / data-dir lock will collide.
+
+[daemons.postgres]
+run = "scripts/dev/pg-server.sh"
+# Not "ready" until roles/databases exist and migrations have run, so every
+# dependent daemon waits for a fully prepared DB.
+ready_cmd = "scripts/dev/db-bootstrap.sh"
+
+[daemons.octane]
+# --watch reloads workers when files change. Octane implements it with a Node
+# file-watcher (vendor/laravel/octane/bin/file-watcher.cjs) that requires the
+# `chokidar` devDependency in package.json -- without it, --watch errors out.
+run = "php artisan octane:frankenphp --watch --host=127.0.0.1 --port=8000"
+mise = true
+depends = ["postgres"]
+ready_port = 8000
+
+[daemons.queue]
+run = "php artisan queue:work"
+mise = true
+depends = ["postgres"]
+
+[daemons.vite]
+run = "npm run dev"
+mise = true
+# Vite binds IPv6 ([::1]) only, so a 127.0.0.1 port probe never connects;
+# key off its startup output instead.
+ready_output = "ready in"
+
+# Optional: not part of [groups.dev]. Start on demand with `pitchfork start nutgram`.
+[daemons.nutgram]
+run = "php artisan nutgram:listen"
+mise = true
+depends = ["postgres"]
+
+[groups.dev]
+daemons = ["postgres", "octane", "queue", "vite"]

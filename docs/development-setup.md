@@ -27,6 +27,8 @@ php artisan key:generate
 
 ### 3. PostgreSQL Setup
 
+Pick the path for your environment. **Remote / CI / sandboxed Linux containers** (including cloud coding agents) use the Linux section and drive PostgreSQL directly. **Local macOS** development uses the pitchfork-managed workflow. mise + pitchfork are a macOS-local convenience, not a requirement anywhere else.
+
 #### Linux / sandboxed environments
 
 Start PostgreSQL:
@@ -47,45 +49,25 @@ sudo -u postgres psql -d laravel -c "GRANT ALL ON SCHEMA public TO root;"
 sudo -u postgres psql -d laravel_test -c "GRANT ALL ON SCHEMA public TO root;"
 ```
 
-#### macOS via mise
+#### macOS (local dev via pitchfork)
 
-There's no system Postgres service on macOS, so run it directly from the mise-installed binaries. `postgres = "17"` should be in your mise config (e.g. `~/repos/.config/mise/config.toml` or a project-local `mise.toml`).
+On macOS, PostgreSQL is managed by [pitchfork](https://pitchfork.jdx.dev) as the `postgres` daemon in `pitchfork.toml` — you do **not** start it by hand. On first run the daemon initializes the mise-installed PostgreSQL 17 data directory, and its readiness script (`scripts/dev/db-bootstrap.sh`) idempotently creates the roles and databases below and runs migrations. `postgres = "17"` must be in your mise config (e.g. `~/repos/.config/mise/config.toml`).
 
-Locate the install and put its `bin/` on `PATH` for these commands:
-
-```bash
-PG_BIN="$(mise where postgres)/bin"
-PGDATA="$(mise where postgres)/data"
-export PATH="$PG_BIN:$PATH"
-```
-
-Initialize the data directory (first time only):
+Install tools and dependencies (one-off):
 
 ```bash
-initdb -D "$PGDATA" -U postgres
+mise run setup
 ```
 
-Start the server:
+Bring up the stack — starts postgres, creates roles/databases, migrates, then starts octane/queue/vite:
 
 ```bash
-pg_ctl -D "$PGDATA" -l "$PGDATA/logfile" start
+mise run dev
 ```
 
-Create databases and users. `laravel` matches `.env`; `david` matches the `DB_USERNAME` hardcoded in `phpunit.xml` for the test database — substitute your own username if different:
+The roles and databases created match `.env` and `phpunit.xml`: `laravel` for dev, and `laravel_test` owned by `david` — the `DB_USERNAME` hardcoded in `phpunit.xml` for the test database. Substitute your own username if different (see `scripts/dev/db-bootstrap.sh`).
 
-```bash
-psql -U postgres -d postgres -c "CREATE ROLE david WITH LOGIN SUPERUSER;"
-psql -U postgres -d postgres -c "CREATE ROLE laravel WITH LOGIN PASSWORD 'password';"
-psql -U postgres -d postgres -c "CREATE DATABASE laravel OWNER laravel;"
-psql -U postgres -d postgres -c "CREATE DATABASE laravel_test OWNER david;"
-psql -U postgres -d postgres -c "GRANT ALL PRIVILEGES ON DATABASE laravel TO laravel;"
-```
-
-Stop the server when you're done:
-
-```bash
-pg_ctl -D "$PGDATA" stop
-```
+If you only need the database (e.g. to run tests), `pitchfork start postgres` is enough. Stop everything with `mise run down`.
 
 #### Both environments
 

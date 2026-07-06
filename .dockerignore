@@ -26,8 +26,6 @@ fly.toml
 **/.DS_Store
 **/Thumbs.db
 public/hot
-docker-compose.yml
-docker-compose.dev.yml
 render.yaml
 
 
@@ -42,7 +40,6 @@ render.yaml
 /vendor
 .env
 .env.backup
-.env.task
 .env.production
 .phpactor.json
 .phpunit.result.cache

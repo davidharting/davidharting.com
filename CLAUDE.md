@@ -6,6 +6,11 @@ This is a Laravel project for my personal website, davidharting.com.
 
 Quick check: if `php artisan test` fails with autoload errors, run the setup.
 
+### Environments
+
+- **Local macOS**: dev runs through mise + pitchfork. Use `mise run setup` once, then `mise run dev` to bring up the stack (postgres, octane, queue, vite). See the macOS section of [docs/development-setup.md](docs/development-setup.md).
+- **Remote / CI / preconfigured Linux containers** (e.g. a cloud coding agent): tools are already installed — **do not install mise or run pitchfork**. Run `php artisan`, `vendor/bin/pint`, and `npm` directly, and follow the Linux/sandboxed section of [docs/development-setup.md](docs/development-setup.md). `mise run <task>` is a local convenience, not a requirement; the underlying commands work without it.
+
 ## Architecture overview
 
 The site runs on Render.com from `render.yaml`.
@@ -48,14 +53,14 @@ e.g. PR #155 -> `https://davidhartingdotcom-web-pr-155.onrender.com`. Preview en
 - Use `php artisan` for Laravel commands
 - Run tests: `php artisan test` (pass a file path to run one file)
 - Run tests with previously failed tests first, stopping on first failure: `php artisan test --compact --retry --bail`
-- Format code: `task format`
+- Format code: `mise run format` (or `vendor/bin/pint && npm run format` where mise isn't available)
 
 ## Rules
 
 ### Way of working
 
 - Work on only what I ask you to do, and one thing at a time. Focus changes to just the task at hand. Ask about refactors before doing them.
-- Run `task format` before every commit. Pint (PHP) and Prettier (JS/CSS/YAML) are both enforced in CI.
+- Run `mise run format` before every commit (or `vendor/bin/pint && npm run format` where mise isn't available). Pint (PHP) and Prettier (JS/CSS/YAML) are both enforced in CI.
 - Make atomic commits with detailed messages
 - Include tests as you go rather than at the end. Tests should be committed with the relevant application changes.
 

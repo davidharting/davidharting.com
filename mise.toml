@@ -1,0 +1,60 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+# mise config for local macOS development: tools + dev tasks.
+#
+# PHP and Composer are installed as Herd's prebuilt binaries via mise's http
+# backend (below) -- a prebuilt binary with the full extension set, but
+# mise-managed.
+#
+# This targets Apple Silicon (macos-arm64) only. Remote/CI Linux uses system
+# tools, not mise -- see docs/development-setup.md. Add more [platforms.*]
+# entries here if another host ever needs them.
+#
+# PHP 8.4 matches composer.json's config.platform.php (8.4.1), so the runtime
+# lines up with how Composer resolves dependencies.
+
+[settings]
+lockfile = true
+
+[tools]
+node = "20.5.1"
+postgres = "17"
+
+[tools."http:php"]
+version = "8.4"
+[tools."http:php".platforms.macos-arm64]
+url = "https://download.herdphp.com/herd-lite/macos/arm64/8.4/php"
+
+[tools."http:composer"]
+version = "2"
+url = "https://download.herdphp.com/herd-lite/composer"
+
+[tasks.setup]
+description = "One-time/occasional dev bootstrap: install tools & dependencies (not per-startup)"
+run = [
+    "mise install",
+    "test -f .env || (cp .env.example .env && php artisan key:generate)",
+    "composer install",
+    "npm install",
+    "test -e public/storage || php artisan storage:link",
+    "npm run build",
+]
+
+[tasks.dev]
+description = "Start the core dev stack (postgres, octane, queue, vite) via pitchfork"
+run = "pitchfork start --group dev"
+
+[tasks.down]
+description = "Stop the core dev stack"
+run = "pitchfork stop --group dev"
+
+[tasks.format]
+description = "Format all backend and frontend code"
+run = ["./vendor/bin/pint", "npm run format"]
+
+[tasks."db:seed"]
+description = "Seed the dev database (one-off)"
+run = "php artisan db:seed"
+
+[tasks."db:refresh"]
+description = "Drop, re-migrate, and re-seed the dev database"
+run = ["php artisan migrate:fresh", "php artisan db:seed"]

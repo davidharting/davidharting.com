@@ -12,9 +12,8 @@
 .env
 .env.backup
 .env.production
-.env.task
 staging.secrets.env
-mise.toml
+mise.local.toml
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
@@ -44,6 +43,7 @@ davidharting*.tar
 /caddy
 frankenphp
 frankenphp-worker.php
+pitchfork.local.toml
 
 
 /secrets
