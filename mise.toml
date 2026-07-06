@@ -1,11 +1,9 @@
+#:schema https://mise.jdx.dev/schema/mise.json
 # mise config for local macOS development: tools + dev tasks.
 #
 # PHP and Composer are installed as Herd's prebuilt binaries via mise's http
 # backend (below) -- a prebuilt binary with the full extension set, but
 # mise-managed.
-#
-# postgres is also provided by the global mise config, but pinned here too so
-# this repo is self-documenting about the versions it targets.
 #
 # This targets Apple Silicon (macos-arm64) only. Remote/CI Linux uses system
 # tools, not mise -- see docs/development-setup.md. Add more [platforms.*]
