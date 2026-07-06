@@ -24,6 +24,9 @@ run = "scripts/dev/pg-server.sh"
 ready_cmd = "scripts/dev/db-bootstrap.sh"
 
 [daemons.octane]
+# --watch reloads workers when files change. Octane implements it with a Node
+# file-watcher (vendor/laravel/octane/bin/file-watcher.cjs) that requires the
+# `chokidar` devDependency in package.json -- without it, --watch errors out.
 run = "php artisan octane:frankenphp --watch --host=127.0.0.1 --port=8000"
 mise = true
 depends = ["postgres"]
