@@ -40,6 +40,8 @@ test('guests can initialize a session and see the server identity', function () 
 
     $response->assertOk();
     $response->assertJsonPath('result.serverInfo.name', 'davidharting.com');
+
+    expect($response->json('result.instructions'))->toContain('davidharting.com');
 });
 
 test('guests can call a tool over the streamable HTTP transport', function () {
