@@ -4,6 +4,7 @@ namespace App\Mcp\Servers;
 
 use App\Mcp\Tools\GetNote;
 use App\Mcp\Tools\ListNotes;
+use App\Mcp\Tools\QueryMedia;
 use App\Mcp\Tools\SearchNotes;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
@@ -27,6 +28,7 @@ class PublicServer extends Server
         ListNotes::class,
         SearchNotes::class,
         GetNote::class,
+        QueryMedia::class,
     ];
 
     protected array $resources = [
