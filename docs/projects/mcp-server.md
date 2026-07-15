@@ -14,23 +14,40 @@ A public, unauthenticated, read-only MCP server so AI agents (Claude, Codex, etc
 - No OAuth / no auth of any kind for now. The server exposes only information that is already public on the website.
 - Use `laravel/mcp` in the most vanilla, first-party way possible: `make:mcp-server` / `make:mcp-tool` scaffolding, `routes/ai.php` registration, first-party testing helpers, and the MCP Inspector for manual verification.
 
-### Future direction (out of scope for this project)
+### Phase 2: `AuthenticatedServer` with OAuth (out of scope, but shapes v1 naming)
 
-The longer-term plan is to replace the custom Telegram agent (`TrackConversation` + Nutgram) with MCP plus first-party chat bots. When authentication arrives, it should enable three things:
+The longer-term plan is to replace the custom Telegram agent (`TrackConversation` + Nutgram) with MCP plus first-party chat bots, doing authentication **properly with OAuth 2.1** (Laravel Passport) as a deliberate learning exercise. That phase adds a second server class alongside this one, which is why the v1 server is named for its audience contract:
 
-- **Authenticated write tools** — port the existing `App\Ai\Tools\CreateMedia` / `CreateMediaEvent` logic to MCP tools.
-- **Enhanced reads on the same tools** — when the caller is authenticated as admin, the _same_ tools disclose more: `QueryMedia` includes `media.note` and event comments, and the note tools include unpublished (`visible = false`) notes.
-- **New read-only, auth-only tools** — e.g. a `GetMedia` detail tool with the full event history (the MCP equivalent of the admin-only `/media/{id}` page).
+- **`PublicServer`** (this project) — registered at `/mcp` with no auth middleware, and it stays that way forever. Its contract: everything it returns is public information. This route can never gain OAuth, because OAuth on a route is all-or-nothing: the 401 challenge to anonymous requests is what triggers MCP OAuth discovery, so an OAuth-protected route has no anonymous access by definition.
+- **`AuthenticatedServer`** (phase 2) — registered at `/mcp/auth` behind Passport (`Mcp::oauthRoutes()` + `->middleware('auth:api')`). Serves OAuth-capable clients such as Claude.ai custom connectors. Anonymous access impossible by design.
 
-laravel/mcp supports all of this on the **same `/mcp` endpoint** in a first-party way:
+```php
+// routes/ai.php — phase 2 end state
+Mcp::web('/mcp', PublicServer::class)->middleware('throttle:60,1');
 
-- **Optional authentication middleware.** Plain `auth:sanctum` would reject anonymous requests, so the endpoint instead gets a small middleware that resolves the Sanctum bearer token _when present_ and otherwise continues as a guest. Tools then see `$request->user()` as either null or the admin user.
-- **`shouldRegister(Request $request)`** on auth-only tools (writes, `GetMedia`), so anonymous clients never even see them in `tools/list`.
-- **`$request->user()?->can(...)` checks inside shared tools** to widen the disclosed fields — the same gates (`seeNote`, `NotePolicy`) the website uses.
+Mcp::oauthRoutes();
+Mcp::web('/mcp/auth', AuthenticatedServer::class)
+    ->middleware(['auth:api', 'throttle:60,1']);
+```
 
-One caveat to remember: the MCP OAuth 2.1 discovery flow relies on the server answering unauthenticated requests with a 401 challenge, which a public-by-default endpoint never emits. That is fine for first-party bots holding a Sanctum token; if third-party OAuth clients are ever needed, add a second authenticated `Mcp::web` endpoint (Passport) that registers the same server class.
+Two server classes, one implementation: laravel/mcp server classes are thin manifests (a `$tools` array plus instructions), and the **tool classes are shared** between them. `AuthenticatedServer` registers a superset:
 
-Consequence for v1: each tool should make its visibility decisions in one obvious place (the `visible = true` predicate in note tools, the column list in `QueryMedia`) so that "widen when authenticated" is later a deliberate, testable one-line change per tool rather than a hunt.
+- The same four read tools as `PublicServer`, which disclose more per-user (below).
+- Write tools — port of the existing `App\Ai\Tools\CreateMedia` / `CreateMediaEvent` logic.
+- New read-only, auth-only tools — e.g. a `GetMedia` detail tool with full event history (the MCP equivalent of the admin-only `/media/{id}` page).
+
+**Authenticated ≠ admin.** The system has at least one non-admin user (David's wife), who must be able to complete the OAuth flow and connect to `AuthenticatedServer` without gaining admin-level disclosure. So shared tools never branch on "is a user present" — they ask the same gates and policies the website uses:
+
+- `QueryMedia` includes `media.note` and event comments only when `$request->user()?->can('seeNote', Media::class)`.
+- Note tools include `visible = false` notes only for users passing `NotePolicy::viewAny`.
+- Write tools and `GetMedia` hide themselves via `shouldRegister()` backed by policy abilities (`can('create', Media::class)`, `can('view', $media)`), so a non-admin user doesn't even see them in `tools/list`.
+
+A non-admin authenticated user therefore sees exactly the public data set until policies grant more. Authorization lives in the policies; MCP is just another consumer of them, like the Blade templates.
+
+Consequences for v1:
+
+- Name the server `PublicServer` now, so the phase-2 pair is symmetrical from day one.
+- Each tool makes its visibility decision in one obvious place (the `visible = true` predicate in note tools, the column list in `QueryMedia`), written with the intent of later replacing that hardcoded "guest" assumption with the corresponding policy check — a deliberate, testable change per tool rather than a hunt.
 
 ## Current state
 
@@ -71,10 +88,10 @@ php artisan vendor:publish --tag=ai-routes   # creates routes/ai.php
 
 ```php
 // routes/ai.php
-use App\Mcp\Servers\WebsiteServer;
+use App\Mcp\Servers\PublicServer;
 use Laravel\Mcp\Facades\Mcp;
 
-Mcp::web('/mcp', WebsiteServer::class)
+Mcp::web('/mcp', PublicServer::class)
     ->middleware('throttle:60,1');
 ```
 
@@ -84,10 +101,10 @@ Mcp::web('/mcp', WebsiteServer::class)
 ### Server class
 
 ```bash
-php artisan make:mcp-server WebsiteServer
+php artisan make:mcp-server PublicServer
 ```
 
-`app/Mcp/Servers/WebsiteServer.php` extends `Laravel\Mcp\Server`, registering the four tools below in its `$tools` array. Set `$serverName` ("davidharting.com"), `$serverVersion`, and `$instructions` — the instructions string is where we tell agents what this server is (David Harting's personal website: published notes and a media tracking library), the media type / status vocabularies, and that all data is public.
+`app/Mcp/Servers/PublicServer.php` extends `Laravel\Mcp\Server`, registering the four tools below in its `$tools` array. The name is the contract: this server only ever serves public information, anonymously — its authenticated sibling (`AuthenticatedServer`, phase 2) is a separate class on a separate route. Set `$serverName` ("davidharting.com"), `$serverVersion`, and `$instructions` — the instructions string is where we tell agents what this server is (David Harting's personal website: published notes and a media tracking library), the media type / status vocabularies, and that all data is public.
 
 ### Tools
 
@@ -145,7 +162,7 @@ Notes could also be modeled as MCP resources with a resource template. Skipping 
 
 ## Testing
 
-Feature tests in `tests/Feature/Mcp/`, using the first-party server testing API (`WebsiteServer::tool(QueryMedia::class, [...])` returning a `TestResponse` with `assertOk` / `assertSee` / structured-content assertions):
+Feature tests in `tests/Feature/Mcp/`, using the first-party server testing API (`PublicServer::tool(QueryMedia::class, [...])` returning a `TestResponse` with `assertOk` / `assertSee` / structured-content assertions):
 
 - **ListNotes / SearchNotes / GetNote**: returns visible notes; **never** returns `visible = false` notes (list, search, and direct-slug fetch all tested); `GetNote` gives identical not-found errors for missing vs. invisible slugs; pagination bounds enforced.
 - **QueryMedia**: each filter individually and in combination (factories already exist for Media, MediaEvent, Creator); status derivation matches the view (backlog = no events); year filters distinguish release year from finished/started year; response **never contains** `note` or `comment` values even when set on the underlying rows; sort orders; pagination bounds.
@@ -166,7 +183,7 @@ Nothing new in `render.yaml` — the MCP endpoint is just another route on the e
 
 Each step is an atomic commit with its tests:
 
-1. `composer require laravel/mcp` + publish `routes/ai.php` + `WebsiteServer` skeleton registered at `Mcp::web('/mcp')` with throttle. Test: guest `tools/list` HTTP round-trip.
+1. `composer require laravel/mcp` + publish `routes/ai.php` + `PublicServer` skeleton registered at `Mcp::web('/mcp')` with throttle. Test: guest `tools/list` HTTP round-trip.
 2. `ListNotes` + `GetNote` tools with visibility tests.
 3. `SearchNotes` tool with tests.
 4. Extend `SearchMediaQuery` (status / years / sort / pagination) with query tests.
