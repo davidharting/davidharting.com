@@ -14,35 +14,31 @@ A public, unauthenticated, read-only MCP server so AI agents (Claude, Codex, etc
 - No OAuth / no auth of any kind for now. The server exposes only information that is already public on the website.
 - Use `laravel/mcp` in the most vanilla, first-party way possible: `make:mcp-server` / `make:mcp-tool` scaffolding, `routes/ai.php` registration, first-party testing helpers, and the MCP Inspector for manual verification.
 
-### Phase 2: `AuthenticatedServer` with OAuth (out of scope, but shapes v1 naming)
+### Phase 2: `AdminServer` with OAuth (out of scope, but shapes v1 naming)
 
 The longer-term plan is to replace the custom Telegram agent (`TrackConversation` + Nutgram) with MCP plus first-party chat bots, doing authentication **properly with OAuth 2.1** (Laravel Passport) as a deliberate learning exercise. That phase adds a second server class alongside this one, which is why the v1 server is named for its audience contract:
 
 - **`PublicServer`** (this project) — registered at `/mcp` with no auth middleware, and it stays that way forever. Its contract: everything it returns is public information. This route can never gain OAuth, because OAuth on a route is all-or-nothing: the 401 challenge to anonymous requests is what triggers MCP OAuth discovery, so an OAuth-protected route has no anonymous access by definition.
-- **`AuthenticatedServer`** (phase 2) — registered at `/mcp/auth` behind Passport (`Mcp::oauthRoutes()` + `->middleware('auth:api')`). Serves OAuth-capable clients such as Claude.ai custom connectors. Anonymous access impossible by design.
+- **`AdminServer`** (phase 2) — registered at `/mcp/admin` behind Passport plus the existing `administrate` gate (`Mcp::oauthRoutes()` + `->middleware(['auth:api', 'can:administrate'])`). David only: the write tools are inherently about _his_ library and _his_ notes, so the admin distinction is the honest one. Other users (there is at least one non-admin user in the system) can complete the OAuth dance but are rejected by the gate — they have no business on this server.
 
 ```php
 // routes/ai.php — phase 2 end state
 Mcp::web('/mcp', PublicServer::class)->middleware('throttle:60,1');
 
 Mcp::oauthRoutes();
-Mcp::web('/mcp/auth', AuthenticatedServer::class)
-    ->middleware(['auth:api', 'throttle:60,1']);
+Mcp::web('/mcp/admin', AdminServer::class)
+    ->middleware(['auth:api', 'can:administrate', 'throttle:60,1']);
 ```
 
-Two server classes, one implementation: laravel/mcp server classes are thin manifests (a `$tools` array plus instructions), and the **tool classes are shared** between them. `AuthenticatedServer` registers a superset:
+Two server classes, one implementation: laravel/mcp server classes are thin manifests (a `$tools` array plus instructions), and the **tool classes are shared** between them. `AdminServer` registers a superset:
 
-- The same four read tools as `PublicServer`, which disclose more per-user (below).
+- The same four read tools as `PublicServer`. Because the route guarantees an admin caller, the shared tools' policy checks (`can('seeNote', Media::class)`, `NotePolicy::viewAny`) pass and the reads widen: `QueryMedia` includes `media.note` and event comments, note tools include `visible = false` notes.
 - Write tools — port of the existing `App\Ai\Tools\CreateMedia` / `CreateMediaEvent` logic.
-- New read-only, auth-only tools — e.g. a `GetMedia` detail tool with full event history (the MCP equivalent of the admin-only `/media/{id}` page).
+- New read-only, admin-only tools — e.g. a `GetMedia` detail tool with full event history (the MCP equivalent of the admin-only `/media/{id}` page).
 
-**Authenticated ≠ admin.** The system has at least one non-admin user (David's wife), who must be able to complete the OAuth flow and connect to `AuthenticatedServer` without gaining admin-level disclosure. So shared tools never branch on "is a user present" — they ask the same gates and policies the website uses:
+Tools still authorize through the same gates and policies the Blade templates use rather than assuming trust from the route — the route middleware is the bouncer, the policies remain the source of truth.
 
-- `QueryMedia` includes `media.note` and event comments only when `$request->user()?->can('seeNote', Media::class)`.
-- Note tools include `visible = false` notes only for users passing `NotePolicy::viewAny`.
-- Write tools and `GetMedia` hide themselves via `shouldRegister()` backed by policy abilities (`can('create', Media::class)`, `can('view', $media)`), so a non-admin user doesn't even see them in `tools/list`.
-
-A non-admin authenticated user therefore sees exactly the public data set until policies grant more. Authorization lives in the policies; MCP is just another consumer of them, like the Blade templates.
+If non-admin users ever need authenticated MCP access (e.g. per-user features), that would be a third, separate server — an `AuthenticatedServer` between the two — not a loosening of `AdminServer`. Explicitly not designed now; keeping it simple.
 
 Consequences for v1:
 
@@ -104,7 +100,7 @@ Mcp::web('/mcp', PublicServer::class)
 php artisan make:mcp-server PublicServer
 ```
 
-`app/Mcp/Servers/PublicServer.php` extends `Laravel\Mcp\Server`, registering the four tools below in its `$tools` array. The name is the contract: this server only ever serves public information, anonymously — its authenticated sibling (`AuthenticatedServer`, phase 2) is a separate class on a separate route. Set `$serverName` ("davidharting.com"), `$serverVersion`, and `$instructions` — the instructions string is where we tell agents what this server is (David Harting's personal website: published notes and a media tracking library), the media type / status vocabularies, and that all data is public.
+`app/Mcp/Servers/PublicServer.php` extends `Laravel\Mcp\Server`, registering the four tools below in its `$tools` array. The name is the contract: this server only ever serves public information, anonymously — its admin sibling (`AdminServer`, phase 2) is a separate class on a separate route. Set `$serverName` ("davidharting.com"), `$serverVersion`, and `$instructions` — the instructions string is where we tell agents what this server is (David Harting's personal website: published notes and a media tracking library), the media type / status vocabularies, and that all data is public.
 
 ### Tools
 
