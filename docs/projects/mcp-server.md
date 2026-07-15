@@ -16,7 +16,21 @@ A public, unauthenticated, read-only MCP server so AI agents (Claude, Codex, etc
 
 ### Future direction (out of scope for this project)
 
-The longer-term plan is to replace the custom Telegram agent (`TrackConversation` + Nutgram) with MCP plus first-party chat bots. That will require authenticated write tools (the existing `App\Ai\Tools\CreateMedia` / `CreateMediaEvent` logic). This project deliberately lays the foundation: the same server can later gain authenticated tools via `shouldRegister()` / middleware, or a second `Mcp::web` endpoint behind Sanctum or Passport OAuth can be added alongside this one.
+The longer-term plan is to replace the custom Telegram agent (`TrackConversation` + Nutgram) with MCP plus first-party chat bots. When authentication arrives, it should enable three things:
+
+- **Authenticated write tools** — port the existing `App\Ai\Tools\CreateMedia` / `CreateMediaEvent` logic to MCP tools.
+- **Enhanced reads on the same tools** — when the caller is authenticated as admin, the _same_ tools disclose more: `QueryMedia` includes `media.note` and event comments, and the note tools include unpublished (`visible = false`) notes.
+- **New read-only, auth-only tools** — e.g. a `GetMedia` detail tool with the full event history (the MCP equivalent of the admin-only `/media/{id}` page).
+
+laravel/mcp supports all of this on the **same `/mcp` endpoint** in a first-party way:
+
+- **Optional authentication middleware.** Plain `auth:sanctum` would reject anonymous requests, so the endpoint instead gets a small middleware that resolves the Sanctum bearer token _when present_ and otherwise continues as a guest. Tools then see `$request->user()` as either null or the admin user.
+- **`shouldRegister(Request $request)`** on auth-only tools (writes, `GetMedia`), so anonymous clients never even see them in `tools/list`.
+- **`$request->user()?->can(...)` checks inside shared tools** to widen the disclosed fields — the same gates (`seeNote`, `NotePolicy`) the website uses.
+
+One caveat to remember: the MCP OAuth 2.1 discovery flow relies on the server answering unauthenticated requests with a 401 challenge, which a public-by-default endpoint never emits. That is fine for first-party bots holding a Sanctum token; if third-party OAuth clients are ever needed, add a second authenticated `Mcp::web` endpoint (Passport) that registers the same server class.
+
+Consequence for v1: each tool should make its visibility decisions in one obvious place (the `visible = true` predicate in note tools, the column list in `QueryMedia`) so that "widen when authenticated" is later a deliberate, testable one-line change per tool rather than a hunt.
 
 ## Current state
 
