@@ -1,11 +1,14 @@
 <?php
 
+use App\Enum\MediaSort;
+use App\Enum\MediaTrackingStatus;
 use App\Enum\MediaTypeName;
 use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaEvent;
 use App\Queries\Media\SearchMediaQuery;
 use Illuminate\Foundation\Testing\TestCase;
+use Illuminate\Support\Carbon;
 
 test('returns empty collection when no media matches', function () {
     /** @var TestCase $this */
@@ -245,5 +248,228 @@ describe('status', function () {
         $item = (new SearchMediaQuery(title: 'Neuromancer'))->execute()->sole();
 
         $this->assertSame('started', $item->current_status);
+    });
+});
+
+describe('status filter', function () {
+    test('filters by backlog status', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Untouched Book']);
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started(), 'events')
+            ->create(['title' => 'Started Book']);
+
+        $results = (new SearchMediaQuery(status: MediaTrackingStatus::Backlog))->execute();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Untouched Book', $results->sole()->title);
+    });
+
+    test('filters by started status', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Untouched Book']);
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started(), 'events')
+            ->create(['title' => 'Started Book']);
+
+        $results = (new SearchMediaQuery(status: MediaTrackingStatus::Started))->execute();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Started Book', $results->sole()->title);
+    });
+
+    test('filters by finished status', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started()->at(now()->subDays(2)), 'events')
+            ->has(MediaEvent::factory()->finished()->at(now()), 'events')
+            ->create(['title' => 'Finished Book']);
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started()->at(now()->subDays(2)), 'events')
+            ->has(MediaEvent::factory()->abandoned()->at(now()), 'events')
+            ->create(['title' => 'Abandoned Book']);
+
+        $results = (new SearchMediaQuery(status: MediaTrackingStatus::Finished))->execute();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Finished Book', $results->sole()->title);
+    });
+
+    test('filters by abandoned status', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started()->at(now()->subDays(2)), 'events')
+            ->has(MediaEvent::factory()->finished()->at(now()), 'events')
+            ->create(['title' => 'Finished Book']);
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started()->at(now()->subDays(2)), 'events')
+            ->has(MediaEvent::factory()->abandoned()->at(now()), 'events')
+            ->create(['title' => 'Abandoned Book']);
+
+        $results = (new SearchMediaQuery(status: MediaTrackingStatus::Abandoned))->execute();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Abandoned Book', $results->sole()->title);
+    });
+});
+
+describe('year filters', function () {
+    test('filters by release year', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Old Book', 'year' => 1965]);
+        Media::factory()->book()->create(['title' => 'New Book', 'year' => 2020]);
+
+        $results = (new SearchMediaQuery(year: 1965))->execute();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Old Book', $results->sole()->title);
+    });
+
+    test('filters by started year', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started()->at(Carbon::create(2023, 5, 1)), 'events')
+            ->create(['title' => 'Started In 2023']);
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started()->at(Carbon::create(2024, 5, 1)), 'events')
+            ->create(['title' => 'Started In 2024']);
+
+        $results = (new SearchMediaQuery(startedYear: 2023))->execute();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Started In 2023', $results->sole()->title);
+    });
+
+    test('filters by finished year', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2023, 5, 1)), 'events')
+            ->create(['title' => 'Finished In 2023']);
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2024, 5, 1)), 'events')
+            ->create(['title' => 'Finished In 2024']);
+
+        $results = (new SearchMediaQuery(finishedYear: 2023))->execute();
+
+        $this->assertCount(1, $results);
+        $this->assertSame('Finished In 2023', $results->sole()->title);
+    });
+
+    test('release year is distinct from finished year', function () {
+        /** @var TestCase $this */
+        // A 1965 book finished in 2024: matches year=1965 and finishedYear=2024,
+        // but not year=2024.
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2024, 5, 1)), 'events')
+            ->create(['title' => 'Dune', 'year' => 1965]);
+
+        $this->assertCount(1, (new SearchMediaQuery(year: 1965))->execute());
+        $this->assertCount(1, (new SearchMediaQuery(finishedYear: 2024))->execute());
+        $this->assertEmpty((new SearchMediaQuery(year: 2024))->execute());
+    });
+
+    test('items without events are excluded by event-year filters', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Backlog Book']);
+
+        $this->assertEmpty((new SearchMediaQuery(startedYear: 2024))->execute());
+        $this->assertEmpty((new SearchMediaQuery(finishedYear: 2024))->execute());
+    });
+});
+
+describe('sort', function () {
+    test('recently_finished puts most recently finished first and unfinished last', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2023, 1, 1)), 'events')
+            ->create(['title' => 'Finished Earlier']);
+        Media::factory()->book()->create(['title' => 'Never Finished']);
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2024, 1, 1)), 'events')
+            ->create(['title' => 'Finished Recently']);
+
+        $titles = (new SearchMediaQuery(sort: MediaSort::RecentlyFinished))->execute()->pluck('title')->all();
+
+        $this->assertSame(['Finished Recently', 'Finished Earlier', 'Never Finished'], $titles);
+    });
+
+    test('recently_started puts most recently started first and unstarted last', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started()->at(Carbon::create(2023, 1, 1)), 'events')
+            ->create(['title' => 'Started Earlier']);
+        Media::factory()->book()->create(['title' => 'Never Started']);
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started()->at(Carbon::create(2024, 1, 1)), 'events')
+            ->create(['title' => 'Started Recently']);
+
+        $titles = (new SearchMediaQuery(sort: MediaSort::RecentlyStarted))->execute()->pluck('title')->all();
+
+        $this->assertSame(['Started Recently', 'Started Earlier', 'Never Started'], $titles);
+    });
+
+    test('recently_added puts the newest library entries first', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Added First']);
+        Media::factory()->book()->create(['title' => 'Added Second']);
+
+        $titles = (new SearchMediaQuery(sort: MediaSort::RecentlyAdded))->execute()->pluck('title')->all();
+
+        $this->assertSame(['Added Second', 'Added First'], $titles);
+    });
+
+    test('title sorts alphabetically', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Zebra']);
+        Media::factory()->book()->create(['title' => 'Aardvark']);
+
+        $titles = (new SearchMediaQuery(sort: MediaSort::Title))->execute()->pluck('title')->all();
+
+        $this->assertSame(['Aardvark', 'Zebra'], $titles);
+    });
+
+    test('year puts the most recent releases first', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Old Release', 'year' => 1965]);
+        Media::factory()->book()->create(['title' => 'New Release', 'year' => 2020]);
+
+        $titles = (new SearchMediaQuery(sort: MediaSort::Year))->execute()->pluck('title')->all();
+
+        $this->assertSame(['New Release', 'Old Release'], $titles);
+    });
+});
+
+describe('paginate()', function () {
+    test('returns the requested page with the total count', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->count(3)->create();
+
+        $paginator = (new SearchMediaQuery(sort: MediaSort::RecentlyAdded))->paginate(perPage: 2, page: 2);
+
+        $this->assertSame(3, $paginator->total());
+        $this->assertSame(2, $paginator->currentPage());
+        $this->assertCount(1, $paginator->items());
+    });
+
+    test('applies filters', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Dune']);
+        Media::factory()->book()->create(['title' => 'Foundation']);
+
+        $paginator = (new SearchMediaQuery(title: 'Dune'))->paginate(perPage: 10, page: 1);
+
+        $this->assertSame(1, $paginator->total());
+    });
+
+    test('pages never overlap when sorted', function () {
+        /** @var TestCase $this */
+        // Identical titles force the sort to fall through to the tiebreaker.
+        Media::factory()->book()->count(4)->create(['title' => 'Same Title']);
+
+        $query = new SearchMediaQuery(sort: MediaSort::Title);
+        $firstPage = collect($query->paginate(perPage: 2, page: 1)->items())->pluck('media_id');
+        $secondPage = collect($query->paginate(perPage: 2, page: 2)->items())->pluck('media_id');
+
+        $this->assertCount(4, $firstPage->merge($secondPage)->unique());
     });
 });
