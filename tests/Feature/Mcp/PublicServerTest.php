@@ -18,6 +18,7 @@ test('guests can list tools over the streamable HTTP transport', function () {
     $toolNames = collect($response->json('result.tools'))->pluck('name')->all();
     expect($toolNames)->toBe([
         'list-notes',
+        'search-notes',
         'get-note',
     ]);
 });

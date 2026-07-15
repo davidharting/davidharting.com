@@ -4,6 +4,7 @@ namespace App\Mcp\Servers;
 
 use App\Mcp\Tools\GetNote;
 use App\Mcp\Tools\ListNotes;
+use App\Mcp\Tools\SearchNotes;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
@@ -24,6 +25,7 @@ class PublicServer extends Server
 {
     protected array $tools = [
         ListNotes::class,
+        SearchNotes::class,
         GetNote::class,
     ];
 
