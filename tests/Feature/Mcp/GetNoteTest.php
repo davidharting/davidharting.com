@@ -18,12 +18,24 @@ test('returns a visible note as markdown', function () {
 
     $response = PublicServer::tool(GetNote::class, ['slug' => $note->slug]);
 
+    $url = route('notes.show', $note->slug);
+
     $response->assertOk();
-    $response->assertSee('# My Great Note');
-    $response->assertSee('An interesting lead');
-    $response->assertSee('2024-06-01');
-    $response->assertSee(route('notes.show', $note->slug));
-    $response->assertSee('Some **bold** content.');
+    $response->assertSee(<<<MARKDOWN
+        # My Great Note
+
+        *An interesting lead*
+
+        Published: 2024-06-01
+
+        URL: {$url}
+
+        ---
+
+        Some **bold** content.
+
+        A second paragraph.
+        MARKDOWN);
 });
 
 test('renders a note without a title', function () {
