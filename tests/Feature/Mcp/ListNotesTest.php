@@ -19,6 +19,7 @@ test('returns visible notes with most recently published first', function () {
     $response->assertOk();
     $response->assertStructuredContent(function ($json) {
         $json->where('total', 3)
+            ->where('per_page', 250)
             ->where('notes.0.title', 'Newest note')
             ->where('notes.1.title', 'Middle note')
             ->where('notes.2.title', 'Oldest note')
@@ -94,7 +95,7 @@ test('paginates results', function () {
 
 test('rejects a per_page above the maximum', function () {
     /** @var TestCase $this */
-    $response = PublicServer::tool(ListNotes::class, ['per_page' => 51]);
+    $response = PublicServer::tool(ListNotes::class, ['per_page' => 251]);
 
     $response->assertHasErrors(['per page']);
 });

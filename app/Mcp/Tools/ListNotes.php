@@ -23,6 +23,10 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
     TEXT)]
 class ListNotes extends Tool
 {
+    private const DEFAULT_PER_PAGE = 250;
+
+    private const MAX_PER_PAGE = 250;
+
     /**
      * Handle the tool request.
      */
@@ -30,14 +34,14 @@ class ListNotes extends Tool
     {
         $validated = $request->validate([
             'page' => ['sometimes', 'integer', 'min:1'],
-            'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:'.self::MAX_PER_PAGE],
         ]);
 
         $paginator = Note::query()
             ->where('visible', true)
             ->orderByDesc('published_at')
             ->paginate(
-                perPage: $validated['per_page'] ?? 20,
+                perPage: $validated['per_page'] ?? self::DEFAULT_PER_PAGE,
                 page: $validated['page'] ?? 1,
             );
 
@@ -69,8 +73,12 @@ class ListNotes extends Tool
                 ->description('The page of results to return. Defaults to 1.'),
             'per_page' => $schema->integer()
                 ->min(1)
-                ->max(50)
-                ->description('How many notes to return per page. Defaults to 20, maximum 50.'),
+                ->max(self::MAX_PER_PAGE)
+                ->description(sprintf(
+                    'How many notes to return per page. Defaults to %d, maximum %d.',
+                    self::DEFAULT_PER_PAGE,
+                    self::MAX_PER_PAGE,
+                )),
         ];
     }
 
