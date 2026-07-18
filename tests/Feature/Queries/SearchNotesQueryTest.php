@@ -61,6 +61,21 @@ test('orders results with most recently published first', function () {
     );
 });
 
+test('paginates results', function () {
+    /** @var TestCase $this */
+    Note::factory()->createMany([
+        ['title' => 'Xylophone post one', 'visible' => true],
+        ['title' => 'Xylophone post two', 'visible' => true],
+        ['title' => 'Xylophone post three', 'visible' => true],
+    ]);
+
+    $paginator = (new SearchNotesQuery('xylophone'))->paginate(perPage: 2, page: 2);
+
+    $this->assertSame(3, $paginator->total());
+    $this->assertCount(1, $paginator->items());
+    $this->assertFalse($paginator->hasMorePages());
+});
+
 test('matches wildcard characters literally', function () {
     /** @var TestCase $this */
     Note::factory()->create([

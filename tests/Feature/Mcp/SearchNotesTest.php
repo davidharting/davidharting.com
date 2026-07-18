@@ -20,6 +20,7 @@ test('returns matching notes with their metadata', function () {
     $response->assertOk();
     $response->assertStructuredContent(function ($json) use ($note) {
         $json->where('total', 1)
+            ->where('per_page', 250)
             ->where('notes.0.slug', $note->slug)
             ->where('notes.0.title', 'All about the xylophone')
             ->where('notes.0.lead', 'A percussion story')
@@ -73,6 +74,41 @@ test('snippet is null when the match is only in the title', function () {
     $response->assertStructuredContent(function ($json) {
         $json->where('notes.0.snippet', null)->etc();
     });
+});
+
+test('paginates results', function () {
+    /** @var TestCase $this */
+    Note::factory()->createMany([
+        ['title' => 'Xylophone post one', 'visible' => true],
+        ['title' => 'Xylophone post two', 'visible' => true],
+        ['title' => 'Xylophone post three', 'visible' => true],
+    ]);
+
+    $response = PublicServer::tool(SearchNotes::class, ['query' => 'xylophone', 'page' => 2, 'per_page' => 2]);
+
+    $response->assertOk();
+    $response->assertStructuredContent(function ($json) {
+        $json->where('total', 3)
+            ->where('page', 2)
+            ->where('per_page', 2)
+            ->where('has_more_pages', false)
+            ->has('notes', 1)
+            ->etc();
+    });
+});
+
+test('rejects a per_page above the maximum', function () {
+    /** @var TestCase $this */
+    $response = PublicServer::tool(SearchNotes::class, ['query' => 'xylophone', 'per_page' => 251]);
+
+    $response->assertHasErrors(['per page']);
+});
+
+test('rejects a query shorter than the minimum length', function () {
+    /** @var TestCase $this */
+    $response = PublicServer::tool(SearchNotes::class, ['query' => 'xyl']);
+
+    $response->assertHasErrors(['query']);
 });
 
 test('requires a query', function () {

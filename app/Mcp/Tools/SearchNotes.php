@@ -21,7 +21,8 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
     full markdown content. Returns matching notes (most recently published
     first) with a short snippet of the surrounding content where the query
     matched, so you can judge relevance. Pass a result's slug to the get-note
-    tool to read the whole note.
+    tool to read the whole note. Results are paginated — use the page and
+    per_page arguments to walk through them.
     TEXT)]
 class SearchNotes extends Tool
 {
@@ -31,21 +32,32 @@ class SearchNotes extends Tool
      */
     private const SNIPPET_CHARS_AROUND_MATCH = 120;
 
+    private const MIN_QUERY_LENGTH = 4;
+
+    private const DEFAULT_PER_PAGE = 250;
+
+    private const MAX_PER_PAGE = 250;
+
     /**
      * Handle the tool request.
      */
     public function handle(Request $request): ResponseFactory
     {
         $validated = $request->validate([
-            'query' => ['required', 'string'],
+            'query' => ['required', 'string', 'min:'.self::MIN_QUERY_LENGTH],
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:'.self::MAX_PER_PAGE],
         ]);
 
         $query = $validated['query'];
 
-        $notes = (new SearchNotesQuery($query))->execute();
+        $paginator = (new SearchNotesQuery($query))->paginate(
+            perPage: $validated['per_page'] ?? self::DEFAULT_PER_PAGE,
+            page: $validated['page'] ?? 1,
+        );
 
         return Response::structured([
-            'notes' => $notes->map(fn (Note $note): array => [
+            'notes' => collect($paginator->items())->map(fn (Note $note): array => [
                 'slug' => $note->slug,
                 'title' => $note->title,
                 'lead' => $note->lead,
@@ -53,7 +65,10 @@ class SearchNotes extends Tool
                 'url' => route('notes.show', $note->slug),
                 'snippet' => $this->snippet($note, $query),
             ])->all(),
-            'total' => $notes->count(),
+            'total' => $paginator->total(),
+            'page' => $paginator->currentPage(),
+            'per_page' => $paginator->perPage(),
+            'has_more_pages' => $paginator->hasMorePages(),
         ]);
     }
 
@@ -94,7 +109,22 @@ class SearchNotes extends Tool
         return [
             'query' => $schema->string()
                 ->required()
-                ->description('The text to search for. Matched case-insensitively against note titles, leads, and markdown content.'),
+                ->min(self::MIN_QUERY_LENGTH)
+                ->description(sprintf(
+                    'The text to search for, at least %d characters long. Matched case-insensitively against note titles, leads, and markdown content.',
+                    self::MIN_QUERY_LENGTH,
+                )),
+            'page' => $schema->integer()
+                ->min(1)
+                ->description('The page of results to return. Defaults to 1.'),
+            'per_page' => $schema->integer()
+                ->min(1)
+                ->max(self::MAX_PER_PAGE)
+                ->description(sprintf(
+                    'How many notes to return per page. Defaults to %d, maximum %d.',
+                    self::DEFAULT_PER_PAGE,
+                    self::MAX_PER_PAGE,
+                )),
         ];
     }
 
@@ -115,8 +145,11 @@ class SearchNotes extends Tool
                     'url' => $schema->string()->description('The canonical URL of the note on davidharting.com.'),
                     'snippet' => $schema->string()->nullable()->description('The content surrounding the first match in the note body. Null when the match was only in the title or lead.'),
                 ]))
-                ->description('The matching published notes, most recently published first.'),
-            'total' => $schema->integer()->description('The total number of matching notes.'),
+                ->description('The matching published notes on this page, most recently published first.'),
+            'total' => $schema->integer()->description('The total number of matching notes across all pages.'),
+            'page' => $schema->integer()->description('The current page number.'),
+            'per_page' => $schema->integer()->description('The number of notes per page.'),
+            'has_more_pages' => $schema->boolean()->description('Whether more pages of matching notes are available.'),
         ];
     }
 }
