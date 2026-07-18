@@ -3,8 +3,10 @@
 use App\Ai\Tools\SearchMedia;
 use App\Models\Creator;
 use App\Models\Media;
+use App\Models\MediaEvent;
 use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
+use Illuminate\Support\Carbon;
 use Laravel\Ai\Tools\Request;
 
 test('SearchMedia has a meaningful description', function () {
@@ -18,13 +20,13 @@ test('SearchMedia has a meaningful description', function () {
     $this->assertStringContainsStringIgnoringCase('status', $description);
 });
 
-test('SearchMedia schema defines title, media_type, and creator fields', function () {
+test('SearchMedia schema defines all filter, sort, and pagination fields', function () {
     /** @var TestCase $this */
     $fields = (new SearchMedia)->schema(new JsonSchemaTypeFactory);
 
-    $this->assertArrayHasKey('title', $fields);
-    $this->assertArrayHasKey('media_type', $fields);
-    $this->assertArrayHasKey('creator', $fields);
+    foreach (['title', 'media_type', 'creator', 'status', 'year', 'started_year', 'finished_year', 'sort', 'page', 'limit'] as $field) {
+        $this->assertArrayHasKey($field, $fields);
+    }
 });
 
 test('SearchMedia schema enumerates valid media_type values', function () {
@@ -49,11 +51,73 @@ test('SearchMedia returns error when an invalid media_type is provided', functio
     $this->assertStringContainsString('podcast', $result['error']);
 });
 
-test('SearchMedia returns error when no search fields are provided', function () {
+test('SearchMedia browses the whole library when no filters are provided', function () {
     /** @var TestCase $this */
+    Media::factory()->book()->create(['title' => 'Dune']);
+    Media::factory()->movie()->create(['title' => 'Alien']);
+
     $result = json_decode((new SearchMedia)->handle(new Request([])), true);
 
+    $this->assertTrue($result['found']);
+    $this->assertSame(2, $result['total']);
+});
+
+test('SearchMedia filters by status', function () {
+    /** @var TestCase $this */
+    Media::factory()->book()
+        ->has(MediaEvent::factory()->finished(), 'events')
+        ->create(['title' => 'Finished Book']);
+    Media::factory()->book()->create(['title' => 'Backlog Book']);
+
+    $result = json_decode((new SearchMedia)->handle(new Request(['status' => 'finished'])), true);
+
+    $this->assertSame(1, $result['total']);
+    $this->assertSame('Finished Book', $result['results'][0]['title']);
+});
+
+test('SearchMedia returns error when an invalid status is provided', function () {
+    /** @var TestCase $this */
+    $result = json_decode((new SearchMedia)->handle(new Request(['status' => 'paused'])), true);
+
     $this->assertArrayHasKey('error', $result);
+    $this->assertStringContainsString('paused', $result['error']);
+});
+
+test('SearchMedia filters by finished_year', function () {
+    /** @var TestCase $this */
+    Media::factory()->book()
+        ->has(MediaEvent::factory()->finished()->at(Carbon::create(2024, 3, 1)), 'events')
+        ->create(['title' => 'Finished in 2024']);
+    Media::factory()->book()
+        ->has(MediaEvent::factory()->finished()->at(Carbon::create(2023, 3, 1)), 'events')
+        ->create(['title' => 'Finished in 2023']);
+
+    $result = json_decode((new SearchMedia)->handle(new Request(['finished_year' => 2024])), true);
+
+    $this->assertSame(1, $result['total']);
+    $this->assertSame('Finished in 2024', $result['results'][0]['title']);
+});
+
+test('SearchMedia applies sort', function () {
+    /** @var TestCase $this */
+    Media::factory()->book()->create(['title' => 'Zebra']);
+    Media::factory()->book()->create(['title' => 'Aardvark']);
+
+    $result = json_decode((new SearchMedia)->handle(new Request(['sort' => 'title'])), true);
+
+    $this->assertSame(['Aardvark', 'Zebra'], array_column($result['results'], 'title'));
+});
+
+test('SearchMedia paginates with a capped limit', function () {
+    /** @var TestCase $this */
+    Media::factory()->book()->count(3)->create();
+
+    $result = json_decode((new SearchMedia)->handle(new Request(['limit' => 2, 'page' => 2])), true);
+
+    $this->assertSame(3, $result['total']);
+    $this->assertSame(2, $result['page']);
+    $this->assertCount(1, $result['results']);
+    $this->assertFalse($result['has_more_pages']);
 });
 
 test('SearchMedia returns JSON with found=false when no results', function () {

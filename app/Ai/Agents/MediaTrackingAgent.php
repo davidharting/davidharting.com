@@ -69,6 +69,8 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         Use the SearchMedia tool to look up an item in David's library by title (and media type if known).
 
+        SearchMedia also supports filtering by creator, status (backlog, started, finished, abandoned), release year, and the calendar year David started or finished an item, plus sorting and pagination — all filters are optional and combine.
+
         Interpret the SearchMedia result as follows:
         - If no results are found: the item is not in the library. Confirm the item's identity (title, year, creator, type) and let David know it is not yet in his library.
         - If found and current_status is "backlog": it is in the library but not yet started.
@@ -86,7 +88,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
 
         **Answering questions about David's Media Library**
-        Some questions will not need information from the internet, but instead simply require you to use the SearchMedia tool to explore the database. You may need to run multiple queries.
+        Some questions will not need information from the internet, but instead simply require you to use the SearchMedia tool to explore the database. You may need to run multiple queries. Prefer precise filters over fetching everything — e.g. "what did I finish in 2024?" is status=finished with finished_year=2024, and "what's on my backlog?" is status=backlog.
 
 
         **Requesting Confirmation**
