@@ -3,8 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Models\Note;
-use App\Support\LikePattern;
-use Illuminate\Contracts\Database\Query\Builder;
+use App\Queries\SearchNotesQuery;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -26,7 +25,11 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
     TEXT)]
 class SearchNotes extends Tool
 {
-    private const SNIPPET_RADIUS = 120;
+    /**
+     * How many characters of context to include around the first match (on
+     * each side of it) when building a snippet.
+     */
+    private const SNIPPET_CHARS_AROUND_MATCH = 120;
 
     /**
      * Handle the tool request.
@@ -38,17 +41,8 @@ class SearchNotes extends Tool
         ]);
 
         $query = $validated['query'];
-        $pattern = '%'.LikePattern::escape($query).'%';
 
-        $notes = Note::query()
-            ->where('visible', true)
-            ->where(function (Builder $builder) use ($pattern): void {
-                $builder->whereLike('title', $pattern)
-                    ->orWhereLike('lead', $pattern)
-                    ->orWhereLike('markdown_content', $pattern);
-            })
-            ->orderByDesc('published_at')
-            ->get();
+        $notes = (new SearchNotesQuery($query))->execute();
 
         return Response::structured([
             'notes' => $notes->map(fn (Note $note): array => [
@@ -82,8 +76,8 @@ class SearchNotes extends Tool
             return null;
         }
 
-        $start = max(0, $position - self::SNIPPET_RADIUS);
-        $snippet = mb_substr($content, $start, mb_strlen($query) + self::SNIPPET_RADIUS * 2);
+        $start = max(0, $position - self::SNIPPET_CHARS_AROUND_MATCH);
+        $snippet = mb_substr($content, $start, mb_strlen($query) + self::SNIPPET_CHARS_AROUND_MATCH * 2);
 
         return ($start > 0 ? '…' : '')
             .trim($snippet)
