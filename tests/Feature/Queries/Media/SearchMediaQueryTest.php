@@ -428,6 +428,28 @@ describe('sort', function () {
         $this->assertSame(['Aardvark', 'Zebra'], $titles);
     });
 
+    test('creator sorts alphabetically by creator name', function () {
+        /** @var TestCase $this */
+        $smith = Creator::factory()->create(['name' => 'Zadie Smith']);
+        $patchett = Creator::factory()->create(['name' => 'Ann Patchett']);
+        Media::factory()->book()->create(['title' => 'By Zadie', 'creator_id' => $smith->id]);
+        Media::factory()->book()->create(['title' => 'By Ann', 'creator_id' => $patchett->id]);
+
+        $titles = (new SearchMediaQuery(sort: MediaSort::Creator))->execute()->pluck('title')->all();
+
+        $this->assertSame(['By Ann', 'By Zadie'], $titles);
+    });
+
+    test('defaults to most recently added first when no sort is given', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Added First']);
+        Media::factory()->book()->create(['title' => 'Added Second']);
+
+        $titles = (new SearchMediaQuery)->execute()->pluck('title')->all();
+
+        $this->assertSame(['Added Second', 'Added First'], $titles);
+    });
+
     test('year puts the most recent releases first', function () {
         /** @var TestCase $this */
         Media::factory()->book()->create(['title' => 'Old Release', 'year' => 1965]);

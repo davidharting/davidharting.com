@@ -4,6 +4,10 @@ namespace App\Enum;
 
 /**
  * Sort orders for media library queries backed by media_tracking_summary.
+ *
+ * Every sort ends with a media_id (library insertion order) tiebreaker, so
+ * ordering is fully deterministic: items a sort cannot rank — e.g.
+ * never-finished items under RecentlyFinished — come last, oldest first.
  */
 enum MediaSort: string
 {
@@ -21,6 +25,9 @@ enum MediaSort: string
 
     /** Alphabetical by title. */
     case Title = 'title';
+
+    /** Alphabetical by creator name. */
+    case Creator = 'creator';
 
     /** Release year, most recent first. */
     case Year = 'year';

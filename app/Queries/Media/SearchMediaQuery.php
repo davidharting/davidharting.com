@@ -102,15 +102,12 @@ class SearchMediaQuery
      */
     private function applySort(Builder $query): void
     {
-        if ($this->sort === null) {
-            return;
-        }
-
-        match ($this->sort) {
+        match ($this->sort ?? MediaSort::RecentlyAdded) {
             MediaSort::RecentlyFinished => $query->orderByRaw('finished_at desc nulls last'),
             MediaSort::RecentlyStarted => $query->orderByRaw('started_at desc nulls last'),
             MediaSort::RecentlyAdded => $query->orderByDesc('media_id'),
             MediaSort::Title => $query->orderBy('title'),
+            MediaSort::Creator => $query->orderBy('creator'),
             MediaSort::Year => $query->orderByRaw('year desc nulls last'),
         };
 
