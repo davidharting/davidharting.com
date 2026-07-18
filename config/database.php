@@ -77,6 +77,12 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => 'prefer',
+            // Keep sessions in UTC regardless of the server default. Even for
+            // timestamptz columns, Laravel sends offset-less datetime strings
+            // ('Y-m-d H:i:s') in app time (UTC), and Postgres resolves those
+            // against the session timezone at parse time — so a non-UTC server
+            // default (e.g. a local mac) silently shifts every stored timestamp.
+            'timezone' => 'UTC',
         ],
 
         'sqlsrv' => [

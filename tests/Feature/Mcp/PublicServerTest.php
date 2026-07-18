@@ -14,7 +14,13 @@ test('guests can list tools over the streamable HTTP transport', function () {
     $response->assertJsonPath('jsonrpc', '2.0');
     $response->assertJsonPath('id', 1);
     $response->assertJsonMissingPath('error');
-    $response->assertJsonPath('result.tools', []);
+
+    $toolNames = collect($response->json('result.tools'))->pluck('name')->all();
+    expect($toolNames)->toBe([
+        'list-notes',
+        'search-notes',
+        'get-note',
+    ]);
 });
 
 test('guests can initialize a session and see the server identity', function () {
