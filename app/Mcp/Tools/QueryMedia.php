@@ -62,6 +62,7 @@ class QueryMedia extends Tool
         return Response::structured([
             'results' => collect($paginator->items())->map(fn (MediaTrackingSummary $item): array => [
                 'media_id' => $item->media_id,
+                'creator_id' => $item->creator_id,
                 'title' => $item->title,
                 'year' => $item->year,
                 'media_type' => $item->media_type,
@@ -99,6 +100,7 @@ class QueryMedia extends Tool
             'results' => $schema->array()
                 ->items($schema->object([
                     'media_id' => $schema->integer()->description('The internal id of the media item.'),
+                    'creator_id' => $schema->integer()->nullable()->description('The internal id of the creator of the work.'),
                     'title' => $schema->string()->description('The title of the work.'),
                     'year' => $schema->integer()->nullable()->description('The release year of the work.'),
                     'media_type' => $schema->string()->description('One of: album, book, movie, tv show, video game.'),

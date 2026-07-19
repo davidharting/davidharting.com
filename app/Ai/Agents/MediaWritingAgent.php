@@ -4,7 +4,8 @@ namespace App\Ai\Agents;
 
 use App\Ai\Tools\CreateMedia;
 use App\Ai\Tools\CreateMediaEvent;
-use App\Ai\Tools\SearchMedia;
+use App\Ai\Tools\RecoverableMcpServerTool;
+use App\Mcp\Tools\QueryMedia;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
 use Laravel\Ai\Contracts\Agent;
@@ -50,7 +51,7 @@ class MediaWritingAgent implements Agent, CanActAsTool, HasTools
         Today's date is {$today}.
 
         **Creator resolution**
-        Always call SearchMedia with the creator name first to get creator_id before calling CreateMedia.
+        Always call query-media with the creator name first to get creator_id before calling CreateMedia.
         Use partial search — for example, to find J.R.R. Tolkien search for "Tolkien" and inspect the results.
         If a matching creator is found, pass creator_id to CreateMedia.
         If not found, pass creator_name — the tool will create the creator.
@@ -74,6 +75,6 @@ class MediaWritingAgent implements Agent, CanActAsTool, HasTools
      */
     public function tools(): iterable
     {
-        return [new SearchMedia, new CreateMedia, new CreateMediaEvent];
+        return [new RecoverableMcpServerTool(new QueryMedia), new CreateMedia, new CreateMediaEvent];
     }
 }

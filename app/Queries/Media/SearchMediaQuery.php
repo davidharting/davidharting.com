@@ -64,8 +64,8 @@ class SearchMediaQuery
     }
 
     /**
-     * The JSON schema fields describing this query's arguments, shared by the
-     * LLM-facing tools (agent and MCP) that expose it.
+     * The JSON schema fields describing this query's arguments, exposed to
+     * LLMs by the QueryMedia tool.
      *
      * @return array<string, JsonSchema>
      */

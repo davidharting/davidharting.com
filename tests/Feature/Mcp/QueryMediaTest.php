@@ -34,6 +34,7 @@ test('includes the public tracking fields for each item', function () {
     $response->assertOk();
     $response->assertStructuredContent(function ($json) use ($media) {
         $json->where('results.0.media_id', $media->id)
+            ->where('results.0.creator_id', $media->creator_id)
             ->where('results.0.title', 'Dune')
             ->where('results.0.year', 1965)
             ->where('results.0.media_type', 'book')

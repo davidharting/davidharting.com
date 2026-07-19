@@ -18,7 +18,7 @@ class CreateMedia implements Tool
     {
         return <<<'TEXT'
             Find or create a media item in the library. Provide either creator_id (when the
-            creator was found via SearchMedia) or creator_name (when the creator is new or
+            creator was found via query-media) or creator_name (when the creator is new or
             not yet known — the tool will double-check if it's already in the DB and if not,
             create the creator automatically). Exactly one of creator_id or creator_name must
             be provided. Returns the media record details and whether the media and/or creator
@@ -110,7 +110,7 @@ class CreateMedia implements Tool
             'year' => $schema->integer()
                 ->description('The publication or release year (optional).'),
             'creator_id' => $schema->integer()
-                ->description('The creator\'s ID as returned by SearchMedia. Use when the creator already exists in the library.'),
+                ->description('The creator\'s ID as returned by query-media. Use when the creator already exists in the library.'),
             'creator_name' => $schema->string()
                 ->description('The creator\'s name. Use when the creator is new or not yet known in the library — the tool will call firstOrCreate on Creator.'),
             'media_type' => $schema->string()->required()

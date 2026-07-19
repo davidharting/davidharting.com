@@ -2,8 +2,9 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\RecoverableMcpServerTool;
 use App\Ai\Tools\RequestConfirmation;
-use App\Ai\Tools\SearchMedia;
+use App\Mcp\Tools\QueryMedia;
 use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
@@ -63,16 +64,16 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         When David tells you about a piece of media he wants to track, identify the exact item with precision.
 
-        Use MediaWebSearchAgent when you need to identify a piece of media you don't already know — typically when David is adding something new, or when a library lookup turns up nothing or is ambiguous. You don't need it when David is referring to something already in his library and SearchMedia is enough to find it. Pass a condensed description of what David said (title, creator, year, type, plot hints — whatever he provided), NOT a search query string. The tool returns either "No matches found." or markdown bullets in the format: `- <title> (<year>) — <creator> — <media_type>` where media_type is one of: album, book, movie, tv show, video game.
+        Use MediaWebSearchAgent when you need to identify a piece of media you don't already know — typically when David is adding something new, or when a library lookup turns up nothing or is ambiguous. You don't need it when David is referring to something already in his library and query-media is enough to find it. Pass a condensed description of what David said (title, creator, year, type, plot hints — whatever he provided), NOT a search query string. The tool returns either "No matches found." or markdown bullets in the format: `- <title> (<year>) — <creator> — <media_type>` where media_type is one of: album, book, movie, tv show, video game.
 
         Flag ambiguity. If MediaWebSearchAgent returns more than one bullet — such as a remake, an adaptation, or multiple works with the same title — tell David and ask which one he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
 
-        Use the SearchMedia tool to look up an item in David's library by title (and media type if known).
+        Use the query-media tool to look up an item in David's library by title (and media type if known).
 
-        SearchMedia also supports filtering by creator, status (backlog, started, finished, abandoned), release year, and the calendar year David started or finished an item, plus sorting and pagination — all filters are optional and combine.
+        query-media also supports filtering by creator, status (backlog, started, finished, abandoned), release year, and the calendar year David started or finished an item, plus sorting and pagination — all filters are optional and combine.
 
-        Interpret the SearchMedia result as follows:
-        - If no results are found: the item is not in the library. Confirm the item's identity (title, year, creator, type) and let David know it is not yet in his library.
+        Interpret the query-media result as follows:
+        - If results is empty (total is 0): the item is not in the library. Confirm the item's identity (title, year, creator, type) and let David know it is not yet in his library.
         - If found and current_status is "backlog": it is in the library but not yet started.
         - If found and current_status is "started": David is currently working through it.
         - If found and current_status is "finished": David has already finished it.
@@ -88,7 +89,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
 
         **Answering questions about David's Media Library**
-        Some questions will not need information from the internet, but instead simply require you to use the SearchMedia tool to explore the database. You may need to run multiple queries. Prefer precise filters over fetching everything — e.g. "what did I finish in 2024?" is status=finished with finished_year=2024, and "what's on my backlog?" is status=backlog.
+        Some questions will not need information from the internet, but instead simply require you to use the query-media tool to explore the database. You may need to run multiple queries. Prefer precise filters over fetching everything — e.g. "what did I finish in 2024?" is status=finished with finished_year=2024, and "what's on my backlog?" is status=backlog.
 
 
         **Requesting Confirmation**
@@ -97,7 +98,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         Only call RequestConfirmation when:
         - You have identified the exact media item (title, year, creator, type confirmed via web search)
-        - You have checked the library via SearchMedia
+        - You have checked the library via query-media
         - All ambiguity is resolved (if there were multiple matches, David has clarified which one)
         - You know exactly what actions are needed (create media record, add event, etc.)
 
@@ -133,7 +134,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
     {
         $tools = [
             new MediaWebSearchAgent,
-            new SearchMedia,
+            new RecoverableMcpServerTool(new QueryMedia),
             $this->confirmationTool ?? new RequestConfirmation,
         ];
 
