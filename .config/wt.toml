@@ -1,0 +1,9 @@
+# Worktrunk project config — https://worktrunk.dev
+#
+# When a new worktree is created, copy this repo's gitignored/untracked files
+# (node_modules, vendor, .env, build caches, …) into it so the worktree is
+# ready to run without a fresh `composer install` / `npm install`.
+#
+# post-start runs in the background after the worktree is created. `.worktrees/`
+# and VCS/tool-state dirs are excluded automatically.
+post-start = "wt step copy-ignored"
