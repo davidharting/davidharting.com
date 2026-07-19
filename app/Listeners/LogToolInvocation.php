@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Events\ToolInvoked;
+use Laravel\Ai\Tools\ToolNameResolver;
 
 class LogToolInvocation
 {
@@ -19,6 +20,7 @@ class LogToolInvocation
         Log::info('AI tool invoked', [
             'agent' => $event->agent::class,
             'tool' => $event->tool::class,
+            'tool_name' => ToolNameResolver::resolve($event->tool),
             'invocation_id' => $event->invocationId,
             'tool_invocation_id' => $event->toolInvocationId,
             'arguments' => $event->arguments,

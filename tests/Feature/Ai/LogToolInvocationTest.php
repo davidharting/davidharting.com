@@ -1,8 +1,9 @@
 <?php
 
 use App\Ai\Agents\MediaTrackingAgent;
-use App\Ai\Tools\SearchMedia;
+use App\Ai\Tools\RecoverableMcpServerTool;
 use App\Listeners\LogToolInvocation;
+use App\Mcp\Tools\QueryMedia;
 use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
@@ -23,9 +24,9 @@ test('logs the agent, tool, ids, arguments, and result', function () {
         invocationId: 'inv-1',
         toolInvocationId: 'tool-inv-1',
         agent: new MediaTrackingAgent,
-        tool: new SearchMedia,
+        tool: new RecoverableMcpServerTool(new QueryMedia),
         arguments: ['title' => 'Dune'],
-        result: '{"found":false,"results":[]}',
+        result: '{"total":0,"results":[]}',
     );
 
     (new LogToolInvocation)->handle($event);
@@ -33,10 +34,11 @@ test('logs the agent, tool, ids, arguments, and result', function () {
     Log::shouldHaveReceived('info')->once()->withArgs(function ($message, $context) {
         return $message === 'AI tool invoked'
             && $context['agent'] === MediaTrackingAgent::class
-            && $context['tool'] === SearchMedia::class
+            && $context['tool'] === RecoverableMcpServerTool::class
+            && $context['tool_name'] === 'query-media'
             && $context['invocation_id'] === 'inv-1'
             && $context['tool_invocation_id'] === 'tool-inv-1'
             && $context['arguments'] === ['title' => 'Dune']
-            && $context['result'] === '{"found":false,"results":[]}';
+            && $context['result'] === '{"total":0,"results":[]}';
     });
 });

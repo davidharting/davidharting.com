@@ -3,8 +3,8 @@
 use App\Ai\Agents\MediaTrackingAgent;
 use App\Ai\Agents\MediaWebSearchAgent;
 use App\Ai\Agents\MediaWritingAgent;
+use App\Ai\Tools\RecoverableMcpServerTool;
 use App\Ai\Tools\RequestConfirmation;
-use App\Ai\Tools\SearchMedia;
 use Illuminate\Foundation\Testing\TestCase;
 use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Attributes\Model;
@@ -52,13 +52,13 @@ test('instructions include the current date', function () {
 });
 
 describe('tools()', function () {
-    test('includes MediaWebSearchAgent, SearchMedia, and RequestConfirmation by default', function () {
+    test('includes MediaWebSearchAgent, the wrapped query-media tool, and RequestConfirmation by default', function () {
         /** @var TestCase $this */
         $agent = MediaTrackingAgent::make();
         $tools = collect($agent->tools());
 
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof MediaWebSearchAgent));
-        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof SearchMedia));
+        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RecoverableMcpServerTool && $tool->name() === 'query-media'));
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RequestConfirmation));
     });
 

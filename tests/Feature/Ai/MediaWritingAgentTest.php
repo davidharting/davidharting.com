@@ -3,7 +3,7 @@
 use App\Ai\Agents\MediaWritingAgent;
 use App\Ai\Tools\CreateMedia;
 use App\Ai\Tools\CreateMediaEvent;
-use App\Ai\Tools\SearchMedia;
+use App\Ai\Tools\RecoverableMcpServerTool;
 use Illuminate\Foundation\Testing\TestCase;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
@@ -43,7 +43,7 @@ test('has the database write tools', function () {
     /** @var TestCase $this */
     $tools = collect((new MediaWritingAgent)->tools());
 
-    $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof SearchMedia));
+    $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RecoverableMcpServerTool && $tool->name() === 'query-media'));
     $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof CreateMedia));
     $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof CreateMediaEvent));
 });
