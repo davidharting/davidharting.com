@@ -58,3 +58,7 @@ run = "php artisan db:seed"
 [tasks."db:refresh"]
 description = "Drop, re-migrate, and re-seed the dev database"
 run = ["php artisan migrate:fresh", "php artisan db:seed"]
+
+[tasks.test]
+description = "Run tests for a quick dev loop"
+run = "php artisan test --compact --retry --bail"
