@@ -17,7 +17,7 @@ test('returns the whole library when called without arguments', function () {
 
     $response->assertOk();
     $response->assertStructuredContent(function ($json) {
-        $json->where('total', 2)->etc();
+        $json->where('total', 2)->where('has_more_pages', false)->etc();
     });
 });
 
@@ -202,12 +202,14 @@ describe('sorting', function () {
         /** @var TestCase $this */
         Media::factory()->book()->create(['title' => 'Zebra']);
         Media::factory()->book()->create(['title' => 'Aardvark']);
+        Media::factory()->book()->create(['title' => 'Monkey']);
 
         $response = PublicServer::tool(QueryMedia::class, ['sort' => 'title']);
 
         $response->assertStructuredContent(function ($json) {
             $json->where('results.0.title', 'Aardvark')
-                ->where('results.1.title', 'Zebra')
+                ->where('results.1.title', 'Monkey')
+                ->where('results.2.title', 'Zebra')
                 ->etc();
         });
     });
@@ -228,6 +230,42 @@ describe('pagination', function () {
                 ->has('results', 1)
                 ->etc();
         });
+    });
+
+    test('walking every page exhausts the full library exactly once', function () {
+        /** @var TestCase $this */
+        $created = Media::factory()->book()->count(5)->create();
+
+        $seen = [];
+        $page = 1;
+
+        do {
+            $hasMore = null;
+
+            PublicServer::tool(QueryMedia::class, ['limit' => 2, 'page' => $page])
+                ->assertOk()
+                ->assertStructuredContent(function ($json) use (&$seen, &$hasMore, $page) {
+                    $json->where('total', 5)
+                        ->where('page', $page)
+                        ->where('limit', 2)
+                        ->where('results', function ($results) use (&$seen) {
+                            $seen = array_merge($seen, $results->pluck('media_id')->all());
+
+                            return true;
+                        })
+                        ->where('has_more_pages', function ($value) use (&$hasMore) {
+                            $hasMore = $value;
+
+                            return true;
+                        })
+                        ->etc();
+                });
+
+            $page++;
+        } while ($hasMore && $page <= 5);
+
+        expect($hasMore)->toBeFalse();
+        expect($seen)->toEqualCanonicalizing($created->pluck('id')->all());
     });
 
     test('rejects a limit above the maximum', function () {
