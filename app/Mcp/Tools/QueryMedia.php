@@ -49,28 +49,13 @@ class QueryMedia extends Tool
             'finished_year' => ['sometimes', 'integer'],
             'sort' => ['sometimes', 'string', Rule::enum(MediaSort::class)],
             'page' => ['sometimes', 'integer', 'min:1'],
-            'limit' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'limit' => ['sometimes', 'integer', 'min:1', 'max:'.SearchMediaQuery::MAX_LIMIT],
         ]);
 
-        $status = isset($validated['status'])
-            ? MediaTrackingStatus::from($validated['status'])
-            : null;
-
-        $query = new SearchMediaQuery(
-            title: $validated['title'] ?? null,
-            mediaType: isset($validated['media_type']) ? MediaTypeName::from($validated['media_type']) : null,
-            creator: $validated['creator'] ?? null,
-            status: $status,
-            year: $validated['year'] ?? null,
-            startedYear: $validated['started_year'] ?? null,
-            finishedYear: $validated['finished_year'] ?? null,
-            sort: isset($validated['sort'])
-                ? MediaSort::from($validated['sort'])
-                : $this->defaultSort($status),
-        );
+        $query = SearchMediaQuery::fromArray($validated);
 
         $paginator = $query->paginate(
-            perPage: $validated['limit'] ?? 25,
+            perPage: $validated['limit'] ?? SearchMediaQuery::DEFAULT_LIMIT,
             page: $validated['page'] ?? 1,
         );
 
@@ -94,54 +79,13 @@ class QueryMedia extends Tool
     }
 
     /**
-     * When the caller does not choose a sort, pick the one they most likely
-     * mean: recently finished for finished items, recently started for
-     * started items, and newest library entries otherwise.
-     */
-    private function defaultSort(?MediaTrackingStatus $status): MediaSort
-    {
-        return match ($status) {
-            MediaTrackingStatus::Finished => MediaSort::RecentlyFinished,
-            MediaTrackingStatus::Started => MediaSort::RecentlyStarted,
-            default => MediaSort::RecentlyAdded,
-        };
-    }
-
-    /**
      * Get the tool's input schema.
      *
      * @return array<string, JsonSchema>
      */
     public function schema(JsonSchema $schema): array
     {
-        return [
-            'title' => $schema->string()
-                ->description('Match against the title (case-insensitive, partial match).'),
-            'creator' => $schema->string()
-                ->description('Match against the creator — author, director, artist, studio, etc. (case-insensitive, partial match).'),
-            'media_type' => $schema->string()
-                ->enum(array_column(MediaTypeName::cases(), 'value'))
-                ->description('Only return items of this media type.'),
-            'status' => $schema->string()
-                ->enum(array_column(MediaTrackingStatus::cases(), 'value'))
-                ->description('Only return items with this current tracking status. backlog means not yet started.'),
-            'year' => $schema->integer()
-                ->description('The release year of the work itself (e.g. the year a book was published). Distinct from started_year and finished_year.'),
-            'started_year' => $schema->integer()
-                ->description('The calendar year David started the item. Distinct from year, the release year of the work.'),
-            'finished_year' => $schema->integer()
-                ->description('The calendar year David finished the item. Distinct from year, the release year of the work.'),
-            'sort' => $schema->string()
-                ->enum(array_column(MediaSort::cases(), 'value'))
-                ->description('Sort order. Defaults to recently_finished when status=finished, recently_started when status=started, and recently_added otherwise.'),
-            'page' => $schema->integer()
-                ->min(1)
-                ->description('The page of results to return. Defaults to 1.'),
-            'limit' => $schema->integer()
-                ->min(1)
-                ->max(100)
-                ->description('How many results to return per page. Defaults to 25, maximum 100.'),
-        ];
+        return SearchMediaQuery::inputSchema($schema);
     }
 
     /**

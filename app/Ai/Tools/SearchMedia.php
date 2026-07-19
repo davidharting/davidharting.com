@@ -12,12 +12,20 @@ use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Stringable;
 
+/**
+ * The Telegram agent's window into the media library.
+ *
+ * Its public MCP twin, App\Mcp\Tools\QueryMedia, could be handed to the agent
+ * directly — laravel/ai auto-wraps Laravel\Mcp\Server\Tool instances — and the
+ * two already share their core through SearchMediaQuery. This native tool
+ * exists because the agent needs a different surface than anonymous MCP
+ * clients: creator_id in results (MediaWritingAgent passes it to CreateMedia),
+ * case-insensitive enum arguments, and invalid arguments answered with error
+ * strings the model can correct — a wrapped MCP tool's validate() throws
+ * instead, aborting the whole agent run.
+ */
 class SearchMedia implements Tool
 {
-    private const DEFAULT_LIMIT = 25;
-
-    private const MAX_LIMIT = 100;
-
     /**
      * Get the description of the tool's purpose.
      */
@@ -44,9 +52,6 @@ class SearchMedia implements Tool
      */
     public function handle(Request $request): Stringable|string
     {
-        $title = ((string) $request->string('title')) ?: null;
-        $creator = ((string) $request->string('creator')) ?: null;
-
         $mediaType = $this->enumFromRequest($request, 'media_type', MediaTypeName::class, $error);
         if ($error !== null) {
             return $error;
@@ -62,19 +67,19 @@ class SearchMedia implements Tool
             return $error;
         }
 
-        $query = new SearchMediaQuery(
-            title: $title,
-            mediaType: $mediaType,
-            creator: $creator,
-            status: $status,
-            year: $request->integer('year') ?: null,
-            startedYear: $request->integer('started_year') ?: null,
-            finishedYear: $request->integer('finished_year') ?: null,
-            sort: $sort ?? $this->defaultSort($status),
-        );
+        $query = SearchMediaQuery::fromArray([
+            'title' => ((string) $request->string('title')) ?: null,
+            'creator' => ((string) $request->string('creator')) ?: null,
+            'media_type' => $mediaType,
+            'status' => $status,
+            'year' => $request->integer('year') ?: null,
+            'started_year' => $request->integer('started_year') ?: null,
+            'finished_year' => $request->integer('finished_year') ?: null,
+            'sort' => $sort,
+        ]);
 
         $paginator = $query->paginate(
-            perPage: min($request->integer('limit') ?: self::DEFAULT_LIMIT, self::MAX_LIMIT),
+            perPage: min($request->integer('limit') ?: SearchMediaQuery::DEFAULT_LIMIT, SearchMediaQuery::MAX_LIMIT),
             page: max($request->integer('page') ?: 1, 1),
         );
 
@@ -89,32 +94,14 @@ class SearchMedia implements Tool
     }
 
     /**
-     * When the caller does not choose a sort, pick the one they most likely
-     * mean: recently finished for finished items, recently started for
-     * started items, and newest library entries otherwise.
-     */
-    private function defaultSort(?MediaTrackingStatus $status): MediaSort
-    {
-        return match ($status) {
-            MediaTrackingStatus::Finished => MediaSort::RecentlyFinished,
-            MediaTrackingStatus::Started => MediaSort::RecentlyStarted,
-            default => MediaSort::RecentlyAdded,
-        };
-    }
-
-    /**
-     * Parse an optional backed-enum argument, setting $error to a JSON error
-     * payload when the provided value is not a valid case.
+     * Parse and normalize an optional backed-enum argument, setting $error to
+     * a JSON error payload when the provided value is not a valid case.
      *
-     * @template TEnum of \BackedEnum
-     *
-     * @param  class-string<TEnum>  $enum
+     * @param  class-string<BackedEnum>  $enum
      *
      * @param-out string|null $error
-     *
-     * @return TEnum|null
      */
-    private function enumFromRequest(Request $request, string $key, string $enum, ?string &$error): ?BackedEnum
+    private function enumFromRequest(Request $request, string $key, string $enum, ?string &$error): ?string
     {
         $error = null;
         $raw = ((string) $request->string($key)) ?: null;
@@ -131,9 +118,11 @@ class SearchMedia implements Tool
                 ['error' => "Invalid {$key} \"{$raw}\". Must be one of: {$valid}."],
                 JSON_THROW_ON_ERROR,
             );
+
+            return null;
         }
 
-        return $value;
+        return $value->value;
     }
 
     /**
@@ -141,33 +130,6 @@ class SearchMedia implements Tool
      */
     public function schema(JsonSchema $schema): array
     {
-        return [
-            'title' => $schema->string()
-                ->description('The title of the media item to search for (case-insensitive, partial match).'),
-            'creator' => $schema->string()
-                ->description('The creator (author, director, artist, etc.) to search for (case-insensitive, partial match).'),
-            'media_type' => $schema->string()
-                ->enum(array_column(MediaTypeName::cases(), 'value'))
-                ->description('Optional media type filter.'),
-            'status' => $schema->string()
-                ->enum(array_column(MediaTrackingStatus::cases(), 'value'))
-                ->description('Only return items with this current tracking status. backlog means not yet started.'),
-            'year' => $schema->integer()
-                ->description('The release year of the work itself (e.g. the year a book was published). Distinct from started_year and finished_year.'),
-            'started_year' => $schema->integer()
-                ->description('The calendar year David started the item. Distinct from year, the release year of the work.'),
-            'finished_year' => $schema->integer()
-                ->description('The calendar year David finished the item. Distinct from year, the release year of the work.'),
-            'sort' => $schema->string()
-                ->enum(array_column(MediaSort::cases(), 'value'))
-                ->description('Sort order. Defaults to recently_finished when status=finished, recently_started when status=started, and recently_added otherwise.'),
-            'page' => $schema->integer()
-                ->min(1)
-                ->description('The page of results to return. Defaults to 1.'),
-            'limit' => $schema->integer()
-                ->min(1)
-                ->max(self::MAX_LIMIT)
-                ->description(sprintf('How many results to return per page. Defaults to %d, maximum %d.', self::DEFAULT_LIMIT, self::MAX_LIMIT)),
-        ];
+        return SearchMediaQuery::inputSchema($schema);
     }
 }

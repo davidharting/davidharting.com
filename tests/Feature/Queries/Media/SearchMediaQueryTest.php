@@ -450,6 +450,34 @@ describe('sort', function () {
         $this->assertSame(['Added Second', 'Added First'], $titles);
     });
 
+    test('defaults to most recently finished first when filtering by finished status', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2023, 1, 1)), 'events')
+            ->create(['title' => 'Finished Earlier']);
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2024, 1, 1)), 'events')
+            ->create(['title' => 'Finished Recently']);
+
+        $titles = (new SearchMediaQuery(status: MediaTrackingStatus::Finished))->execute()->pluck('title')->all();
+
+        $this->assertSame(['Finished Recently', 'Finished Earlier'], $titles);
+    });
+
+    test('defaults to most recently started first when filtering by started status', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started()->at(Carbon::create(2023, 1, 1)), 'events')
+            ->create(['title' => 'Started Earlier']);
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->started()->at(Carbon::create(2024, 1, 1)), 'events')
+            ->create(['title' => 'Started Recently']);
+
+        $titles = (new SearchMediaQuery(status: MediaTrackingStatus::Started))->execute()->pluck('title')->all();
+
+        $this->assertSame(['Started Recently', 'Started Earlier'], $titles);
+    });
+
     test('year puts the most recent releases first', function () {
         /** @var TestCase $this */
         Media::factory()->book()->create(['title' => 'Old Release', 'year' => 1965]);
