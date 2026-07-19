@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Attributes\Version;
  * The name is the contract: every tool registered here must only ever return
  * information that is already visible to a logged-out visitor on the website.
  * Authenticated capabilities belong on a separate server, never here (see
- * docs/projects/done/mcp-server.md).
+ * docs/projects/mcp-server.md).
  */
 #[Name('davidharting.com')]
 #[Version('1.0.0')]

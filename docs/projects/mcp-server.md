@@ -1,7 +1,7 @@
 ---
 name: mcp-server
 description: Public, unauthenticated, read-only MCP server for notes and media queries
-status: done
+status: in-progress
 ---
 
 # Public MCP Server

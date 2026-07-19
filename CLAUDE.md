@@ -49,7 +49,7 @@ e.g. PR #155 -> `https://davidhartingdotcom-web-pr-155.onrender.com`. Preview en
 
 ### MCP server
 
-A public, unauthenticated, read-only MCP server is served at `https://davidharting.com/mcp` (`Mcp::web()` in `routes/ai.php`, server and tools in `app/Mcp/`). It exposes published notes and the media library — only information a logged-out visitor can already see. Verify manually with `php artisan mcp:inspector mcp`. See `docs/projects/done/mcp-server.md`.
+A public, unauthenticated, read-only MCP server is served at `https://davidharting.com/mcp` (`Mcp::web()` in `routes/ai.php`, server and tools in `app/Mcp/`). It exposes published notes and the media library — only information a logged-out visitor can already see. Verify manually with `php artisan mcp:inspector mcp`. See `docs/projects/mcp-server.md`.
 
 ## Commands
 
