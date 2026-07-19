@@ -1,6 +1,6 @@
 <?php
 
-use App\Ai\Agents\MediaWebSearchAgent;
+use App\Ai\Agents\WebSearchAgent;
 use Illuminate\Foundation\Testing\TestCase;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
@@ -10,7 +10,7 @@ use Laravel\Ai\Providers\Tools\WebSearch;
 
 test("uses Anthropic's Sonnet 4.6", function () {
     /** @var TestCase $this */
-    $reflection = new ReflectionClass(MediaWebSearchAgent::class);
+    $reflection = new ReflectionClass(WebSearchAgent::class);
 
     $providerAttributes = $reflection->getAttributes(Provider::class);
     $this->assertNotEmpty($providerAttributes);
@@ -23,24 +23,24 @@ test("uses Anthropic's Sonnet 4.6", function () {
 
 test('acts as a tool with a stable name and a description', function () {
     /** @var TestCase $this */
-    $agent = new MediaWebSearchAgent;
+    $agent = new WebSearchAgent;
 
     $this->assertInstanceOf(CanActAsTool::class, $agent);
-    $this->assertSame('MediaWebSearchAgent', $agent->name());
+    $this->assertSame('WebSearchAgent', $agent->name());
     $this->assertNotEmpty((string) $agent->description());
 });
 
-test('instructions describe the media identification contract', function () {
+test('instructions frame the agent as a context-free shim', function () {
     /** @var TestCase $this */
-    $instructions = (string) (new MediaWebSearchAgent)->instructions();
+    $instructions = (string) (new WebSearchAgent)->instructions();
 
-    $this->assertStringContainsString('No matches found.', $instructions);
-    $this->assertStringContainsStringIgnoringCase('media_type', $instructions);
+    $this->assertStringContainsString('complete specification', $instructions);
+    $this->assertStringContainsStringIgnoringCase('WebSearch', $instructions);
 });
 
 test('has the WebSearch provider tool', function () {
     /** @var TestCase $this */
-    $tools = collect((new MediaWebSearchAgent)->tools());
+    $tools = collect((new WebSearchAgent)->tools());
 
     $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof WebSearch));
 });
