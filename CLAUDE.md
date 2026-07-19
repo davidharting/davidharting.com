@@ -47,6 +47,10 @@ https://davidhartingdotcom-web-pr-<PR_NUMBER>.onrender.com
 
 e.g. PR #155 -> `https://davidhartingdotcom-web-pr-155.onrender.com`. Preview environments set `IS_PULL_REQUEST=true` and `RUN_DEV_SEEDER=true`, and use the staging secrets/env group rather than production.
 
+### MCP server
+
+A public, unauthenticated, read-only MCP server is served at `https://davidharting.com/mcp` (`Mcp::web()` in `routes/ai.php`, server and tools in `app/Mcp/`). It exposes published notes and the media library — only information a logged-out visitor can already see. Verify manually with `php artisan mcp:inspector mcp`. See `docs/projects/mcp-server.md`.
+
 ## Commands
 
 - Use `ripgrep` to search files and `fd` to find files

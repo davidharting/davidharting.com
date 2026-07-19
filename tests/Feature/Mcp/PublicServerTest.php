@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Note;
 use Tests\TestCase;
 
 test('guests can list tools over the streamable HTTP transport', function () {
@@ -20,6 +21,7 @@ test('guests can list tools over the streamable HTTP transport', function () {
         'list-notes',
         'search-notes',
         'get-note',
+        'query-media',
     ]);
 });
 
@@ -38,6 +40,28 @@ test('guests can initialize a session and see the server identity', function () 
 
     $response->assertOk();
     $response->assertJsonPath('result.serverInfo.name', 'davidharting.com');
+
+    expect($response->json('result.instructions'))->toContain('davidharting.com');
+});
+
+test('guests can call a tool over the streamable HTTP transport', function () {
+    /** @var TestCase $this */
+    Note::factory()->create(['title' => 'A public note', 'visible' => true]);
+
+    $response = $this->postJson('/mcp', [
+        'jsonrpc' => '2.0',
+        'id' => 2,
+        'method' => 'tools/call',
+        'params' => [
+            'name' => 'list-notes',
+            'arguments' => [],
+        ],
+    ]);
+
+    $response->assertOk();
+    $response->assertJsonMissingPath('error');
+    $response->assertJsonPath('result.isError', false);
+    $response->assertJsonPath('result.structuredContent.total', 1);
 });
 
 test('non-POST requests are rejected with a 405', function () {
