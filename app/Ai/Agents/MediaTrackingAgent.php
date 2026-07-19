@@ -63,9 +63,13 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
 
         When David tells you about a piece of media he wants to track, identify the exact item with precision.
 
-        Use MediaWebSearchAgent when you need to identify a piece of media you don't already know — typically when David is adding something new, or when a library lookup turns up nothing or is ambiguous. You don't need it when David is referring to something already in his library and SearchMedia is enough to find it. Pass a condensed description of what David said (title, creator, year, type, plot hints — whatever he provided), NOT a search query string. The tool returns either "No matches found." or markdown bullets in the format: `- <title> (<year>) — <creator> — <media_type>` where media_type is one of: album, book, movie, tv show, video game.
+        Use WebSearchAgent whenever you need information from the web. It is a general-purpose web search tool with no context of its own: pass a self-contained request describing what you want to find and exactly what details you need back.
 
-        Flag ambiguity. If MediaWebSearchAgent returns more than one bullet — such as a remake, an adaptation, or multiple works with the same title — tell David and ask which one he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
+        To identify a piece of media you don't already know — typically when David is adding something new, or when a library lookup turns up nothing or is ambiguous — ask WebSearchAgent to identify the media from a condensed description of what David said (title, creator, year, type, plot hints — whatever he provided). Ask it to return every plausible candidate with title, year, primary creator, and media type, where media type is one of: album, book, movie, tv show, video game. You don't need it when David is referring to something already in his library and SearchMedia is enough to find it.
+
+        The primary creator depends on the media type — album → artist, book → author, movie → director, TV show → creator or showrunner, video game → developer studio — and is a single creator, the most relevant one (e.g. the lead director when a movie has several). Ask WebSearchAgent for the primary creator in these terms.
+
+        Flag ambiguity. If the search turns up more than one plausible match — such as a remake, an adaptation, or multiple works with the same title — tell David and ask which one he means. For example: "I found two possibilities: 'Dune' (1965 novel by Frank Herbert) or 'Dune' (2021 film by Denis Villeneuve). Which did you mean?"
 
         Use the SearchMedia tool to look up an item in David's library by title (and media type if known).
 
@@ -76,7 +80,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
         - If found and current_status is "finished": David has already finished it.
         - If found and current_status is "abandoned": David previously abandoned it.
 
-        If MediaWebSearchAgent returns "No matches found.", let David know you couldn't identify the item from the description and ask for more detail.
+        If the web search cannot identify the item, let David know you couldn't identify it from the description and ask for more detail.
 
         Supported event types are: started, finished, abandoned, and comment. Comment events do not change the media status — they attach a free-text note to a media item (e.g. a thought, recommendation, or reflection).
 
@@ -130,7 +134,7 @@ class MediaTrackingAgent implements Agent, Conversational, HasTools
     public function tools(): iterable
     {
         $tools = [
-            new MediaWebSearchAgent,
+            new WebSearchAgent,
             new SearchMedia,
             $this->confirmationTool ?? new RequestConfirmation,
         ];

@@ -1,8 +1,8 @@
 <?php
 
 use App\Ai\Agents\MediaTrackingAgent;
-use App\Ai\Agents\MediaWebSearchAgent;
 use App\Ai\Agents\MediaWritingAgent;
+use App\Ai\Agents\WebSearchAgent;
 use App\Ai\Tools\RequestConfirmation;
 use App\Ai\Tools\SearchMedia;
 use Illuminate\Foundation\Testing\TestCase;
@@ -52,19 +52,19 @@ test('instructions include the current date', function () {
 });
 
 describe('tools()', function () {
-    test('includes MediaWebSearchAgent, SearchMedia, and RequestConfirmation by default', function () {
+    test('includes WebSearchAgent, SearchMedia, and RequestConfirmation by default', function () {
         /** @var TestCase $this */
         $agent = MediaTrackingAgent::make();
         $tools = collect($agent->tools());
 
-        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof MediaWebSearchAgent));
+        $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof WebSearchAgent));
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof SearchMedia));
         $this->assertTrue($tools->contains(fn ($tool) => $tool instanceof RequestConfirmation));
     });
 
     // At time of writing, the Anthropic provider returns 400s when an agent mixes custom tools with
     // provider tools (like WebSearch) across multi-turn conversations. WebSearch lives inside the
-    // MediaWebSearchAgent sub-agent so the orchestrator only owns custom tools.
+    // WebSearchAgent sub-agent so the orchestrator only owns custom tools.
     test('does not expose the WebSearch provider tool directly', function () {
         /** @var TestCase $this */
         $agent = MediaTrackingAgent::make();
