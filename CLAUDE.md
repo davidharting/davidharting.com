@@ -71,6 +71,28 @@ public function down(): void
 
 Never edit a version file that has already shipped — migrations reference it by version, so rewriting it changes what `down()` restores.
 
+A new version arrives in a PR as a whole new file, so review it by diffing against the version it replaces:
+
+```bash
+git diff --no-index database/views/media_tracking_summary/v1.sql database/views/media_tracking_summary/v2.sql
+```
+
+#### Views block some table migrations
+
+Postgres refuses to `DROP COLUMN` or `ALTER COLUMN ... TYPE` on a column a view selects. A migration that needs to do either must drop the view first and reapply it afterwards:
+
+```php
+DatabaseView::drop('media_tracking_summary');
+Schema::table('media', function (Blueprint $table) {
+    $table->dropColumn('note');
+});
+DatabaseView::apply('media_tracking_summary', 'v3');
+```
+
+Because the view is created by a migration, a fresh database has it in exactly the same state production does at every point in history — so a migration that trips this fails in CI rather than only in production.
+
+Renames are the quiet case: `RENAME COLUMN` and `RENAME TABLE` succeed, and Postgres silently rewrites the stored view to follow them (`note` becomes `remark AS note`). The live view and its `.sql` file then disagree until the next version is applied.
+
 ## Commands
 
 - Use `ripgrep` to search files and `fd` to find files

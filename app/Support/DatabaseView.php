@@ -28,8 +28,20 @@ class DatabaseView
     {
         $select = self::definition($view, $version);
 
-        DB::statement("DROP VIEW IF EXISTS {$view}");
+        self::drop($view);
         DB::statement("CREATE VIEW {$view} AS {$select}");
+    }
+
+    /**
+     * Drop a view.
+     *
+     * Postgres refuses to `DROP COLUMN` or `ALTER COLUMN ... TYPE` on a column a
+     * view selects, so a migration doing either must drop the view first and
+     * reapply the next version afterwards.
+     */
+    public static function drop(string $view): void
+    {
+        DB::statement("DROP VIEW IF EXISTS {$view}");
     }
 
     /**

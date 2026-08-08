@@ -18,6 +18,27 @@ describe('definition()', function () {
     });
 });
 
+describe('drop()', function () {
+    test('removes the view so blocked table changes can proceed', function () {
+        /** @var TestCase $this */
+        DatabaseView::drop('media_tracking_summary');
+
+        $exists = DB::selectOne(
+            "SELECT 1 AS found FROM pg_views WHERE viewname = 'media_tracking_summary'"
+        );
+
+        $this->assertNull($exists);
+    });
+
+    test('is a no-op when the view does not exist', function () {
+        /** @var TestCase $this */
+        DatabaseView::drop('media_tracking_summary');
+        DatabaseView::drop('media_tracking_summary');
+
+        $this->assertTrue(true);
+    });
+});
+
 describe('apply()', function () {
     test('recreates the view from its definition file', function () {
         /** @var TestCase $this */
