@@ -13,6 +13,12 @@ use Illuminate\Support\Collection;
 
 class SearchMediaQuery
 {
+    /**
+     * The columns this query returns. It is an allowlist rather than `select *`
+     * on purpose: the view also carries `note`, `full_text`, and `history`,
+     * which are admin-only, and public callers such as the MCP `QueryMedia`
+     * tool read through here.
+     */
     private const COLUMNS = [
         'media_id',
         'creator_id',
