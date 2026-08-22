@@ -25,7 +25,9 @@ describe('full_text', function () {
     test('is null when the item has no note and no commented events', function () {
         /** @var TestCase $this */
         $media = Media::factory()->book()
-            ->has(MediaEvent::factory()->started()->state(['comment' => null]), 'events')
+            ->has(MediaEvent::factory()->started()->withComment(null), 'events')
+            ->has(MediaEvent::factory()->finished()->withComment(null), 'events')
+            ->has(MediaEvent::factory()->abandoned()->withComment(null), 'events')
             ->create(['note' => null]);
 
         $this->assertNull(fullTextFor($media));
@@ -34,7 +36,7 @@ describe('full_text', function () {
     test('is null when the note and comments are only whitespace', function () {
         /** @var TestCase $this */
         $media = Media::factory()->book()
-            ->has(MediaEvent::factory()->started()->state(['comment' => "  \n "]), 'events')
+            ->has(MediaEvent::factory()->started()->withComment("  \n "), 'events')
             ->create(['note' => '   ']);
 
         $this->assertNull(fullTextFor($media));
@@ -54,7 +56,7 @@ describe('full_text', function () {
                 MediaEvent::factory()
                     ->finished()
                     ->at(Carbon::create(2025, 4, 1))
-                    ->state(['comment' => 'Stuck the landing.']),
+                    ->withComment('Stuck the landing.'),
                 'events'
             )
             ->create(['note' => null]);
@@ -72,7 +74,7 @@ describe('full_text', function () {
                 MediaEvent::factory()
                     ->started()
                     ->at(Carbon::create(2025, 3, 4))
-                    ->state(['comment' => 'Slow first hundred pages.']),
+                    ->withComment('Slow first hundred pages.'),
                 'events'
             )
             ->create(['note' => 'Recommended by Ben.']);
@@ -90,11 +92,11 @@ describe('full_text', function () {
         MediaEvent::factory()->for($media)->comment('Still thinking about the ending.')
             ->at(Carbon::create(2025, 5, 12))->create();
         MediaEvent::factory()->for($media)->started()
-            ->at(Carbon::create(2025, 3, 4))->state(['comment' => 'Slow start.'])->create();
+            ->at(Carbon::create(2025, 3, 4))->withComment('Slow start.')->create();
         MediaEvent::factory()->for($media)->abandoned()
-            ->at(Carbon::create(2025, 6, 1))->state(['comment' => 'Gave up.'])->create();
+            ->at(Carbon::create(2025, 6, 1))->withComment('Gave up.')->create();
         MediaEvent::factory()->for($media)->finished()
-            ->at(Carbon::create(2025, 4, 1))->state(['comment' => 'Stuck the landing.'])->create();
+            ->at(Carbon::create(2025, 4, 1))->withComment('Stuck the landing.')->create();
 
         $this->assertSame(
             implode("\n", [
@@ -112,9 +114,9 @@ describe('full_text', function () {
         $media = Media::factory()->book()->create(['note' => null]);
 
         MediaEvent::factory()->for($media)->started()
-            ->at(Carbon::create(2025, 3, 4))->state(['comment' => null])->create();
+            ->at(Carbon::create(2025, 3, 4))->withComment(null)->create();
         MediaEvent::factory()->for($media)->finished()
-            ->at(Carbon::create(2025, 4, 1))->state(['comment' => 'Stuck the landing.'])->create();
+            ->at(Carbon::create(2025, 4, 1))->withComment('Stuck the landing.')->create();
 
         $this->assertSame(
             '- **finished** (2025-04-01): Stuck the landing.',
@@ -129,7 +131,7 @@ describe('full_text', function () {
                 MediaEvent::factory()
                     ->finished()
                     ->at(Carbon::create(2025, 4, 1))
-                    ->state(['comment' => "First thought.\nSecond thought."]),
+                    ->withComment("First thought.\nSecond thought."),
                 'events'
             )
             ->create(['note' => null]);
@@ -144,7 +146,7 @@ describe('full_text', function () {
         /** @var TestCase $this */
         $media = Media::factory()->book()->create(['note' => 'Mine.']);
         Media::factory()->book()
-            ->has(MediaEvent::factory()->finished()->state(['comment' => 'Theirs.']), 'events')
+            ->has(MediaEvent::factory()->finished()->withComment('Theirs.'), 'events')
             ->create(['note' => 'Also theirs.']);
 
         $this->assertSame('Mine.', fullTextFor($media));
@@ -154,7 +156,7 @@ describe('full_text', function () {
         /** @var TestCase $this */
         $noted = Media::factory()->book()->create(['note' => 'Borrowed from the library.']);
         $commented = Media::factory()->book()
-            ->has(MediaEvent::factory()->finished()->state(['comment' => 'Returned to the LIBRARY late.']), 'events')
+            ->has(MediaEvent::factory()->finished()->withComment('Returned to the LIBRARY late.'), 'events')
             ->create(['note' => null]);
         Media::factory()->book()->create(['note' => 'Bought it new.']);
 
@@ -162,6 +164,8 @@ describe('full_text', function () {
             ->whereLike('full_text', '%library%', caseSensitive: false)
             ->pluck('media_id');
 
+        // Canonicalizing because whereLike doesn't guarantee row order — we
+        // only care which items matched, not what order they came back in.
         $this->assertEqualsCanonicalizing([$noted->id, $commented->id], $matches->all());
     });
 });
@@ -170,7 +174,7 @@ describe('note', function () {
     test('is the item note on its own, without the event commentary', function () {
         /** @var TestCase $this */
         $media = Media::factory()->book()
-            ->has(MediaEvent::factory()->finished()->state(['comment' => 'Stuck the landing.']), 'events')
+            ->has(MediaEvent::factory()->finished()->withComment('Stuck the landing.'), 'events')
             ->create(['note' => 'Recommended by Ben.']);
 
         $summary = summaryFor($media);
@@ -207,7 +211,7 @@ describe('history', function () {
                 MediaEvent::factory()
                     ->started()
                     ->at(Carbon::create(2025, 3, 4))
-                    ->state(['comment' => null]),
+                    ->withComment(null),
                 'events'
             )
             ->create(['note' => null]);
@@ -227,11 +231,14 @@ describe('history', function () {
     test('lists every event oldest first with its type, timestamp, and comment', function () {
         /** @var TestCase $this */
         $media = Media::factory()->book()->create(['note' => null]);
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->finished()->at(Carbon::create(2025, 2, 1))->withComment('Unrelated.'), 'events')
+            ->create(['note' => null]);
 
         MediaEvent::factory()->for($media)->finished()
-            ->at(Carbon::create(2025, 4, 1))->state(['comment' => 'Stuck the landing.'])->create();
+            ->at(Carbon::create(2025, 4, 1))->withComment('Stuck the landing.')->create();
         MediaEvent::factory()->for($media)->started()
-            ->at(Carbon::create(2025, 3, 4))->state(['comment' => 'Slow start.'])->create();
+            ->at(Carbon::create(2025, 3, 4))->withComment('Slow start.')->create();
 
         $this->assertEquals(
             [
@@ -245,10 +252,10 @@ describe('history', function () {
     test('does not include events belonging to another media item', function () {
         /** @var TestCase $this */
         $media = Media::factory()->book()
-            ->has(MediaEvent::factory()->started()->state(['comment' => 'Mine.']), 'events')
+            ->has(MediaEvent::factory()->started()->withComment('Mine.'), 'events')
             ->create(['note' => null]);
         Media::factory()->book()
-            ->has(MediaEvent::factory()->finished()->state(['comment' => 'Theirs.']), 'events')
+            ->has(MediaEvent::factory()->finished()->withComment('Theirs.'), 'events')
             ->create(['note' => null]);
 
         $history = summaryFor($media)->history;

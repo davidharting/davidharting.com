@@ -65,4 +65,9 @@ class MediaEventFactory extends Factory
             'comment' => $text,
         ]);
     }
+
+    public function withComment(?string $text): MediaEventFactory
+    {
+        return $this->state(['comment' => $text]);
+    }
 }
