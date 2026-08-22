@@ -177,6 +177,24 @@ describe('privacy', function () {
         $response->assertOk();
         $response->assertDontSee('PRIVATE-COMMENT-MARKER');
     });
+
+    test('never returns the admin-only columns of the view', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()
+            ->has(MediaEvent::factory()->finished()->state(['comment' => 'PRIVATE-COMMENT-MARKER']), 'events')
+            ->create(['title' => 'A Book', 'note' => 'PRIVATE-NOTE-MARKER']);
+
+        $response = PublicServer::tool(QueryMedia::class);
+
+        $response->assertOk();
+        $response->assertStructuredContent(function ($json) {
+            $json->has('results', fn ($results) => $results->each(
+                fn ($item) => $item->missingAll(['full_text', 'history', 'note'])->etc()
+            ))->etc();
+        });
+        $response->assertDontSee('PRIVATE-NOTE-MARKER');
+        $response->assertDontSee('PRIVATE-COMMENT-MARKER');
+    });
 });
 
 describe('sorting', function () {

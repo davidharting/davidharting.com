@@ -64,9 +64,16 @@ The MCP server must expose exactly what the website exposes to a logged-out visi
 | Media tracking status + started/finished/abandoned dates             | Yes                 | `/media` index (finished / backlog / in-progress lists)      |
 | `media.note`                                                         | **No** (admin only) | `MediaPolicy::seeNote` gate in `media/index.blade.php`       |
 | Media event `comment` (incl. `finished_comment`)                     | **No** (admin only) | Rendered inside the same `$canSeeNote` guard in the template |
+| `media_tracking_summary.note` / `.full_text` / `.history`            | **No** (admin only) | Derived from the two rows above                              |
 | Media detail page `/media/{id}`                                      | No (admin only)     | `MediaPolicy::view`                                          |
 
-The two admin-only text fields are the main trap: `LogbookQuery` _selects_ `media.note` and `finished_comment`, but the Blade template hides them from guests. MCP tools must never include these columns. `MediaTrackingSummary` conveniently contains no private columns, which is one reason to build the media tool on it.
+The two admin-only text fields are the main trap: `LogbookQuery` _selects_ `media.note` and `finished_comment`, but the Blade template hides them from guests. MCP tools must never include these columns.
+
+The `media_tracking_summary` view now carries three more, all derived from those two sources: `note` (the item note verbatim), `full_text` (note plus every event comment as one searchable markdown string), and `history` (the full event timeline as `jsonb`). They are admin-only for exactly the same reason their inputs are.
+
+Authorization lives in the application, not the database. `SearchMediaQuery` expresses it for this path with an explicit column allowlist (`SearchMediaQuery::COLUMNS`) rather than `select *`, and `QueryMedia` maps that result field by field, so a column cannot reach a public response without someone deliberately adding it in two places. `tests/Feature/Mcp/QueryMediaTest.php` asserts none of them appear in a `QueryMedia` response.
+
+This is also what makes the phase-2 `AdminServer` widening cheap: once the policy check passes, including the free text is adding entries to `COLUMNS` and fields to the response map, not a second query path.
 
 ## Design
 
@@ -138,7 +145,7 @@ Fetch one published note in full.
 
 The flexible one. A single tool that can answer everything the website's three lists answer, plus free combinations the website can't.
 
-- **Backed by** the `media_tracking_summary` view via the `MediaTrackingSummary` model — it already computes `current_status` (backlog / started / finished / abandoned) and the three timestamps, and contains no admin-only columns.
+- **Backed by** the `media_tracking_summary` view via the `MediaTrackingSummary` model — it already computes `current_status` (backlog / started / finished / abandoned) and the three timestamps. Its admin-only columns — `note`, `full_text`, `history` — are excluded by `SearchMediaQuery::COLUMNS`.
 - **Input** (all optional; no arguments = the full library):
     - `title` — partial, case-insensitive match
     - `creator` — partial, case-insensitive match
