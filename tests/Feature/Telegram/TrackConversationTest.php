@@ -208,6 +208,45 @@ describe('awaitConfirmation()', function () {
     });
 });
 
+describe('/end', function () {
+    test('purges an in-flight conversation', function () {
+        /** @var TestCase $this */
+        Queue::fake();
+
+        $bot = trackBot();
+        $bot->hearText('/track mark dune as finished')->reply();
+
+        $bot->hearText('/end')
+            ->reply()
+            ->assertReplyText('Conversation ended.', index: 0)
+            ->assertNoConversation();
+    });
+
+    test('is harmless when no conversation is active', function () {
+        /** @var TestCase $this */
+        trackBot()
+            ->hearText('/end')
+            ->reply()
+            ->assertReplyText('Conversation ended.', index: 0)
+            ->assertNoConversation();
+    });
+
+    test('a new /track replaces the conversation left by an abandoned turn', function () {
+        /** @var TestCase $this */
+        Queue::fake();
+
+        $bot = trackBot();
+        $bot->hearText('/track mark dune as finished')->reply();
+        $bot->hearText('/track add the hobbit')->reply();
+
+        Queue::assertPushed(RunTrackAgentTurn::class, 2);
+
+        // Two distinct AI conversations: the second /track started over rather than
+        // continuing the first, which the abandoned turn's turn id no longer matches.
+        $this->assertDatabaseCount('agent_conversations', 2);
+    });
+});
+
 describe('end to end on the queue', function () {
     test('a completed turn leaves the conversation ready for the next message', function () {
         /** @var TestCase $this */

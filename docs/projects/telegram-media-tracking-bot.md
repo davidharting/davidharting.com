@@ -21,6 +21,7 @@ The site has a media tracking system with `Media` and `MediaEvent` models. Event
     - Plain-text (non-confirmation) responses include a `End` inline button to close the conversation.
     - Full conversation history (including tool calls and results) is persisted to `agent_conversations` / `agent_conversation_messages` via `RemembersConversations`.
     - Agent turns run on the queue worker via `App\Jobs\RunTrackAgentTurn`; the webhook only acknowledges and dispatches. See "Background agent turns" below.
+    - `/end` purges an in-flight conversation.
     - DB writes on confirm are not yet implemented (placeholder acknowledgement sent).
 
 ## Data Model
