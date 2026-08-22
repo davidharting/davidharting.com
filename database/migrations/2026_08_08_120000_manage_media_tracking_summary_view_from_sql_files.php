@@ -19,6 +19,8 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Same as up(): v1 is the pre-migration state, so there's no earlier
+        // version to roll back to.
         DatabaseView::apply('media_tracking_summary', 'v1');
     }
 };
