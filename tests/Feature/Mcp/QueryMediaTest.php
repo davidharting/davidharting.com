@@ -178,7 +178,7 @@ describe('privacy', function () {
         $response->assertDontSee('PRIVATE-COMMENT-MARKER');
     });
 
-    test('never returns the admin-only free text columns of the view', function () {
+    test('never returns the admin-only columns of the view', function () {
         /** @var TestCase $this */
         Media::factory()->book()
             ->has(MediaEvent::factory()->finished()->state(['comment' => 'PRIVATE-COMMENT-MARKER']), 'events')
