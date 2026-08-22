@@ -187,8 +187,11 @@ describe('privacy', function () {
         $response = PublicServer::tool(QueryMedia::class);
 
         $response->assertOk();
-        $response->assertDontSee('full_text');
-        $response->assertDontSee('history');
+        $response->assertStructuredContent(function ($json) {
+            $json->has('results', fn ($results) => $results->each(
+                fn ($item) => $item->missingAll(['full_text', 'history', 'note'])->etc()
+            ))->etc();
+        });
         $response->assertDontSee('PRIVATE-NOTE-MARKER');
         $response->assertDontSee('PRIVATE-COMMENT-MARKER');
     });
