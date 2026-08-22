@@ -51,6 +51,48 @@ e.g. PR #155 -> `https://davidhartingdotcom-web-pr-155.onrender.com`. Preview en
 
 A public, unauthenticated, read-only MCP server is served at `https://davidharting.com/mcp` (`Mcp::web()` in `routes/ai.php`, server and tools in `app/Mcp/`). It exposes published notes and the media library — only information a logged-out visitor can already see. Verify manually with `php artisan mcp:inspector mcp`. See `docs/projects/mcp-server.md`.
 
+### Database views
+
+Postgres view definitions live as versioned SQL files at `database/views/{view}/{version}.sql`, holding only the `SELECT` body. `App\Support\DatabaseView::apply()` drops and recreates the view from one of those files.
+
+To change a view: add the next version file, then a migration that applies the new version on `up()` and the previous one on `down()`.
+
+```php
+public function up(): void
+{
+    DatabaseView::apply('media_tracking_summary', 'v2');
+}
+
+public function down(): void
+{
+    DatabaseView::apply('media_tracking_summary', 'v1');
+}
+```
+
+Never edit a version file that has already shipped — migrations reference it by version, so rewriting it changes what `down()` restores.
+
+A new version arrives in a PR as a whole new file, so review it by diffing against the version it replaces:
+
+```bash
+git diff --no-index database/views/media_tracking_summary/v1.sql database/views/media_tracking_summary/v2.sql
+```
+
+#### Views block some table migrations
+
+Postgres refuses to `DROP COLUMN` or `ALTER COLUMN ... TYPE` on a column a view selects. A migration that needs to do either must drop the view first and reapply it afterwards:
+
+```php
+DatabaseView::drop('media_tracking_summary');
+Schema::table('media', function (Blueprint $table) {
+    $table->dropColumn('note');
+});
+DatabaseView::apply('media_tracking_summary', 'v3');
+```
+
+Because the view is created by a migration, a fresh database has it in exactly the same state production does at every point in history — so a migration that trips this fails in CI rather than only in production.
+
+Renames are the quiet case: `RENAME COLUMN` and `RENAME TABLE` succeed, and Postgres silently rewrites the stored view to follow them (`note` becomes `remark AS note`). The live view and its `.sql` file then disagree until the next version is applied.
+
 ## Commands
 
 - Use `ripgrep` to search files and `fd` to find files
