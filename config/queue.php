@@ -38,7 +38,10 @@ return [
             'driver' => 'database',
             'table' => 'jobs',
             'queue' => 'default',
-            'retry_after' => 90,
+            // Must stay above the longest job timeout on this connection, or the driver
+            // re-reserves a job that is still running and a second worker picks it up.
+            // App\Jobs\RunTrackAgentTurn is the long pole at a 300s timeout.
+            'retry_after' => 600,
             'after_commit' => false,
         ],
 

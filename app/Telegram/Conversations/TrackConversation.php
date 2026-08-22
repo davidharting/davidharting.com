@@ -2,61 +2,80 @@
 
 namespace App\Telegram\Conversations;
 
-use App\Ai\Agents\MediaTrackingAgent;
-use App\Ai\Tools\RequestConfirmation;
-use Illuminate\Support\Facades\Log;
+use App\Jobs\RunTrackAgentTurn;
 use Illuminate\Support\Str;
 use Laravel\Ai\Contracts\ConversationStore;
-use Laravel\Ai\Exceptions\AiException;
 use SergiX44\Nutgram\Conversations\Conversation;
 use SergiX44\Nutgram\Nutgram;
-use SergiX44\Nutgram\Telegram\Properties\ParseMode;
-use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
-use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardMarkup;
+use SergiX44\Nutgram\Telegram\Properties\ChatAction;
 
+/**
+ * Routes /track messages to the agent and back.
+ *
+ * Every step here runs inside the Telegram webhook request, so none of them may block:
+ * the agent turn itself is handed to RunTrackAgentTurn on the queue, and the job sends
+ * the reply and moves us on to the next step when it finishes.
+ */
 class TrackConversation extends Conversation
 {
     protected ?string $aiConversationId = null;
 
-    // Provides a ->id property for RemembersConversations. We use null so the DB stores
-    // NULL for user_id — this avoids conflating Telegram user IDs with system user IDs.
-    private function conversationUser(): object
-    {
-        return new class
-        {
-            public ?int $id = null;
-        };
-    }
+    /**
+     * Identifies the agent turn currently running on the queue. RunTrackAgentTurn
+     * carries a copy and discards its result unless this still matches, so a turn that
+     * has been superseded — by /end, or by a newer /track — cannot post a stale reply
+     * over a fresher one.
+     */
+    protected ?string $turnId = null;
 
     public function start(Nutgram $bot, string $text): void
     {
-        // Pre-create the conversation so runAgentTurn() can always call continue() uniformly,
+        // Pre-create the conversation so every turn can call continue() uniformly,
         // regardless of whether this is the first turn or a follow-up. This also avoids
         // spending tokens on a Haiku-generated title that is never shown to the user —
         // we use the first message text as the title instead.
         $this->aiConversationId = app(ConversationStore::class)
             ->storeConversation(null, Str::limit($text, 100, preserveWords: true));
 
-        $this->runAgentTurn($bot, $text);
+        $this->dispatchTurn($bot, $text);
     }
 
     public function converse(Nutgram $bot): void
     {
-        if ($bot->isCallbackQuery() && $bot->callbackQuery()?->data === 'end') {
-            $bot->answerCallbackQuery();
-            $bot->sendMessage('Conversation ended.');
-            $this->end();
+        if ($this->endedByButton($bot)) {
+            return;
+        }
+
+        $this->dispatchTurn($bot, $bot->message()->text ?? '');
+    }
+
+    /**
+     * Holds the conversation while an agent turn runs on the queue.
+     *
+     * Nutgram only rewrites the cached conversation when next() is called, so returning
+     * without stepping parks us here until RunTrackAgentTurn advances us. That is what
+     * keeps a second message from kicking off a concurrent agent run against the same
+     * conversation history.
+     */
+    public function working(Nutgram $bot): void
+    {
+        if ($this->endedByButton($bot)) {
+            return;
+        }
+
+        if ($bot->isCallbackQuery()) {
+            $bot->answerCallbackQuery(text: 'Still working on your last message.');
 
             return;
         }
 
-        $this->runAgentTurn($bot, $bot->message()->text ?? '');
+        $bot->sendMessage('Still working on your last message — one moment.');
     }
 
     public function awaitConfirmation(Nutgram $bot): void
     {
         if (! $bot->isCallbackQuery()) {
-            $this->runAgentTurn($bot, $bot->message()->text ?? '');
+            $this->dispatchTurn($bot, $bot->message()->text ?? '');
 
             return;
         }
@@ -68,58 +87,68 @@ class TrackConversation extends Conversation
 
         if ($bot->callbackQuery()?->data === 'confirm') {
             $bot->sendMessage('On it! I\'ll report back when it\'s done.');
-            $agent = (new MediaTrackingAgent(canWrite: true))
-                ->continue($this->aiConversationId, $this->conversationUser());
-            $response = $agent->prompt('The user confirmed. Execute the plan.');
-            $bot->sendMessage($response->text, parse_mode: ParseMode::HTML);
-        } else {
-            $bot->sendMessage('Conversation ended.');
+            $this->dispatchTurn($bot, 'The user confirmed. Execute the plan.', canWrite: true);
+
+            return;
         }
 
+        $bot->sendMessage('Conversation ended.');
         $this->end();
     }
 
-    private function runAgentTurn(Nutgram $bot, string $userText): void
+    /**
+     * Whether RunTrackAgentTurn still owns the turn it was dispatched for.
+     */
+    public function ownsTurn(string $turnId): bool
     {
-        try {
-            // We resolve RequestConfirmation via the container (rather than new-ing it up)
-            // so tests can swap in a pre-triggered instance via app()->bind(). We pass it
-            // through the constructor so we can read its state after the agent turn ends.
-            $confirmationTool = app(RequestConfirmation::class);
+        return $this->turnId !== null && hash_equals($this->turnId, $turnId);
+    }
 
-            // continue() requires a non-nullable object for the second arg even though the
-            // middleware accesses it with ?->id. conversationUser() provides a null-id object
-            // so the DB stores NULL for user_id (Telegram IDs ≠ system user IDs).
-            $agent = (new MediaTrackingAgent($confirmationTool))
-                ->continue($this->aiConversationId, $this->conversationUser());
+    /**
+     * Park the conversation on $step, ready for the user's next message.
+     *
+     * Persisting is the caller's job. RunTrackAgentTurn runs without an Update, so it
+     * has to call Nutgram::stepConversation() with explicit ids rather than going
+     * through next(), which resolves those ids from the update being handled.
+     */
+    public function resumeAt(string $step): void
+    {
+        $this->step = $step;
+        $this->turnId = null;
+    }
 
-            $response = $agent->prompt($userText);
+    private function dispatchTurn(Nutgram $bot, string $userText, bool $canWrite = false): void
+    {
+        $this->turnId = (string) Str::uuid();
 
-            if ($confirmationTool->wasRequested()) {
-                $bot->sendMessage(
-                    $response->text,
-                    reply_markup: InlineKeyboardMarkup::make()->addRow(
-                        InlineKeyboardButton::make('✓ Confirm', callback_data: 'confirm'),
-                        InlineKeyboardButton::make('End', callback_data: 'end'),
-                    ),
-                    parse_mode: ParseMode::HTML,
-                );
-                $this->next('awaitConfirmation');
-            } else {
-                $bot->sendMessage(
-                    $response->text,
-                    reply_markup: InlineKeyboardMarkup::make()->addRow(
-                        InlineKeyboardButton::make('End', callback_data: 'end'),
-                    ),
-                    parse_mode: ParseMode::HTML,
-                );
-                $this->next('converse');
-            }
-        } catch (AiException $e) {
-            // TODO: Retry with exponential backoff before giving up (consider adding to the agent itself).
-            Log::error('MediaTrackingAgent failed', ['exception' => $e]);
-            $bot->sendMessage("Error: {$e->getMessage()}");
-            $this->end();
+        // Park on working() and persist *before* dispatching. The queue worker is a
+        // separate process that can pick the job up as soon as the row lands, and its
+        // write to the conversation cache must not be clobbered by this one.
+        $this->next('working');
+
+        $bot->sendChatAction(ChatAction::TYPING);
+
+        RunTrackAgentTurn::dispatch(
+            chatId: $bot->chatId(),
+            userId: $bot->userId(),
+            threadId: $bot->messageThreadId(),
+            aiConversationId: $this->aiConversationId,
+            turnId: $this->turnId,
+            userText: $userText,
+            canWrite: $canWrite,
+        );
+    }
+
+    private function endedByButton(Nutgram $bot): bool
+    {
+        if (! $bot->isCallbackQuery() || $bot->callbackQuery()?->data !== 'end') {
+            return false;
         }
+
+        $bot->answerCallbackQuery();
+        $bot->sendMessage('Conversation ended.');
+        $this->end();
+
+        return true;
     }
 }

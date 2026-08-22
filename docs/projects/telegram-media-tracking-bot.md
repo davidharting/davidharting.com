@@ -20,6 +20,7 @@ The site has a media tracking system with `Media` and `MediaEvent` models. Event
     - Agent can ask clarifying questions before presenting the confirmation UI.
     - Plain-text (non-confirmation) responses include a `End` inline button to close the conversation.
     - Full conversation history (including tool calls and results) is persisted to `agent_conversations` / `agent_conversation_messages` via `RemembersConversations`.
+    - Agent turns run on the queue worker via `App\Jobs\RunTrackAgentTurn`; the webhook only acknowledges and dispatches. See "Background agent turns" below.
     - DB writes on confirm are not yet implemented (placeholder acknowledgement sent).
 
 ## Data Model
@@ -35,6 +36,42 @@ Creator         — name
 ## Design
 
 **Multi-turn conversation.** The user sends a natural-language message. The agent may ask clarifying questions (e.g. to resolve ambiguity between two works with the same title) before presenting a confirmation. Once ready, it presents a single confirmation. The user taps Confirm or Cancel. Informational queries (no action needed) receive a plain-text response with a `✓ End` button to close the conversation.
+
+## Background agent turns
+
+A `MediaTrackingAgent` turn is a multi-step Sonnet run with web search behind it and can
+take minutes — far longer than Telegram waits for a webhook response before redelivering
+the update, which used to mean a slow turn could run twice and produce two confirmation
+prompts.
+
+So the webhook never runs the agent. Each step of `TrackConversation` parks itself on a
+`working` step, persists, and dispatches `RunTrackAgentTurn`; the job runs the agent on
+`davidhartingdotcom-worker`, sends the reply, and advances the conversation to its next
+step. The webhook returns in well under a second.
+
+```
+Telegram -> webhook -> TrackConversation: next('working') -> dispatch -> 200 OK
+                                                                 |
+                    worker: RunTrackAgentTurn -> agent turn -> sendMessage
+                                                            -> stepConversation('converse')
+```
+
+Things worth knowing before changing this:
+
+- **State must persist before the job is dispatched.** The worker is a separate container
+  that can pick the job up as soon as the row lands, and its write to the conversation
+  cache must not be clobbered by the webhook's.
+- **`CACHE_DRIVER` must stay shared** between web and worker (`database` in `render.yaml`).
+  Nutgram keeps conversation state in the cache, and the two services have separate
+  filesystems, so a `file` driver would break the handoff silently.
+- **The job carries a turn id** that must still match the parked conversation before it
+  posts anything. That is what stops a turn superseded by `/end` — or by a newer `/track` —
+  from dropping a stale reply on top of a fresher one.
+- **The job never retries** (`$tries = 1`). A confirmed turn commits media events, and a
+  retry would apply them twice. `failed()` reports the error and ends the conversation so
+  a blown-up turn cannot leave the conversation parked on `working` forever.
+- **`retry_after` must outrun the job timeout** on the database queue connection, or the
+  driver re-reserves a turn that is still running and a second worker picks it up.
 
 ## Examples
 
