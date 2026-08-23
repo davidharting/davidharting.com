@@ -50,7 +50,7 @@ npm run test
 
 ```json
 {
-  "*": "prettier --ignore-unknown --write"
+    "*": "prettier --ignore-unknown --write"
 }
 ```
 
@@ -60,13 +60,13 @@ Only create if no Prettier config exists. Use these defaults:
 
 ```json
 {
-  "useTabs": false,
-  "tabWidth": 2,
-  "printWidth": 80,
-  "singleQuote": false,
-  "trailingComma": "es5",
-  "semi": true,
-  "arrowParens": "always"
+    "useTabs": false,
+    "tabWidth": 2,
+    "printWidth": 80,
+    "singleQuote": false,
+    "trailingComma": "es5",
+    "semi": true,
+    "arrowParens": "always"
 }
 ```
 
