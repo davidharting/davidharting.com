@@ -2,7 +2,8 @@ package-lock.json
 composer.lock
 mise.lock
 
-resources/views/emails
+# Blade templates are formatted by Pint (Pint/laravel_blade), not Prettier.
+*.blade.php
 
 public/js/filament
 public/css/filament

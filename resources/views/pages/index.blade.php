@@ -7,12 +7,7 @@
         <ul class="mt-8 space-y-2">
             @foreach ($pages as $page)
                 <li>
-                    <a
-                        href="{{ route("pages.show", $page->slug) }}"
-                        class="link link-primary"
-                    >
-                        {{ $page->title }}
-                    </a>
+                    <a href="{{ route("pages.show", $page->slug) }}" class="link link-primary"> {{ $page->title }} </a>
                     @if (! $page->is_published)
                         <span class="badge badge-ghost ml-2">Unpublished</span>
                     @endif
