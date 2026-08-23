@@ -154,7 +154,6 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/breeze (BREEZE) - v2
 - laravel/framework (LARAVEL) - v13
 - laravel/mcp (MCP) - v0
-- laravel/nightwatch (NIGHTWATCH) - v1
 - laravel/octane (OCTANE) - v2
 - laravel/prompts (PROMPTS) - v0
 - laravel/sanctum (SANCTUM) - v4
@@ -162,7 +161,6 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/boost (BOOST) - v2
 - laravel/pail (PAIL) - v1
 - laravel/pint (PINT) - v1
-- laravel/sail (SAIL) - v1
 - pestphp/pest (PEST) - v5
 - phpunit/phpunit (PHPUNIT) - v13
 - prettier (PRETTIER) - v3
