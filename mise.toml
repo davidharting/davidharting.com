@@ -16,7 +16,7 @@
 lockfile = true
 
 [tools]
-node = "20.5.1"
+node = "24.19.0"
 postgres = "17"
 
 [tools."http:php"]
