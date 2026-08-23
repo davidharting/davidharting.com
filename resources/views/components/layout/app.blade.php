@@ -1,74 +1,64 @@
 @props([
-    "title",
-    "description",
+    'title',
+    'description',
 ])
 
 <!DOCTYPE html>
 <html lang="{{ str_replace("_", "-", app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="csrf-token" content="{{ csrf_token() }}" />
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-        @php
-            $pageTitle = $title ?? "David Harting's Website";
-            $pageDescription = $description ?? "David's Corner of the Internet";
-        @endphp
+    @php
+        $pageTitle = $title ?? "David Harting's Website";
+        $pageDescription = $description ?? "David's Corner of the Internet";
+    @endphp
 
-        <title>{{ $pageTitle }}</title>
-        <meta name="title" content="{{ $pageTitle }}" />
+    <title>{{ $pageTitle }}</title>
+    <meta name="title" content="{{ $pageTitle }}" />
 
-        <meta name="description" content="{{ $pageDescription }}" />
-        <meta property="og:description" content="{{ $pageDescription }}" />
+    <meta name="description" content="{{ $pageDescription }}" />
+    <meta property="og:description" content="{{ $pageDescription }}" />
 
-        {{-- PWA --}}
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1a1a2e" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-        <meta name="apple-mobile-web-app-title" content="David Harting" />
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    {{-- PWA --}}
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1a1a2e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="David Harting" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 
-        @vite(["resources/css/app.css", "resources/js/app.js"])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-        <x-feed-links />
+    <x-feed-links />
 
-        {{-- Optional slot for page-specific <head> content (e.g., extra meta tags, structured data, page-specific styles) --}}
-        {{ $head ?? "" }}
-    </head>
+    {{-- Optional slot for page-specific <head> content (e.g., extra meta tags, structured data, page-specific styles) --}}
+    {{ $head ?? "" }}
+</head>
 
-    <body class="font-serif antialiased">
-        <div class="container mx-auto px-4">
-            <main class="mt-8">
-                <div class="flex justify-between w-full mb-8">
-                    <nav class="flex gap-1">
-                        <x-nav-link :href="route('home')">Home</x-nav-link>
-                        <x-nav-link :href="route('notes.index')">
-                            Notes
-                        </x-nav-link>
-                        <x-nav-link :href="route('media.index')">
-                            Media Log
-                        </x-nav-link>
-                        <x-nav-link :href="route('pages.index')">
-                            Pages
-                        </x-nav-link>
-                    </nav>
-                    <div class="flex gap-1">
-                        @guest
-                            <x-nav-link :href="route('login')">
-                                Login
-                            </x-nav-link>
-                        @endguest
+<body class="font-serif antialiased">
+    <div class="container mx-auto px-4">
+        <main class="mt-8">
+            <div class="mb-8 flex w-full justify-between">
+                <nav class="flex gap-1">
+                    <x-nav-link :href="route('home')">Home</x-nav-link>
+                    <x-nav-link :href="route('notes.index')"> Notes </x-nav-link>
+                    <x-nav-link :href="route('media.index')"> Media Log </x-nav-link>
+                    <x-nav-link :href="route('pages.index')"> Pages </x-nav-link>
+                </nav>
+                <div class="flex gap-1">
+                    @guest
+                        <x-nav-link :href="route('login')"> Login </x-nav-link>
+                    @endguest
 
-                        @can("administrate")
-                            <x-nav-link :href="route('admin.index')">
-                                Admin
-                            </x-nav-link>
-                        @endcan
-                    </div>
+                    @can('administrate')
+                        <x-nav-link :href="route('admin.index')"> Admin </x-nav-link>
+                    @endcan
                 </div>
-                {{ $slot }}
-            </main>
-        </div>
-    </body>
+            </div>
+            {{ $slot }}
+        </main>
+    </div>
+</body>
 </html>

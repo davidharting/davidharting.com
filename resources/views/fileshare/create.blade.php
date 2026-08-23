@@ -1,22 +1,12 @@
 <x-layout.app>
     <x-type.page-title>Upload a File</x-type.page-title>
-    <form
-        method="POST"
-        action="{{ route("fileshare.store") }}"
-        enctype="multipart/form-data"
-    >
+    <form method="POST" action="{{ route("fileshare.store") }}" enctype="multipart/form-data">
         @csrf
 
         <fieldset class="mb-4">
-            <legend class="font-bold mb-2">Disk</legend>
+            <legend class="mb-2 font-bold">Disk</legend>
             <label class="flex items-center gap-2">
-                <input
-                    type="radio"
-                    name="disk"
-                    value="private"
-                    checked
-                    class="radio"
-                />
+                <input type="radio" name="disk" value="private" checked class="radio" />
                 Private
             </label>
             <label class="flex items-center gap-2">
@@ -25,12 +15,8 @@
             </label>
         </fieldset>
 
-        <input
-            name="file"
-            type="file"
-            class="file-input @error("file") file-input-error @enderror"
-        />
-        @error("file")
+        <input name="file" type="file" class="file-input @error('file') file-input-error @enderror" />
+        @error('file')
             <p class="text-error mt-1">{{ $message }}</p>
         @enderror
 

@@ -15,12 +15,10 @@
                     $currentYear = $note->published_at->year;
                 @endphp
 
-                <h2 class="text-xl {{ $loop->first ? "" : "mt-8" }}">
-                    {{ $currentYear }}
-                </h2>
+                <h2 class="text-xl {{ $loop->first ? "" : "mt-8" }}">{{ $currentYear }}</h2>
             @endif
 
-            <x-note-index-item :note='$note' />
+            <x-note-index-item :note="$note" />
         @endforeach
     </div>
 

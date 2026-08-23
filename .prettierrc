@@ -1,11 +1,3 @@
 {
-    "plugins": ["prettier-plugin-blade", "prettier-plugin-toml"],
-    "overrides": [
-        {
-            "files": ["*.blade.php"],
-            "options": {
-                "parser": "blade"
-            }
-        }
-    ]
+    "plugins": ["prettier-plugin-toml"]
 }

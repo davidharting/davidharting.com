@@ -1,5 +1,5 @@
 @props([
-    "href",
+    'href',
 ])
 
 @php
@@ -16,8 +16,6 @@
 >
     {{ $slot }}
     @if ($isActive)
-        <span
-            class="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded"
-        ></span>
+        <span class="bg-primary absolute right-2 bottom-0 left-2 h-0.5 rounded"></span>
     @endif
 </a>

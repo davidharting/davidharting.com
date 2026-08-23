@@ -1,79 +1,48 @@
 <x-layout.app>
-    <div class="m-auto mx-4 sm:mx-auto max-w-2xl my-16">
-        <div
-            class="flex flex-col sm:flex-row justify-between w-full sm:space-x-4"
-        >
-            <div class="avatar mb-4 sm:mb-0 flex justify-center">
-                <div
-                    class="w-24 rounded-xl ring-3 ring-primary ring-offset-base-100 ring-offset-2"
-                >
+    <div class="m-auto mx-4 my-16 max-w-2xl sm:mx-auto">
+        <div class="flex w-full flex-col justify-between sm:flex-row sm:space-x-4">
+            <div class="avatar mb-4 flex justify-center sm:mb-0">
+                <div class="ring-primary ring-offset-base-100 w-24 rounded-xl ring-3 ring-offset-2">
                     <img src="headshot.jpg" />
                 </div>
             </div>
             <div class="space-y-2">
-                <h1 class="text-5xl font-extrabold font-serif">
-                    Hi! I am David Harting,
-                </h1>
+                <h1 class="font-serif text-5xl font-extrabold">Hi! I am David Harting,</h1>
                 <p class="text-lg">and it's a great day to build software ☀️</p>
             </div>
         </div>
 
-        <div class="space-y-16 mt-14">
+        <div class="mt-14 space-y-16">
             <div class="space-y-6">
                 <div class="space-y-12">
                     <p>
-                        I am an experienced, full-stack software engineer from
-                        Westfield, Indiana. My focus in my career has been web
-                        apps that enable people to work with data and infra.
-                        More recently, I've focused on other developer tools,
-                        e.g., CLIs and VS Code extensions. I work at
-                        <a href="https://render.com" class="link link-primary">
-                            Render
-                        </a>
+                        I am an experienced, full-stack software engineer from Westfield, Indiana. My focus in my career
+                        has been web apps that enable people to work with data and infra. More recently, I've focused on
+                        other developer tools, e.g., CLIs and VS Code extensions. I work at
+                        <a href="https://render.com" class="link link-primary"> Render </a>
                         , focusing on how agents can best use our platform.
                     </p>
                     <p>
-                        At work, I am happiest working closely with product and
-                        design to navigate tradeoffs and to ship quickly. I am
-                        passionate about code review and testing.
+                        At work, I am happiest working closely with product and design to navigate tradeoffs and to ship
+                        quickly. I am passionate about code review and testing.
                     </p>
                     <p>
-                        I believe in working hard and living slow. I share life
-                        with my wife Katie, my son AJ, and our dog Andi. I am
-                        fortunate enough to enjoy leisure time, which is filled
-                        with walks, wine, books, games, and more recently
-                        strength training.
+                        I believe in working hard and living slow. I share life with my wife Katie, my son AJ, and our
+                        dog Andi. I am fortunate enough to enjoy leisure time, which is filled with walks, wine, books,
+                        games, and more recently strength training.
                     </p>
                     <p>
                         You can email me at
-                        <a
-                            href="mailto:connect@davidharting.com"
-                            class="link link-primary"
-                        >
+                        <a href="mailto:connect@davidharting.com" class="link link-primary">
                             connect@davidharting.com
                         </a>
 
                         Or, find me on
-                        <a
-                            href="https://github.com/davidharting"
-                            class="link link-primary"
-                        >
-                            GitHub
-                        </a>
+                        <a href="https://github.com/davidharting" class="link link-primary"> GitHub </a>
                         ,
-                        <a
-                            href="https://bsky.app/profile/davidharting.com"
-                            class="link link-primary"
-                        >
-                            Bluesky
-                        </a>
+                        <a href="https://bsky.app/profile/davidharting.com" class="link link-primary"> Bluesky </a>
                         , and
-                        <a
-                            href="https://www.linkedin.com/in/davidharting/"
-                            class="link link-primary"
-                        >
-                            LinkedIn
-                        </a>
+                        <a href="https://www.linkedin.com/in/davidharting/" class="link link-primary"> LinkedIn </a>
                         .
                     </p>
                 </div>

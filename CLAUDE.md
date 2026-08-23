@@ -99,14 +99,14 @@ Renames are the quiet case: `RENAME COLUMN` and `RENAME TABLE` succeed, and Post
 - Use `php artisan` for Laravel commands
 - Run tests: `php artisan test` (pass a file path to run one file)
 - Run tests with previously failed tests first, stopping on first failure: `php artisan test --compact --retry --bail`
-- Format code: `mise run format` (or `vendor/bin/pint && npm run format` where mise isn't available)
+- Format code: `mise run format` (or `vendor/bin/pint && npm run format` where mise isn't available). Pint's Blade rule shells out to Node, so `node_modules` must be installed before Pint will run.
 
 ## Rules
 
 ### Way of working
 
 - Work on only what I ask you to do, and one thing at a time. Focus changes to just the task at hand. Ask about refactors before doing them.
-- Run `mise run format` before every commit (or `vendor/bin/pint && npm run format` where mise isn't available). Pint (PHP) and Prettier (JS/CSS/YAML) are both enforced in CI.
+- Run `mise run format` before every commit (or `vendor/bin/pint && npm run format` where mise isn't available). Pint formats PHP and Blade (the `Pint/laravel_blade` rule, which shells out to Node/Prettier); Prettier formats JS/CSS/YAML/TOML. Both are enforced in CI.
 - Make atomic commits with detailed messages
 - Include tests as you go rather than at the end. Tests should be committed with the relevant application changes.
 
