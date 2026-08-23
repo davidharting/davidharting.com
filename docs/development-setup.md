@@ -6,7 +6,7 @@ Bootstrap a fresh development environment to run tests. This guide is designed f
 
 - PHP 8.2 or higher
 - Composer
-- Node.js and npm
+- Node.js 24 or higher, and npm
 - PostgreSQL 15 or higher
 
 ## Setup Steps
