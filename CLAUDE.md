@@ -98,8 +98,14 @@ Renames are the quiet case: `RENAME COLUMN` and `RENAME TABLE` succeed, and Post
 - Use `ripgrep` to search files and `fd` to find files
 - Use `php artisan` for Laravel commands
 - Run tests: `php artisan test` (pass a file path to run one file)
+- Run the whole suite fast: `php artisan test --compact --parallel` (~5.5s vs ~18s serial). Laravel creates and migrates the per-process `laravel_test_test_N` databases itself, so no setup is needed.
 - Run tests with previously failed tests first, stopping on first failure: `php artisan test --compact --retry --bail`
+- Verify a one-off behavior without writing a throwaway test: `vendor/bin/pest --agent='<php>'` (single outer quotes). See the `pest-plugin-agent` skill.
 - Format code: `mise run format` (or `vendor/bin/pint && npm run format` where mise isn't available). Pint's Blade rule shells out to Node, so `node_modules` must be installed before Pint will run.
+
+### Pest's Tia engine is unavailable here
+
+The bundled `pest-testing` skill recommends `--tia` (Test Impact Analysis). **Ignore it in this project.** Tia needs a PCOV or Xdebug coverage driver, and our PHP is a Herd-lite static binary with neither — it cannot load extensions at all. `pest --tia` prints `TIA is skipped as it needs ext-pcov or Xdebug` and quietly runs the full suite, so the flag buys nothing. Reach for `--parallel` instead.
 
 ## Rules
 
@@ -142,22 +148,21 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.5
+- php - 8.4
 - filament/filament (FILAMENT) - v5
 - laravel/ai (AI) - v0
 - laravel/breeze (BREEZE) - v2
-- laravel/framework (LARAVEL) - v12
-- laravel/nightwatch (NIGHTWATCH) - v1
+- laravel/framework (LARAVEL) - v13
+- laravel/mcp (MCP) - v0
 - laravel/octane (OCTANE) - v2
 - laravel/prompts (PROMPTS) - v0
 - laravel/sanctum (SANCTUM) - v4
 - livewire/livewire (LIVEWIRE) - v4
 - laravel/boost (BOOST) - v2
-- laravel/mcp (MCP) - v0
+- laravel/pail (PAIL) - v1
 - laravel/pint (PINT) - v1
-- laravel/sail (SAIL) - v1
-- pestphp/pest (PEST) - v3
-- phpunit/phpunit (PHPUNIT) - v11
+- pestphp/pest (PEST) - v5
+- phpunit/phpunit (PHPUNIT) - v13
 - prettier (PRETTIER) - v3
 - tailwindcss (TAILWINDCSS) - v4
 
@@ -284,31 +289,17 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
 
-=== laravel/v12 rules ===
+=== octane/core rules ===
 
-# Laravel 12
+# Laravel Octane
 
-- CRITICAL: ALWAYS use `search-docs` tool for version-specific Laravel documentation and updated code examples.
-- This project upgraded from Laravel 10 without migrating to the new streamlined Laravel file structure.
-- This is perfectly fine and recommended by Laravel. Follow the existing structure from Laravel 10. We do not need to migrate to the new Laravel structure unless the user explicitly requests it.
+This application uses Laravel Octane, a long-running PHP server. The application bootstraps once and handles many requests within the same process.
 
-## Laravel 10 Structure
+- Never store request-specific state in singletons or static properties, because it can leak across requests.
+- Use `config('octane.server')` to detect the active driver (`swoole`, `roadrunner`, or `frankenphp`).
+- Prefer scoped bindings (`$this->app->scoped()`) over singletons for per-request services.
 
-- Middleware typically lives in `app/Http/Middleware/` and service providers in `app/Providers/`.
-- There is no `bootstrap/app.php` application configuration in a Laravel 10 structure:
-    - Middleware registration happens in `app/Http/Kernel.php`
-    - Exception handling is in `app/Exceptions/Handler.php`
-    - Console commands and schedule register in `app/Console/Kernel.php`
-    - Rate limits likely exist in `RouteServiceProvider` or `app/Http/Kernel.php`
-
-## Database
-
-- When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
-- Laravel 12 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
-
-### Models
-
-- Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
+When working on Octane-specific features (concurrency, shared tables, memory, driver configuration, testing), invoke `octane-development` for detailed rules.
 
 === pint/core rules ===
 
@@ -330,22 +321,21 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Filament
 
-- Filament is used by this application. Follow existing conventions for how and where it's implemented.
-- Filament is a Server-Driven UI (SDUI) framework for Laravel that lets you define user interfaces in PHP using structured configuration objects. Built on Livewire, Alpine.js, and Tailwind CSS.
-- Use the `search-docs` tool for official documentation on Artisan commands, code examples, testing, relationships, and idiomatic practices.
+- Filament is a Laravel UI framework built on Livewire, Alpine.js, and Tailwind CSS. UIs are defined in PHP via fluent, chainable components. Follow existing conventions in this app.
+- Use the `search-docs` tool for official documentation on Artisan commands, code examples, testing, relationships, and idiomatic practices. If `search-docs` is unavailable, refer to https://filamentphp.com/docs.
 
 ### Artisan
 
-- Use Filament-specific Artisan commands to create files. Find them with `list-artisan-commands` or `php artisan --help`.
-- Inspect required options and always pass `--no-interaction`.
+- Always use Filament-specific Artisan commands to create files. Find available commands with the `list-artisan-commands` tool, or run `php artisan --help`.
+- Inspect required options before running, and always pass `--no-interaction`.
 
 ### Patterns
 
-Use static `make()` methods to initialize components. Most configuration methods accept a `Closure` for dynamic values.
+Always use static `make()` methods to initialize components. Most configuration methods accept a `Closure` for dynamic values.
 
 Use `Get $get` to read other form field values for conditional logic:
 
-<code-snippet name="Conditional form field" lang="php">
+<code-snippet name="Conditional form field visibility" lang="php">
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
@@ -358,104 +348,255 @@ Select::make('type')
 TextInput::make('company_name')
 ->required()
 ->visible(fn (Get $get): bool => $get('type') === 'business'),
+
+</code-snippet>
+
+Use `Set $set` inside `->afterStateUpdated()` on a `->live()` field to mutate another field reactively. Prefer `->live(onBlur: true)` on text inputs to avoid per-keystroke updates:
+
+<code-snippet name="Reactive field update" lang="php">
+use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Support\Str;
+
+TextInput::make('title')
+->required()
+->live(onBlur: true)
+->afterStateUpdated(fn (Set $set, ?string $state) => $set(
+        'slug',
+        Str::slug($state ?? ''),
+)),
+
+TextInput::make('slug')
+->required(),
+
+</code-snippet>
+
+Compose layout by nesting `Section` and `Grid`. Children need explicit `->columnSpan()` or `->columnSpanFull()`:
+
+<code-snippet name="Section and Grid layout" lang="php">
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+
+Section::make('Details')
+->schema([
+Grid::make(2)->schema([
+TextInput::make('first_name')
+->columnSpan(1),
+TextInput::make('last_name')
+->columnSpan(1),
+TextInput::make('bio')
+->columnSpanFull(),
+]),
+]),
+
+</code-snippet>
+
+Use `Repeater` for inline `HasMany` management. `->relationship()` with no args binds to the relationship matching the field name:
+
+<code-snippet name="Repeater for HasMany" lang="php">
+use Filament\Forms\Components\Repeater;
+
+Repeater::make('qualifications')
+->relationship()
+->schema([
+TextInput::make('institution')
+->required(),
+TextInput::make('qualification')
+->required(),
+])
+->columns(2),
+
 </code-snippet>
 
 Use `state()` with a `Closure` to compute derived column values:
 
-<code-snippet name="Computed table column" lang="php">
+<code-snippet name="Computed table column value" lang="php">
 use Filament\Tables\Columns\TextColumn;
 
 TextColumn::make('full_name')
 ->state(fn (User $record): string => "{$record->first_name} {$record->last_name}"),
+
 </code-snippet>
 
-Actions encapsulate a button with optional modal form and logic:
+Use `SelectFilter` for enum or relationship filters, and `Filter` with a `->query()` closure for custom logic:
+
+<code-snippet name="Table filters" lang="php">
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
+
+SelectFilter::make('status')
+->options(UserStatus::class),
+
+SelectFilter::make('author')
+->relationship('author', 'name'),
+
+Filter::make('verified')
+->query(fn (Builder $query) => $query->whereNotNull('email_verified_at')),
+
+</code-snippet>
+
+Actions are buttons that encapsulate optional modal forms and behavior:
 
 <code-snippet name="Action with modal form" lang="php">
 use Filament\Actions\Action;
-use Filament\Forms\Components\TextInput;
 
 Action::make('updateEmail')
-->form([
-TextInput::make('email')->email()->required(),
+->schema([
+TextInput::make('email')
+->email()
+->required(),
 ])
-->action(fn (array $data, User $record): void => $record->update($data)),
+->action(fn (array $data, User $record) => $record->update($data)),
+
 </code-snippet>
 
 ### Testing
 
-Authenticate before testing panel functionality. Filament uses Livewire, so use `livewire()` or `Livewire::test()`:
+Testing setup (requires `pestphp/pest-plugin-livewire` in `composer.json`):
 
-<code-snippet name="Filament Table Test" lang="php">
-    livewire(ListUsers::class)
-        ->assertCanSeeTableRecords($users)
-        ->searchTable($users->first()->name)
-        ->assertCanSeeTableRecords($users->take(1))
-        ->assertCanNotSeeTableRecords($users->skip(1));
-</code-snippet>
+- Always call `$this->actingAs(User::factory()->create())` before testing panel functionality.
+- For edit pages, pass `['record' => $user->id]`, use `->call('save')` (not `->call('create')`), and do not assert `->assertRedirect()` (edit pages do not redirect after save).
 
-<code-snippet name="Filament Create Resource Test" lang="php">
-    livewire(CreateUser::class)
-        ->fillForm([
-            'name' => 'Test',
-            'email' => 'test@example.com',
-        ])
-        ->call('create')
-        ->assertNotified()
-        ->assertRedirect();
+<code-snippet name="Table test" lang="php">
+use function Pest\Livewire\livewire;
 
-    assertDatabaseHas(User::class, [
-        'name' => 'Test',
-        'email' => 'test@example.com',
-    ]);
+livewire(ListUsers::class)
+->assertCanSeeTableRecords($users)
+    ->searchTable($users->first()->name)
+->assertCanSeeTableRecords($users->take(1))
+    ->assertCanNotSeeTableRecords($users->skip(1));
 
 </code-snippet>
 
-<code-snippet name="Testing Validation" lang="php">
-    livewire(CreateUser::class)
-        ->fillForm([
-            'name' => null,
-            'email' => 'invalid-email',
-        ])
-        ->call('create')
-        ->assertHasFormErrors([
-            'name' => 'required',
-            'email' => 'email',
-        ])
-        ->assertNotNotified();
-</code-snippet>
+<code-snippet name="Create resource test" lang="php">
+use function Pest\Laravel\assertDatabaseHas;
 
-<code-snippet name="Calling Actions" lang="php">
-    use Filament\Actions\DeleteAction;
-    use Filament\Actions\Testing\TestAction;
+livewire(CreateUser::class)
+->fillForm([
+'name' => 'Test',
+'email' => 'test@example.com',
+])
+->call('create')
+->assertNotified()
+->assertHasNoFormErrors()
+->assertRedirect();
 
-    livewire(EditUser::class, ['record' => $user->id])
-        ->callAction(DeleteAction::class)
-        ->assertNotified()
-        ->assertRedirect();
-
-    livewire(ListUsers::class)
-        ->callAction(TestAction::make('promote')->table($user), [
-            'role' => 'admin',
-        ])
-        ->assertNotified();
+assertDatabaseHas(User::class, [
+'name' => 'Test',
+'email' => 'test@example.com',
+]);
 
 </code-snippet>
+
+<code-snippet name="Edit resource test" lang="php">
+livewire(EditUser::class, ['record' => $user->id])
+    ->fillForm(['name' => 'Updated'])
+    ->call('save')
+    ->assertNotified()
+    ->assertHasNoFormErrors();
+
+assertDatabaseHas(User::class, [
+'id' => $user->id,
+'name' => 'Updated',
+]);
+
+</code-snippet>
+
+<code-snippet name="Testing validation" lang="php">
+livewire(CreateUser::class)
+    ->fillForm([
+        'name' => null,
+        'email' => 'invalid-email',
+    ])
+    ->call('create')
+    ->assertHasFormErrors([
+        'name' => 'required',
+        'email' => 'email',
+    ])
+    ->assertNotNotified();
+
+</code-snippet>
+
+Use `->callAction(DeleteAction::class)` for page actions, or `->callAction(TestAction::make('name')->table($record))` for table actions:
+
+<code-snippet name="Calling actions" lang="php">
+use Filament\Actions\Testing\TestAction;
+
+livewire(ListUsers::class)
+->callAction(TestAction::make('promote')->table($user), [
+'role' => 'admin',
+])
+->assertNotified();
+
+</code-snippet>
+
+### Correct Namespaces
+
+- Form fields (`TextInput`, `Select`, `Repeater`, etc.): `Filament\Forms\Components\`
+- Infolist entries (`TextEntry`, `IconEntry`, etc.): `Filament\Infolists\Components\`
+- Layout components (`Grid`, `Section`, `Fieldset`, `Tabs`, `Wizard`, etc.): `Filament\Schemas\Components\`
+- Schema utilities (`Get`, `Set`, etc.): `Filament\Schemas\Components\Utilities\`
+- Table columns (`TextColumn`, `IconColumn`, etc.): `Filament\Tables\Columns\`
+- Table filters (`SelectFilter`, `Filter`, etc.): `Filament\Tables\Filters\`
+- Actions (`DeleteAction`, `CreateAction`, etc.): `Filament\Actions\`. Never use `Filament\Tables\Actions\`, `Filament\Forms\Actions\`, or any other sub-namespace for actions.
+- Icons: `Filament\Support\Icons\Heroicon` enum (e.g., `Heroicon::PencilSquare`)
 
 ### Common Mistakes
 
-**Commonly Incorrect Namespaces:**
+- **Never assume public file visibility.** File visibility is `private` by default. Always use `->visibility('public')` when public access is needed.
+- **Never assume full-width layout.** `Grid`, `Section`, `Fieldset`, and `Repeater` do not span all columns by default.
+- **Use `Select::make('author_id')->relationship('author', 'name')` for BelongsTo fields.** `BelongsToSelect` does not exist in v4.
+- **`Repeater` uses `->schema()`, not `->fields()`.**
+- **Never add `->dehydrated(false)` to fields that need to be saved.** It strips the value from form state before `->action()` or the save handler runs. Only use it for helper/UI-only fields.
+- **Use correct property types when overriding `Page`, `Resource`, and `Widget` properties.** These properties have union types or changed modifiers that must be preserved:
+    - `$navigationIcon`: `protected static string | BackedEnum | null` (not `?string`)
+    - `$navigationGroup`: `protected static string | UnitEnum | null` (not `?string`)
+    - `$view`: `protected string` (not `protected static string`) on `Page` and `Widget` classes
 
-- Form fields (TextInput, Select, etc.): `Filament\Forms\Components\`
-- Infolist entries (for read-only views) (TextEntry, IconEntry, etc.): `Filament\Forms\Components\`
-- Layout components (Grid, Section, Fieldset, Tabs, Wizard, etc.): `Filament\Schemas\Components\`
-- Schema utilities (Get, Set, etc.): `Filament\Schemas\Components\Utilities\`
-- Actions: `Filament\Actions\` (no `Filament\Tables\Actions\` etc.)
-- Icons: `Filament\Support\Icons\Heroicon` enum (e.g., `Heroicon::PencilSquare`)
+=== pestphp/pest-plugin-agent rules ===
 
-**Recent breaking changes to Filament:**
+## Pest Agent Plugin
 
-- File visibility is `private` by default. Use `->visibility('public')` for public access.
-- `Grid`, `Section`, and `Fieldset` no longer span all columns by default.
+`vendor/bin/pest --agent="<code>"` runs a one-off Pest assertion without creating a test file — the fastest way to verify that a change actually works (a route response, a model relationship, a rendered page, a form submission, mail firing, a screenshot, JavaScript errors, and so on).
+
+### ALWAYS load the skill first
+
+Whenever the user asks you to check, verify, confirm, or "make sure" something **works** — and it can be exercised on a route, page, form, model, job, mail, notification, or screenshot — you **MUST** load the **`pest-plugin-agent` skill before doing anything else**. Do not reach for a shell command, a throwaway test file, or manual reasoning first. This includes prompts like "verify the login form works", "did my change break X", "screenshot the homepage", "check this route returns 200", "make sure the mail fires", "is the form working", or any behavioral check after a Blade, Livewire, CSS, or JS change. Load the skill, then follow it exactly.
+
+### NEVER fight shell escaping — use SINGLE outer quotes
+
+Inline the snippet, but wrap it in **single** quotes, not double. Single quotes tell the shell to interpret nothing, so `$variables`, `\App\Models\User`, backticks, and `!` all pass through to PHP literally — **there is nothing to escape.** Use double quotes for PHP string literals inside:
+
+```bash
+vendor/bin/pest --agent='$user = \App\Models\User::factory()->create(); visit("/login")->type("email", $user->email)->press("Log in")->assertPathIs("/dashboard");'
+```
+
+Double outer quotes are the trap the shell springs on you — `--agent="…$user…"` makes the shell interpolate `$user` to nothing. Never do that, and never hand-escape `\$`.
+
+The one thing single quotes can't contain is a literal single quote (an apostrophe in the PHP). Only then, fall back to a file: **Write** the snippet to a `.php` file (plain body statements — no `<?php`, no `use`, fully qualified class names) and run `vendor/bin/pest --agent="$(cat /path/to/snippet.php)"`. `"$(cat …)"` passes the contents verbatim without re-parsing. The plugin resolves the test suite's `uses`/namespace itself, so the file's location does not matter (a scratch/temp path is fine — it need not live under `tests/`).
+
+### Browser checks require the browser plugin — ask before installing
+
+Whenever the request can only be answered in a real browser — "does login work", "is the page responsive", "screenshot the homepage", "check the mobile layout", "does the button click through", "are there JS/console errors", or any visual/interaction check — the `visit()` browser API is needed. It comes from a **separate** package, `pestphp/pest-plugin-browser`, which is powered by Playwright.
+
+If `visit()` is undefined (or the package is not installed), **do not install it silently — ask the user for permission first**, since it pulls in Node/Playwright dependencies and downloads browser binaries. Explain that the browser check needs it and confirm before running these commands:
+
+```bash
+composer require pestphp/pest-plugin-browser --dev   # the browser plugin (needs Node.js)
+
+npm install playwright@latest                         # Playwright driver
+
+npx playwright install                                # download the browser binaries
+
+```
+
+Once the user approves and it's installed, add `tests/Browser/Screenshots` to `.gitignore` so captured screenshots aren't committed. Browser assertions then run through the same `vendor/bin/pest --agent='…'` flow:
+
+```bash
+vendor/bin/pest --agent='visit("/login")->type("email", "test@example.com")->type("password", "password")->press("Log in")->assertPathIs("/dashboard");'
+vendor/bin/pest --agent='visit("/")->on()->mobile()->screenshot(fullPage: false, filename: "home-mobile");'
+```
+
+For full usage — backend examples, browser testing, screenshots, responsive checks, combining frontend and backend assertions, RefreshDatabase guidance, and pitfalls — load the **`pest-plugin-agent` skill**.
 
 </laravel-boost-guidelines>

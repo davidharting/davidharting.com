@@ -21,7 +21,17 @@
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
-        <env name="CACHE_DRIVER" value="database"/>
+        <!--
+            Must stay "array". With the database store, running the suite in
+            parallel fails ~10 tests: the store captures a Connection before
+            parallel testing swaps in the per-process database, and reaching for
+            it later reconnects by name, which silently discards the transaction
+            RefreshDatabase wraps each test in.
+            Upstream bug, open since 2025: https://github.com/laravel/framework/issues/54716
+            A test that genuinely needs the database store can still opt in
+            per-test with Cache::store('database'), which resolves lazily.
+        -->
+        <env name="CACHE_DRIVER" value="array"/>
         <env name="DB_CONNECTION" value="pgsql"/>
         <env name="DB_DATABASE" value="laravel_test"/>
         <env name="DB_USERNAME" value="david" force="false"/>
