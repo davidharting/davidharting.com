@@ -2,6 +2,7 @@
 
 namespace App\Telegram\Commands;
 
+use App\Support\DeploymentInfo;
 use SergiX44\Nutgram\Handlers\Type\Command;
 use SergiX44\Nutgram\Nutgram;
 
@@ -13,14 +14,10 @@ class WhoAreYouCommand extends Command
 
     public function handle(Nutgram $bot): void
     {
-        $lines = [
-            'APP_URL: '.config('app.url'),
-            'APP_ENV: '.config('app.env'),
-            'IS_PULL_REQUEST: '.(env('IS_PULL_REQUEST') ? 'yes' : 'no'),
-            'GIT_COMMIT: '.(env('RENDER_GIT_COMMIT') ? substr(env('RENDER_GIT_COMMIT'), 0, 10) : 'unknown'),
-            'GIT_BRANCH: '.(env('RENDER_GIT_BRANCH') ?? 'unknown'),
-            'SERVICE_NAME: '.(env('RENDER_SERVICE_NAME') ?? 'unknown'),
-        ];
+        $lines = collect(DeploymentInfo::values())
+            ->map(fn (string $value, string $key): string => "{$key}: {$value}")
+            ->values()
+            ->all();
 
         $bot->sendMessage(implode("\n", $lines));
     }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DebugController;
 use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MediaIndexController;
@@ -75,5 +76,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/kitchen-sink', function () {
     return view('kitchen-sink');
 })->name('kitchen-sink');
+
+Route::get('/debug', DebugController::class)->name('debug');
 
 require __DIR__.'/auth.php';
