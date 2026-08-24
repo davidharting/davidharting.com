@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DebugController;
 use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MediaIndexController;
@@ -30,6 +31,11 @@ Route::withHead(robots: 'noindex, nofollow')->group(function () {
     })->name('kitchen-sink')->withHead(
         title: 'Kitchen Sink',
         description: 'Component showcase page',
+    );
+
+    Route::get('/debug', DebugController::class)->name('debug')->withHead(
+        title: 'Debug',
+        description: 'Which deployment is serving this request',
     );
 });
 
