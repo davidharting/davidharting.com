@@ -2,6 +2,7 @@
 
 namespace App\Telegram\Commands;
 
+use App\Support\DeploymentFact;
 use App\Support\DeploymentInfo;
 use SergiX44\Nutgram\Handlers\Type\Command;
 use SergiX44\Nutgram\Nutgram;
@@ -14,10 +15,10 @@ class WhoAreYouCommand extends Command
 
     public function handle(Nutgram $bot): void
     {
-        $lines = collect(DeploymentInfo::values())
-            ->map(fn (string $value, string $key): string => "{$key}: {$value}")
-            ->values()
-            ->all();
+        $lines = array_map(
+            fn (DeploymentFact $fact): string => "{$fact->label}: {$fact->value}",
+            DeploymentInfo::facts(),
+        );
 
         $bot->sendMessage(implode("\n", $lines));
     }

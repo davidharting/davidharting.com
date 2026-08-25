@@ -14,14 +14,14 @@
         <div class="overflow-x-auto">
             <table class="table">
                 <tbody>
-                    @foreach ($values as $key => $value)
+                    @foreach ($facts as $fact)
                         <tr>
-                            <th class="font-mono whitespace-nowrap">{{ $key }}</th>
+                            <th class="font-mono whitespace-nowrap">{{ $fact->label }}</th>
                             <td class="font-mono break-all">
-                                @if ($key === 'GIT_COMMIT' && $commitUrl)
-                                    <a class="link link-primary" href="{{ $commitUrl }}">{{ $value }}</a>
+                                @if ($fact->url)
+                                    <a class="link link-primary" href="{{ $fact->url }}">{{ $fact->value }}</a>
                                 @else
-                                    {{ $value }}
+                                    {{ $fact->value }}
                                 @endif
                             </td>
                         </tr>

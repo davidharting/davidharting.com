@@ -11,29 +11,39 @@ namespace App\Support;
  * near-identical deployments are live at once.
  *
  * Read by both the `/whoareyou` Telegram command and the `/debug` page so the
- * two can never drift apart.
+ * two can never drift apart, including in the order they present.
  */
 class DeploymentInfo
 {
     /**
-     * The deployment's identifying values, keyed by the environment variable
-     * they come from, in display order.
+     * The facts identifying this deployment, in presentation order.
      *
-     * Every value is safe to show a logged-out visitor: the repository is
+     * Returned as an ordered list rather than a map because the order is part
+     * of the contract: it is the reading order both surfaces render, and
+     * defining it here is what keeps the page and the Telegram reply
+     * recognisably the same output.
+     *
+     * Every fact is safe to show a logged-out visitor: the repository is
      * public, and the URL and service name are already visible in the address
      * bar of the request asking for them.
      *
-     * @return array<string, string>
+     * @return list<DeploymentFact>
      */
-    public static function values(): array
+    public static function facts(): array
     {
+        $commit = self::shortCommit();
+
         return [
-            'APP_URL' => config('app.url'),
-            'APP_ENV' => config('app.env'),
-            'IS_PULL_REQUEST' => env('IS_PULL_REQUEST') ? 'yes' : 'no',
-            'GIT_COMMIT' => self::shortCommit() ?? 'unknown',
-            'GIT_BRANCH' => env('RENDER_GIT_BRANCH') ?? 'unknown',
-            'SERVICE_NAME' => env('RENDER_SERVICE_NAME') ?? 'unknown',
+            new DeploymentFact('APP_URL', config('app.url')),
+            new DeploymentFact('APP_ENV', config('app.env')),
+            new DeploymentFact('IS_PULL_REQUEST', env('IS_PULL_REQUEST') ? 'yes' : 'no'),
+            new DeploymentFact(
+                'GIT_COMMIT',
+                $commit ?? 'unknown',
+                $commit ? "https://github.com/davidharting/davidharting.com/commit/{$commit}" : null,
+            ),
+            new DeploymentFact('GIT_BRANCH', env('RENDER_GIT_BRANCH') ?? 'unknown'),
+            new DeploymentFact('SERVICE_NAME', env('RENDER_SERVICE_NAME') ?? 'unknown'),
         ];
     }
 
@@ -41,24 +51,10 @@ class DeploymentInfo
      * The abbreviated commit SHA this deployment was built from, or null when
      * running somewhere Render did not set it (local dev, tests, CI).
      */
-    public static function shortCommit(): ?string
+    private static function shortCommit(): ?string
     {
         $commit = env('RENDER_GIT_COMMIT');
 
         return $commit ? substr($commit, 0, 10) : null;
-    }
-
-    /**
-     * A GitHub link to the deployed commit, or null when the commit is unknown.
-     */
-    public static function commitUrl(): ?string
-    {
-        $commit = self::shortCommit();
-
-        if (! $commit) {
-            return null;
-        }
-
-        return "https://github.com/davidharting/davidharting.com/commit/{$commit}";
     }
 }
