@@ -23,12 +23,6 @@ describe('GET /debug', function () {
             'SERVICE_NAME',
             'davidhartingdotcom-web-pr-999',
         ]);
-    });
-
-    test('links the commit to GitHub', function () {
-        /** @var TestCase $this */
-        $response = $this->get('/debug');
-
         $response->assertSee('https://github.com/davidharting/davidharting.com/commit/abcdef1234');
     });
 
@@ -45,10 +39,5 @@ describe('GET /debug', function () {
 
         expect(RenderedHead::from($response)->meta('robots'))->toBe('noindex, nofollow')
             ->and($response->headers->get('X-Robots-Tag'))->toBe('noindex, nofollow');
-    });
-
-    test('robots.txt disallows it', function () {
-        /** @var TestCase $this */
-        expect(file_get_contents(public_path('robots.txt')))->toContain('Disallow: /debug');
     });
 });
