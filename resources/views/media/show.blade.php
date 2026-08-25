@@ -1,4 +1,4 @@
-<x-layout.app :title="$media->title" :description="$media->title">
+<x-layout.app>
     <article class="max-w-2xl">
         <h1 class="mb-4 font-serif text-2xl">{{ $media->title }}</h1>
 

@@ -43,27 +43,45 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home')->middleware(ProvideMarkdownResponse::class);
 
-Route::get('/backend', [AdminController::class, 'index'])->name('admin.index')->middleware('can:administrate');
-Route::post('/backend/backup', [AdminController::class, 'backupDatabase'])->name('admin.backup')->middleware('can:administrate');
+Route::withHead(robots: 'noindex, nofollow')->group(function () {
+    Route::get('/backend', [AdminController::class, 'index'])->name('admin.index')->middleware('can:administrate')->withHead(title: 'Admin');
+    Route::post('/backend/backup', [AdminController::class, 'backupDatabase'])->name('admin.backup')->middleware('can:administrate');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->middleware(['auth', 'verified'])->name('dashboard')->withHead(title: 'Dashboard');
 
-Route::get('/notes', NotesIndexController::class)->name('notes.index')->middleware(ProvideMarkdownResponse::class);
+    Route::get('/kitchen-sink', function () {
+        return view('kitchen-sink');
+    })->name('kitchen-sink')->withHead(
+        title: 'Kitchen Sink',
+        description: 'Component showcase page',
+    );
+});
+
+Route::get('/notes', NotesIndexController::class)->name('notes.index')->middleware(ProvideMarkdownResponse::class)->withHead(
+    title: "David's Notes",
+    description: 'Notes from David',
+);
 Route::get('/notes/{note}', [NoteController::class, 'show'])->name('notes.show')->can('view', 'note')->middleware(ProvideMarkdownResponse::class);
 
-Route::get('/pages', [PageController::class, 'index'])->name('pages.index')->middleware(ProvideMarkdownResponse::class);
+Route::get('/pages', [PageController::class, 'index'])->name('pages.index')->middleware(ProvideMarkdownResponse::class)->withHead(
+    title: 'Pages',
+    description: 'One-off pages on davidharting.com',
+);
 Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show')->can('view', 'page')->middleware(ProvideMarkdownResponse::class);
 
-Route::get('/media', MediaIndexController::class)->name('media.index')->middleware(ProvideMarkdownResponse::class);
+Route::get('/media', MediaIndexController::class)->name('media.index')->middleware(ProvideMarkdownResponse::class)->withHead(
+    title: "David's Media Log",
+    description: 'I track what I read, watch, and play here!',
+);
 Route::get('/media/log', function () {
     return redirect()->route('media.index', request()->query());
 });
 Route::get('/media/{media}', [MediaController::class, 'show'])->name('media.show')->can('view', 'media')->whereNumber('media');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')->withHead(title: 'Profile');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
@@ -71,9 +89,5 @@ Route::middleware('auth')->group(function () {
     Route::post('/fileshare', [FileShareController::class, 'store'])->name('fileshare.store');
     Route::get('/fileshare/{path}', [FileShareController::class, 'show'])->name('fileshare.show')->where('path', '.*');
 });
-
-Route::get('/kitchen-sink', function () {
-    return view('kitchen-sink');
-})->name('kitchen-sink');
 
 require __DIR__.'/auth.php';

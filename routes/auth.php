@@ -11,33 +11,38 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->group(function () {
+Route::withHead(robots: 'noindex, nofollow')->middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
+        ->name('register')
+        ->withHead(title: 'Register');
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
-        ->name('login');
+        ->name('login')
+        ->withHead(title: 'Log In');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
-        ->name('password.request');
+        ->name('password.request')
+        ->withHead(title: 'Forgot Password');
 
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
         ->name('password.email');
 
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-        ->name('password.reset');
+        ->name('password.reset')
+        ->withHead(title: 'Reset Password');
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
 });
 
-Route::middleware('auth')->group(function () {
+Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)
-        ->name('verification.notice');
+        ->name('verification.notice')
+        ->withHead(title: 'Verify Email');
 
     Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
         ->middleware(['signed', 'throttle:6,1'])
@@ -48,7 +53,8 @@ Route::middleware('auth')->group(function () {
         ->name('verification.send');
 
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
-        ->name('password.confirm');
+        ->name('password.confirm')
+        ->withHead(title: 'Confirm Password');
 
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
 

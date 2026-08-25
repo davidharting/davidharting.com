@@ -89,7 +89,7 @@ test('show page has correct meta tags', function () {
 
     $response = $this->get('/pages/'.$page->slug);
     $response->assertSuccessful();
-    expect(RenderedHead::from($response)->title)->toBe('About Us');
+    expect(RenderedHead::from($response)->title)->toBe('About Us - davidharting.com');
 });
 
 test('responds to .md extension with markdown content type', function () {

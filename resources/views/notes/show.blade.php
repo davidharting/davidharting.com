@@ -1,4 +1,4 @@
-<x-layout.app :title="$note->title" :description="$description">
+<x-layout.app>
     <div class="mx-auto max-w-3xl">
         <header class="mb-8 text-center">
             <p class="text-base-content/60 mb-2 text-sm">{{ $note->publicationDate() }}</p>

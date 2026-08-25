@@ -1,4 +1,4 @@
-<x-layout.app title="Admin">
+<x-layout.app>
     <x-type.page-title>Admin</x-type.page-title>
 
     <ul class="list-disc">

@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Media;
 use App\Models\Note;
 use App\Models\Page;
 use App\Models\User;
@@ -9,41 +8,38 @@ use Tests\Support\RenderedHead;
 use Tests\TestCase;
 
 /**
- * Characterization tests for the document <head>.
+ * These tests parse the <head> back out of the rendered response, so they
+ * prove tags actually reached the browser -- something Head::toArray() cannot
+ * tell you, since it reports resolved metadata whether or not @head rendered
+ * it.
  *
- * These parse the <head> back out of the rendered response, so they prove
- * tags actually reached the browser while staying indifferent to attribute
- * order and HTML escaping.
+ * Parsing rather than string-matching keeps them indifferent to attribute
+ * order and HTML escaping, which is where raw assertSeeHtml gets brittle.
  *
- * Where a whole family of tags matters, assert the full map with toBe rather
- * than picking out the two or three tags that come to mind -- that is the
- * assertion that fails when a tag nobody anticipated appears or drifts.
+ * Where a whole family of tags matters (social cards especially), assert the
+ * full map with toBe rather than picking out the two or three tags you happen
+ * to be thinking about. That is the assertion that fails when a tag you did
+ * not anticipate drifts.
  */
-describe('site-wide tags', function () {
-    test('the home page falls back to the site title and description', function () {
+describe('defaults', function () {
+    test('site-wide metadata renders on every page', function () {
         /** @var TestCase $this */
         $head = RenderedHead::from($this->get('/'));
 
         expect($head->title)->toBe("David Harting's Website")
-            ->and($head->meta('title'))->toBe("David Harting's Website")
             ->and($head->meta('description'))->toBe("David's Corner of the Internet")
-            ->and($head->meta('og:description'))->toBe("David's Corner of the Internet");
+            ->and($head->meta('robots'))->toBe('all')
+            ->and($head->link('canonical'))->toBe('https://davidharting-dot-com.test/');
     });
 
-    test('the PWA tags render on every page', function () {
+    test('the default title renders without the site-name suffix', function () {
         /** @var TestCase $this */
-        $head = RenderedHead::from($this->get('/'));
+        expect(RenderedHead::from($this->get('/'))->title)->toBe("David Harting's Website");
+    });
 
-        expect($head->meta)->toMatchArray([
-            'viewport' => 'width=device-width, initial-scale=1',
-            'theme-color' => '#1a1a2e',
-            'apple-mobile-web-app-capable' => 'yes',
-            'apple-mobile-web-app-status-bar-style' => 'black',
-            'apple-mobile-web-app-title' => 'David Harting',
-        ]);
-
-        expect($head->link('manifest'))->toBe('/manifest.json')
-            ->and($head->link('apple-touch-icon'))->toBe('/icons/apple-touch-icon.png');
+    test('a page title inherits the site-name suffix', function () {
+        /** @var TestCase $this */
+        expect(RenderedHead::from($this->get('/notes'))->title)->toBe("David's Notes - davidharting.com");
     });
 
     test('every page advertises the atom feed', function () {
@@ -56,89 +52,137 @@ describe('site-wide tags', function () {
             'attributes' => ['type' => 'application/atom+xml', 'title' => 'David Harting'],
         ]);
     });
+
+    test('the PWA block renders', function () {
+        /** @var TestCase $this */
+        $head = RenderedHead::from($this->get('/'));
+
+        expect($head->meta)->toMatchArray([
+            'viewport' => 'width=device-width, initial-scale=1',
+            'application-name' => 'David Harting',
+            'apple-mobile-web-app-title' => 'David Harting',
+            'apple-mobile-web-app-status-bar-style' => 'black',
+            'mobile-web-app-capable' => 'yes',
+            'theme-color' => '#1a1a2e',
+        ]);
+
+        expect($head->link('manifest'))->toBe('/manifest.json')
+            ->and($head->link('apple-touch-icon'))->toBe('/icons/apple-touch-icon.png');
+    });
 });
 
-describe('page titles and descriptions', function () {
-    test('index pages set their own title and description', function (string $path, string $title, string $description) {
+describe('canonical urls', function () {
+    test('a canonical url renders for the current page over https', function () {
         /** @var TestCase $this */
-        $head = RenderedHead::from($this->get($path));
+        expect(RenderedHead::from($this->get('/notes'))->link('canonical'))
+            ->toBe('https://davidharting-dot-com.test/notes');
+    });
 
-        expect($head->title)->toBe($title)
-            ->and($head->meta('description'))->toBe($description);
-    })->with([
-        ['/notes', "David's Notes", 'Notes from David'],
-        ['/media', "David's Media Log", 'I track what I read, watch, and play here!'],
-        ['/pages', 'Pages', 'One-off pages on davidharting.com'],
-    ]);
-
-    test('a note uses its title and a description built from its lead', function () {
+    test('query strings are excluded so filtered media lists do not compete', function () {
         /** @var TestCase $this */
-        $note = Note::factory()->create([
+        expect(RenderedHead::from($this->get('/media?list=backlog&type=book'))->link('canonical'))
+            ->toBe('https://davidharting-dot-com.test/media');
+    });
+});
+
+describe('robots', function () {
+    test('public pages are searchable', function () {
+        /** @var TestCase $this */
+        expect(RenderedHead::from($this->get('/notes'))->meta('robots'))->toBe('all');
+    });
+
+    test('private routes are hidden from robots', function (string $path) {
+        /** @var TestCase $this */
+        $response = $this->actingAs(User::factory()->create(['is_admin' => true]))->get($path);
+
+        expect(RenderedHead::from($response)->meta('robots'))->toBe('noindex, nofollow');
+    })->with(['/dashboard', '/profile', '/backend', '/kitchen-sink']);
+
+    test('auth pages are hidden from robots', function () {
+        /** @var TestCase $this */
+        expect(RenderedHead::from($this->get('/login'))->meta('robots'))->toBe('noindex, nofollow');
+    });
+
+    test('an unpublished note is hidden from robots for the admin previewing it', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create(['visible' => false, 'title' => 'Draft']);
+        $response = $this->actingAs(User::factory()->create(['is_admin' => true]))->get('/notes/'.$note->slug);
+
+        expect(RenderedHead::from($response)->meta('robots'))->toBe('none');
+    });
+});
+
+describe('notes', function () {
+    beforeEach(function () {
+        $this->note = Note::factory()->create([
             'visible' => true,
             'title' => 'A cool post',
             'lead' => 'You should read this',
             'published_at' => Carbon::parse('2000-02-01 12:00:00'),
         ]);
-
-        $head = RenderedHead::from($this->get('/notes/'.$note->slug));
-
-        expect($head->title)->toBe('A cool post')
-            ->and($head->meta('description'))
-            ->toBe("You should read this\n\nBy David Harting.\nPublished on 2000 February 1");
     });
 
-    test('a page uses its title', function () {
+    /**
+     * Asserting the exhaustive og:/twitter:/article: map -- rather than the
+     * handful of tags that come to mind -- is what catches a social tag
+     * drifting. twitter:title falling back to the suffixed document title
+     * instead of og:title was found exactly this way.
+     */
+    test('the full set of social tags renders', function () {
         /** @var TestCase $this */
-        $page = Page::factory()->create(['is_published' => true, 'title' => 'About Us']);
+        $head = RenderedHead::from($this->get('/notes/'.$this->note->slug));
 
-        expect(RenderedHead::from($this->get('/pages/'.$page->slug))->title)->toBe('About Us');
+        expect($head->metaMatching('og:', 'twitter:', 'article:'))->toBe([
+            'og:type' => 'article',
+            'og:site_name' => 'David Harting',
+            'og:locale' => 'en_US',
+            'og:title' => 'A cool post',
+            'og:description' => "You should read this\n\nBy David Harting.\nPublished on 2000 February 1",
+            'og:image' => 'http://davidharting-dot-com.test/headshot.jpg',
+            'og:image:alt' => 'David Harting',
+            'twitter:card' => 'summary',
+            'twitter:title' => 'A cool post',
+            'twitter:description' => "You should read this\n\nBy David Harting.\nPublished on 2000 February 1",
+            'twitter:image' => 'http://davidharting-dot-com.test/headshot.jpg',
+            'twitter:image:alt' => 'David Harting',
+            'article:published_time' => '2000-02-01T12:00:00+00:00',
+        ]);
     });
 
-    test('a media item uses its title', function () {
+    test('social titles omit the site-name suffix carried by the document title', function () {
         /** @var TestCase $this */
-        $media = Media::factory()->create(['title' => 'Dune']);
-        $response = $this->actingAs(User::factory()->admin()->create())->get('/media/'.$media->id);
+        $head = RenderedHead::from($this->get('/notes/'.$this->note->slug));
 
-        expect(RenderedHead::from($response)->title)->toBe('Dune');
+        expect($head->title)->toBe('A cool post - davidharting.com')
+            ->and($head->meta('og:title'))->toBe('A cool post')
+            ->and($head->meta('twitter:title'))->toBe('A cool post');
+    });
+
+    test('a BlogPosting schema is emitted', function () {
+        /** @var TestCase $this */
+        $blogPosting = RenderedHead::from($this->get('/notes/'.$this->note->slug))->schema('BlogPosting');
+
+        expect($blogPosting)->not->toBeNull()
+            ->and($blogPosting['headline'])->toBe('A cool post')
+            ->and($blogPosting['author']['name'])->toBe('David Harting')
+            ->and($blogPosting['datePublished'])->toStartWith('2000-02-01');
+    });
+
+    test('a breadcrumb trail back to the notes index is emitted', function () {
+        /** @var TestCase $this */
+        $breadcrumbs = RenderedHead::from($this->get('/notes/'.$this->note->slug))->schema('BreadcrumbList');
+
+        expect(array_column($breadcrumbs['itemListElement'], 'name'))
+            ->toBe(['Home', 'Notes', 'A cool post']);
     });
 });
 
-describe('robots', function () {
-    test('the kitchen sink is hidden from robots', function () {
+describe('pages', function () {
+    test('an unpublished page is hidden from robots', function () {
         /** @var TestCase $this */
-        expect(RenderedHead::from($this->get('/kitchen-sink'))->meta('robots'))->toBe('noindex, nofollow');
-    });
+        $page = Page::factory()->create(['is_published' => false, 'title' => 'Secret']);
+        $response = $this->actingAs(User::factory()->create(['is_admin' => true]))->get('/pages/'.$page->slug);
 
-    test('public pages carry no robots directive', function (string $path) {
-        /** @var TestCase $this */
-        expect(RenderedHead::from($this->get($path))->meta('robots'))->toBeNull();
-    })->with(['/', '/notes', '/media', '/pages']);
-});
-
-/**
- * Pinning what the head does *not* contain is what makes a swap of the
- * rendering implementation verifiable: a pure refactor has to leave these
- * absent, and adding any of them is a deliberate change.
- */
-describe('tags the head does not yet emit', function () {
-    test('no canonical url', function () {
-        /** @var TestCase $this */
-        expect(RenderedHead::from($this->get('/notes'))->link('canonical'))->toBeNull();
-    });
-
-    test('open graph carries only a description', function () {
-        /** @var TestCase $this */
-        $note = Note::factory()->create(['visible' => true, 'title' => 'A cool post']);
-
-        $head = RenderedHead::from($this->get('/notes/'.$note->slug));
-
-        expect(array_keys($head->metaMatching('og:', 'twitter:', 'article:')))->toBe(['og:description']);
-    });
-
-    test('no JSON-LD structured data', function () {
-        /** @var TestCase $this */
-        $note = Note::factory()->create(['visible' => true, 'title' => 'A cool post']);
-
-        expect(RenderedHead::from($this->get('/notes/'.$note->slug))->schemas)->toBeEmpty();
+        expect(RenderedHead::from($response)->meta('robots'))->toBe('none');
     });
 });

@@ -1,8 +1,4 @@
-<x-layout.app title="Kitchen Sink" description="Component showcase page">
-    <x-slot:head>
-        <meta name="robots" content="noindex, nofollow" />
-    </x-slot:head>
-
+<x-layout.app>
     <div class="mx-auto max-w-4xl space-y-16 pb-16">
         <header class="text-center">
             <h1 class="mb-4 text-4xl font-bold">Kitchen Sink</h1>

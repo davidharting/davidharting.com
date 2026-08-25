@@ -44,7 +44,7 @@ test('show', function () {
     $response->assertSeeTextInOrder(['2000 February', 'A cool post', 'You should read this', 'Captivating content']);
 
     $head = RenderedHead::from($response);
-    expect($head->title)->toBe('A cool post')
+    expect($head->title)->toBe('A cool post - davidharting.com')
         ->and($head->meta('description'))
         ->toBe("You should read this\n\nBy David Harting.\nPublished on 2000 February 1");
 });
