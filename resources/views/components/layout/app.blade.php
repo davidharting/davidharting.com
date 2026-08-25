@@ -7,31 +7,21 @@
 <html lang="{{ str_replace("_", "-", app()->getLocale()) }}">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
     @php
         $pageTitle = $title ?? "David Harting's Website";
         $pageDescription = $description ?? "David's Corner of the Internet";
+
+        \Laravel\Head\Facades\Head::title($pageTitle)
+            ->meta('title', $pageTitle)
+            ->description($pageDescription)
+            ->meta('og:description', $pageDescription);
     @endphp
 
-    <title>{{ $pageTitle }}</title>
-    <meta name="title" content="{{ $pageTitle }}" />
-
-    <meta name="description" content="{{ $pageDescription }}" />
-    <meta property="og:description" content="{{ $pageDescription }}" />
-
-    {{-- PWA --}}
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#1a1a2e" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="David Harting" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    @head
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <x-feed-links />
 
     {{-- Optional slot for page-specific <head> content (e.g., extra meta tags, structured data, page-specific styles) --}}
     {{ $head ?? "" }}
