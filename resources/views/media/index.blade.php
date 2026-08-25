@@ -1,6 +1,6 @@
 @use("App\Enum\MediaTypeName")
 
-<x-layout.app title="David's Media Log" description="I track what I read, watch, and play here!">
+<x-layout.app>
     <x-type.page-title>Media Log</x-type.page-title>
 
     <form class="m-2 flex flex-row space-x-2" method="GET" action="{{ route("media.index") }}">

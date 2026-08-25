@@ -1,30 +1,12 @@
-@props([
-    'title',
-    'description',
-])
-
 <!DOCTYPE html>
 <html lang="{{ str_replace("_", "-", app()->getLocale()) }}">
 <head>
     <meta charset="utf-8" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-    @php
-        $pageTitle = $title ?? "David Harting's Website";
-        $pageDescription = $description ?? "David's Corner of the Internet";
-
-        \Laravel\Head\Facades\Head::title($pageTitle)
-            ->meta('title', $pageTitle)
-            ->description($pageDescription)
-            ->meta('og:description', $pageDescription);
-    @endphp
-
     @head
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    {{-- Optional slot for page-specific <head> content (e.g., extra meta tags, structured data, page-specific styles) --}}
-    {{ $head ?? "" }}
 </head>
 
 <body class="font-serif antialiased">
