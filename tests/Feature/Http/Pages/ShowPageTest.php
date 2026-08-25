@@ -2,6 +2,7 @@
 
 use App\Models\Page;
 use App\Models\User;
+use Tests\Support\RenderedHead;
 use Tests\TestCase;
 
 test('404 if page not found', function () {
@@ -88,7 +89,7 @@ test('show page has correct meta tags', function () {
 
     $response = $this->get('/pages/'.$page->slug);
     $response->assertSuccessful();
-    $response->assertSeeHtml('<title>About Us</title>');
+    expect(RenderedHead::from($response)->title)->toBe('About Us');
 });
 
 test('responds to .md extension with markdown content type', function () {
