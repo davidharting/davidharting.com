@@ -1,5 +1,6 @@
 <?php
 
+use Tests\Support\RenderedHead;
 use Tests\TestCase;
 
 test('kitchen sink page renders successfully', function () {
@@ -15,5 +16,5 @@ test('kitchen sink page has noindex meta tag', function () {
     $response = $this->get('/kitchen-sink');
 
     $response->assertStatus(200);
-    $response->assertSee('<meta name="robots" content="noindex, nofollow" />', false);
+    expect(RenderedHead::from($response)->meta('robots'))->toBe('noindex, nofollow');
 });

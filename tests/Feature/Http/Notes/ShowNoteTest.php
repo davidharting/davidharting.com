@@ -3,6 +3,7 @@
 use App\Models\Note;
 use App\Models\User;
 use Carbon\Carbon;
+use Tests\Support\RenderedHead;
 use Tests\TestCase;
 
 test('404 if note not found', function () {
@@ -42,8 +43,10 @@ test('show', function () {
     $response->assertSuccessful();
     $response->assertSeeTextInOrder(['2000 February', 'A cool post', 'You should read this', 'Captivating content']);
 
-    $response->assertSeeHtml('<title>A cool post</title>');
-    $response->assertSeeHtml("<meta name=\"description\" content=\"You should read this\n\nBy David Harting.\nPublished on 2000 February 1\" />");
+    $head = RenderedHead::from($response);
+    expect($head->title)->toBe('A cool post')
+        ->and($head->meta('description'))
+        ->toBe("You should read this\n\nBy David Harting.\nPublished on 2000 February 1");
 });
 
 test('admin can view unpublished note', function () {

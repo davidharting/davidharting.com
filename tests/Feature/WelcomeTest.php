@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Tests\Support\RenderedHead;
 use Tests\TestCase;
 
 test('responds to markdown accept header with markdown content type', function () {
@@ -17,8 +18,11 @@ test('Welcome page contains link to atom feed', function () {
     $response = $this->get('/');
     $response->assertStatus(200);
 
-    $feedLink = '<link rel="alternate" type="application/atom+xml" href="http://davidharting-dot-com.test/feed" title="David Harting">';
-    $response->assertSeeHtml($feedLink);
+    expect(RenderedHead::from($response)->links)->toContain([
+        'rel' => 'alternate',
+        'href' => 'http://davidharting-dot-com.test/feed',
+        'attributes' => ['type' => 'application/atom+xml', 'title' => 'David Harting'],
+    ]);
 });
 
 test('navigation links are present for anonymous users', function () {
