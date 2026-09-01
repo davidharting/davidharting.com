@@ -16,7 +16,7 @@
         "laravel/ai": "^0.8",
         "laravel/breeze": "^2.3.5",
         "laravel/framework": "^13.14",
-        "laravel/mcp": "^0.8.2",
+        "laravel/mcp": "dev-main as 0.9.99",
         "laravel/octane": "^2.8.1",
         "laravel/sanctum": "^4.0.8",
         "laravel/tinker": "^3.0",
@@ -30,7 +30,7 @@
         "spatie/laravel-markdown-response": "^1.1"
     },
     "require-dev": {
-        "laravel/boost": "^2.4",
+        "laravel/boost": "^2.7",
         "laravel/pail": "^1.2",
         "laravel/pint": "^1.29",
         "mockery/mockery": "^1.6.12",
