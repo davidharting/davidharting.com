@@ -20,11 +20,11 @@ use Tests\TestCase;
  */
 
 beforeEach(function () {
-    // auth:sanctum stands in for the auth:api guard /mcp/admin will use once
-    // Passport is installed (#185). Any Illuminate\Auth\Middleware\Authenticate
-    // reproduces the bug, because it is the $middlewarePriority sorting that puts
-    // the 401 out of the package middleware's reach.
-    Mcp::web('/mcp/test-protected', PublicServer::class)->middleware('auth:sanctum');
+    // auth:api is the guard /mcp/admin will actually use (#187). It is
+    // Illuminate\Auth\Middleware\Authenticate, which $middlewarePriority sorts
+    // ahead of the package's route middleware — the ordering that puts the 401
+    // out of the decorator's reach in the first place.
+    Mcp::web('/mcp/test-protected', PublicServer::class)->middleware('auth:api');
     Mcp::web('/mcp/test-open', PublicServer::class);
 
     // Not MCP servers: one under the /mcp prefix, one outside it.
