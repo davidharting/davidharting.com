@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\AddMcpOAuthChallengeHeader;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\PreventRequestForgery;
@@ -44,6 +45,9 @@ class Kernel extends HttpKernel
         ValidatePostSize::class,
         TrimStrings::class,
         ConvertEmptyStringsToNull::class,
+        // Global because it must wrap auth:api's 401; see the class docblock for
+        // why it exists and how to remove it once laravel/mcp#322 ships.
+        AddMcpOAuthChallengeHeader::class,
     ];
 
     /**
