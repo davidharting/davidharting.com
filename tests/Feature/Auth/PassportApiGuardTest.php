@@ -74,3 +74,31 @@ test('a non-admin with a valid token is forbidden', function () {
 
     $response->assertForbidden();
 });
+
+/*
+ * Regression cover for the one place Sanctum is still referenced.
+ *
+ * routes/api.php:18 guards GET /api/user with `auth:sanctum`, and swapping
+ * Sanctum's HasApiTokens off App\Models\User changes what Sanctum's Guard does
+ * with it: supportsTokens() is now false, so the session branch returns the user
+ * plainly instead of wrapping it in a TransientToken. The observable behaviour is
+ * unchanged, which is what these pin.
+ *
+ * The token branch of that guard cannot authenticate anyone any more, but it never
+ * could here — nothing in this app ever issued a Sanctum personal access token.
+ */
+
+test('the sanctum-guarded api/user route still rejects anonymous requests', function () {
+    /** @var TestCase $this */
+    $this->getJson('/api/user')->assertUnauthorized();
+});
+
+test('the sanctum-guarded api/user route still serves a session-authenticated user', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->getJson('/api/user');
+
+    $response->assertOk();
+    $response->assertJsonPath('id', $user->id);
+});
