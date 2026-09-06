@@ -20,6 +20,15 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!--
+            Pinned so the suite does not inherit APP_DEBUG from a developer's
+            untracked .env (and from .env.example, which CI copies). Debug mode
+            changes real behavior under test — the health route rethrows instead
+            of reporting "down", and error responses carry different payloads —
+            so tests should exercise the production path. Failure output is
+            unaffected: TestResponse captures and prints the exception either way.
+        -->
+        <env name="APP_DEBUG" value="false"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <!--
             Must stay "array". With the database store, running the suite in
