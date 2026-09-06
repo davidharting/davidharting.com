@@ -11,6 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
+        health: '/healthz',
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Render terminates TLS, so the app only ever sees plain HTTP on $PORT.
@@ -35,9 +36,8 @@ return Application::configure(basePath: dirname(__DIR__))
             users: fn () => route('dashboard'),
         );
 
-        // routes/api.php is not throttled by default in this structure, unlike
-        // the old Kernel's 'api' group. The limiter itself lives in
-        // AppServiceProvider::boot().
+        // routes/api.php is not throttled unless we ask for it. The 'api'
+        // limiter itself lives in AppServiceProvider::boot().
         $middleware->throttleApi();
 
         // See the class docblock: global because it must wrap auth:api's 401.

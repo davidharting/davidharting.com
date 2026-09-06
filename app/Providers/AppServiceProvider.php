@@ -24,8 +24,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Moved here from the deleted RouteServiceProvider; referenced by
-        // $middleware->throttleApi() in bootstrap/app.php.
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)
             ->by($request->user()?->id ?: $request->ip()));
 

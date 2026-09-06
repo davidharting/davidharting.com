@@ -8,36 +8,10 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
-use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
-use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Spatie\MarkdownResponse\Middleware\ProvideMarkdownResponse;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
 Route::feeds();
-
-Route::get('/healthz', function () {
-    return response('OK', 200);
-})->withoutMiddleware([
-    EncryptCookies::class,
-    AddQueuedCookiesToResponse::class,
-    StartSession::class,
-    ShareErrorsFromSession::class,
-    PreventRequestForgery::class,
-]);
 
 Route::get('/', function () {
     return view('welcome');
