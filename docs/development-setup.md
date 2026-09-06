@@ -23,7 +23,12 @@ npm install
 ```bash
 cp .env.example .env
 php artisan key:generate
+php artisan passport:keys
 ```
+
+`passport:keys` writes `storage/oauth-private.key` and `storage/oauth-public.key`, which Passport uses to sign OAuth access tokens. They are gitignored, so every environment generates its own. Without them, anything touching the `api` guard — including the test suite — fails with `Invalid key supplied`.
+
+Deployed environments do not use these files; they read `PASSPORT_PRIVATE_KEY` / `PASSPORT_PUBLIC_KEY` from the Render secret files instead.
 
 ### 3. PostgreSQL Setup
 

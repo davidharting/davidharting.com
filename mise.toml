@@ -35,6 +35,7 @@ run = [
     "test -f .env || (cp .env.example .env && php artisan key:generate)",
     "composer install",
     "npm install",
+    "test -f storage/oauth-private.key || php artisan passport:keys",
     "test -e public/storage || php artisan storage:link",
     "npm run build",
 ]
