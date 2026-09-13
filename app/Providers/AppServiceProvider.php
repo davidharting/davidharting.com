@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        /*
+         * Passport defaults to storage_path(), which is runtime state the app
+         * writes to, not configuration. Pinning one path here keeps every
+         * environment loading keys the same way: dev and CI generate them with
+         * `php artisan passport:keys`, and deployed environments will place the
+         * Render secret files here.
+         */
+        Passport::loadKeysFrom(base_path('secrets/oauth'));
+
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)
             ->by($request->user()?->id ?: $request->ip()));
 

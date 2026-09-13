@@ -23,7 +23,12 @@ npm install
 ```bash
 cp .env.example .env
 php artisan key:generate
+mkdir -p secrets/oauth && php artisan passport:keys
 ```
+
+`passport:keys` writes the keypair Passport signs OAuth access tokens with. Without it, anything touching the `api` guard — including the test suite — fails with `Invalid key supplied`.
+
+The keys land in `secrets/oauth/`, not Passport's default of `storage/`, because `AppServiceProvider` pins the path with `Passport::loadKeysFrom()`. `storage/` is runtime state the app writes to; signing keys are configuration. All of `secrets/` is gitignored, so every environment generates its own and none are ever committed.
 
 ### 3. PostgreSQL Setup
 

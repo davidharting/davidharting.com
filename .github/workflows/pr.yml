@@ -51,6 +51,9 @@ jobs:
       - name: Generate key
         run: php artisan key:generate
 
+      - name: Generate Passport keys
+        run: mkdir -p secrets/oauth && php artisan passport:keys
+
       - name: Execute tests
         env:
           DB_USERNAME: root
