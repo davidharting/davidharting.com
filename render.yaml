@@ -76,15 +76,15 @@ projects:
               - key: OCTANE_HTTPS
                 value: "false"
 
-              # Secrets are mounted as a Render secret file and linked to /app/.env
-              # by scripts/render-with-secrets.sh at runtime. Production uses
-              # secrets.env; preview environments use staging.secrets.env, served
-              # from a manually-managed dashboard env group (not Blueprint-managed)
-              # so it is shared across all preview services rather than being
-              # copied per-PR (which would strip the secret file).
-              - key: RENDER_SECRETS_ENV_FILE
-                value: /etc/secrets/secrets.env
-                previewValue: /etc/secrets/staging.secrets.env
+              # Render mounts Secrets to /etc/secrets.
+              # These are copied to the dir the app expects in scripts/render-with-secrets.sh
+              #
+              # Production secrets live in the davidhartingdotcom-shared envvar group managed by this blueprint.
+              # Due to limitations with env var groups and preview envs, those secrets are managed manually in
+              # an env var group named davidhartingdotcom-preview-env-secrets
+              - key: RENDER_SECRETS_PREFIX
+                value: ""
+                previewValue: "staging."
               - key: RUN_DEV_SEEDER
                 value: "false"
                 previewValue: "true"
