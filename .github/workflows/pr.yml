@@ -51,11 +51,8 @@ jobs:
       - name: Generate key
         run: php artisan key:generate
 
-      # Passport signs tokens with these. They live in storage/ and are
-      # gitignored, so a fresh runner has none and every test that touches the
-      # api guard fails with "Invalid key supplied".
       - name: Generate Passport keys
-        run: php artisan passport:keys
+        run: mkdir -p secrets/oauth && php artisan passport:keys
 
       - name: Execute tests
         env:

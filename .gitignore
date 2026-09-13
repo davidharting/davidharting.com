@@ -46,4 +46,6 @@ frankenphp-worker.php
 pitchfork.local.toml
 
 
+# Passport's OAuth signing keys live in secrets/oauth/ (AppServiceProvider
+# pins the path). Nothing in here may ever be committed.
 /secrets
