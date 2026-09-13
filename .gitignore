@@ -23,6 +23,7 @@ npm-debug.log
 yarn-error.log
 /.fleet
 /.idea
+.DS_Store
 # Claude Code - ignore user settings, but share project skills and rules
 .claude/*
 !.claude/skills/
