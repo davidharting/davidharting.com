@@ -34,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
          */
         Passport::loadKeysFrom(base_path('secrets/oauth'));
 
+        // Passport ships no consent screen; laravel/mcp does.
+        Passport::authorizationView('mcp::authorize');
+
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)
             ->by($request->user()?->id ?: $request->ip()));
 
