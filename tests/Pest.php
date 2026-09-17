@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Passport\ClientRepository;
 use Tests\TestCase;
 
 /*
@@ -45,7 +47,15 @@ uses(
 |
 */
 
-/*function something()
+/**
+ * Issue a real Passport bearer token. Passport::actingAs() would skip TokenGuard,
+ * so the guard and scope checks would never run.
+ *
+ * @param  string[]  $scopes
+ */
+function accessTokenFor(User $user, array $scopes = []): string
 {
-    // ..
-}*/
+    app(ClientRepository::class)->createPersonalAccessGrantClient('Test Personal Access Client');
+
+    return $user->createToken('test-token', $scopes)->accessToken;
+}

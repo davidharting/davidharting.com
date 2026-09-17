@@ -69,3 +69,15 @@ test('non-POST requests are rejected with a 405', function () {
     $this->get('/mcp')->assertStatus(405);
     $this->delete('/mcp')->assertStatus(405);
 });
+
+test('guests are never sent an OAuth challenge', function () {
+    /** @var TestCase $this */
+    $response = $this->postJson('/mcp', [
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'tools/list',
+    ]);
+
+    $response->assertOk();
+    expect($response->headers->get('WWW-Authenticate'))->toBeNull();
+});

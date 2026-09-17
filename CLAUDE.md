@@ -49,7 +49,10 @@ e.g. PR #155 -> `https://davidhartingdotcom-web-pr-155.onrender.com`. Preview en
 
 ### MCP server
 
-A public, unauthenticated, read-only MCP server is served at `https://davidharting.com/mcp` (`Mcp::web()` in `routes/ai.php`, server and tools in `app/Mcp/`). It exposes published notes and the media library — only information a logged-out visitor can already see. Verify manually with `php artisan mcp:inspector mcp`. See `docs/projects/mcp-server.md`.
+Two MCP servers are registered in `routes/ai.php`; servers and tools live in `app/Mcp/`. Verify manually with `php artisan mcp:inspector mcp`. See `docs/projects/mcp-server.md`.
+
+- **`/mcp`** (`PublicServer`) — public, unauthenticated, read-only. It exposes published notes and the media library, only information a logged-out visitor can already see. It never gains auth: OAuth on a route is all-or-nothing.
+- **`/mcp/admin`** (`AdminServer`) — behind OAuth 2.1 (Passport), the `mcp:use` scope, and the `administrate` gate. The route is only the bouncer; every tool still makes its own visibility decision through the same gates and policies the Blade templates use.
 
 ### Database views
 

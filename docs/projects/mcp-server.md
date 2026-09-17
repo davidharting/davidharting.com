@@ -28,8 +28,10 @@ Mcp::web('/mcp', PublicServer::class)->middleware('throttle:60,1');
 
 Mcp::oauthRoutes();
 Mcp::web('/mcp/admin', AdminServer::class)
-    ->middleware(['auth:api', 'can:administrate', 'throttle:60,1']);
+    ->middleware(['auth:api', CheckToken::using('mcp:use'), 'can:administrate', 'throttle:60,1']);
 ```
+
+`auth:api` only proves the bearer token is valid, not that it carries `mcp:use`. `Passport::$defaultScope` is `''`, so an authorization request that omits `scope` mints a token with no scopes. `CheckToken` keeps such tokens, and any other admin-owned token not granted for MCP, off `/mcp/admin`; `can:administrate` still stops non-admins either way. See [#186](https://github.com/davidharting/davidharting.com/issues/186).
 
 Two server classes, one implementation: laravel/mcp server classes are thin manifests (a `$tools` array plus instructions), and the **tool classes are shared** between them. `AdminServer` registers a superset:
 
