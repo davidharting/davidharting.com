@@ -2,19 +2,12 @@
 
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
-use Laravel\Passport\ClientRepository;
 use Tests\TestCase;
 
 /*
  * Proves the `api` guard is wired to Passport and composes with the
- * `administrate` gate — the combination /mcp/admin will sit behind (#187).
- *
- * These mint a real access token rather than using Passport::actingAs(), which
- * bypasses TokenGuard. Only a real token exercises User::withAccessToken(), so
- * these would fail if the model were missing Laravel\Passport\HasApiTokens.
- * A personal access token is a different grant from the authorization code flow
- * /mcp/admin will use, but it is the cheapest way to get a genuine token through
- * the guard, which is what is under test here.
+ * `administrate` gate. accessTokenFor() mints a real token, so these would fail
+ * if User were missing Laravel\Passport\HasApiTokens.
  */
 
 beforeEach(function () {
@@ -25,14 +18,6 @@ beforeEach(function () {
 
     Route::middleware(['auth:api', 'can:administrate'])->get('/test/admin-only', fn () => response('welcome'));
 });
-
-/** Issue a genuine bearer token for the given user. */
-function accessTokenFor(User $user): string
-{
-    app(ClientRepository::class)->createPersonalAccessGrantClient('Test Personal Access Client');
-
-    return $user->createToken('test-token')->accessToken;
-}
 
 test('a valid bearer token resolves to the user through the api guard', function () {
     /** @var TestCase $this */
