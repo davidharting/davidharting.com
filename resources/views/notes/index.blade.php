@@ -1,4 +1,4 @@
-<x-layout.app title="David's Notes" description="Notes from David">
+<x-layout.app>
     <x-type.page-title>Notes</x-type.page-title>
     @if ($notes->isEmpty())
         No notes yet
