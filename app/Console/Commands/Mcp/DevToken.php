@@ -29,6 +29,12 @@ class DevToken extends Command
     private const SCOPE = 'mcp:use';
 
     /**
+     * What the printed `claude mcp add` calls the server. Shared with the
+     * matching `claude mcp remove` so the two cannot drift apart.
+     */
+    private const SERVER_NAME = 'mcp-admin-local';
+
+    /**
      * The name and signature of the console command.
      *
      * @var string
@@ -64,17 +70,30 @@ class DevToken extends Command
 
         $this->ensurePersonalAccessClient($clients);
 
-        $token = $admin->createToken((string) $this->option('name'), [self::SCOPE])->accessToken;
+        $result = $admin->createToken((string) $this->option('name'), [self::SCOPE]);
 
         $this->newLine();
         $this->components->info('Minted an '.self::SCOPE." token for {$admin->email}.");
-        $this->line($token);
+        $this->line($result->accessToken);
         $this->newLine();
+
         $this->line('Connect Claude Code to it with:');
         $this->line(sprintf(
-            'claude mcp add --transport http mcp-admin-local %s --header "Authorization: Bearer %s"',
+            'claude mcp add --transport http %s %s --header "Authorization: Bearer %s"',
+            self::SERVER_NAME,
             $this->serverUrl(),
-            $token,
+            $result->accessToken,
+        ));
+        $this->newLine();
+
+        // Both halves matter. Removing the client registration leaves the token
+        // live for a year, and Passport has no first-party command to revoke a
+        // single one, so spell out the tinker call with the id filled in.
+        $this->line('When you are done, unregister it and revoke the token:');
+        $this->line('claude mcp remove '.self::SERVER_NAME);
+        $this->line(sprintf(
+            'php artisan tinker --execute \'\Laravel\Passport\Token::find("%s")->revoke();\'',
+            $result->token->id,
         ));
         $this->newLine();
 

@@ -104,6 +104,30 @@ test('--url tolerates a trailing slash', function () {
         ->not->toContain('8000//mcp');
 });
 
+test('prints how to clean up afterwards', function () {
+    /** @var TestCase $this */
+    User::factory()->create(['is_admin' => true]);
+
+    [, $output] = runDevToken();
+
+    expect($output)
+        ->toContain('claude mcp remove mcp-admin-local')
+        ->toContain('->revoke();')
+        ->toContain(Token::sole()->id);
+});
+
+test('the add and remove lines name the same server', function () {
+    /** @var TestCase $this */
+    User::factory()->create(['is_admin' => true]);
+
+    [, $output] = runDevToken();
+
+    preg_match('/claude mcp add --transport http (\\S+)/', $output, $added);
+    preg_match('/claude mcp remove (\\S+)/', $output, $removed);
+
+    expect($added[1])->toBe($removed[1]);
+});
+
 test('names the token from --name', function () {
     /** @var TestCase $this */
     User::factory()->create(['is_admin' => true]);
