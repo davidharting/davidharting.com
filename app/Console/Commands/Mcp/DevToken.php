@@ -52,7 +52,7 @@ class DevToken extends Command
      */
     public function handle(ClientRepository $clients): int
     {
-        if (! $this->confirmToProceed('Minting a real admin token for this environment')) {
+        if (! $this->confirmToProceed($this->confirmationWarning(), $this->needsConfirmation(...))) {
             return self::FAILURE;
         }
 
@@ -79,6 +79,29 @@ class DevToken extends Command
         $this->newLine();
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Minting is allowed everywhere — a hand-minted token is a reasonable
+     * break-glass for debugging a preview or production — but only `local` gets
+     * to do it silently. ConfirmableTrait's own default would ask in
+     * `production` alone, which would wave through any environment that is
+     * merely not named that.
+     *
+     * `testing` is exempt so the suite is not answering prompts; the guard's
+     * behaviour outside `local` is covered by tests that set the environment.
+     */
+    private function needsConfirmation(): bool
+    {
+        return ! $this->getLaravel()->environment('local', 'testing');
+    }
+
+    private function confirmationWarning(): string
+    {
+        return sprintf(
+            'Minting a real admin token for the [%s] environment',
+            $this->getLaravel()->environment(),
+        );
     }
 
     /**

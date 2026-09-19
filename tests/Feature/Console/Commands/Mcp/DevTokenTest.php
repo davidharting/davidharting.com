@@ -198,3 +198,64 @@ describe('choosing the admin', function () {
             ->and(Token::count())->toBe(0);
     });
 });
+
+describe('the confirmation guard', function () {
+    test('mints without a prompt in local', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => true]);
+        $this->app['env'] = 'local';
+
+        $this->artisan('mcp:dev-token')->assertSuccessful();
+
+        expect(Token::count())->toBe(1);
+    });
+
+    test('asks first outside local, and mints nothing when declined', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => true]);
+        $this->app['env'] = 'production';
+
+        $this->artisan('mcp:dev-token')
+            ->expectsConfirmation('Are you sure you want to run this command?', 'no')
+            ->assertFailed();
+
+        expect(Token::count())->toBe(0);
+    });
+
+    test('mints outside local once confirmed', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => true]);
+        $this->app['env'] = 'production';
+
+        $this->artisan('mcp:dev-token')
+            ->expectsConfirmation('Are you sure you want to run this command?', 'yes')
+            ->assertSuccessful();
+
+        expect(Token::count())->toBe(1);
+    });
+
+    // The alert component renders its content uppercase, and pipes the
+    // interpolated environment name through EnsureDynamicContentIsHighlighted,
+    // which wraps it in styling this assertion cannot see. Pin the sentence
+    // stem, which is what tells the operator what is about to happen.
+    test('warns about what it is about to do before asking', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => true]);
+        $this->app['env'] = 'staging';
+
+        $this->artisan('mcp:dev-token')
+            ->expectsOutputToContain('MINTING A REAL ADMIN TOKEN FOR THE')
+            ->expectsConfirmation('Are you sure you want to run this command?', 'no')
+            ->assertFailed();
+    });
+
+    test('--force skips the prompt outside local', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => true]);
+        $this->app['env'] = 'production';
+
+        $this->artisan('mcp:dev-token', ['--force' => true])->assertSuccessful();
+
+        expect(Token::count())->toBe(1);
+    });
+});
