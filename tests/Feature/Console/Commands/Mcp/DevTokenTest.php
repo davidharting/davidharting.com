@@ -2,9 +2,24 @@
 
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Laravel\Passport\Client;
+use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Token;
 use Tests\TestCase;
+
+beforeEach(function () {
+    File::delete(base_path('secrets/mcp/dev-token.'.getmypid().'.json'));
+});
+
+afterEach(function () {
+    File::delete(base_path('secrets/mcp/dev-token.'.getmypid().'.json'));
+});
+
+function devTokenCachePath(): string
+{
+    return base_path('secrets/mcp/dev-token.'.getmypid().'.json');
+}
 
 function toolsListRpc(): array
 {
@@ -158,8 +173,7 @@ describe('the personal access client', function () {
         runDevToken();
         runDevToken();
 
-        expect(Client::count())->toBe(1)
-            ->and(Token::count())->toBe(2);
+        expect(Client::count())->toBe(1);
     });
 });
 
@@ -281,5 +295,116 @@ describe('the confirmation guard', function () {
         $this->artisan('mcp:dev-token', ['--force' => true])->assertSuccessful();
 
         expect(Token::count())->toBe(1);
+    });
+});
+
+describe('only one live token', function () {
+    test('each run leaves exactly one live token behind', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => true]);
+
+        runDevToken();
+        runDevToken();
+        runDevToken();
+
+        expect(Token::count())->toBe(3)
+            ->and(Token::where('revoked', false)->count())->toBe(1);
+    });
+
+    test('sweeps up several stale tokens at once', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        accessTokenFor($admin, ['mcp:use']);
+        accessTokenFor($admin, ['mcp:use']);
+
+        [, $output] = runDevToken();
+
+        expect($output)->toContain('Revoked 2 previously minted tokens.')
+            ->and(Token::where('revoked', false)->count())->toBe(1);
+    });
+
+    test('the newest token is the live one and it works', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => true]);
+
+        runDevToken();
+        [, $output] = runDevToken();
+
+        $this->withToken(tokenFromOutput($output))
+            ->postJson('/mcp/admin', toolsListRpc())
+            ->assertSuccessful();
+
+        // The jti claim is the token id, so this pins that the token the
+        // command printed is the one row left unrevoked.
+        $claims = json_decode(base64_decode(explode('.', tokenFromOutput($output))[1]), true);
+
+        expect(Token::where('revoked', false)->sole()->id)->toBe($claims['jti']);
+    });
+
+    test('the previous token stops working', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => true]);
+
+        [, $first] = runDevToken();
+        runDevToken();
+
+        $this->withToken(tokenFromOutput($first))
+            ->postJson('/mcp/admin', toolsListRpc())
+            ->assertUnauthorized();
+    });
+
+    test('says nothing about revoking on the first run', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => true]);
+
+        [, $output] = runDevToken();
+
+        expect($output)->not->toContain('previously minted');
+    });
+
+    test('counts one token in the singular', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => true]);
+
+        runDevToken();
+        [, $output] = runDevToken();
+
+        expect($output)->toContain('Revoked 1 previously minted token.');
+    });
+
+    test('leaves another admin\'s token alone', function () {
+        /** @var TestCase $this */
+        $first = User::factory()->create(['is_admin' => true, 'email' => 'first@example.test']);
+        User::factory()->create(['is_admin' => true, 'email' => 'second@example.test']);
+
+        runDevToken(['--email' => 'first@example.test']);
+        runDevToken(['--email' => 'second@example.test']);
+
+        expect(Token::where('user_id', $first->id)->where('revoked', false)->count())->toBe(1);
+    });
+
+    test('leaves authorization-code tokens alone, so Claude.ai stays connected', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $claude = app(ClientRepository::class)->createAuthorizationCodeGrantClient(
+            name: 'Claude',
+            redirectUris: ['https://claude.ai/api/mcp/auth_callback'],
+            confidential: false,
+        );
+        $connected = Token::create([
+            'id' => 'a-token-from-the-oauth-dance',
+            'user_id' => $admin->getKey(),
+            'client_id' => $claude->getKey(),
+            'scopes' => ['mcp:use'],
+            'revoked' => false,
+            'expires_at' => now()->addYear(),
+        ]);
+
+        runDevToken();
+        runDevToken();
+
+        expect($connected->fresh()->revoked)->toBeFalse();
     });
 });

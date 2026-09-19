@@ -6,7 +6,10 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Passport;
+use Laravel\Passport\Token;
 use RuntimeException;
 
 /**
@@ -43,7 +46,7 @@ class DevToken extends Command
             {--email= : The admin to mint for. Only needed when there is more than one}
             {--name=local-mcp : The token name, shown in the oauth_access_tokens table}
             {--url= : Where your dev server is listening. Defaults to APP_URL, which does not carry a port}
-            {--force : Skip the confirmation prompt in production}
+            {--force : Skip the confirmation prompt outside local}
     ';
 
     /**
@@ -69,12 +72,62 @@ class DevToken extends Command
         }
 
         $this->ensurePersonalAccessClient($clients);
+        $this->revokePreviousTokens($admin);
 
         $result = $admin->createToken((string) $this->option('name'), [self::SCOPE]);
 
-        $this->newLine();
         $this->components->info('Minted an '.self::SCOPE." token for {$admin->email}.");
-        $this->line($result->accessToken);
+
+        return $this->report($result->accessToken, $result->token->id);
+    }
+
+    /**
+     * Passport cannot hand a token back: oauth_access_tokens stores the id,
+     * scopes, and expiry, but never the signed string a client sends. So every
+     * run mints, and the only way to avoid accumulating year-long admin
+     * credentials is to retire the ones this command minted before.
+     *
+     * Deliberately limited to tokens issued by a personal access client, which
+     * is the only kind this command creates. Tokens from the authorization code
+     * flow — Claude.ai's real connection — are left alone, so running this as a
+     * break-glass on a deployed environment does not disconnect the connector.
+     */
+    private function revokePreviousTokens(User $admin): void
+    {
+        $revoked = Token::query()
+            ->where('user_id', $admin->getKey())
+            ->whereIn('client_id', $this->personalAccessClientIds())
+            ->where('revoked', false)
+            ->update(['revoked' => true]);
+
+        if ($revoked > 0) {
+            $this->components->info(sprintf(
+                'Revoked %d previously minted %s.',
+                $revoked,
+                str('token')->plural($revoked),
+            ));
+        }
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function personalAccessClientIds(): array
+    {
+        return Passport::client()
+            ->newQuery()
+            ->get()
+            ->filter(fn (Client $client): bool => $client->hasGrantType('personal_access'))
+            ->pluck('id')
+            ->all();
+    }
+
+    /**
+     * Print the token and what to do with it.
+     */
+    private function report(string $accessToken, string $tokenId): int
+    {
+        $this->line($accessToken);
         $this->newLine();
 
         $this->line('Connect Claude Code to it with:');
@@ -82,18 +135,18 @@ class DevToken extends Command
             'claude mcp add --transport http %s %s --header "Authorization: Bearer %s"',
             self::SERVER_NAME,
             $this->serverUrl(),
-            $result->accessToken,
+            $accessToken,
         ));
         $this->newLine();
 
-        // Both halves matter. Removing the client registration leaves the token
-        // live for a year, and Passport has no first-party command to revoke a
-        // single one, so spell out the tinker call with the id filled in.
+        // Removing the client registration leaves the token live for a year, so
+        // spell out the revoke too. Passport has no first-party command for a
+        // single token, hence the tinker call with the id filled in.
         $this->line('When you are done, unregister it and revoke the token:');
         $this->line('claude mcp remove '.self::SERVER_NAME);
         $this->line(sprintf(
             'php artisan tinker --execute \'\Laravel\Passport\Token::find("%s")->revoke();\'',
-            $result->token->id,
+            $tokenId,
         ));
         $this->newLine();
 
@@ -118,7 +171,7 @@ class DevToken extends Command
     private function confirmationWarning(): string
     {
         return sprintf(
-            'Minting a real admin token for the [%s] environment',
+            'Minting a real admin token for the [%s] environment, and revoking the previous ones',
             $this->getLaravel()->environment(),
         );
     }
