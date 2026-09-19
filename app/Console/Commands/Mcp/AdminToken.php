@@ -22,7 +22,7 @@ use RuntimeException;
  *
  * @see https://github.com/davidharting/davidharting.com/issues/188
  */
-class DevToken extends Command
+class AdminToken extends Command
 {
     use ConfirmableTrait;
 
@@ -35,16 +35,16 @@ class DevToken extends Command
      * What the printed `claude mcp add` calls the server. Shared with the
      * matching `claude mcp remove` so the two cannot drift apart.
      */
-    private const SERVER_NAME = 'mcp-admin-local';
+    private const SERVER_NAME = 'mcp-admin';
 
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'mcp:dev-token
+    protected $signature = 'mcp:admin-token
             {--email= : The admin to mint for. Only needed when there is more than one}
-            {--name=local-mcp : The token name, shown in the oauth_access_tokens table}
+            {--name=mcp-admin : The token name, shown in the oauth_access_tokens table}
             {--url= : Where your dev server is listening. Defaults to APP_URL, which does not carry a port}
             {--force : Skip the confirmation prompt outside local}
     ';
@@ -54,7 +54,7 @@ class DevToken extends Command
      *
      * @var string
      */
-    protected $description = 'Mint an mcp:use bearer token for local development against /mcp/admin';
+    protected $description = 'Mint an mcp:use bearer token for reaching /mcp/admin without the OAuth dance';
 
     /**
      * Execute the console command.
@@ -251,7 +251,7 @@ class DevToken extends Command
         try {
             $clients->personalAccessClient($provider);
         } catch (RuntimeException) {
-            $clients->createPersonalAccessGrantClient('MCP development', $provider);
+            $clients->createPersonalAccessGrantClient('MCP admin tokens', $provider);
 
             $this->components->info('Created the personal access client Passport needs to issue tokens.');
         }
