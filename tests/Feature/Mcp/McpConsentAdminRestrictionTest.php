@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Middleware\RestrictMcpConsentToAdmins;
 use App\Models\User;
+use Illuminate\Session\Middleware\StartSession;
 use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
 use Tests\TestCase;
@@ -90,3 +92,34 @@ test('the token endpoint is untouched', function () {
     // Rejected by league for the bogus code, never by our 403.
     $response->assertStatus(400);
 });
+
+test('the middleware runs after the session has started', function () {
+    /** @var TestCase $this */
+    $route = collect(app('router')->getRoutes()->getRoutes())
+        ->firstOrFail(fn ($route) => $route->getName() === 'passport.authorizations.authorize');
+
+    $stack = array_values(array_map(
+        fn ($middleware) => is_string($middleware) ? $middleware : $middleware::class,
+        app('router')->gatherRouteMiddleware($route),
+    ));
+
+    expect(array_search(RestrictMcpConsentToAdmins::class, $stack, strict: true))
+        ->toBeGreaterThan(array_search(StartSession::class, $stack, strict: true));
+})->note(<<<'NOTE'
+    This is asserted structurally because no behavioural test can catch it.
+
+    config('passport.middleware') attaches the middleware to Passport's route
+    group, and group middleware is absent from $middlewarePriority, so it sorts
+    to the FRONT of the stack by default -- ahead of StartSession, where
+    $request->user() is always null. The middleware then takes its guest branch
+    and waves every request through, including a logged-in non-admin's.
+
+    A feature test cannot see that: actingAs() puts the user on the guard
+    directly, and both the guard and the session store are container singletons
+    that outlive a single request inside one test process, so even a test that
+    logs in over the session passes with the ordering broken. It was caught by
+    driving a real browser-style request against `php artisan serve`, which
+    returned 200 and the consent screen where this expects 403.
+
+    bootstrap/app.php pins the order with appendToPriorityList().
+    NOTE);

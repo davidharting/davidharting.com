@@ -48,6 +48,18 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * The device grant (`/oauth/device/authorize`) is a second minting path this
  * deliberately does not cover; that is issue #199.
+ *
+ * ---------------------------------------------------------------------------
+ * IT MUST RUN AFTER THE SESSION STARTS
+ * ---------------------------------------------------------------------------
+ * `config('passport.middleware')` makes this group middleware, which is not in
+ * `$middlewarePriority` and therefore sorts to the *front* of the stack — ahead
+ * of `StartSession`, where `$request->user()` is always null. Combined with the
+ * fail-open guest branch below, that silently waves every request through.
+ *
+ * `bootstrap/app.php` pins the order with `appendToPriorityList()`. Do not
+ * remove that pin, and do not trust the feature tests to catch it if you do:
+ * see the note on the ordering test in McpConsentAdminRestrictionTest.
  */
 class RestrictMcpConsentToAdmins
 {
