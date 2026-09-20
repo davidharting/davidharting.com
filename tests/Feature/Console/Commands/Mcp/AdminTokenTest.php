@@ -24,9 +24,9 @@ function toolsListRpc(): array
  * @param  array<string, string>  $parameters
  * @return array{0: int, 1: string}
  */
-function runAdminToken(array $parameters = []): array
+function runAdminToken(string $email, array $parameters = []): array
 {
-    $exitCode = Artisan::call('mcp:admin-token', $parameters);
+    $exitCode = Artisan::call('mcp:admin-token', ['email' => $email] + $parameters);
 
     return [$exitCode, Artisan::output()];
 }
@@ -43,9 +43,9 @@ function tokenFromOutput(string $output): string
 
 test('mints a token that reaches /mcp/admin', function () {
     /** @var TestCase $this */
-    User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->create(['is_admin' => true]);
 
-    [$exitCode, $output] = runAdminToken();
+    [$exitCode, $output] = runAdminToken($admin->email);
 
     expect($exitCode)->toBe(0);
 
@@ -59,9 +59,9 @@ test('mints a token that reaches /mcp/admin', function () {
 
 test('the minted token carries only the mcp:use scope', function () {
     /** @var TestCase $this */
-    User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->create(['is_admin' => true]);
 
-    runAdminToken();
+    runAdminToken($admin->email);
 
     expect(Token::sole()->scopes)->toBe(['mcp:use']);
 });
@@ -77,9 +77,9 @@ test('a token minted without the scope is refused, which is the belt #186 leans 
 
 test('prints a ready-to-paste claude mcp add line', function () {
     /** @var TestCase $this */
-    User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->create(['is_admin' => true]);
 
-    [, $output] = runAdminToken();
+    [, $output] = runAdminToken($admin->email);
 
     expect($output)
         ->toContain('claude mcp add --transport http')
@@ -88,18 +88,18 @@ test('prints a ready-to-paste claude mcp add line', function () {
 
 test('--url overrides APP_URL, which carries no port in local dev', function () {
     /** @var TestCase $this */
-    User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->create(['is_admin' => true]);
 
-    [, $output] = runAdminToken(['--url' => 'http://127.0.0.1:8000']);
+    [, $output] = runAdminToken($admin->email, ['--url' => 'http://127.0.0.1:8000']);
 
     expect($output)->toContain('http://127.0.0.1:8000/mcp/admin');
 });
 
 test('--url tolerates a trailing slash', function () {
     /** @var TestCase $this */
-    User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->create(['is_admin' => true]);
 
-    [, $output] = runAdminToken(['--url' => 'http://127.0.0.1:8000/']);
+    [, $output] = runAdminToken($admin->email, ['--url' => 'http://127.0.0.1:8000/']);
 
     expect($output)->toContain('http://127.0.0.1:8000/mcp/admin')
         ->not->toContain('8000//mcp');
@@ -107,9 +107,9 @@ test('--url tolerates a trailing slash', function () {
 
 test('prints how to clean up afterwards', function () {
     /** @var TestCase $this */
-    User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->create(['is_admin' => true]);
 
-    [, $output] = runAdminToken();
+    [, $output] = runAdminToken($admin->email);
 
     expect($output)
         ->toContain('claude mcp remove mcp-admin')
@@ -119,9 +119,9 @@ test('prints how to clean up afterwards', function () {
 
 test('the add and remove lines name the same server', function () {
     /** @var TestCase $this */
-    User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->create(['is_admin' => true]);
 
-    [, $output] = runAdminToken();
+    [, $output] = runAdminToken($admin->email);
 
     preg_match('/claude mcp add --transport http (\\S+)/', $output, $added);
     preg_match('/claude mcp remove (\\S+)/', $output, $removed);
@@ -131,9 +131,9 @@ test('the add and remove lines name the same server', function () {
 
 test('names the token from --name', function () {
     /** @var TestCase $this */
-    User::factory()->create(['is_admin' => true]);
+    $admin = User::factory()->create(['is_admin' => true]);
 
-    runAdminToken(['--name' => 'scratch']);
+    runAdminToken($admin->email, ['--name' => 'scratch']);
 
     expect(Token::sole()->name)->toBe('scratch');
 });
@@ -141,11 +141,11 @@ test('names the token from --name', function () {
 describe('the personal access client', function () {
     test('is created when there is not one yet', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
 
         expect(Client::count())->toBe(0);
 
-        [$exitCode, $output] = runAdminToken();
+        [$exitCode, $output] = runAdminToken($admin->email);
 
         expect($exitCode)->toBe(0)
             ->and($output)->toContain('Created the personal access client')
@@ -154,92 +154,93 @@ describe('the personal access client', function () {
 
     test('is reused on a second run rather than duplicated', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
 
-        runAdminToken();
-        runAdminToken();
+        runAdminToken($admin->email);
+        runAdminToken($admin->email);
 
         expect(Client::count())->toBe(1);
     });
 });
 
 describe('choosing the admin', function () {
-    test('fails when there are no admins', function () {
-        /** @var TestCase $this */
-        User::factory()->create(['is_admin' => false]);
-
-        [$exitCode, $output] = runAdminToken();
-
-        expect($exitCode)->toBe(1)
-            ->and($output)->toContain('There are no admin users')
-            ->and(Token::count())->toBe(0);
-    });
-
-    test('fails and lists them when there is more than one admin', function () {
-        /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true, 'email' => 'first@example.test']);
-        User::factory()->create(['is_admin' => true, 'email' => 'second@example.test']);
-
-        [$exitCode, $output] = runAdminToken();
-
-        expect($exitCode)->toBe(1)
-            ->and($output)->toContain('There is more than one admin')
-            ->and($output)->toContain('first@example.test')
-            ->and(Token::count())->toBe(0);
-    });
-
-    test('--email picks one when there are several', function () {
+    test('mints for the admin named on the command line', function () {
         /** @var TestCase $this */
         User::factory()->create(['is_admin' => true, 'email' => 'first@example.test']);
         $second = User::factory()->create(['is_admin' => true, 'email' => 'second@example.test']);
 
-        [$exitCode] = runAdminToken(['--email' => 'second@example.test']);
+        [$exitCode] = runAdminToken('second@example.test');
 
         expect($exitCode)->toBe(0)
             ->and(Token::sole()->user_id)->toBe($second->id);
     });
 
-    test('refuses to mint for a non-admin', function () {
+    test('an unknown email lists the admins to choose from', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        User::factory()->create(['is_admin' => true, 'email' => 'first@example.test']);
+        User::factory()->create(['is_admin' => true, 'email' => 'second@example.test']);
         User::factory()->create(['is_admin' => false, 'email' => 'frodo@example.test']);
 
-        [$exitCode, $output] = runAdminToken(['--email' => 'frodo@example.test']);
+        [$exitCode, $output] = runAdminToken('typo@example.test');
+
+        expect($exitCode)->toBe(1)
+            ->and($output)->toContain('No user with the email')
+            ->and($output)->toContain('first@example.test')
+            ->and($output)->toContain('second@example.test')
+            ->and($output)->not->toContain('frodo@example.test')
+            ->and(Token::count())->toBe(0);
+    });
+
+    test('says so when there are no admins at all', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => false, 'email' => 'frodo@example.test']);
+
+        [$exitCode, $output] = runAdminToken('nobody@example.test');
+
+        expect($exitCode)->toBe(1)
+            ->and($output)->toContain('There are no admin users at all')
+            ->and(Token::count())->toBe(0);
+    });
+
+    test('refuses to mint for a non-admin', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => false, 'email' => 'frodo@example.test']);
+
+        [$exitCode, $output] = runAdminToken('frodo@example.test');
 
         expect($exitCode)->toBe(1)
             ->and($output)->toContain('is not an admin')
             ->and(Token::count())->toBe(0);
     });
 
-    test('fails on an unknown email', function () {
+    test('the email is required, so it never guesses', function () {
         /** @var TestCase $this */
         User::factory()->create(['is_admin' => true]);
 
-        [$exitCode, $output] = runAdminToken(['--email' => 'nobody@example.test']);
+        expect(fn () => Artisan::call('mcp:admin-token'))
+            ->toThrow(RuntimeException::class, 'Not enough arguments');
 
-        expect($exitCode)->toBe(1)
-            ->and($output)->toContain('No user with the email')
-            ->and(Token::count())->toBe(0);
+        expect(Token::count())->toBe(0);
     });
 });
 
 describe('the confirmation guard', function () {
     test('mints without a prompt in local', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
         $this->app['env'] = 'local';
 
-        $this->artisan('mcp:admin-token')->assertSuccessful();
+        $this->artisan('mcp:admin-token', ['email' => $admin->email])->assertSuccessful();
 
         expect(Token::count())->toBe(1);
     });
 
     test('asks first outside local, and mints nothing when declined', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
         $this->app['env'] = 'production';
 
-        $this->artisan('mcp:admin-token')
+        $this->artisan('mcp:admin-token', ['email' => $admin->email])
             ->expectsConfirmation('Are you sure you want to run this command?', 'no')
             ->assertFailed();
 
@@ -248,10 +249,10 @@ describe('the confirmation guard', function () {
 
     test('mints outside local once confirmed', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
         $this->app['env'] = 'production';
 
-        $this->artisan('mcp:admin-token')
+        $this->artisan('mcp:admin-token', ['email' => $admin->email])
             ->expectsConfirmation('Are you sure you want to run this command?', 'yes')
             ->assertSuccessful();
 
@@ -264,10 +265,10 @@ describe('the confirmation guard', function () {
     // stem, which is what tells the operator what is about to happen.
     test('warns about what it is about to do before asking', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
         $this->app['env'] = 'staging';
 
-        $this->artisan('mcp:admin-token')
+        $this->artisan('mcp:admin-token', ['email' => $admin->email])
             ->expectsOutputToContain('MINTING A REAL ADMIN TOKEN FOR THE')
             ->expectsConfirmation('Are you sure you want to run this command?', 'no')
             ->assertFailed();
@@ -275,10 +276,10 @@ describe('the confirmation guard', function () {
 
     test('--force skips the prompt outside local', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
         $this->app['env'] = 'production';
 
-        $this->artisan('mcp:admin-token', ['--force' => true])->assertSuccessful();
+        $this->artisan('mcp:admin-token', ['email' => $admin->email, '--force' => true])->assertSuccessful();
 
         expect(Token::count())->toBe(1);
     });
@@ -287,11 +288,11 @@ describe('the confirmation guard', function () {
 describe('only one live token', function () {
     test('each run leaves exactly one live token behind', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
 
-        runAdminToken();
-        runAdminToken();
-        runAdminToken();
+        runAdminToken($admin->email);
+        runAdminToken($admin->email);
+        runAdminToken($admin->email);
 
         expect(Token::count())->toBe(3)
             ->and(Token::where('revoked', false)->count())->toBe(1);
@@ -304,7 +305,7 @@ describe('only one live token', function () {
         accessTokenFor($admin, ['mcp:use']);
         accessTokenFor($admin, ['mcp:use']);
 
-        [, $output] = runAdminToken();
+        [, $output] = runAdminToken($admin->email);
 
         expect($output)->toContain('Revoked 2 previously minted tokens.')
             ->and(Token::where('revoked', false)->count())->toBe(1);
@@ -312,10 +313,10 @@ describe('only one live token', function () {
 
     test('the newest token is the live one and it works', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
 
-        runAdminToken();
-        [, $output] = runAdminToken();
+        runAdminToken($admin->email);
+        [, $output] = runAdminToken($admin->email);
 
         $this->withToken(tokenFromOutput($output))
             ->postJson('/mcp/admin', toolsListRpc())
@@ -330,10 +331,10 @@ describe('only one live token', function () {
 
     test('the previous token stops working', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
 
-        [, $first] = runAdminToken();
-        runAdminToken();
+        [, $first] = runAdminToken($admin->email);
+        runAdminToken($admin->email);
 
         $this->withToken(tokenFromOutput($first))
             ->postJson('/mcp/admin', toolsListRpc())
@@ -342,19 +343,19 @@ describe('only one live token', function () {
 
     test('says nothing about revoking on the first run', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
 
-        [, $output] = runAdminToken();
+        [, $output] = runAdminToken($admin->email);
 
         expect($output)->not->toContain('previously minted');
     });
 
     test('counts one token in the singular', function () {
         /** @var TestCase $this */
-        User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['is_admin' => true]);
 
-        runAdminToken();
-        [, $output] = runAdminToken();
+        runAdminToken($admin->email);
+        [, $output] = runAdminToken($admin->email);
 
         expect($output)->toContain('Revoked 1 previously minted token.');
     });
@@ -364,8 +365,8 @@ describe('only one live token', function () {
         $first = User::factory()->create(['is_admin' => true, 'email' => 'first@example.test']);
         User::factory()->create(['is_admin' => true, 'email' => 'second@example.test']);
 
-        runAdminToken(['--email' => 'first@example.test']);
-        runAdminToken(['--email' => 'second@example.test']);
+        runAdminToken('first@example.test');
+        runAdminToken('second@example.test');
 
         expect(Token::where('user_id', $first->id)->where('revoked', false)->count())->toBe(1);
     });
@@ -388,8 +389,8 @@ describe('only one live token', function () {
             'expires_at' => now()->addYear(),
         ]);
 
-        runAdminToken();
-        runAdminToken();
+        runAdminToken($admin->email);
+        runAdminToken($admin->email);
 
         expect($connected->fresh()->revoked)->toBeFalse();
     });

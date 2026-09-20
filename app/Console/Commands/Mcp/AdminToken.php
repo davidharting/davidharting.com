@@ -43,7 +43,7 @@ class AdminToken extends Command
      * @var string
      */
     protected $signature = 'mcp:admin-token
-            {--email= : The admin to mint for. Only needed when there is more than one}
+            {email : The admin to mint the token for}
             {--name=mcp-admin : The token name, shown in the oauth_access_tokens table}
             {--url= : Where your dev server is listening. Defaults to APP_URL, which does not carry a port}
             {--force : Skip the confirmation prompt outside local}
@@ -196,47 +196,51 @@ class AdminToken extends Command
     }
 
     /**
-     * Find the admin to mint for, reporting the reason when there is no single
-     * obvious answer rather than guessing at one.
+     * The admin named on the command line.
+     *
+     * Taking the email as a required argument rather than inferring it is
+     * deliberate: this mints a credential and retires that person's previous
+     * ones, so which account it acts on belongs in the command, where shell
+     * history and a reviewer can both see it. Inferring "the only admin" would
+     * also change behaviour the moment a second one exists.
      */
     private function resolveAdmin(): ?User
     {
-        $email = $this->option('email');
+        $email = (string) $this->argument('email');
 
-        if (is_string($email) && $email !== '') {
-            $user = User::where('email', $email)->first();
+        $user = User::where('email', $email)->first();
 
-            if ($user === null) {
-                $this->components->error("No user with the email [{$email}].");
+        if ($user === null) {
+            $this->components->error("No user with the email [{$email}].");
+            $this->listAdmins();
 
-                return null;
-            }
-
-            if (Gate::forUser($user)->denies('administrate')) {
-                $this->components->error("[{$email}] is not an admin, so a token for them could not reach /mcp/admin.");
-
-                return null;
-            }
-
-            return $user;
+            return null;
         }
 
-        $admins = User::where('is_admin', true)->orderBy('id')->get();
+        if (Gate::forUser($user)->denies('administrate')) {
+            $this->components->error("[{$email}] is not an admin, so a token for them could not reach /mcp/admin.");
+
+            return null;
+        }
+
+        return $user;
+    }
+
+    /**
+     * Offer the choices, so a typo does not mean a second trip to tinker.
+     */
+    private function listAdmins(): void
+    {
+        $admins = User::where('is_admin', true)->orderBy('id')->pluck('email');
 
         if ($admins->isEmpty()) {
-            $this->components->error('There are no admin users. Seed the database or promote one, then try again.');
+            $this->line('  There are no admin users at all. Seed the database or promote one.');
 
-            return null;
+            return;
         }
 
-        if ($admins->count() > 1) {
-            $this->components->error('There is more than one admin. Pass --email to pick one:');
-            $this->line($admins->pluck('email')->map(fn (string $email): string => "  {$email}")->implode(PHP_EOL));
-
-            return null;
-        }
-
-        return $admins->first();
+        $this->line('  Admins are:');
+        $this->line($admins->map(fn (string $email): string => "    {$email}")->implode(PHP_EOL));
     }
 
     /**
