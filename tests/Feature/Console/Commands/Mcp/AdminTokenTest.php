@@ -17,9 +17,11 @@ function toolsListRpc(): array
 }
 
 /**
- * Run the command and hand back everything it printed. Artisan::call is used
- * rather than $this->artisan() because these tests read the token out of the
- * output, and PendingCommand does not record it for Artisan::output().
+ * Run the command and hand back its exit code and everything it printed.
+ *
+ * Artisan::call is used rather than $this->artisan() because these tests read
+ * the token out of the output, and the pending-command helper does not record
+ * output where Artisan::output() can see it.
  *
  * @param  array<string, string>  $parameters
  * @return array{0: int, 1: string}
@@ -66,7 +68,7 @@ test('the minted token carries only the mcp:use scope', function () {
     expect(Token::sole()->scopes)->toBe(['mcp:use']);
 });
 
-test('a token minted without the scope is refused, which is the belt #186 leans on', function () {
+test('a token without the mcp:use scope is refused', function () {
     /** @var TestCase $this */
     $admin = User::factory()->create(['is_admin' => true]);
 
@@ -259,10 +261,9 @@ describe('the confirmation guard', function () {
         expect(Token::count())->toBe(1);
     });
 
-    // The alert component renders its content uppercase, and pipes the
-    // interpolated environment name through EnsureDynamicContentIsHighlighted,
-    // which wraps it in styling this assertion cannot see. Pin the sentence
-    // stem, which is what tells the operator what is about to happen.
+    // The alert component uppercases its content and wraps any bracketed value
+    // in styling that output assertions cannot match, so assert on the fixed
+    // part of the sentence rather than the interpolated environment name.
     test('warns about what it is about to do before asking', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
@@ -322,7 +323,7 @@ describe('only one live token', function () {
             ->postJson('/mcp/admin', toolsListRpc())
             ->assertSuccessful();
 
-        // The jti claim is the token id, so this pins that the token the
+        // A JWT's jti claim is the token's id, so this pins that the token the
         // command printed is the one row left unrevoked.
         $claims = json_decode(base64_decode(explode('.', tokenFromOutput($output))[1]), true);
 

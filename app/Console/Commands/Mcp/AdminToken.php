@@ -15,25 +15,29 @@ use RuntimeException;
 /**
  * Mints a bearer token for /mcp/admin without the browser OAuth dance.
  *
- * This is the "tier 2" development loop decided on issue #188: the token goes
- * through the same auth:api, CheckToken, and can:administrate middleware that
- * Claude.ai's token does, so it exercises the real stack while skipping
- * discovery, consent, and the code exchange.
+ * /mcp/admin authenticates a bearer token; it does not care how that token was
+ * issued. Minting one directly therefore exercises the real route — auth:api,
+ * the scope check, and the administrate gate — while skipping discovery,
+ * consent, and the authorization code exchange, which need a browser and a
+ * publicly reachable host.
  *
- * @see https://github.com/davidharting/davidharting.com/issues/188
+ * This is a convenience for driving the server by hand, not a second way in:
+ * the token it produces is subject to exactly the same checks as one an MCP
+ * client obtained through OAuth.
  */
 class AdminToken extends Command
 {
     use ConfirmableTrait;
 
     /**
-     * The scope /mcp/admin requires, hardcoded by Mcp::oauthRoutes().
+     * The scope the admin server's route requires of a bearer token. A token
+     * without it is rejected even when its owner is an admin.
      */
     private const SCOPE = 'mcp:use';
 
     /**
-     * What the printed `claude mcp add` calls the server. Shared with the
-     * matching `claude mcp remove` so the two cannot drift apart.
+     * The name the printed registration command gives the server. Shared with
+     * the matching removal command so the two cannot drift apart.
      */
     private const SERVER_NAME = 'mcp-admin';
 
@@ -45,7 +49,7 @@ class AdminToken extends Command
     protected $signature = 'mcp:admin-token
             {email : The admin to mint the token for}
             {--name=mcp-admin : The token name, shown in the oauth_access_tokens table}
-            {--url= : Where your dev server is listening. Defaults to APP_URL, which does not carry a port}
+            {--url= : Origin the server is reachable at, e.g. http://127.0.0.1:8000. Defaults to APP_URL}
             {--force : Skip the confirmation prompt outside local}
     ';
 
@@ -82,15 +86,17 @@ class AdminToken extends Command
     }
 
     /**
-     * Passport cannot hand a token back: oauth_access_tokens stores the id,
-     * scopes, and expiry, but never the signed string a client sends. So every
-     * run mints, and the only way to avoid accumulating year-long admin
-     * credentials is to retire the ones this command minted before.
+     * Retire the tokens this command issued previously, so that it leaves
+     * exactly one live token behind.
      *
-     * Deliberately limited to tokens issued by a personal access client, which
-     * is the only kind this command creates. Tokens from the authorization code
-     * flow — Claude.ai's real connection — are left alone, so running this as a
-     * break-glass on a deployed environment does not disconnect the connector.
+     * Reusing the previous token instead is not possible: Passport stores a
+     * token's id, scopes, and expiry, but never the signed string a client
+     * sends, so an issued token cannot be read back. Every run therefore mints,
+     * and without revoking, long-lived admin credentials would pile up.
+     *
+     * Limited to tokens issued by a personal access client, which is the only
+     * kind this command creates. Tokens from the authorization code flow belong
+     * to real connected clients, and revoking those would sign them out.
      */
     private function revokePreviousTokens(User $admin): void
     {
@@ -123,7 +129,7 @@ class AdminToken extends Command
     }
 
     /**
-     * Print the token and what to do with it.
+     * Print the token, how to register it with a client, and how to undo both.
      */
     private function report(string $accessToken, string $tokenId): int
     {
@@ -139,9 +145,9 @@ class AdminToken extends Command
         ));
         $this->newLine();
 
-        // Removing the client registration leaves the token live for a year, so
-        // spell out the revoke too. Passport has no first-party command for a
-        // single token, hence the tinker call with the id filled in.
+        // Unregistering the client leaves the token itself valid until it
+        // expires, so print the revoke as well. Passport has no command for
+        // revoking a single token, hence the inline call with the id filled in.
         $this->line('When you are done, unregister it and revoke the token:');
         $this->line('claude mcp remove '.self::SERVER_NAME);
         $this->line(sprintf(
@@ -154,14 +160,17 @@ class AdminToken extends Command
     }
 
     /**
-     * Minting is allowed everywhere — a hand-minted token is a reasonable
-     * break-glass for debugging a preview or production — but only `local` gets
-     * to do it silently. ConfirmableTrait's own default would ask in
-     * `production` alone, which would wave through any environment that is
-     * merely not named that.
+     * Minting is allowed in every environment, since a hand-issued token is a
+     * reasonable way to inspect a deployed server, but only `local` does it
+     * without asking.
      *
-     * `testing` is exempt so the suite is not answering prompts; the guard's
-     * behaviour outside `local` is covered by tests that set the environment.
+     * ConfirmableTrait's own default prompts in `production` alone, which would
+     * let any environment not named that through unchallenged. Naming the
+     * exemption instead of the trigger keeps staging-like environments guarded
+     * however they are labelled.
+     *
+     * `testing` is exempt so that test runs are not blocked waiting on a
+     * prompt.
      */
     private function needsConfirmation(): bool
     {
@@ -177,12 +186,12 @@ class AdminToken extends Command
     }
 
     /**
-     * Where to tell the developer to point their MCP client.
+     * The URL to tell the operator to point their MCP client at.
      *
-     * url() is unreliable here: in a console command there is no request to
-     * infer the origin from, so it falls back to APP_URL, which this project
-     * sets to http://localhost with no port while the dev server listens on
-     * 8000 (pitchfork.toml). Hence --url.
+     * A console command has no request to infer an origin from, so url() falls
+     * back to APP_URL. That is frequently not where a local server is actually
+     * listening — APP_URL commonly omits the port the dev server binds to —
+     * which would make the printed command silently wrong. --url overrides it.
      */
     private function serverUrl(): string
     {
@@ -196,13 +205,16 @@ class AdminToken extends Command
     }
 
     /**
-     * The admin named on the command line.
+     * The user named on the command line, if they may reach the admin server.
      *
-     * Taking the email as a required argument rather than inferring it is
-     * deliberate: this mints a credential and retires that person's previous
-     * ones, so which account it acts on belongs in the command, where shell
-     * history and a reviewer can both see it. Inferring "the only admin" would
-     * also change behaviour the moment a second one exists.
+     * The email is a required argument rather than an inferred default because
+     * this issues a credential and revokes that user's previous ones. Naming
+     * the account keeps it visible in shell history and to anyone reviewing
+     * what was run. Falling back to "the only admin" would also silently change
+     * behaviour as soon as a second one existed.
+     *
+     * Authorization goes through the gate rather than the is_admin column, so
+     * this cannot drift from what the rest of the application enforces.
      */
     private function resolveAdmin(): ?User
     {
@@ -227,7 +239,8 @@ class AdminToken extends Command
     }
 
     /**
-     * Offer the choices, so a typo does not mean a second trip to tinker.
+     * List the accounts that would be accepted, so a mistyped address does not
+     * require a separate query to recover from.
      */
     private function listAdmins(): void
     {
@@ -244,9 +257,10 @@ class AdminToken extends Command
     }
 
     /**
-     * Passport needs a personal access client before it will issue a token, and
-     * a fresh checkout has none. Create one rather than making the developer
-     * decode "Personal access client not found for 'users' user provider."
+     * Passport refuses to issue a personal access token until a personal access
+     * client exists, and a newly set up database has none. Creating it here
+     * turns an opaque "Personal access client not found" runtime exception into
+     * something the command handles itself.
      */
     private function ensurePersonalAccessClient(ClientRepository $clients): void
     {
