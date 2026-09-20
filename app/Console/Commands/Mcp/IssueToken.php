@@ -25,7 +25,7 @@ use RuntimeException;
  * the token it produces is subject to exactly the same checks as one an MCP
  * client obtained through OAuth.
  */
-class AdminToken extends Command
+class IssueToken extends Command
 {
     use ConfirmableTrait;
 
@@ -46,7 +46,7 @@ class AdminToken extends Command
      *
      * @var string
      */
-    protected $signature = 'mcp:admin-token
+    protected $signature = 'mcp:token
             {email : The admin to mint the token for}
             {--name=mcp-admin : The token name, shown in the oauth_access_tokens table}
             {--url= : Origin the server is reachable at, e.g. http://127.0.0.1:8000. Defaults to APP_URL}
