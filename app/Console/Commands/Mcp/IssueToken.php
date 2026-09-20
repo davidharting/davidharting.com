@@ -24,6 +24,11 @@ use RuntimeException;
  * This is a convenience for driving the server by hand, not a second way in:
  * the token it produces is subject to exactly the same checks as one an MCP
  * client obtained through OAuth.
+ *
+ * A token can be issued for any user, not only one who may reach the server.
+ * A token belonging to someone the gate refuses is the cheapest way to exercise
+ * the rejection path by hand, and it grants nothing: the admin server is the
+ * only route the api guard protects, and it answers such a token with a 403.
  */
 class IssueToken extends Command
 {
@@ -47,7 +52,7 @@ class IssueToken extends Command
      * @var string
      */
     protected $signature = 'mcp:token
-            {email : The admin to mint the token for}
+            {email : The user to issue the token for}
             {--name=mcp-admin : The token name, shown in the oauth_access_tokens table}
             {--url= : Origin the server is reachable at, e.g. http://127.0.0.1:8000. Defaults to APP_URL}
             {--force : Skip the confirmation prompt outside local}
@@ -58,7 +63,7 @@ class IssueToken extends Command
      *
      * @var string
      */
-    protected $description = 'Mint an mcp:use bearer token for reaching /mcp/admin without the OAuth dance';
+    protected $description = 'Issue an mcp:use bearer token for a user, for driving /mcp/admin without the OAuth dance';
 
     /**
      * Execute the console command.
@@ -69,18 +74,20 @@ class IssueToken extends Command
             return self::FAILURE;
         }
 
-        $admin = $this->resolveAdmin();
+        $user = $this->resolveUser();
 
-        if ($admin === null) {
+        if ($user === null) {
             return self::FAILURE;
         }
 
+        $this->warnIfRefused($user);
+
         $this->ensurePersonalAccessClient($clients);
-        $this->revokePreviousTokens($admin);
+        $this->revokePreviousTokens($user);
 
-        $result = $admin->createToken((string) $this->option('name'), [self::SCOPE]);
+        $result = $user->createToken((string) $this->option('name'), [self::SCOPE]);
 
-        $this->components->info('Minted an '.self::SCOPE." token for {$admin->email}.");
+        $this->components->info('Minted an '.self::SCOPE." token for {$user->email}.");
 
         return $this->report($result->accessToken, $result->token->id);
     }
@@ -98,10 +105,10 @@ class IssueToken extends Command
      * kind this command creates. Tokens from the authorization code flow belong
      * to real connected clients, and revoking those would sign them out.
      */
-    private function revokePreviousTokens(User $admin): void
+    private function revokePreviousTokens(User $user): void
     {
         $revoked = Token::query()
-            ->where('user_id', $admin->getKey())
+            ->where('user_id', $user->getKey())
             ->whereIn('client_id', $this->personalAccessClientIds())
             ->where('revoked', false)
             ->update(['revoked' => true]);
@@ -180,7 +187,7 @@ class IssueToken extends Command
     private function confirmationWarning(): string
     {
         return sprintf(
-            'Minting a real admin token for the [%s] environment, and revoking the previous ones',
+            'Issuing a real access token for the [%s] environment, and revoking that user\'s previous ones',
             $this->getLaravel()->environment(),
         );
     }
@@ -205,18 +212,15 @@ class IssueToken extends Command
     }
 
     /**
-     * The user named on the command line, if they may reach the admin server.
+     * The user named on the command line.
      *
      * The email is a required argument rather than an inferred default because
      * this issues a credential and revokes that user's previous ones. Naming
      * the account keeps it visible in shell history and to anyone reviewing
      * what was run. Falling back to "the only admin" would also silently change
      * behaviour as soon as a second one existed.
-     *
-     * Authorization goes through the gate rather than the is_admin column, so
-     * this cannot drift from what the rest of the application enforces.
      */
-    private function resolveAdmin(): ?User
+    private function resolveUser(): ?User
     {
         $email = (string) $this->argument('email');
 
@@ -229,18 +233,30 @@ class IssueToken extends Command
             return null;
         }
 
-        if (Gate::forUser($user)->denies('administrate')) {
-            $this->components->error("[{$email}] is not an admin, so a token for them could not reach /mcp/admin.");
-
-            return null;
-        }
-
         return $user;
     }
 
     /**
-     * List the accounts that would be accepted, so a mistyped address does not
-     * require a separate query to recover from.
+     * Say plainly when the issued token will not be accepted, so that a 403
+     * later is a confirmed expectation rather than a puzzle.
+     *
+     * The check goes through the gate rather than the is_admin column, so it
+     * cannot disagree with what the server itself enforces.
+     */
+    private function warnIfRefused(User $user): void
+    {
+        if (Gate::forUser($user)->allows('administrate')) {
+            return;
+        }
+
+        $this->components->warn(
+            "[{$user->email}] is not an admin. The token will be issued, but /mcp/admin will refuse it with 403."
+        );
+    }
+
+    /**
+     * Offer the admin addresses after a miss. A token can be issued for anyone,
+     * so this is a hint for the common case rather than a list of valid values.
      */
     private function listAdmins(): void
     {
@@ -269,7 +285,7 @@ class IssueToken extends Command
         try {
             $clients->personalAccessClient($provider);
         } catch (RuntimeException) {
-            $clients->createPersonalAccessGrantClient('MCP admin tokens', $provider);
+            $clients->createPersonalAccessGrantClient('MCP tokens', $provider);
 
             $this->components->info('Created the personal access client Passport needs to issue tokens.');
         }

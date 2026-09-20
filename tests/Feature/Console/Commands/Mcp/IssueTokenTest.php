@@ -204,15 +204,36 @@ describe('choosing the admin', function () {
             ->and(Token::count())->toBe(0);
     });
 
-    test('refuses to mint for a non-admin', function () {
+    test('issues for a non-admin and warns the server will refuse it', function () {
         /** @var TestCase $this */
         User::factory()->create(['is_admin' => false, 'email' => 'frodo@example.test']);
 
         [$exitCode, $output] = runIssueToken('frodo@example.test');
 
-        expect($exitCode)->toBe(1)
+        expect($exitCode)->toBe(0)
             ->and($output)->toContain('is not an admin')
-            ->and(Token::count())->toBe(0);
+            ->and($output)->toContain('403')
+            ->and(Token::count())->toBe(1);
+    });
+
+    test('a non-admin token is refused by the server, which is the point of issuing one', function () {
+        /** @var TestCase $this */
+        User::factory()->create(['is_admin' => false, 'email' => 'frodo@example.test']);
+
+        [, $output] = runIssueToken('frodo@example.test');
+
+        $this->withToken(tokenFromOutput($output))
+            ->postJson('/mcp/admin', toolsListRpc())
+            ->assertForbidden();
+    });
+
+    test('says nothing about refusal for an admin', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        [, $output] = runIssueToken($admin->email);
+
+        expect($output)->not->toContain('is not an admin');
     });
 
     test('the email is required, so it never guesses', function () {
@@ -270,7 +291,7 @@ describe('the confirmation guard', function () {
         $this->app['env'] = 'staging';
 
         $this->artisan('mcp:token', ['email' => $admin->email])
-            ->expectsOutputToContain('MINTING A REAL ADMIN TOKEN FOR THE')
+            ->expectsOutputToContain('ISSUING A REAL ACCESS TOKEN FOR THE')
             ->expectsConfirmation('Are you sure you want to run this command?', 'no')
             ->assertFailed();
     });
