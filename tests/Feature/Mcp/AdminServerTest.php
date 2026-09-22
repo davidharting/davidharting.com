@@ -174,7 +174,7 @@ test('an admin can read a draft through get-note', function () {
             'method' => 'tools/call',
             'params' => [
                 'name' => 'get-note',
-                'arguments' => ['slug' => $note->slug, 'include_drafts' => true],
+                'arguments' => ['slug' => $note->slug],
             ],
         ]);
 

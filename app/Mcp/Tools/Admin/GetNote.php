@@ -19,7 +19,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
  * Do not collapse the two into one class with a flag. A tool's name,
  * description and schemas come from class attributes and never see the request,
  * so a single class would have to describe both surfaces at once — and the
- * description is how the model learns drafts are reachable here.
+ * description is how the model learns drafts are reachable here at all.
  */
 #[IsReadOnly]
 #[IsIdempotent]
@@ -29,10 +29,10 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
     response includes the note's title, lead (subtitle), status, publication
     date, canonical URL, and complete markdown content.
 
-    Published notes are returned by default. An unpublished draft is refused
-    unless include_drafts is true — a draft is work in progress, so never quote
-    or summarise one as something David has published. The response says which
-    it is; check that before relying on a note.
+    Published notes and unpublished drafts are both returned. Every response
+    carries a Status line saying which it is — read it. A draft is work in
+    progress, so never quote or summarise one as something David has
+    published.
     TEXT)]
 class GetNote extends Tool
 {
@@ -62,24 +62,15 @@ class GetNote extends Tool
 
         $validated = $request->validate([
             'slug' => ['required', 'string'],
-            'include_drafts' => ['sometimes', 'boolean'],
         ]);
 
-        // Fetched without the visibility rule, then judged here. The public
-        // tool hides a draft's existence behind "not found" because a stranger
-        // is asking; this caller may read every note, so concealment would buy
-        // nothing and cost an accurate refusal.
+        // A slug names one note, so there is nothing to filter: the caller
+        // already said which note they want. The Status line, not a refusal, is
+        // what stops a draft being mistaken for published work.
         $note = (new GetNoteQuery($validated['slug'], includeDrafts: true))->execute();
 
         if ($note === null) {
             return Response::error('Note not found.');
-        }
-
-        if (! $note->visible && ! ($validated['include_drafts'] ?? false)) {
-            return Response::error(sprintf(
-                'The note "%s" is an unpublished draft. Pass include_drafts to read it.',
-                $note->slug,
-            ));
         }
 
         return Response::text($this->toMarkdown($note));
@@ -123,8 +114,6 @@ class GetNote extends Tool
             'slug' => $schema->string()
                 ->required()
                 ->description('The slug of the note to fetch, as returned by the list-notes or search-notes tools.'),
-            'include_drafts' => $schema->boolean()
-                ->description('Whether an unpublished draft may be returned. Defaults to false, which refuses one and says so.'),
         ];
     }
 }

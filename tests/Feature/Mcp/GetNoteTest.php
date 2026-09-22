@@ -87,16 +87,13 @@ test('still refuses a draft to an authenticated admin, with the same wording', f
     $note = Note::factory()->create(['title' => 'SECRET DRAFT', 'visible' => false]);
     $admin = User::factory()->create(['is_admin' => true]);
 
-    $response = PublicServer::actingAs($admin)->tool(GetNote::class, [
-        'slug' => $note->slug,
-        'include_drafts' => true,
-    ]);
+    $response = PublicServer::actingAs($admin)->tool(GetNote::class, ['slug' => $note->slug]);
 
     $response->assertHasErrors(['Note not found.']);
     $response->assertDontSee('SECRET DRAFT');
 });
 
-test('does not advertise include_drafts on the public server', function () {
+test('takes only a slug on the public server', function () {
     /** @var TestCase $this */
     $response = $this->postJson('/mcp', [
         'jsonrpc' => '2.0',

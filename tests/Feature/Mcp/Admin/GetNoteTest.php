@@ -89,22 +89,10 @@ describe('handle()', function () {
             MARKDOWN);
     });
 
-    test('refuses a draft by default, and says it is a draft', function () {
+    test('returns a draft, labelled as a draft', function () {
         /** @var TestCase $this */
-        // The public tool answers "not found" here to avoid confirming a draft
-        // exists to a stranger. This caller may read every note, so the same
-        // reply would only be a lie the model then repeats to David.
-        $note = Note::factory()->create(['title' => 'SECRET DRAFT', 'visible' => false]);
-        $admin = User::factory()->create(['is_admin' => true]);
-
-        $response = AdminServer::actingAs($admin)->tool(GetNote::class, ['slug' => $note->slug]);
-
-        $response->assertHasErrors(['is an unpublished draft']);
-        $response->assertDontSee('SECRET DRAFT');
-    });
-
-    test('returns a draft when asked, labelled as a draft', function () {
-        /** @var TestCase $this */
+        // No opt-in: a slug names one note, and the caller already named it.
+        // The label is what keeps the draft from being read as published work.
         $note = Note::factory()->create([
             'title' => 'Work in progress',
             'markdown_content' => 'Half an argument.',
@@ -112,10 +100,7 @@ describe('handle()', function () {
         ]);
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $response = AdminServer::actingAs($admin)->tool(GetNote::class, [
-            'slug' => $note->slug,
-            'include_drafts' => true,
-        ]);
+        $response = AdminServer::actingAs($admin)->tool(GetNote::class, ['slug' => $note->slug]);
 
         $response->assertOk();
         $response->assertSee('# Work in progress');
@@ -123,14 +108,11 @@ describe('handle()', function () {
         $response->assertSee('Status: draft');
     });
 
-    test('returns not found for a slug that does not exist, with drafts allowed', function () {
+    test('returns not found for a slug that does not exist', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $response = AdminServer::actingAs($admin)->tool(GetNote::class, [
-            'slug' => 'does-not-exist',
-            'include_drafts' => true,
-        ]);
+        $response = AdminServer::actingAs($admin)->tool(GetNote::class, ['slug' => 'does-not-exist']);
 
         $response->assertHasErrors(['Note not found.']);
     });
@@ -142,17 +124,5 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(GetNote::class);
 
         $response->assertHasErrors(['slug']);
-    });
-
-    test('rejects a non-boolean include_drafts', function () {
-        /** @var TestCase $this */
-        $admin = User::factory()->create(['is_admin' => true]);
-
-        $response = AdminServer::actingAs($admin)->tool(GetNote::class, [
-            'slug' => 'anything',
-            'include_drafts' => 'yes please',
-        ]);
-
-        $response->assertHasErrors(['include drafts']);
     });
 });

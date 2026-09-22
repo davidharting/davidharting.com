@@ -27,10 +27,11 @@ class AdminServer extends Server
 
         **Notes** are David's blog posts. Use list-notes to browse them
         (newest first), search-notes to find notes matching a query, and
-        get-note to read one in full as markdown. list-notes and get-note can
-        both reach unpublished drafts, which search-notes cannot — pass
-        include_drafts to either when the question is about work in progress,
-        and read the status before treating a note as published.
+        get-note to read one in full as markdown. Unpublished drafts are
+        reachable here: get-note returns one whenever its slug is asked for,
+        and list-notes includes them when you pass include_drafts. Every
+        result says whether it is published or a draft — read that before
+        treating a note as published. search-notes never matches drafts.
 
         **The media library** tracks the albums, books, movies, TV shows, and
         video games David engages with. Each item has a current status —
