@@ -13,12 +13,12 @@ describe('shouldRegister()', function () {
     // no note in the database both failures produce that phrase and the test
     // would pass without the gate doing anything.
     beforeEach(function () {
-        Note::factory()->create(['slug' => 'anything', 'visible' => true]);
+        Note::factory()->create(['slug' => 'published-note', 'visible' => true]);
     });
 
     test('an anonymous caller cannot reach the tool at all', function () {
         /** @var TestCase $this */
-        $response = AdminServer::tool(GetNote::class, ['slug' => 'anything']);
+        $response = AdminServer::tool(GetNote::class, ['slug' => 'published-note']);
 
         // "Tool not found" rather than "denied": tools/call resolves through
         // the same filtered collection tools/list does, so a tool the caller
@@ -30,7 +30,7 @@ describe('shouldRegister()', function () {
         /** @var TestCase $this */
         $user = User::factory()->create(['is_admin' => false]);
 
-        $response = AdminServer::actingAs($user)->tool(GetNote::class, ['slug' => 'anything']);
+        $response = AdminServer::actingAs($user)->tool(GetNote::class, ['slug' => 'published-note']);
 
         $response->assertHasErrors(['Tool [get-note] not found']);
     });
