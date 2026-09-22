@@ -109,6 +109,22 @@ describe('robots', function () {
 
 });
 
+describe('request isolation', function () {
+    /**
+     * A controller's Head:: calls must not outlive its request. Production
+     * guarantees this; the test layer only does because Tests\TestCase
+     * simulates it -- see TestCase::call() for why and how we know.
+     */
+    test('runtime metadata from one request does not carry into the next', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create(['visible' => true, 'title' => 'A cool post']);
+
+        $this->get('/notes/'.$note->slug);
+
+        expect(RenderedHead::from($this->get('/notes'))->title)->toBe("David's Notes - davidharting.com");
+    });
+});
+
 /**
  * A note is the fixture here, not the subject. These two assert rules the head
  * system owns -- the complete social-card contract, and how the title suffix
