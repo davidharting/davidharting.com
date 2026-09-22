@@ -73,8 +73,8 @@ test('does not load markdown content by default', function () {
 
     $note = (new ListNotesQuery)->execute()->sole();
 
-    // Not merely absent from the response map: never fetched, so a listing does
-    // not drag every note body into memory to render titles.
+    // Asserted on the model's attributes, not the response: the column has to
+    // be absent from the query, not just dropped afterwards.
     expect($note->getAttributes())->not->toHaveKey('markdown_content');
 });
 

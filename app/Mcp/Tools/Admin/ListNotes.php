@@ -17,10 +17,10 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
  * The admin counterpart of App\Mcp\Tools\ListNotes, registered only on
  * AdminServer.
  *
- * It is a separate class rather than a mode of the public one because an MCP
- * tool's contract is static: name, description and schemas resolve without ever
- * seeing the request, so one class cannot honestly describe two surfaces. See
- * https://github.com/davidharting/davidharting.com/issues/208.
+ * Do not collapse the two into one class with a flag. A tool's name,
+ * description and schemas come from class attributes and never see the request,
+ * so a single class would have to describe both surfaces at once — and the
+ * description is how the model learns whether drafts are in the results.
  */
 #[IsReadOnly]
 #[IsIdempotent]
@@ -46,13 +46,12 @@ class ListNotes extends Tool
     private const MAX_PER_PAGE = 250;
 
     /**
-     * Whether this tool is offered at all: is the caller entitled to the admin
-     * surface? A tool that fails this is absent from tools/list *and* answers
-     * tools/call with "Tool not found", because CallTool resolves through the
-     * same filtered collection ListTools does.
+     * Whether the caller is entitled to the admin surface at all. Failing this
+     * hides the tool from tools/list and makes tools/call answer "Tool not
+     * found": both resolve through the same filtered collection.
      *
-     * This is a different question from the one handle() asks, and neither
-     * substitutes for the other.
+     * handle() asks the narrower question of whether the caller may see these
+     * particular rows. Neither check substitutes for the other.
      */
     public function shouldRegister(Request $request): bool
     {

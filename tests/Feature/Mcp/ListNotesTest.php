@@ -110,10 +110,9 @@ test('rejects a page below one', function () {
 
 test('still hides drafts from an authenticated admin', function () {
     /** @var TestCase $this */
-    // The route is the bouncer, but the class is what decides. An admin who
-    // connects to the unauthenticated server gets the unauthenticated view,
-    // because PublicServer registers this class and nothing else — the widened
-    // reads live in App\Mcp\Tools\Admin, registered only on AdminServer.
+    // Being an admin is not what widens a read; being served the admin class
+    // is. This class is registered on PublicServer only, so /mcp returns the
+    // public view no matter who is asking.
     Note::factory()->create(['title' => 'Public note', 'visible' => true]);
     Note::factory()->create(['title' => 'SECRET DRAFT', 'visible' => false]);
     $admin = User::factory()->create(['is_admin' => true]);

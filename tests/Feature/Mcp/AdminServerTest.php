@@ -121,11 +121,9 @@ test('an admin can call a tool', function () {
 
 test('an admin is served the admin list-notes, not the public one', function () {
     /** @var TestCase $this */
-    // The in-process AdminServer::tool() helper resolves shouldRegister through
-    // the same filtered collection, but it never runs auth:api — so the tool the
-    // gate actually admits over a real bearer token is asserted here, where the
-    // whole stack runs. See #203: a test that skips the real guard can be green
-    // about an authorization the server never performs.
+    // Asserted over a real bearer token rather than through the in-process
+    // AdminServer::tool() helper, which never runs auth:api. A test that stubs
+    // the guard can pass while the deployed server admits nobody, or everybody.
     $admin = User::factory()->create(['is_admin' => true]);
 
     $response = $this->withToken(accessTokenFor($admin, ['mcp:use']))

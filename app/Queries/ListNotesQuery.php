@@ -10,9 +10,8 @@ use Illuminate\Support\Collection;
 class ListNotesQuery
 {
     /**
-     * Everything a caller needs to list notes, minus the body. `visible` is
-     * here because a caller passing $includeDrafts has to be able to tell the
-     * two apart in the result.
+     * What a listing needs, minus the body. `visible` earns its place because a
+     * caller that asked for drafts still has to tell them apart in the result.
      */
     private const COLUMNS = [
         'id',
@@ -24,13 +23,13 @@ class ListNotesQuery
     ];
 
     /**
-     * This query performs no authorization. Both flags are the caller's to set,
-     * and the caller is responsible for having earned them.
+     * This query performs no authorization. The caller sets these flags and is
+     * responsible for having earned them.
      *
      * @param  bool  $includeDrafts  Whether notes with `visible = false` are in the result.
-     * @param  bool  $includeContent  Whether to load `markdown_content`. Off by default:
-     *                                a listing renders titles, so loading every body is
-     *                                the expensive half of the row for nothing.
+     * @param  bool  $includeContent  Whether to load `markdown_content`. Off by default,
+     *                                because it is the largest column and a listing
+     *                                renders titles.
      */
     public function __construct(
         public bool $includeDrafts = false,

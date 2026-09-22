@@ -13,8 +13,9 @@ describe('shouldRegister()', function () {
         /** @var TestCase $this */
         $response = AdminServer::tool(ListNotes::class);
 
-        // Not merely denied: CallTool resolves through the same filtered
-        // collection tools/list uses, so an ineligible tool does not exist.
+        // "Not found" rather than "denied" is the expected wording: tools/call
+        // resolves through the same filtered collection tools/list does, so a
+        // tool the caller cannot register simply is not there.
         $response->assertHasErrors(['not found']);
     });
 
@@ -40,10 +41,10 @@ describe('shouldRegister()', function () {
 describe('handle()', function () {
     test('refuses a caller the note policy denies, even if it is reached', function () {
         /** @var TestCase $this */
-        // Called directly rather than through the server, because shouldRegister
-        // would otherwise turn this away first. The guard is a precondition, not
-        // a branch: it must refuse on its own so a registration mistake degrades
-        // into a denial rather than a leak.
+        // Called directly, since going through the server would only prove
+        // shouldRegister works. The point is that handle() refuses on its own
+        // too, so registering this tool somewhere it does not belong leaks
+        // nothing.
         $this->actingAs(User::factory()->create(['is_admin' => false]));
 
         $response = (new ListNotes)->handle(new Request);
