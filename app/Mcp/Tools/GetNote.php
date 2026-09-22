@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Models\Note;
+use App\Queries\GetNoteQuery;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -30,10 +31,7 @@ class GetNote extends Tool
             'slug' => ['required', 'string'],
         ]);
 
-        $note = Note::query()
-            ->where('slug', $validated['slug'])
-            ->where('visible', true)
-            ->first();
+        $note = (new GetNoteQuery($validated['slug']))->execute();
 
         if ($note === null) {
             return Response::error('Note not found.');
