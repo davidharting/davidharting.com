@@ -42,16 +42,16 @@ describe('defaults', function () {
         expect(RenderedHead::from($this->get('/notes'))->title)->toBe("David's Notes - davidharting.com");
     });
 
-    test('every page advertises the atom feed', function () {
+    test('every page advertises the atom feed', function (string $path) {
         /** @var TestCase $this */
-        $head = RenderedHead::from($this->get('/media'));
+        $head = RenderedHead::from($this->get($path));
 
         expect($head->links)->toContain([
             'rel' => 'alternate',
             'href' => 'http://davidharting-dot-com.test/feed',
             'attributes' => ['type' => 'application/atom+xml', 'title' => 'David Harting'],
         ]);
-    });
+    })->with(['/', '/notes', '/media', '/pages']);
 
     test('the PWA block renders', function () {
         /** @var TestCase $this */

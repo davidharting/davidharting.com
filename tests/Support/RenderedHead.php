@@ -28,6 +28,14 @@ class RenderedHead
         public readonly array $schemas,
     ) {}
 
+    /**
+     * Parse the <head> out of a test response.
+     *
+     * ```php
+     * $head = RenderedHead::from($this->get('/notes'));
+     * expect($head->title)->toBe("David's Notes - davidharting.com");
+     * ```
+     */
     public static function from(TestResponse $response): self
     {
         $document = new DOMDocument;
@@ -61,7 +69,21 @@ class RenderedHead
     }
 
     /**
-     * Get the content of a single meta tag, by its name or property attribute.
+     * Get the content of a single meta tag, keyed by its name or property.
+     *
+     * Meta tags are indexed under whichever of the two they carry: HTML's own
+     * `name` (description, robots, theme-color) or RDFa's `property`, which is
+     * what Open Graph uses (og:title, article:published_time). A tag never
+     * carries both in practice, so one flat lookup covers both spellings.
+     *
+     * Returns null for a tag that is absent -- which is a useful assertion in
+     * its own right.
+     *
+     * ```php
+     * expect($head->meta('robots'))->toBe('noindex, nofollow');
+     * expect($head->meta('og:title'))->toBe('A cool post');
+     * expect($head->meta('title'))->toBeNull();       // the dead tag is gone
+     * ```
      */
     public function meta(string $key): ?string
     {
@@ -70,6 +92,11 @@ class RenderedHead
 
     /**
      * Get the href of the first link with the given rel.
+     *
+     * ```php
+     * expect($head->link('canonical'))->toBe('https://davidharting.com/notes');
+     * expect($head->link('manifest'))->toBe('/manifest.json');
+     * ```
      */
     public function link(string $rel): ?string
     {
@@ -86,7 +113,18 @@ class RenderedHead
      * Get every meta tag whose key starts with one of the given prefixes.
      *
      * Use this to assert on a whole family at once -- `toBe` against the full
-     * map fails when a tag you did not anticipate appears or drifts.
+     * map fails when a tag you did not anticipate appears or drifts, which a
+     * handful of individual `meta()` assertions cannot do. This is how the
+     * twitter:title regression was caught.
+     *
+     * ```php
+     * expect($head->metaMatching('og:', 'twitter:'))->toBe([
+     *     'og:type' => 'article',
+     *     'og:title' => 'A cool post',
+     *     'twitter:card' => 'summary',
+     *     'twitter:title' => 'A cool post',
+     * ]);
+     * ```
      *
      * @return array<string, string>
      */
@@ -101,6 +139,20 @@ class RenderedHead
 
     /**
      * Get the decoded JSON-LD block for a schema.org type.
+     *
+     * Nothing to do with pages that return JSON. JSON-LD is structured data
+     * for crawlers, embedded in an ordinary HTML page as
+     * `<script type="application/ld+json">` -- it is how a search engine
+     * learns that a page is a blog post with an author and a publish date.
+     * Every page here is HTML; the JSON lives inside it.
+     *
+     * The block is already decoded, so assert on it as a plain array.
+     *
+     * ```php
+     * $post = $head->schema('BlogPosting');
+     * expect($post['headline'])->toBe('A cool post')
+     *     ->and($post['author']['name'])->toBe('David Harting');
+     * ```
      *
      * @return array<string, mixed>|null
      */
@@ -130,6 +182,13 @@ class RenderedHead
     }
 
     /**
+     * Index a meta tag under its `name` or `property`, preferring `name`.
+     *
+     * A meta tag is legally allowed to carry neither -- `<meta charset>` and
+     * `<meta http-equiv>` are the common cases -- so those are skipped rather
+     * than indexed under an empty key. Nothing asserts on them: charset is
+     * written directly in the layout because Laravel Head cannot express it.
+     *
      * @param  array<string, string>  $meta
      */
     private static function collectMeta(DOMElement $node, array &$meta): void
@@ -162,6 +221,15 @@ class RenderedHead
     }
 
     /**
+     * Collect a JSON-LD block, ignoring every other kind of script.
+     *
+     * Deliberately only `application/ld+json`. That media type means "this is
+     * structured data"; a plain `application/json` script would be application
+     * payload, not schema.org, and letting it in here would put non-schema
+     * entries into $schemas where `schema()` searches for an `@type`. It would
+     * also hand arbitrary script bodies to a decoder that throws on invalid
+     * JSON -- Vite's `<script type="module">` being the obvious neighbour.
+     *
      * @param  array<int, array<string, mixed>>  $schemas
      */
     private static function collectSchema(DOMElement $node, array &$schemas): void
