@@ -44,13 +44,25 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
     Note the difference between year (the work's release year) and started_year /
     finished_year (when David started or finished it).
 
-    Two arguments reach writing that is not on the public website. text searches
-    it; include_history returns the full event timeline, each entry carrying the
-    comment David left at that moment. Both are private — treat what they return
-    as his notes to himself, not as published opinion.
+    Every result carries the same base fields. Ask for more with
+    additional_fields: full_text for everything David has written about an item
+    as one markdown string, or history for the event timeline as structured data,
+    one entry per event. They hold the same writing in two shapes — full_text to
+    read it, history when you need the individual events. Both are left out
+    unless asked for.
+
+    The remark, full_text, history and the text filter all reach writing that is
+    not on the public website. Treat it as David's notes to himself, not as
+    published opinion.
     TEXT)]
 class QueryMedia extends Tool
 {
+    /**
+     * Fields a caller can ask for on top of the base set. Each is expensive
+     * enough per row to be worth leaving out by default.
+     */
+    private const ADDITIONAL_FIELDS = ['full_text', 'history'];
+
     /**
      * Whether the caller is entitled to the admin surface at all. Failing this
      * hides the tool from tools/list and makes tools/call answer "Tool not
@@ -86,7 +98,8 @@ class QueryMedia extends Tool
             'started_year' => ['sometimes', 'integer'],
             'finished_year' => ['sometimes', 'integer'],
             'text' => ['sometimes', 'string'],
-            'include_history' => ['sometimes', 'boolean'],
+            'additional_fields' => ['sometimes', 'array'],
+            'additional_fields.*' => ['string', Rule::in(self::ADDITIONAL_FIELDS)],
             'sort' => ['sometimes', 'string', Rule::enum(MediaSort::class)],
             'page' => ['sometimes', 'integer', 'min:1'],
             'limit' => ['sometimes', 'integer', 'min:1', 'max:100'],
@@ -96,7 +109,9 @@ class QueryMedia extends Tool
             ? MediaTrackingStatus::from($validated['status'])
             : null;
 
-        $includeHistory = $validated['include_history'] ?? false;
+        $additionalFields = $validated['additional_fields'] ?? [];
+        $includeHistory = in_array('history', $additionalFields, true);
+        $includeFullText = in_array('full_text', $additionalFields, true);
 
         $query = new SearchMediaQuery(
             title: $validated['title'] ?? null,
@@ -112,6 +127,7 @@ class QueryMedia extends Tool
             text: $validated['text'] ?? null,
             includeRemark: true,
             includeHistory: $includeHistory,
+            includeFullText: $includeFullText,
         );
 
         $paginator = $query->paginate(
@@ -121,7 +137,7 @@ class QueryMedia extends Tool
 
         return Response::structured([
             'results' => collect($paginator->items())
-                ->map(fn (MediaTrackingSummary $item): array => $this->toResult($item, $includeHistory))
+                ->map(fn (MediaTrackingSummary $item): array => $this->toResult($item, $includeHistory, $includeFullText))
                 ->all(),
             'total' => $paginator->total(),
             'page' => $paginator->currentPage(),
@@ -133,7 +149,7 @@ class QueryMedia extends Tool
     /**
      * @return array<string, mixed>
      */
-    private function toResult(MediaTrackingSummary $item, bool $includeHistory): array
+    private function toResult(MediaTrackingSummary $item, bool $includeHistory, bool $includeFullText): array
     {
         $result = [
             'media_id' => $item->media_id,
@@ -148,8 +164,12 @@ class QueryMedia extends Tool
             'remark' => $item->note,
         ];
 
-        // Omitted rather than null when not asked for: a null history would
-        // read as "no events", which is a different claim from "not fetched".
+        // Omitted rather than null when not asked for: a null would read as "no
+        // writing" or "no events", which is a different claim from "not fetched".
+        if ($includeFullText) {
+            $result['full_text'] = $item->full_text;
+        }
+
         if ($includeHistory) {
             $result['history'] = $item->history;
         }
@@ -197,8 +217,9 @@ class QueryMedia extends Tool
                 ->description('The calendar year David finished the item. Distinct from year, the release year of the work.'),
             'text' => $schema->string()
                 ->description('Match against what David has written about the item — his remark plus every comment on its events (case-insensitive, partial match). Use this to find items by what he said about them rather than by their title or status.'),
-            'include_history' => $schema->boolean()
-                ->description('Whether to return each item\'s full event timeline. Defaults to false; the current status and the started/finished/abandoned dates are returned either way.'),
+            'additional_fields' => $schema->array()
+                ->items($schema->string()->enum(self::ADDITIONAL_FIELDS))
+                ->description('Extra fields to return on each result. full_text is everything David has written about the item as one markdown string, best for reading. history is the event timeline as structured data, one entry per event. Both are omitted unless listed here; the current status and the started/finished/abandoned dates are returned either way.'),
             'sort' => $schema->string()
                 ->enum(array_column(MediaSort::cases(), 'value'))
                 ->description('Sort order. Defaults to recently_finished when status=finished, recently_started when status=started, and recently_added otherwise.'),
@@ -232,13 +253,14 @@ class QueryMedia extends Tool
                     'finished_at' => $schema->string()->nullable()->description('When David most recently finished the item (ISO 8601), if ever.'),
                     'abandoned_at' => $schema->string()->nullable()->description('When David most recently abandoned the item (ISO 8601), if ever.'),
                     'remark' => $schema->string()->nullable()->description('David\'s private standing remark on the item. Not on the public website. Null when he has not written one.'),
+                    'full_text' => $schema->string()->nullable()->description('The remark followed by every event comment, as one markdown string with each comment dated. Private. Null when he has written nothing about the item. Present only when full_text is in additional_fields.'),
                     'history' => $schema->array()
                         ->items($schema->object([
                             'type' => $schema->string()->description('One of: backlog, started, finished, abandoned, comment.'),
                             'occurred_at' => $schema->string()->description('When the event happened (ISO 8601).'),
                             'comment' => $schema->string()->nullable()->description('What David wrote at that moment. Private. Null when the event carries no comment.'),
                         ]))
-                        ->description('Every tracking event for the item, oldest first. Present only when include_history is true.'),
+                        ->description('Every tracking event for the item, oldest first. Present only when history is in additional_fields.'),
                 ]))
                 ->description('The matching media items.'),
             'total' => $schema->integer()->description('The total number of matching items across all pages.'),

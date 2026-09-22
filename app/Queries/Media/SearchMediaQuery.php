@@ -33,7 +33,7 @@ class SearchMediaQuery
     ];
 
     /**
-     * This query performs no authorization. The last three parameters reach
+     * This query performs no authorization. The last four parameters reach
      * admin-only data and the caller is responsible for having earned them.
      *
      * @param  string|null  $text  Matches the item's free text — its remark and
@@ -43,9 +43,14 @@ class SearchMediaQuery
      *                             may not read a remark may not search it either.
      * @param  bool  $includeRemark  Whether to return `media.note`, David's
      *                               private remark on the item.
-     * @param  bool  $includeHistory  Whether to return the event timeline. Off by
-     *                                default: it is an array per row, and most
-     *                                questions are about status and dates.
+     * @param  bool  $includeHistory  Whether to return the event timeline as
+     *                                structured data. Off by default: it is an
+     *                                array per row, and most questions are about
+     *                                status and dates.
+     * @param  bool  $includeFullText  Whether to return the remark and every event
+     *                                 comment as one markdown string — the same
+     *                                 writing as the history, in a shape meant for
+     *                                 reading rather than processing.
      */
     public function __construct(
         public ?string $title = null,
@@ -59,6 +64,7 @@ class SearchMediaQuery
         public ?string $text = null,
         public bool $includeRemark = false,
         public bool $includeHistory = false,
+        public bool $includeFullText = false,
     ) {}
 
     /**
@@ -90,6 +96,7 @@ class SearchMediaQuery
             ...self::COLUMNS,
             ...($this->includeRemark ? ['note'] : []),
             ...($this->includeHistory ? ['history'] : []),
+            ...($this->includeFullText ? ['full_text'] : []),
         ];
     }
 

@@ -535,17 +535,26 @@ describe('admin columns', function () {
             ->and($item->history[1]['comment'])->toBe('Worth it');
     });
 
-    test('never returns full_text, which backs the text filter rather than the response', function () {
+    test('returns the full text when asked', function () {
+        /** @var TestCase $this */
+        $media = Media::factory()->book()->create(['note' => 'A private remark']);
+        MediaEvent::factory()->for($media)->finished()->withComment('A private comment')->create();
+
+        $item = (new SearchMediaQuery(title: $media->title, includeFullText: true))->execute()->sole();
+
+        expect($item->full_text)->toContain('A private remark')
+            ->and($item->full_text)->toContain('A private comment');
+    });
+
+    test('keeps each admin column independent of the others', function () {
         /** @var TestCase $this */
         $media = Media::factory()->book()->create(['note' => 'A private remark']);
 
-        $item = (new SearchMediaQuery(
-            title: $media->title,
-            includeRemark: true,
-            includeHistory: true,
-        ))->execute()->sole();
+        $item = (new SearchMediaQuery(title: $media->title, includeFullText: true))->execute()->sole();
 
-        expect($item->getAttributes())->not->toHaveKey('full_text');
+        expect($item->getAttributes())->toHaveKey('full_text')
+            ->and($item->getAttributes())->not->toHaveKey('history')
+            ->and($item->getAttributes())->not->toHaveKey('note');
     });
 });
 

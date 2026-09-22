@@ -40,8 +40,9 @@ class AdminServer extends Server
         those statuses were reached, and whatever David has written about it.
         Use query-media to filter by any combination of title, creator, media
         type, status, release year, and the year an item was started or
-        finished. It also searches his private writing about an item (text) and
-        can return each item's full event timeline (include_history).
+        finished. It also searches his private writing about an item (text),
+        and can return that writing — as one readable string (full_text) or as
+        a structured event timeline (history) — via additional_fields.
 
         What David has written privately — a note still in draft, a remark on a
         media item, a comment on one of its events — is reachable through these

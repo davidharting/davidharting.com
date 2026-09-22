@@ -84,10 +84,10 @@ describe('handle()', function () {
         });
     });
 
-    test('omits history unless asked', function () {
+    test('omits the additional fields unless asked', function () {
         /** @var TestCase $this */
-        // Omitted rather than null: a null history would read as "no events",
-        // which is a different claim from "not fetched".
+        // Omitted rather than null: a null would read as "no writing" or "no
+        // events", which is a different claim from "not fetched".
         $media = Media::factory()->book()->create(['title' => 'Dune', 'note' => null]);
         MediaEvent::factory()->for($media)->finished()->withComment('PRIVATE-COMMENT-MARKER')->create();
         $admin = User::factory()->create(['is_admin' => true]);
@@ -97,7 +97,7 @@ describe('handle()', function () {
         $response->assertOk();
         $response->assertDontSee('PRIVATE-COMMENT-MARKER');
         $response->assertStructuredContent(
-            fn ($json) => $json->has('results.0', fn ($item) => $item->missing('history')->etc())->etc()
+            fn ($json) => $json->has('results.0', fn ($item) => $item->missingAll(['history', 'full_text'])->etc())->etc()
         );
     });
 
@@ -111,7 +111,7 @@ describe('handle()', function () {
 
         $response = AdminServer::actingAs($admin)->tool(QueryMedia::class, [
             'title' => 'Dune',
-            'include_history' => true,
+            'additional_fields' => ['history'],
         ]);
 
         $response->assertOk();
@@ -139,7 +139,7 @@ describe('handle()', function () {
         });
     });
 
-    test('never returns full_text, even alongside the remark and history', function () {
+    test('returns the full text when asked, without the history', function () {
         /** @var TestCase $this */
         $media = Media::factory()->book()->create(['title' => 'Dune', 'note' => 'A remark']);
         MediaEvent::factory()->for($media)->finished()->withComment('A comment')->create();
@@ -147,22 +147,54 @@ describe('handle()', function () {
 
         $response = AdminServer::actingAs($admin)->tool(QueryMedia::class, [
             'title' => 'Dune',
-            'include_history' => true,
+            'additional_fields' => ['full_text'],
         ]);
 
         $response->assertOk();
         $response->assertStructuredContent(
-            fn ($json) => $json->has('results.0', fn ($item) => $item->missing('full_text')->etc())->etc()
+            fn ($json) => $json->has('results.0', fn ($item) => $item
+                ->where('full_text', fn (string $fullText) => str_contains($fullText, 'A remark') && str_contains($fullText, 'A comment'))
+                ->missing('history')
+                ->etc()
+            )->etc()
         );
     });
 
-    test('rejects a non-boolean include_history', function () {
+    test('returns both additional fields when both are asked for', function () {
+        /** @var TestCase $this */
+        $media = Media::factory()->book()->create(['title' => 'Dune', 'note' => 'A remark']);
+        MediaEvent::factory()->for($media)->finished()->withComment('A comment')->create();
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(QueryMedia::class, [
+            'title' => 'Dune',
+            'additional_fields' => ['full_text', 'history'],
+        ]);
+
+        $response->assertOk();
+        $response->assertStructuredContent(
+            fn ($json) => $json->has('results.0', fn ($item) => $item->hasAll(['full_text', 'history'])->etc())->etc()
+        );
+    });
+
+    test('rejects an additional field it does not offer', function () {
+        /** @var TestCase $this */
+        // The enum is what keeps this from becoming a way to name arbitrary
+        // columns of the view.
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(QueryMedia::class, ['additional_fields' => ['creator_id']]);
+
+        $response->assertHasErrors(['additional_fields.0']);
+    });
+
+    test('rejects additional_fields that is not a list', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $response = AdminServer::actingAs($admin)->tool(QueryMedia::class, ['include_history' => 'yes please']);
+        $response = AdminServer::actingAs($admin)->tool(QueryMedia::class, ['additional_fields' => 'history']);
 
-        $response->assertHasErrors(['include history']);
+        $response->assertHasErrors(['additional fields']);
     });
 
     test('rejects a limit above the maximum', function () {
