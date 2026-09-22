@@ -16,17 +16,17 @@ Every claim below is tagged:
 
 - **[DOCUMENTED]** — stated in the MCP specification, Anthropic's own docs, or package source.
 - **[REPORTED]** — from Anthropic's public issue tracker (`anthropics/claude-ai-mcp`, `anthropics/claude-code`).
-  These are first-party *trackers* but the reports are user-filed and, where noted, have no maintainer reply.
+  These are first-party _trackers_ but the reports are user-filed and, where noted, have no maintainer reply.
 - **[UNDETERMINED]** — I could not settle it from a primary source.
 
 ## Bottom line
 
-| Capability | claude.ai web / Desktop (remote custom connector) | Claude Code (`claude mcp add`) |
-| --- | --- | --- |
-| Tools | Yes **[DOCUMENTED]** | Yes **[DOCUMENTED]** |
-| Prompts (`prompts/list` + `prompts/get`) | Listed as "Supported" in Anthropic's connector-building docs, and a step-by-step attach flow exists on modelcontextprotocol.io — **but no current Anthropic help-center page describes the affordance, and an open bug says custom-connector prompts vanished from the UI in May 2026.** Do not build on it. | Yes — `/servername:promptname` slash commands **[DOCUMENTED]** |
-| Resources (`resources/list`, `resources/read`, templates) | Same status as prompts: documented as supported, attach flow documented only on modelcontextprotocol.io, no help-center coverage. Model cannot pull one on its own. | Yes — `@server:uri` mentions **and** built-in `ListMcpResourcesTool` / `ReadMcpResourceTool`, so the model *can* fetch them unprompted **[DOCUMENTED]** |
-| `instructions` from `initialize` | **No.** Open Anthropic issue since 2026-03-11 says claude.ai silently drops it. No Anthropic doc claims it is used. **[REPORTED]** | Yes — loaded into every session, truncated at 2 KB **[DOCUMENTED]** |
+| Capability                                                | claude.ai web / Desktop (remote custom connector)                                                                                                                                                                                                                                                            | Claude Code (`claude mcp add`)                                                                                                                          |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tools                                                     | Yes **[DOCUMENTED]**                                                                                                                                                                                                                                                                                         | Yes **[DOCUMENTED]**                                                                                                                                    |
+| Prompts (`prompts/list` + `prompts/get`)                  | Listed as "Supported" in Anthropic's connector-building docs, and a step-by-step attach flow exists on modelcontextprotocol.io — **but no current Anthropic help-center page describes the affordance, and an open bug says custom-connector prompts vanished from the UI in May 2026.** Do not build on it. | Yes — `/servername:promptname` slash commands **[DOCUMENTED]**                                                                                          |
+| Resources (`resources/list`, `resources/read`, templates) | Same status as prompts: documented as supported, attach flow documented only on modelcontextprotocol.io, no help-center coverage. Model cannot pull one on its own.                                                                                                                                          | Yes — `@server:uri` mentions **and** built-in `ListMcpResourcesTool` / `ReadMcpResourceTool`, so the model _can_ fetch them unprompted **[DOCUMENTED]** |
+| `instructions` from `initialize`                          | **No.** Open Anthropic issue since 2026-03-11 says claude.ai silently drops it. No Anthropic doc claims it is used. **[REPORTED]**                                                                                                                                                                           | Yes — loaded into every session, truncated at 2 KB **[DOCUMENTED]**                                                                                     |
 
 **The single most decision-relevant fact:** for a remote MCP server used as a claude.ai custom connector,
 **tools are the only primitive you can rely on.** Prompts and resources are nominally supported but have no
@@ -40,7 +40,7 @@ descriptions or tool results.
 
 ### What the spec says
 
-**[DOCUMENTED]** The spec's *Prompts* page (spec revision 2025-06-18; the current revision is **2026-07-28**)
+**[DOCUMENTED]** The spec's _Prompts_ page (spec revision 2025-06-18; the current revision is **2026-07-28**)
 opens with a "User Interaction Model" section:
 
 > Prompts are designed to be **user-controlled**, meaning they are exposed from servers to clients with the
@@ -56,7 +56,7 @@ opens with a "User Interaction Model" section:
 
 — <https://modelcontextprotocol.io/specification/2025-06-18/server/prompts>
 
-So the spec *never* promises a prompt will be reachable; it only says clients that expose prompts should let
+So the spec _never_ promises a prompt will be reachable; it only says clients that expose prompts should let
 the user pick one. Nothing auto-invokes a prompt.
 
 **[DOCUMENTED]** The concept doc repeats this and lists slash commands, command palettes and buttons as
@@ -91,14 +91,16 @@ i.e. the feature is actively maintained as of two months ago.
 
 This is where it gets murky. Three primary sources disagree in emphasis.
 
-**[DOCUMENTED] — "supported".** Anthropic's connector-building doc has a *Protocol features* table:
+**[DOCUMENTED] — "supported".** Anthropic's connector-building doc has a _Protocol features_ table:
 
 > **Supported**
+>
 > - [Tools](…/server/tools), [prompts](…/server/prompts), and [resources](…/server/resources)
 > - Text and image-based tool results
 > - Text and binary resources
 >
 > **Not yet supported**
+>
 > - Resource subscriptions
 > - Sampling
 > - Advanced/draft capabilities
@@ -106,8 +108,8 @@ This is where it gets murky. Three primary sources disagree in emphasis.
 — <https://claude.com/docs/connectors/building> (no visible last-updated date; it references the 2025-11-25
 auth spec, so it is at least that recent)
 
-**[DOCUMENTED] — the only description of the affordance.** modelcontextprotocol.io's *Connect to remote MCP
-Servers* walkthrough (which uses Claude as its worked example) has a step titled **"Access Resources and
+**[DOCUMENTED] — the only description of the affordance.** modelcontextprotocol.io's _Connect to remote MCP
+Servers_ walkthrough (which uses Claude as its worked example) has a step titled **"Access Resources and
 Prompts"**:
 
 > After successful connection, the remote server's resources and prompts become available in your Claude
@@ -153,13 +155,13 @@ reporter notes Atlassian's (directory/verified) prompts started appearing at the
 **[REPORTED]** Related: issue **#23, "Allow model to programmatically access prompts and resources"**, opened
 2026-01-23, label `enhancement`, open, no maintainer reply. It asserts Claude exposes only `tools/list` /
 `tools/call` and that a server's 22 resources and its prompts were invisible. Note this issue is about the
-*model* reaching them, which is a different question from the user attaching them.
+_model_ reaching them, which is a different question from the user attaching them.
 — <https://github.com/anthropics/claude-ai-mcp/issues/23>
 
 ### Verdict on prompts
 
 **[UNDETERMINED, leaning negative.]** I could not verify from any Anthropic source dated later than
-May 2026 that a *custom* remote connector's prompts are reachable in the claude.ai or Desktop UI. The one
+May 2026 that a _custom_ remote connector's prompts are reachable in the claude.ai or Desktop UI. The one
 document that describes the affordance is not Anthropic's and is visibly stale; Anthropic's own current
 help-centre page for custom connectors describes tools and nothing else; and the open bug report says the
 affordance was removed for custom connectors in May 2026 while remaining for a directory connector.
@@ -170,14 +172,14 @@ claude.ai user can reach it.
 
 ### Is Desktop different from web?
 
-**[DOCUMENTED]** For *remote* connectors, no. The custom-connectors article (2026-08-11) is explicit:
+**[DOCUMENTED]** For _remote_ connectors, no. The custom-connectors article (2026-08-11) is explicit:
 
 > Even though Cowork and Claude Desktop run on your computer, remote connectors are configured and brokered
 > through your Claude account. The connection to your MCP server originates from Anthropic's servers, not
 > from your machine's network interface.
 
 So Desktop and web share one connector backend, and issue #333 reports the disappearance on both. Desktop's
-*separate* mechanism — local servers via `claude_desktop_config.json` / `.mcpb` extensions — is documented
+_separate_ mechanism — local servers via `claude_desktop_config.json` / `.mcpb` extensions — is documented
 tools-only too (support article 10949351, 2026-06-30).
 
 ---
@@ -186,12 +188,13 @@ tools-only too (support article 10949351, 2026-06-30).
 
 ### What the spec says
 
-**[DOCUMENTED]** The *Resources* page (current revision 2026-07-28) has the mirror-image interaction model:
+**[DOCUMENTED]** The _Resources_ page (current revision 2026-07-28) has the mirror-image interaction model:
 
 > Resources in MCP are designed to be **application-driven**, with host applications determining how to
 > incorporate context based on their needs.
 >
 > For example, applications could:
+>
 > - Expose resources through UI elements for explicit selection, in a tree or list view
 > - Allow the user to search through and filter available resources
 > - Implement automatic context inclusion, based on heuristics or the AI model's selection
@@ -229,7 +232,7 @@ description mentions only "resources".
 
 **[DOCUMENTED]** Same two sources as prompts, same conflict: listed under "Supported" in
 <https://claude.com/docs/connectors/building> (including "Text and binary resources", with "Resource
-subscriptions" explicitly *not* supported), and described as attachable via the composer's `+` menu only on
+subscriptions" explicitly _not_ supported), and described as attachable via the composer's `+` menu only on
 <https://modelcontextprotocol.io/docs/2026-07-28/develop/connect-remote-servers>. No Anthropic help-centre
 page mentions them. **[REPORTED]** Issue #23 says the model cannot reach them at all.
 
@@ -256,12 +259,12 @@ chose.
 
 ```json
 {
-  "result": {
-    "protocolVersion": "2025-06-18",
-    "capabilities": { "…": {} },
-    "serverInfo": { "name": "ExampleServer", "version": "1.0.0" },
-    "instructions": "Optional instructions for the client"
-  }
+    "result": {
+        "protocolVersion": "2025-06-18",
+        "capabilities": { "…": {} },
+        "serverInfo": { "name": "ExampleServer", "version": "1.0.0" },
+        "instructions": "Optional instructions for the client"
+    }
 }
 ```
 
@@ -290,7 +293,7 @@ mandatory `server/discover` RPC, and `instructions` moves to `DiscoverResult` wi
 > tool descriptions.**
 
 — <https://modelcontextprotocol.io/specification/2026-07-28/server/discover> and
-  <https://modelcontextprotocol.io/specification/2026-07-28/schema> (`DiscoverResult.instructions`)
+<https://modelcontextprotocol.io/specification/2026-07-28/schema> (`DiscoverResult.instructions`)
 
 That last clause is the closest thing to a spec-level answer to question 4: **server instructions are for
 cross-tool guidance; per-tool facts belong in tool descriptions.**
@@ -304,11 +307,13 @@ cross-tool guidance; per-tool facts belong in tool descriptions.**
 > context window.
 
 > ### For MCP server authors
+>
 > If you're building an MCP server, the server instructions field becomes more useful with tool search
 > enabled. Server instructions help Claude understand when to search for your tools, similar to how
 > [skills](/docs/en/skills) work.
 >
 > Add clear, descriptive server instructions that explain:
+>
 > - What category of tasks your tools handle
 > - When Claude should search for your tools
 > - Key capabilities your server provides
@@ -342,7 +347,7 @@ independently.
 response not passed to model"**, opened **2026-03-11**, labels `backlog` / `enhancement` / `triaged`, **still
 open**, no public maintainer reply. It reports claude.ai silently ignores `instructions`; the model gets tool
 names, descriptions and schemas only; there is no error or indication the field was discarded; and the same
-server's instructions *are* honoured in Claude Code. Issue **#131** was filed later and closed as a duplicate
+server's instructions _are_ honoured in Claude Code. Issue **#131** was filed later and closed as a duplicate
 of #93.
 — <https://github.com/anthropics/claude-ai-mcp/issues/93>, <https://github.com/anthropics/claude-ai-mcp/issues/131>
 
@@ -351,7 +356,7 @@ rather than a bug, which is consistent with "claude.ai does not implement this,"
 regression."
 
 **[DOCUMENTED, negative]** No Anthropic page states that claude.ai reads `instructions`. The
-connector-building doc's *Protocol features* table lists tools/prompts/resources and says nothing about
+connector-building doc's _Protocol features_ table lists tools/prompts/resources and says nothing about
 `instructions` either way.
 
 **[UNDETERMINED]** Whether claude.ai imposes any length limit on tool descriptions. Issue #93 claims ~500
@@ -376,16 +381,19 @@ Add clear, descriptive server instructions that explain: what category of tasks 
 Claude should search for your tools; key capabilities your server provides." Cap 2 KB, critical details
 first. — <https://code.claude.com/docs/en/mcp>
 
-**[DOCUMENTED] Anthropic directory review — tool descriptions are for *what*, not *how to behave*.** The
+**[DOCUMENTED] Anthropic directory review — tool descriptions are for _what_, not _how to behave_.** The
 pre-submission checklist for the Connectors Directory is unusually direct, and is a hard constraint if the
 server is ever submitted:
 
 > ### Write narrow, accurate descriptions
+>
 > Each tool description should state precisely what the tool does and when to invoke it. The description must
 > match the tool's actual behavior.
 >
 > ## Avoid prompt-injection patterns
+>
 > Tool descriptions are rejected if they:
+>
 > - Instruct Claude to call external software or tools the user didn't request
 > - Interfere with Claude calling other tools
 > - Direct Claude to pull behavioral instructions from external sources
@@ -403,7 +411,7 @@ MCP server**." — <https://modelcontextprotocol.io/docs/2026-07-28/learn/server
 
 **[DOCUMENTED] Anthropic engineering, "Writing effective tools for AI agents" (2025-09-11)** —
 <https://www.anthropic.com/engineering/writing-tools-for-agents>. Does not address the three-way split, but
-pushes domain context *into* tool descriptions: "think of how you would describe your tool to a new hire on
+pushes domain context _into_ tool descriptions: "think of how you would describe your tool to a new hire on
 your team… Consider the context that you might implicitly bring — specialized query formats, definitions of
 niche terminology, relationships between underlying resources — and make it explicit." Read together with the
 review criteria: **domain vocabulary and query semantics in the tool description; behavioural directives
@@ -411,13 +419,13 @@ nowhere.**
 
 ### Synthesis for this project
 
-| Kind of guidance | Put it in | Why |
-| --- | --- | --- |
-| "This server is David Harting's personal site: published notes + a media-tracking library; everything here is public" | Server `instructions` **and** restated compactly in each tool description | Claude Code reads instructions; claude.ai (reportedly) does not, so it has to survive in tool descriptions too |
-| Media-type / tracking-status vocabularies, date semantics, what a field means | Tool description of the tool that takes them, plus the JSON-Schema field descriptions | Survives everywhere; matches "make niche terminology explicit"; schema descriptions are never the truncated part |
-| "Call `search_notes` before `read_note`" style sequencing | Tool descriptions, phrased as *what the tool is for* ("finds the slug you need for `read_note`"), not as a directive | Directive phrasing is a directory-review rejection reason |
-| A multi-step workflow a human would kick off | An MCP **prompt** — Claude Code only | Documented and maintained there; unreliable on claude.ai |
-| Anything that must reach the model on claude.ai | Tool descriptions, or the tool's own response body | The only two channels reported to work |
+| Kind of guidance                                                                                                      | Put it in                                                                                                            | Why                                                                                                              |
+| --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| "This server is David Harting's personal site: published notes + a media-tracking library; everything here is public" | Server `instructions` **and** restated compactly in each tool description                                            | Claude Code reads instructions; claude.ai (reportedly) does not, so it has to survive in tool descriptions too   |
+| Media-type / tracking-status vocabularies, date semantics, what a field means                                         | Tool description of the tool that takes them, plus the JSON-Schema field descriptions                                | Survives everywhere; matches "make niche terminology explicit"; schema descriptions are never the truncated part |
+| "Call `search_notes` before `read_note`" style sequencing                                                             | Tool descriptions, phrased as _what the tool is for_ ("finds the slug you need for `read_note`"), not as a directive | Directive phrasing is a directory-review rejection reason                                                        |
+| A multi-step workflow a human would kick off                                                                          | An MCP **prompt** — Claude Code only                                                                                 | Documented and maintained there; unreliable on claude.ai                                                         |
+| Anything that must reach the model on claude.ai                                                                       | Tool descriptions, or the tool's own response body                                                                   | The only two channels reported to work                                                                           |
 
 Keep server `instructions` under 2 KB with the "what is this server / when to use it" sentence first, and
 treat it as a Claude Code optimisation, not as load-bearing.
@@ -486,7 +494,7 @@ Laravel docs says anything about which clients surface them — that is the gap 
   **today**. The only walkthrough is stale and unowned by Anthropic; the only current data point is an open,
   unanswered bug saying they vanished in May 2026. Settling this needs someone to connect a server with a
   prompt and look at the `+` menu.
-- Whether *directory/verified* connectors get prompt surfacing that custom connectors do not. Issue #333 hints
+- Whether _directory/verified_ connectors get prompt surfacing that custom connectors do not. Issue #333 hints
   at this (Atlassian's prompts appeared as the reporter's own disappeared) but nothing documents it.
 - Whether claude.ai truncates tool descriptions, and at what length. The ~500-character figure comes only from
   issue #93.
