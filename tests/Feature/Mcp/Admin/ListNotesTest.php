@@ -48,7 +48,8 @@ describe('handle()', function () {
 
         $response = (new ListNotes)->handle(new Request);
 
-        expect($response->isError())->toBeTrue();
+        expect($response->isError())->toBeTrue()
+            ->and((string) $response->content())->toBe('You are not authorized to read David\'s notes.');
     });
 
     test('excludes drafts by default', function () {

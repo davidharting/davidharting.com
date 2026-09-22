@@ -66,3 +66,23 @@ test('counts drafts in the total only when they are included', function () {
     expect((new ListNotesQuery)->paginate(perPage: 10, page: 1)->total())->toBe(2)
         ->and((new ListNotesQuery(includeDrafts: true))->paginate(perPage: 10, page: 1)->total())->toBe(3);
 });
+
+test('does not load markdown content by default', function () {
+    /** @var TestCase $this */
+    Note::factory()->create(['visible' => true, 'markdown_content' => 'A body']);
+
+    $note = (new ListNotesQuery)->execute()->sole();
+
+    // Not merely absent from the response map: never fetched, so a listing does
+    // not drag every note body into memory to render titles.
+    expect($note->getAttributes())->not->toHaveKey('markdown_content');
+});
+
+test('loads markdown content when asked', function () {
+    /** @var TestCase $this */
+    Note::factory()->create(['visible' => true, 'markdown_content' => 'A body']);
+
+    $note = (new ListNotesQuery(includeContent: true))->execute()->sole();
+
+    expect($note->markdown_content)->toBe('A body');
+});
