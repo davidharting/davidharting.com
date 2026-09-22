@@ -14,10 +14,10 @@ use Illuminate\Support\Collection;
 class SearchMediaQuery
 {
     /**
-     * The columns this query returns. It is an allowlist rather than `select *`
-     * on purpose: the view also carries `note`, `full_text`, and `history`,
-     * which are admin-only, and public callers such as the MCP `QueryMedia`
-     * tool read through here.
+     * The columns every caller may have. An allowlist rather than `select *` on
+     * purpose: the view also carries `note`, `full_text` and `history`, which
+     * are admin-only, and public callers read through here. Reaching those
+     * three means setting a flag, which is a thing a reader can grep for.
      */
     private const COLUMNS = [
         'media_id',
@@ -32,6 +32,21 @@ class SearchMediaQuery
         'abandoned_at',
     ];
 
+    /**
+     * This query performs no authorization. The last three parameters reach
+     * admin-only data and the caller is responsible for having earned them.
+     *
+     * @param  string|null  $text  Matches the item's free text — its remark and
+     *                             every event comment. A *filter* on admin-only
+     *                             data is as disclosing as returning it: answers
+     *                             narrow by what the text says, so a caller who
+     *                             may not read a remark may not search it either.
+     * @param  bool  $includeRemark  Whether to return `media.note`, David's
+     *                               private remark on the item.
+     * @param  bool  $includeHistory  Whether to return the event timeline. Off by
+     *                                default: it is an array per row, and most
+     *                                questions are about status and dates.
+     */
     public function __construct(
         public ?string $title = null,
         public ?MediaTypeName $mediaType = null,
@@ -41,6 +56,9 @@ class SearchMediaQuery
         public ?int $startedYear = null,
         public ?int $finishedYear = null,
         public ?MediaSort $sort = null,
+        public ?string $text = null,
+        public bool $includeRemark = false,
+        public bool $includeHistory = false,
     ) {}
 
     /**
@@ -48,7 +66,7 @@ class SearchMediaQuery
      */
     public function execute(): Collection
     {
-        return $this->builder()->get(self::COLUMNS);
+        return $this->builder()->get($this->columns());
     }
 
     /**
@@ -58,9 +76,21 @@ class SearchMediaQuery
     {
         return $this->builder()->paginate(
             perPage: $perPage,
-            columns: self::COLUMNS,
+            columns: $this->columns(),
             page: $page,
         );
+    }
+
+    /**
+     * @return string[]
+     */
+    private function columns(): array
+    {
+        return [
+            ...self::COLUMNS,
+            ...($this->includeRemark ? ['note'] : []),
+            ...($this->includeHistory ? ['history'] : []),
+        ];
     }
 
     /**
@@ -96,6 +126,10 @@ class SearchMediaQuery
 
         if ($this->finishedYear !== null) {
             $query->whereYear('finished_at', $this->finishedYear);
+        }
+
+        if ($this->text !== null) {
+            $query->whereLike('full_text', '%'.LikePattern::escape($this->text).'%');
         }
 
         $this->applySort($query);

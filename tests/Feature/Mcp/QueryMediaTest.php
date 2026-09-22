@@ -5,6 +5,7 @@ use App\Mcp\Tools\QueryMedia;
 use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaEvent;
+use App\Models\User;
 use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\Support\Carbon;
 
@@ -315,4 +316,38 @@ describe('validation', function () {
 
         $response->assertHasErrors(['sort']);
     });
+});
+
+test('still withholds the remark from an authenticated admin', function () {
+    /** @var TestCase $this */
+    // Being an admin is not what widens a read; being served the admin class
+    // is. This class is registered on PublicServer only, so /mcp returns the
+    // public view no matter who is asking.
+    Media::factory()->book()->create(['title' => 'A Book', 'note' => 'PRIVATE-REMARK-MARKER']);
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $response = PublicServer::actingAs($admin)->tool(QueryMedia::class, ['title' => 'A Book']);
+
+    $response->assertOk();
+    $response->assertDontSee('PRIVATE-REMARK-MARKER');
+});
+
+test('does not advertise the admin arguments on the public server', function () {
+    /** @var TestCase $this */
+    // text searches the private free text and include_history returns private
+    // comments, so neither may appear on the unauthenticated surface — a filter
+    // over hidden data discloses it by narrowing the answer.
+    $response = $this->postJson('/mcp', [
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'tools/list',
+    ]);
+
+    $response->assertOk();
+
+    $queryMedia = collect($response->json('result.tools'))->firstWhere('name', 'query-media');
+
+    expect(array_keys($queryMedia['inputSchema']['properties']))
+        ->not->toContain('text')
+        ->not->toContain('include_history');
 });

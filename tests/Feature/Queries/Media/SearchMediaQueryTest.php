@@ -495,3 +495,97 @@ describe('paginate()', function () {
         $this->assertCount(4, $firstPage->merge($secondPage)->unique());
     });
 });
+
+describe('admin columns', function () {
+    test('withholds the remark, full text and history by default', function () {
+        /** @var TestCase $this */
+        $media = Media::factory()->book()->create(['note' => 'A private remark']);
+        MediaEvent::factory()->for($media)->finished()->withComment('A private comment')->create();
+
+        $item = (new SearchMediaQuery(title: $media->title))->execute()->sole();
+
+        // Asserted on the model's attributes, not a response: the columns have
+        // to be absent from the query, not dropped after the fact.
+        expect($item->getAttributes())->not->toHaveKey('note')
+            ->and($item->getAttributes())->not->toHaveKey('full_text')
+            ->and($item->getAttributes())->not->toHaveKey('history');
+    });
+
+    test('returns the remark when asked', function () {
+        /** @var TestCase $this */
+        $media = Media::factory()->book()->create(['note' => 'A private remark']);
+
+        $item = (new SearchMediaQuery(title: $media->title, includeRemark: true))->execute()->sole();
+
+        expect($item->note)->toBe('A private remark');
+    });
+
+    test('returns the history when asked', function () {
+        /** @var TestCase $this */
+        $media = Media::factory()->book()->create(['note' => null]);
+        MediaEvent::factory()->for($media)->started()->at(Carbon::create(2024, 1, 1))->create();
+        MediaEvent::factory()->for($media)->finished()->at(Carbon::create(2024, 2, 1))
+            ->withComment('Worth it')->create();
+
+        $item = (new SearchMediaQuery(title: $media->title, includeHistory: true))->execute()->sole();
+
+        expect($item->history)->toHaveCount(2)
+            ->and($item->history[0]['type'])->toBe('started')
+            ->and($item->history[1]['type'])->toBe('finished')
+            ->and($item->history[1]['comment'])->toBe('Worth it');
+    });
+
+    test('never returns full_text, which backs the text filter rather than the response', function () {
+        /** @var TestCase $this */
+        $media = Media::factory()->book()->create(['note' => 'A private remark']);
+
+        $item = (new SearchMediaQuery(
+            title: $media->title,
+            includeRemark: true,
+            includeHistory: true,
+        ))->execute()->sole();
+
+        expect($item->getAttributes())->not->toHaveKey('full_text');
+    });
+});
+
+describe('text filter', function () {
+    test('matches against the remark', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'A Match', 'note' => 'Utterly disappointing']);
+        Media::factory()->book()->create(['title' => 'Not A Match', 'note' => 'Wonderful']);
+
+        $results = (new SearchMediaQuery(text: 'disappointing'))->execute();
+
+        expect($results->pluck('title')->all())->toBe(['A Match']);
+    });
+
+    test('matches against an event comment', function () {
+        /** @var TestCase $this */
+        $media = Media::factory()->book()->create(['title' => 'A Match', 'note' => null]);
+        MediaEvent::factory()->for($media)->finished()->withComment('Utterly disappointing')->create();
+        Media::factory()->book()->create(['title' => 'Not A Match', 'note' => null]);
+
+        $results = (new SearchMediaQuery(text: 'disappointing'))->execute();
+
+        expect($results->pluck('title')->all())->toBe(['A Match']);
+    });
+
+    test('is case-insensitive', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'A Match', 'note' => 'Utterly Disappointing']);
+
+        $results = (new SearchMediaQuery(text: 'disappointing'))->execute();
+
+        expect($results->pluck('title')->all())->toBe(['A Match']);
+    });
+
+    test('does not match the title, which has its own filter', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Disappointing Weather', 'note' => null]);
+
+        $results = (new SearchMediaQuery(text: 'disappointing'))->execute();
+
+        expect($results)->toBeEmpty();
+    });
+});

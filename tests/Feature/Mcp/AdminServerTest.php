@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Media;
 use App\Models\Note;
 use App\Models\User;
 use Tests\TestCase;
@@ -182,4 +183,28 @@ test('an admin can read a draft through get-note', function () {
     $response->assertJsonPath('result.isError', false);
     $response->assertSee('An unpublished draft');
     $response->assertSee('Status: draft');
+});
+
+test('an admin can read a remark through query-media', function () {
+    /** @var TestCase $this */
+    // Asserted over a real bearer token rather than through the in-process
+    // AdminServer::tool() helper, which never runs auth:api. A test that stubs
+    // the guard can pass while the deployed server admits nobody, or everybody.
+    Media::factory()->book()->create(['title' => 'Dune', 'note' => 'Worth the hype']);
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $response = $this->withToken(accessTokenFor($admin, ['mcp:use']))
+        ->postJson('/mcp/admin', [
+            'jsonrpc' => '2.0',
+            'id' => 5,
+            'method' => 'tools/call',
+            'params' => [
+                'name' => 'query-media',
+                'arguments' => ['title' => 'Dune'],
+            ],
+        ]);
+
+    $response->assertOk();
+    $response->assertJsonPath('result.isError', false);
+    $response->assertJsonPath('result.structuredContent.results.0.remark', 'Worth the hype');
 });
