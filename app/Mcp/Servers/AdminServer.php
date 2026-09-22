@@ -2,8 +2,8 @@
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
 use App\Mcp\Tools\GetNote;
-use App\Mcp\Tools\ListNotes;
 use App\Mcp\Tools\QueryMedia;
 use App\Mcp\Tools\SearchNotes;
 use Laravel\Mcp\Server;
@@ -27,7 +27,10 @@ class AdminServer extends Server
 
         **Notes** are David's blog posts. Use list-notes to browse them
         (newest first), search-notes to find notes matching a query, and
-        get-note to read one in full as markdown.
+        get-note to read one in full as markdown. list-notes can also return
+        unpublished drafts, which search-notes and get-note cannot — ask it for
+        include_drafts when the question is about work in progress, and read
+        each result's status before treating a note as published.
 
         **The media library** tracks the albums, books, movies, TV shows, and
         video games David engages with. Each item has a current status —
@@ -36,13 +39,14 @@ class AdminServer extends Server
         combination of title, creator, media type, status, release year, and
         the year an item was started or finished.
 
-        These tools currently return the same public view of that content as
-        the unauthenticated server at /mcp. Admin-only reads and the ability to
-        record what David is engaging with are not available yet.
+        Of these, only list-notes reads more than the public website shows.
+        The others still return the same public view as the unauthenticated
+        server at /mcp, and no tool here can record what David is engaging
+        with yet.
         MARKDOWN;
 
     protected array $tools = [
-        ListNotes::class,
+        AdminListNotes::class,
         SearchNotes::class,
         GetNote::class,
         QueryMedia::class,

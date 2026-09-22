@@ -118,3 +118,43 @@ test('an admin can call a tool', function () {
     $response->assertJsonPath('result.isError', false);
     $response->assertJsonPath('result.structuredContent.total', 1);
 });
+
+test('an admin is served the admin list-notes, not the public one', function () {
+    /** @var TestCase $this */
+    // Asserted over a real bearer token rather than through the in-process
+    // AdminServer::tool() helper, which never runs auth:api. A test that stubs
+    // the guard can pass while the deployed server admits nobody, or everybody.
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $response = $this->withToken(accessTokenFor($admin, ['mcp:use']))
+        ->postJson('/mcp/admin', toolsListRequest());
+
+    $response->assertOk();
+
+    $listNotes = collect($response->json('result.tools'))->firstWhere('name', 'list-notes');
+
+    expect(array_keys($listNotes['inputSchema']['properties']))->toBe(['include_drafts', 'page', 'per_page']);
+});
+
+test('an admin can read a draft through list-notes', function () {
+    /** @var TestCase $this */
+    Note::factory()->create(['title' => 'An unpublished draft', 'visible' => false]);
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $response = $this->withToken(accessTokenFor($admin, ['mcp:use']))
+        ->postJson('/mcp/admin', [
+            'jsonrpc' => '2.0',
+            'id' => 3,
+            'method' => 'tools/call',
+            'params' => [
+                'name' => 'list-notes',
+                'arguments' => ['include_drafts' => true],
+            ],
+        ]);
+
+    $response->assertOk();
+    $response->assertJsonPath('result.isError', false);
+    $response->assertJsonPath('result.structuredContent.total', 1);
+    $response->assertJsonPath('result.structuredContent.notes.0.title', 'An unpublished draft');
+    $response->assertJsonPath('result.structuredContent.notes.0.status', 'draft');
+});
