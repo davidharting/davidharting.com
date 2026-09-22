@@ -63,6 +63,43 @@ test('admin can view unpublished note', function () {
     $response->assertSeeText('Draft post');
 });
 
+test('an unpublished note previewed by an admin is hidden from robots', function () {
+    /** @var TestCase $this */
+    $admin = User::factory()->create(['is_admin' => true]);
+    $note = Note::factory()->create(['visible' => false, 'title' => 'Draft post']);
+
+    $response = $this->actingAs($admin)->get('/notes/'.$note->slug);
+
+    expect(RenderedHead::from($response)->meta('robots'))->toBe('none');
+});
+
+test('a note emits a BlogPosting schema', function () {
+    /** @var TestCase $this */
+    $note = Note::factory()->create([
+        'visible' => true,
+        'title' => 'A cool post',
+        'lead' => 'You should read this',
+        'published_at' => Carbon::create(2000, 02, 01),
+    ]);
+
+    $blogPosting = RenderedHead::from($this->get('/notes/'.$note->slug))->schema('BlogPosting');
+
+    expect($blogPosting)->not->toBeNull()
+        ->and($blogPosting['headline'])->toBe('A cool post')
+        ->and($blogPosting['author']['name'])->toBe('David Harting')
+        ->and($blogPosting['datePublished'])->toStartWith('2000-02-01');
+});
+
+test('a note emits a breadcrumb trail back to the notes index', function () {
+    /** @var TestCase $this */
+    $note = Note::factory()->create(['visible' => true, 'title' => 'A cool post']);
+
+    $breadcrumbs = RenderedHead::from($this->get('/notes/'.$note->slug))->schema('BreadcrumbList');
+
+    expect(array_column($breadcrumbs['itemListElement'], 'name'))
+        ->toBe(['Home', 'Notes', 'A cool post']);
+});
+
 test('responds to .md extension with markdown content type', function () {
     /** @var TestCase $this */
     $note = Note::factory()->create(['visible' => true, 'title' => 'My Markdown Note']);

@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Note;
-use App\Models\Page;
 use App\Models\User;
 use Carbon\Carbon;
 use Tests\Support\RenderedHead;
@@ -20,6 +19,11 @@ use Tests\TestCase;
  * full map with toBe rather than picking out the two or three tags you happen
  * to be thinking about. That is the assertion that fails when a tag you did
  * not anticipate drifts.
+ *
+ * Scope: this file holds the rules the head system owns and applies across
+ * pages -- defaults, the title suffix, canonical behavior, the robots matrix,
+ * the social-card contract. Assertions about what a *particular* page emits
+ * live in that page's own suite (ShowNoteTest, ShowPageTest).
  */
 describe('defaults', function () {
     test('site-wide metadata renders on every page', function () {
@@ -103,16 +107,15 @@ describe('robots', function () {
         expect(RenderedHead::from($this->get('/login'))->meta('robots'))->toBe('noindex, nofollow');
     });
 
-    test('an unpublished note is hidden from robots for the admin previewing it', function () {
-        /** @var TestCase $this */
-        $note = Note::factory()->create(['visible' => false, 'title' => 'Draft']);
-        $response = $this->actingAs(User::factory()->create(['is_admin' => true]))->get('/notes/'.$note->slug);
-
-        expect(RenderedHead::from($response)->meta('robots'))->toBe('none');
-    });
 });
 
-describe('notes', function () {
+/**
+ * A note is the fixture here, not the subject. These two assert rules the head
+ * system owns -- the complete social-card contract, and how the title suffix
+ * applies to social tags -- so they stay with the rest of the spec rather than
+ * moving to ShowNoteTest with the per-record assertions.
+ */
+describe('social cards', function () {
     beforeEach(function () {
         $this->note = Note::factory()->create([
             'visible' => true,
@@ -158,31 +161,4 @@ describe('notes', function () {
             ->and($head->meta('twitter:title'))->toBe('A cool post');
     });
 
-    test('a BlogPosting schema is emitted', function () {
-        /** @var TestCase $this */
-        $blogPosting = RenderedHead::from($this->get('/notes/'.$this->note->slug))->schema('BlogPosting');
-
-        expect($blogPosting)->not->toBeNull()
-            ->and($blogPosting['headline'])->toBe('A cool post')
-            ->and($blogPosting['author']['name'])->toBe('David Harting')
-            ->and($blogPosting['datePublished'])->toStartWith('2000-02-01');
-    });
-
-    test('a breadcrumb trail back to the notes index is emitted', function () {
-        /** @var TestCase $this */
-        $breadcrumbs = RenderedHead::from($this->get('/notes/'.$this->note->slug))->schema('BreadcrumbList');
-
-        expect(array_column($breadcrumbs['itemListElement'], 'name'))
-            ->toBe(['Home', 'Notes', 'A cool post']);
-    });
-});
-
-describe('pages', function () {
-    test('an unpublished page is hidden from robots', function () {
-        /** @var TestCase $this */
-        $page = Page::factory()->create(['is_published' => false, 'title' => 'Secret']);
-        $response = $this->actingAs(User::factory()->create(['is_admin' => true]))->get('/pages/'.$page->slug);
-
-        expect(RenderedHead::from($response)->meta('robots'))->toBe('none');
-    });
 });
