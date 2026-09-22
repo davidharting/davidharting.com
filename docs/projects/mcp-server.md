@@ -33,20 +33,22 @@ Mcp::web('/mcp/admin', AdminServer::class)
 
 `auth:api` only proves the bearer token is valid, not that it carries `mcp:use`. `Passport::$defaultScope` is `''`, so an authorization request that omits `scope` mints a token with no scopes. `CheckToken` keeps such tokens, and any other admin-owned token not granted for MCP, off `/mcp/admin`; `can:administrate` still stops non-admins either way. See [#186](https://github.com/davidharting/davidharting.com/issues/186).
 
-Two server classes, one implementation: laravel/mcp server classes are thin manifests (a `$tools` array plus instructions), and the **tool classes are shared** between them. `AdminServer` registers a superset:
+Two server classes, **two sets of tool classes**: laravel/mcp server classes are thin manifests (a `$tools` array plus instructions), and each registers its own tools. The admin ones live in `App\Mcp\Tools\Admin\`; `PublicServer` keeps the originals in `App\Mcp\Tools\`. `AdminServer` registers:
 
-- The same four read tools as `PublicServer`. Because the route guarantees an admin caller, the shared tools' policy checks (`can('seeNote', Media::class)`, `NotePolicy::viewAny`) pass and the reads widen: `QueryMedia` includes `media.note` and event comments, note tools include `visible = false` notes.
-- Write tools — port of the existing `App\Ai\Tools\CreateMedia` / `CreateMediaEvent` logic.
-- New read-only, admin-only tools — e.g. a `GetMedia` detail tool with full event history (the MCP equivalent of the admin-only `/media/{id}` page).
+- An admin counterpart of each read tool, under the same wire name (`list-notes`, `search-notes`, `get-note`, `query-media`). These read what the website shows an admin: the note tools can return `visible = false` drafts, and `query-media` includes `media.note`, event comments and the event history.
+- Write tools for the media log — see [#209](https://github.com/davidharting/davidharting.com/issues/209).
+- Any further read-only, admin-only tools that earn their place on their own merits.
 
-Tools still authorize through the same gates and policies the Blade templates use rather than assuming trust from the route — the route middleware is the bouncer, the policies remain the source of truth.
+**The tool classes are deliberately not shared**, which reverses what this document originally proposed. The reason is a package fact rather than taste: an MCP tool's contract is static per class — `name()`, `title()` and `description()` resolve from class attributes, and `schema()` / `outputSchema()` never see the request. Only `handle()` does. So one class serving both servers has one description covering two behaviours: either false advertising on `/mcp`, or an undocumented widening on `/mcp/admin` that the model never learns about. It also turns the policy into a branch inside `handle()` rather than a precondition, doubling the test matrix. Sharing happens one layer down instead, in the `App\Queries` objects, parameterised by a visibility or column flag. Decided on [#208](https://github.com/davidharting/davidharting.com/issues/208).
+
+Each admin tool authorizes twice, asking two different questions. `shouldRegister()` asks whether the caller is entitled to the admin surface at all (`administrate`); `handle()` asks whether they may see this data (`NotePolicy::viewAny`, `MediaPolicy::seeNote`). Neither substitutes for the other, and neither assumes trust from the route — the route middleware is the bouncer, the policies remain the source of truth. `shouldRegister()` is enforced on `tools/call` as well as `tools/list`, because `CallTool` resolves through the same filtered collection, so a tool registered on the wrong server is _invisible_ rather than merely denied.
 
 If non-admin users ever need authenticated MCP access (e.g. per-user features), that would be a third, separate server — an `AuthenticatedServer` between the two — not a loosening of `AdminServer`. Explicitly not designed now; keeping it simple.
 
 Consequences for v1:
 
 - Name the server `PublicServer` now, so the phase-2 pair is symmetrical from day one.
-- Each tool makes its visibility decision in one obvious place (the `visible = true` predicate in note tools, the column list in `QueryMedia`), written with the intent of later replacing that hardcoded "guest" assumption with the corresponding policy check — a deliberate, testable change per tool rather than a hunt.
+- Each tool makes its visibility decision in one obvious place (the `visible = true` predicate in note tools, the column list in `QueryMedia`). That paid off in phase 2, though not the way this document expected: the one place became a constructor flag on a shared query object rather than a policy check swapped into the public tool, so the public tools keep their "guest" assumption permanently and the admin ones pass `true`.
 
 ## Current state
 
@@ -75,7 +77,7 @@ The `media_tracking_summary` view now carries three more, all derived from those
 
 Authorization lives in the application, not the database. `SearchMediaQuery` expresses it for this path with an explicit column allowlist (`SearchMediaQuery::COLUMNS`) rather than `select *`, and `QueryMedia` maps that result field by field, so a column cannot reach a public response without someone deliberately adding it in two places. `tests/Feature/Mcp/QueryMediaTest.php` asserts none of them appear in a `QueryMedia` response.
 
-This is also what makes the phase-2 `AdminServer` widening cheap: once the policy check passes, including the free text is adding entries to `COLUMNS` and fields to the response map, not a second query path.
+The admin counterpart of a tool reaches these columns by constructing the same query object with a different flag, not by taking a second query path — the allowlist is parameterised rather than duplicated. What is _not_ cheap, and what [#208](https://github.com/davidharting/davidharting.com/issues/208) settled, is the tool class itself: the widened surface needs its own description and output schema, so it is a second class registered only on `AdminServer`.
 
 ## Design
 

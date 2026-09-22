@@ -3,6 +3,7 @@
 use App\Mcp\Servers\PublicServer;
 use App\Mcp\Tools\ListNotes;
 use App\Models\Note;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\TestCase;
 
@@ -105,4 +106,38 @@ test('rejects a page below one', function () {
     $response = PublicServer::tool(ListNotes::class, ['page' => 0]);
 
     $response->assertHasErrors(['page']);
+});
+
+test('still hides drafts from an authenticated admin', function () {
+    /** @var TestCase $this */
+    // The route is the bouncer, but the class is what decides. An admin who
+    // connects to the unauthenticated server gets the unauthenticated view,
+    // because PublicServer registers this class and nothing else — the widened
+    // reads live in App\Mcp\Tools\Admin, registered only on AdminServer.
+    Note::factory()->create(['title' => 'Public note', 'visible' => true]);
+    Note::factory()->create(['title' => 'SECRET DRAFT', 'visible' => false]);
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $response = PublicServer::actingAs($admin)->tool(ListNotes::class, ['include_drafts' => true]);
+
+    $response->assertOk();
+    $response->assertDontSee('SECRET DRAFT');
+    $response->assertStructuredContent(function ($json) {
+        $json->where('total', 1)->etc();
+    });
+});
+
+test('does not advertise include_drafts on the public server', function () {
+    /** @var TestCase $this */
+    $response = $this->postJson('/mcp', [
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'tools/list',
+    ]);
+
+    $response->assertOk();
+
+    $listNotes = collect($response->json('result.tools'))->firstWhere('name', 'list-notes');
+
+    expect(array_keys($listNotes['inputSchema']['properties']))->toBe(['page', 'per_page']);
 });
