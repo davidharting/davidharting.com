@@ -47,7 +47,7 @@ describe('shouldRegister()', function () {
 });
 
 describe('handle()', function () {
-    test('withholds a draft from a caller the note policy denies, even if it is reached', function () {
+    test('withholds a draft from a non-admin', function () {
         /** @var TestCase $this */
         // Called directly, since going through the server would only prove
         // shouldRegister works. The point is that handle() refuses on its own
@@ -63,7 +63,7 @@ describe('handle()', function () {
             ->and((string) $response->content())->not->toContain('SECRET DRAFT');
     });
 
-    test('serves a published note to a caller the note policy allows', function () {
+    test('serves a published note to a non-admin', function () {
         /** @var TestCase $this */
         // The other half of NotePolicy::view: a published note is public, so
         // the data guard has no reason to withhold it. Keeping the guard
