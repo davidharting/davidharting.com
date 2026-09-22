@@ -29,9 +29,10 @@ class AdminServer extends Server
         (newest first), search-notes to find notes matching a query, and
         get-note to read one in full as markdown. Unpublished drafts are
         reachable here: get-note returns one whenever its slug is asked for,
-        and list-notes includes them when you pass include_drafts. Every
-        result says whether it is published or a draft — read that before
-        treating a note as published. search-notes never matches drafts.
+        and list-notes includes them when you pass include_drafts. Read the
+        status before treating a note as published — list-notes puts it in
+        each result's status field, and get-note on its Status line. Either
+        way it is "published" or "draft". search-notes never matches drafts.
 
         **The media library** tracks the albums, books, movies, TV shows, and
         video games David engages with. Each item has a current status —

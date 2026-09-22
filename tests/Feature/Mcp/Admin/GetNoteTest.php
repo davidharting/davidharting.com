@@ -9,14 +9,21 @@ use Laravel\Mcp\Request;
 use Tests\TestCase;
 
 describe('shouldRegister()', function () {
+    // A real note, so "not found" can only mean the *tool* was not found. With
+    // no note in the database both failures produce that phrase and the test
+    // would pass without the gate doing anything.
+    beforeEach(function () {
+        Note::factory()->create(['slug' => 'anything', 'visible' => true]);
+    });
+
     test('an anonymous caller cannot reach the tool at all', function () {
         /** @var TestCase $this */
         $response = AdminServer::tool(GetNote::class, ['slug' => 'anything']);
 
-        // "Not found" rather than "denied" is the expected wording: tools/call
-        // resolves through the same filtered collection tools/list does, so a
-        // tool the caller cannot register simply is not there.
-        $response->assertHasErrors(['not found']);
+        // "Tool not found" rather than "denied": tools/call resolves through
+        // the same filtered collection tools/list does, so a tool the caller
+        // cannot register simply is not there.
+        $response->assertHasErrors(['Tool [get-note] not found']);
     });
 
     test('a non-admin cannot reach the tool at all', function () {
@@ -25,7 +32,7 @@ describe('shouldRegister()', function () {
 
         $response = AdminServer::actingAs($user)->tool(GetNote::class, ['slug' => 'anything']);
 
-        $response->assertHasErrors(['not found']);
+        $response->assertHasErrors(['Tool [get-note] not found']);
     });
 
     test('an admin can reach the tool', function () {
@@ -40,18 +47,35 @@ describe('shouldRegister()', function () {
 });
 
 describe('handle()', function () {
-    test('refuses a caller the note policy denies, even if it is reached', function () {
+    test('withholds a draft from a caller the note policy denies, even if it is reached', function () {
         /** @var TestCase $this */
         // Called directly, since going through the server would only prove
         // shouldRegister works. The point is that handle() refuses on its own
         // too, so registering this tool somewhere it does not belong leaks
         // nothing.
+        $note = Note::factory()->create(['title' => 'SECRET DRAFT', 'visible' => false]);
         $this->actingAs(User::factory()->create(['is_admin' => false]));
 
-        $response = (new GetNote)->handle(new Request(['slug' => 'anything']));
+        $response = (new GetNote)->handle(new Request(['slug' => $note->slug]));
 
         expect($response->isError())->toBeTrue()
-            ->and((string) $response->content())->toBe('You are not authorized to read David\'s notes.');
+            ->and((string) $response->content())->toBe('Note not found.')
+            ->and((string) $response->content())->not->toContain('SECRET DRAFT');
+    });
+
+    test('serves a published note to a caller the note policy allows', function () {
+        /** @var TestCase $this */
+        // The other half of NotePolicy::view: a published note is public, so
+        // the data guard has no reason to withhold it. Keeping the guard
+        // identical to the website's is the point — shouldRegister is what
+        // keeps non-admins off this tool.
+        $note = Note::factory()->create(['title' => 'A public note', 'visible' => true]);
+        $this->actingAs(User::factory()->create(['is_admin' => false]));
+
+        $response = (new GetNote)->handle(new Request(['slug' => $note->slug]));
+
+        expect($response->isError())->toBeFalse()
+            ->and((string) $response->content())->toContain('A public note');
     });
 
     test('returns a published note as markdown, labelled published', function () {

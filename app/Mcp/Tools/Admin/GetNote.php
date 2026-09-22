@@ -41,8 +41,8 @@ class GetNote extends Tool
      * hides the tool from tools/list and makes tools/call answer "Tool not
      * found": both resolve through the same filtered collection.
      *
-     * handle() asks the narrower question of whether the caller may read notes.
-     * Neither check substitutes for the other.
+     * handle() asks the narrower question of whether the caller may read the
+     * one note they named. Neither check substitutes for the other.
      */
     public function shouldRegister(Request $request): bool
     {
@@ -54,22 +54,17 @@ class GetNote extends Tool
      */
     public function handle(Request $request): Response
     {
-        $user = $request->user();
-
-        if ($user === null || $user->cannot('viewAny', Note::class)) {
-            return Response::error('You are not authorized to read David\'s notes.');
-        }
-
         $validated = $request->validate([
             'slug' => ['required', 'string'],
         ]);
 
-        // A slug names one note, so there is nothing to filter: the caller
-        // already said which note they want. The Status line, not a refusal, is
-        // what stops a draft being mistaken for published work.
         $note = (new GetNoteQuery($validated['slug'], includeDrafts: true))->execute();
 
-        if ($note === null) {
+        // NotePolicy::view is the same check routes/web.php puts on
+        // notes.show, so this tool and the website agree on who may read a
+        // given note. It denies with 404 for a draft, which is why a denial
+        // and a missing slug answer alike here.
+        if ($note === null || $request->user()?->cannot('view', $note)) {
             return Response::error('Note not found.');
         }
 
