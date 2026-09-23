@@ -4,7 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Models\Note;
 use App\Queries\SearchNotesQuery;
-use App\Support\NoteSnippet;
+use App\Support\Excerpt;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -58,7 +58,7 @@ class SearchNotes extends Tool
                 'lead' => $note->lead,
                 'published_at' => $note->published_at?->toIso8601String(),
                 'url' => route('notes.show', $note->slug),
-                'snippet' => NoteSnippet::for($note, $query),
+                'snippet' => Excerpt::around($note->markdown_content, $query),
             ])->all(),
             'total' => $paginator->total(),
             'page' => $paginator->currentPage(),
