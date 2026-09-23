@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\AddMcpOAuthChallengeHeader;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -39,9 +38,6 @@ return Application::configure(basePath: dirname(__DIR__))
         // routes/api.php is not throttled unless we ask for it. The 'api'
         // limiter itself lives in AppServiceProvider::boot().
         $middleware->throttleApi();
-
-        // See the class docblock: global because it must wrap auth:api's 401.
-        $middleware->append(AddMcpOAuthChallengeHeader::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash([

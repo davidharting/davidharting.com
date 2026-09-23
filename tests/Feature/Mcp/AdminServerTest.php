@@ -30,9 +30,9 @@ test('an anonymous request is rejected', function () {
 
 test('an anonymous request is answered with the OAuth challenge that starts discovery', function () {
     /** @var TestCase $this */
-    // The header comes from App\Http\Middleware\AddMcpOAuthChallengeHeader
-    // (laravel/mcp#278). It tells Claude where our OAuth metadata lives when a
-    // connection is set up or has to re-authorize. Without it, Claude falls back
+    // The header comes from laravel/mcp's global AddWwwAuthenticateHeader
+    // middleware (see OAuthChallengeHeaderTest). It tells Claude where our OAuth
+    // metadata lives when a connection is set up or has to re-authorize. Without it, Claude falls back
     // to probing /.well-known/oauth-protected-resource/mcp/admin (covered by
     // OAuthDiscoveryTest), so connecting still works only while that path does.
     $response = $this->postJson('/mcp/admin', toolsListRequest());

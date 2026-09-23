@@ -6,17 +6,18 @@ use Laravel\Mcp\Facades\Mcp;
 use Tests\TestCase;
 
 /*
- * Covers App\Http\Middleware\AddMcpOAuthChallengeHeader, a workaround for
- * laravel/mcp#278. Delete this file together with that class once a released
- * laravel/mcp contains laravel/mcp#322 — see issue #194.
+ * Pins how laravel/mcp's AddWwwAuthenticateHeader decides which 401s get an MCP
+ * OAuth challenge. The package registers it as *global* middleware, because
+ * Laravel sorts `auth:api` ahead of route middleware and a route-level
+ * decorator never sees the 401 (laravel/mcp#278).
  *
- * These register a throwaway MCP server rather than using /mcp/admin, because
- * that server does not exist yet (#187) and the middleware's contract is about
- * any Mcp::web() route returning a 401, not one particular server.
+ * Global middleware sees every response in the app, so what matters is that it
+ * stays scoped to MCP routes: the web UI's 401s must never point a browser at
+ * MCP resource metadata. v1.0.0 scopes on the route's own middleware list; this
+ * app shipped its own scoped wrapper until then (#194).
  *
- * The 401 comes from closure middleware rather than a real `auth:api` guard so
- * these stay meaningful before Passport is installed (#185). What is under test
- * is the decision to decorate, not how the 401 was produced.
+ * These register throwaway servers rather than using /mcp/admin because the
+ * contract is about any Mcp::web() route returning a 401, not one server.
  */
 
 beforeEach(function () {
@@ -55,8 +56,8 @@ test('a successful MCP response is untouched', function () {
 
 test('a 401 from a non-MCP route under /mcp is left alone', function () {
     /** @var TestCase $this */
-    // Detection asks the registrar which routes are MCP servers rather than
-    // matching the URL, so sharing the /mcp prefix is not enough to be decorated.
+    // Detection is by the route's middleware, not its URL, so sharing the /mcp
+    // prefix is not enough to be decorated.
     $response = $this->get('/mcp/not-a-server');
 
     $response->assertStatus(401);
@@ -65,9 +66,8 @@ test('a 401 from a non-MCP route under /mcp is left alone', function () {
 
 test('a 401 from an unrelated route is left alone', function () {
     /** @var TestCase $this */
-    // The package middleware only checks the status code, so registering it
-    // globally as upstream does would stamp an MCP OAuth challenge onto every
-    // 401 in the app. Scoping is the reason this wrapper exists.
+    // The middleware is global, so only its own scoping keeps an MCP OAuth
+    // challenge off every other 401 in the app.
     $response = $this->get('/elsewhere/protected');
 
     $response->assertStatus(401);
