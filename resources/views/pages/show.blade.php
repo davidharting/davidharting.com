@@ -1,4 +1,4 @@
-<x-layout.app :title="$page->title" :description="$page->title">
+<x-layout.app>
     <div class="mx-auto max-w-3xl">
         <header class="mb-8 text-center">
             <h1 class="text-3xl font-bold">{{ $page->title }}</h1>

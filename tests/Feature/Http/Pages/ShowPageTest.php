@@ -2,6 +2,7 @@
 
 use App\Models\Page;
 use App\Models\User;
+use Tests\Support\RenderedHead;
 use Tests\TestCase;
 
 test('404 if page not found', function () {
@@ -50,6 +51,16 @@ test('admin can view unpublished pages', function () {
     $response->assertSee('This is a draft');
 });
 
+test('an unpublished page previewed by an admin is hidden from robots', function () {
+    /** @var TestCase $this */
+    $admin = User::factory()->create(['is_admin' => true]);
+    $page = Page::factory()->unpublished()->create(['title' => 'Draft Page']);
+
+    $response = $this->actingAs($admin)->get('/pages/'.$page->slug);
+
+    expect(RenderedHead::from($response)->meta('robots'))->toBe('none');
+});
+
 test('show published page', function () {
     /** @var TestCase $this */
     $page = Page::factory()->create([
@@ -88,7 +99,7 @@ test('show page has correct meta tags', function () {
 
     $response = $this->get('/pages/'.$page->slug);
     $response->assertSuccessful();
-    $response->assertSeeHtml('<title>About Us</title>');
+    expect(RenderedHead::from($response)->title)->toBe('About Us - davidharting.com');
 });
 
 test('responds to .md extension with markdown content type', function () {

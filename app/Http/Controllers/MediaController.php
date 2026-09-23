@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Media;
 use Illuminate\View\View;
+use Laravel\Head\Facades\Head;
+use Laravel\Head\Facades\Schema;
 
 class MediaController extends Controller
 {
@@ -29,9 +31,34 @@ class MediaController extends Controller
             ->sortBy('date')
             ->values();
 
+        Head::title($media->title)
+            ->description($this->description($media))
+            ->og(title: $media->title)
+            ->twitter(title: $media->title)
+            ->schema(Schema::breadcrumbs()->items([
+                'Home' => route('home'),
+                'Media Log' => route('media.index'),
+                $media->title => route('media.show', $media),
+            ]));
+
         return view('media.show', [
             'media' => $media,
             'timeline' => $timeline,
         ]);
+    }
+
+    /**
+     * Build a description from what the media log actually knows about an item,
+     * rather than repeating its title.
+     */
+    private function description(Media $media): string
+    {
+        $parts = array_filter([
+            $media->title,
+            $media->creator?->name ? 'by '.$media->creator->name : null,
+            $media->year ? "({$media->year})" : null,
+        ]);
+
+        return implode(' ', $parts).' — in David Harting\'s media log.';
     }
 }

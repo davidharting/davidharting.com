@@ -1,4 +1,4 @@
-<x-layout.app title="Pages" description="One-off pages on davidharting.com">
+<x-layout.app>
     <x-type.page-title>Pages</x-type.page-title>
 
     @if ($pages->isEmpty())
