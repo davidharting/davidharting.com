@@ -6,13 +6,13 @@ describe('around()', function () {
     test('returns the text around the first match, with ellipses where it was cut', function () {
         $text = str_repeat('a', 20).' xylophone '.str_repeat('b', 20);
 
-        expect(Excerpt::around($text, 'xylophone', radius: 5))->toBe('…aaaa xylophone bbbb…');
+        expect(Excerpt::around($text, 'xylophone', context: 5))->toBe('…aaaa xylophone bbbb…');
     });
 
     test('matches past the first line of multi-line text', function () {
         $text = "# Heading\n\nI bought a xylophone.\n\nThe end.";
 
-        expect(Excerpt::around($text, 'xylophone', radius: 5))->toBe("…ht a xylophone.\n\nTh…");
+        expect(Excerpt::around($text, 'xylophone', context: 5))->toBe("…ht a xylophone.\n\nTh…");
     });
 
     test('matches case-insensitively', function () {
