@@ -35,12 +35,12 @@ class SearchMediaQuery
      * This query performs no authorization. The last four parameters reach
      * admin-only data and the caller is responsible for authz checks.
      *
-     * @param  string|null  $remarkOrComment  Matches the item's remark or any
-     *                                        comment on its events. A *filter* on
-     *                                        admin-only data is as disclosing as
-     *                                        returning it: answers narrow by what
-     *                                        the text says, so a caller who may
-     *                                        not read a remark may not search it.
+     * @param  string|null  $fullTextQuery  Matches the item's remark or any
+     *                                      comment on its events. A *filter* on
+     *                                      admin-only data is as disclosing as
+     *                                      returning it: answers narrow by what
+     *                                      the text says, so a caller who may
+     *                                      not read a remark may not search it.
      * @param  bool  $includeRemark  Whether to return `media.note`, David's
      *                               private remark on the item.
      * @param  bool  $includeHistory  Whether to return the event timeline as
@@ -61,7 +61,7 @@ class SearchMediaQuery
         public ?int $startedYear = null,
         public ?int $finishedYear = null,
         public ?MediaSort $sort = null,
-        public ?string $remarkOrComment = null,
+        public ?string $fullTextQuery = null,
         public bool $includeRemark = false,
         public bool $includeHistory = false,
         public bool $includeFullText = false,
@@ -135,8 +135,8 @@ class SearchMediaQuery
             $query->whereYear('finished_at', $this->finishedYear);
         }
 
-        if ($this->remarkOrComment !== null) {
-            $query->whereLike('full_text', '%'.LikePattern::escape($this->remarkOrComment).'%');
+        if ($this->fullTextQuery !== null) {
+            $query->whereLike('full_text', '%'.LikePattern::escape($this->fullTextQuery).'%');
         }
 
         $this->applySort($query);

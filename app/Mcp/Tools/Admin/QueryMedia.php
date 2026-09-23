@@ -39,7 +39,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
     Examples: everything finished in 2025 (status=finished, finished_year=2025);
     books in the backlog (media_type=book, status=backlog); what is being read
     right now (media_type=book, status=started); anything he wrote "disappointing"
-    about (remark_or_comment=disappointing).
+    about (full_text_query=disappointing).
 
     Note the difference between year (the work's release year) and started_year /
     finished_year (when David started or finished it).
@@ -51,7 +51,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
     read it, history when you need the individual events. Both are left out
     unless asked for.
 
-    The remark, full_text, history and the remark_or_comment filter all reach
+    The remark, full_text, history and the full_text_query filter all reach
     writing that is not on the public website. Treat it as David's notes to
     himself, not as published opinion.
     TEXT)]
@@ -109,7 +109,7 @@ class QueryMedia extends Tool
             sort: isset($validated['sort'])
                 ? MediaSort::from($validated['sort'])
                 : $this->defaultSort($status),
-            remarkOrComment: $validated['remark_or_comment'] ?? null,
+            fullTextQuery: $validated['full_text_query'] ?? null,
             includeRemark: true,
             includeHistory: $includeHistory,
             includeFullText: $includeFullText,
@@ -143,7 +143,7 @@ class QueryMedia extends Tool
      *     year?: int,
      *     started_year?: int,
      *     finished_year?: int,
-     *     remark_or_comment?: string,
+     *     full_text_query?: string,
      *     additional_fields?: list<'full_text'|'history'>,
      *     sort?: string,
      *     page?: int,
@@ -160,7 +160,7 @@ class QueryMedia extends Tool
             'year' => ['sometimes', 'integer'],
             'started_year' => ['sometimes', 'integer'],
             'finished_year' => ['sometimes', 'integer'],
-            'remark_or_comment' => ['sometimes', 'string'],
+            'full_text_query' => ['sometimes', 'string'],
             'additional_fields' => ['sometimes', 'array'],
             'additional_fields.*' => ['string', Rule::in(self::ADDITIONAL_FIELDS)],
             'sort' => ['sometimes', 'string', Rule::enum(MediaSort::class)],
@@ -238,8 +238,8 @@ class QueryMedia extends Tool
                 ->description('The calendar year David started the item. Distinct from year, the release year of the work.'),
             'finished_year' => $schema->integer()
                 ->description('The calendar year David finished the item. Distinct from year, the release year of the work.'),
-            'remark_or_comment' => $schema->string()
-                ->description('Match against what David has written about the item — his remark on it, or any comment on one of its events (case-insensitive, partial match). Use this to find items by what he said about them rather than by their title or status.'),
+            'full_text_query' => $schema->string()
+                ->description('Search the same writing the full_text field returns — David\'s remark on the item and every comment on its events (case-insensitive, partial match, not word-based). Use this to find items by what he said about them rather than by their title or status.'),
             'additional_fields' => $schema->array()
                 ->items($schema->string()->enum(self::ADDITIONAL_FIELDS))
                 ->description('Extra fields to return on each result. full_text is everything David has written about the item as one markdown string, best for reading. history is the event timeline as structured data, one entry per event. Both are omitted unless listed here; the current status and the started/finished/abandoned dates are returned either way.'),

@@ -123,13 +123,13 @@ describe('handle()', function () {
         });
     });
 
-    test('searches remarks and comments with remark_or_comment', function () {
+    test('searches remarks and comments with full_text_query', function () {
         /** @var TestCase $this */
         Media::factory()->book()->create(['title' => 'A Match', 'note' => 'Utterly disappointing']);
         Media::factory()->book()->create(['title' => 'Not A Match', 'note' => 'Wonderful']);
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $response = AdminServer::actingAs($admin)->tool(QueryMedia::class, ['remark_or_comment' => 'disappointing']);
+        $response = AdminServer::actingAs($admin)->tool(QueryMedia::class, ['full_text_query' => 'disappointing']);
 
         $response->assertOk();
         $response->assertStructuredContent(function ($json) {

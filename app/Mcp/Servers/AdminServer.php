@@ -41,7 +41,7 @@ class AdminServer extends Server
         Use query-media to filter by any combination of title, creator, media
         type, status, release year, and the year an item was started or
         finished. It also searches his remarks and comments on an item
-        (remark_or_comment), and can return that writing — as one readable
+        (full_text_query), and can return that writing — as one readable
         string (full_text) or as a structured event timeline (history) — via
         additional_fields.
 
