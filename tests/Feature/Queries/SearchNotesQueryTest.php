@@ -91,3 +91,31 @@ test('matches wildcard characters literally', function () {
 
     $this->assertSame(['Working at 100% capacity'], $notes->pluck('title')->all());
 });
+
+test('excludes drafts by default', function () {
+    /** @var TestCase $this */
+    Note::factory()->create(['title' => 'A published xylophone', 'visible' => true]);
+    Note::factory()->create(['title' => 'A draft xylophone', 'visible' => false]);
+
+    $notes = (new SearchNotesQuery('xylophone'))->execute();
+
+    expect($notes->pluck('title')->all())->toBe(['A published xylophone']);
+});
+
+test('includes drafts when asked', function () {
+    /** @var TestCase $this */
+    Note::factory()->create([
+        'title' => 'A published xylophone',
+        'published_at' => Carbon::create(2024, 1, 1),
+        'visible' => true,
+    ]);
+    Note::factory()->create([
+        'title' => 'A draft xylophone',
+        'published_at' => Carbon::create(2025, 1, 1),
+        'visible' => false,
+    ]);
+
+    $notes = (new SearchNotesQuery('xylophone', includeDrafts: true))->execute();
+
+    expect($notes->pluck('title')->all())->toBe(['A draft xylophone', 'A published xylophone']);
+});
