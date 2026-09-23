@@ -7,17 +7,12 @@ use App\Models\User;
 
 class MediaEventPolicy
 {
-    public function before(User $user): ?bool
-    {
-        return $user->is_admin;
-    }
-
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->is_admin;
     }
 
     /**
@@ -25,7 +20,7 @@ class MediaEventPolicy
      */
     public function view(User $user, MediaEvent $mediaEvent): bool
     {
-        return true;
+        return $user->is_admin;
     }
 
     /**
@@ -33,7 +28,7 @@ class MediaEventPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->is_admin;
     }
 
     /**
@@ -41,7 +36,7 @@ class MediaEventPolicy
      */
     public function update(User $user, MediaEvent $mediaEvent): bool
     {
-        return false;
+        return $user->is_admin;
     }
 
     /**
@@ -49,7 +44,7 @@ class MediaEventPolicy
      */
     public function delete(User $user, MediaEvent $mediaEvent): bool
     {
-        return false;
+        return $user->is_admin;
     }
 
     /**
@@ -57,7 +52,7 @@ class MediaEventPolicy
      */
     public function restore(User $user, MediaEvent $mediaEvent): bool
     {
-        return false;
+        return $user->is_admin;
     }
 
     /**
@@ -65,6 +60,6 @@ class MediaEventPolicy
      */
     public function forceDelete(User $user, MediaEvent $mediaEvent): bool
     {
-        return false;
+        return $user->is_admin;
     }
 }
