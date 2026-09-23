@@ -84,7 +84,7 @@ describe('handle()', function () {
         });
     });
 
-    test('omits the additional fields unless asked', function () {
+    test('omits the additional fields by default', function () {
         /** @var TestCase $this */
         // Omitted rather than null: a null would read as "no writing" or "no
         // events", which is a different claim from "not fetched".
@@ -123,13 +123,13 @@ describe('handle()', function () {
         });
     });
 
-    test('searches the free text with the text filter', function () {
+    test('searches remarks and comments with remark_or_comment', function () {
         /** @var TestCase $this */
         Media::factory()->book()->create(['title' => 'A Match', 'note' => 'Utterly disappointing']);
         Media::factory()->book()->create(['title' => 'Not A Match', 'note' => 'Wonderful']);
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $response = AdminServer::actingAs($admin)->tool(QueryMedia::class, ['text' => 'disappointing']);
+        $response = AdminServer::actingAs($admin)->tool(QueryMedia::class, ['remark_or_comment' => 'disappointing']);
 
         $response->assertOk();
         $response->assertStructuredContent(function ($json) {

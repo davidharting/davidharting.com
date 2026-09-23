@@ -558,13 +558,13 @@ describe('admin columns', function () {
     });
 });
 
-describe('text filter', function () {
+describe('remarkOrComment filter', function () {
     test('matches against the remark', function () {
         /** @var TestCase $this */
         Media::factory()->book()->create(['title' => 'A Match', 'note' => 'Utterly disappointing']);
         Media::factory()->book()->create(['title' => 'Not A Match', 'note' => 'Wonderful']);
 
-        $results = (new SearchMediaQuery(text: 'disappointing'))->execute();
+        $results = (new SearchMediaQuery(remarkOrComment: 'disappointing'))->execute();
 
         expect($results->pluck('title')->all())->toBe(['A Match']);
     });
@@ -575,7 +575,7 @@ describe('text filter', function () {
         MediaEvent::factory()->for($media)->finished()->withComment('Utterly disappointing')->create();
         Media::factory()->book()->create(['title' => 'Not A Match', 'note' => null]);
 
-        $results = (new SearchMediaQuery(text: 'disappointing'))->execute();
+        $results = (new SearchMediaQuery(remarkOrComment: 'disappointing'))->execute();
 
         expect($results->pluck('title')->all())->toBe(['A Match']);
     });
@@ -584,7 +584,7 @@ describe('text filter', function () {
         /** @var TestCase $this */
         Media::factory()->book()->create(['title' => 'A Match', 'note' => 'Utterly Disappointing']);
 
-        $results = (new SearchMediaQuery(text: 'disappointing'))->execute();
+        $results = (new SearchMediaQuery(remarkOrComment: 'disappointing'))->execute();
 
         expect($results->pluck('title')->all())->toBe(['A Match']);
     });
@@ -593,7 +593,7 @@ describe('text filter', function () {
         /** @var TestCase $this */
         Media::factory()->book()->create(['title' => 'Disappointing Weather', 'note' => null]);
 
-        $results = (new SearchMediaQuery(text: 'disappointing'))->execute();
+        $results = (new SearchMediaQuery(remarkOrComment: 'disappointing'))->execute();
 
         expect($results)->toBeEmpty();
     });

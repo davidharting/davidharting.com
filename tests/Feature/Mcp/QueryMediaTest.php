@@ -334,9 +334,9 @@ test('still withholds the remark from an authenticated admin', function () {
 
 test('does not advertise the admin arguments on the public server', function () {
     /** @var TestCase $this */
-    // text searches the private free text and additional_fields returns it, so
-    // neither may appear on the unauthenticated surface — a filter over hidden
-    // data discloses it by narrowing the answer.
+    // remark_or_comment searches private writing and additional_fields returns
+    // it, so neither may appear on the unauthenticated surface — a filter over
+    // hidden data discloses it by narrowing the answer.
     $response = $this->postJson('/mcp', [
         'jsonrpc' => '2.0',
         'id' => 1,
@@ -348,6 +348,6 @@ test('does not advertise the admin arguments on the public server', function () 
     $queryMedia = collect($response->json('result.tools'))->firstWhere('name', 'query-media');
 
     expect(array_keys($queryMedia['inputSchema']['properties']))
-        ->not->toContain('text')
+        ->not->toContain('remark_or_comment')
         ->not->toContain('additional_fields');
 });

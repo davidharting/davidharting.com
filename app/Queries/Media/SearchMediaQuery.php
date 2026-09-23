@@ -14,10 +14,9 @@ use Illuminate\Support\Collection;
 class SearchMediaQuery
 {
     /**
-     * The columns every caller may have. An allowlist rather than `select *` on
-     * purpose: the view also carries `note`, `full_text` and `history`, which
-     * are admin-only, and public callers read through here. Reaching those
-     * three means setting a flag, which is a thing a reader can grep for.
+     * The columns every caller may have. The view also has `note`, `full_text`
+     * and `history` columns, which are admin-only; reaching them means setting
+     * one of the flags below.
      */
     private const COLUMNS = [
         'media_id',
@@ -34,13 +33,14 @@ class SearchMediaQuery
 
     /**
      * This query performs no authorization. The last four parameters reach
-     * admin-only data and the caller is responsible for having earned them.
+     * admin-only data and the caller is responsible for authz checks.
      *
-     * @param  string|null  $text  Matches the item's free text — its remark and
-     *                             every event comment. A *filter* on admin-only
-     *                             data is as disclosing as returning it: answers
-     *                             narrow by what the text says, so a caller who
-     *                             may not read a remark may not search it either.
+     * @param  string|null  $remarkOrComment  Matches the item's remark or any
+     *                                        comment on its events. A *filter* on
+     *                                        admin-only data is as disclosing as
+     *                                        returning it: answers narrow by what
+     *                                        the text says, so a caller who may
+     *                                        not read a remark may not search it.
      * @param  bool  $includeRemark  Whether to return `media.note`, David's
      *                               private remark on the item.
      * @param  bool  $includeHistory  Whether to return the event timeline as
@@ -61,7 +61,7 @@ class SearchMediaQuery
         public ?int $startedYear = null,
         public ?int $finishedYear = null,
         public ?MediaSort $sort = null,
-        public ?string $text = null,
+        public ?string $remarkOrComment = null,
         public bool $includeRemark = false,
         public bool $includeHistory = false,
         public bool $includeFullText = false,
@@ -135,8 +135,8 @@ class SearchMediaQuery
             $query->whereYear('finished_at', $this->finishedYear);
         }
 
-        if ($this->text !== null) {
-            $query->whereLike('full_text', '%'.LikePattern::escape($this->text).'%');
+        if ($this->remarkOrComment !== null) {
+            $query->whereLike('full_text', '%'.LikePattern::escape($this->remarkOrComment).'%');
         }
 
         $this->applySort($query);

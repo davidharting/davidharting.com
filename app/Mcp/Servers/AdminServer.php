@@ -40,13 +40,14 @@ class AdminServer extends Server
         those statuses were reached, and whatever David has written about it.
         Use query-media to filter by any combination of title, creator, media
         type, status, release year, and the year an item was started or
-        finished. It also searches his private writing about an item (text),
-        and can return that writing — as one readable string (full_text) or as
-        a structured event timeline (history) — via additional_fields.
+        finished. It also searches his remarks and comments on an item
+        (remark_or_comment), and can return that writing — as one readable
+        string (full_text) or as a structured event timeline (history) — via
+        additional_fields.
 
         What David has written privately — a note still in draft, a remark on a
         media item, a comment on one of its events — is reachable through these
-        tools and is not on the public website. It is thinking, not published
+        tools and is not on the public website. It is private writing not published
         opinion, so never quote or attribute it as something he has said in
         public. search-notes alone still returns only the public view, and no
         tool here can record what David is engaging with yet.

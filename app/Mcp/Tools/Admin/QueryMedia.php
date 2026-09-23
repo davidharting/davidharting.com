@@ -39,21 +39,21 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
     Examples: everything finished in 2025 (status=finished, finished_year=2025);
     books in the backlog (media_type=book, status=backlog); what is being read
     right now (media_type=book, status=started); anything he wrote "disappointing"
-    about (text=disappointing).
+    about (remark_or_comment=disappointing).
 
     Note the difference between year (the work's release year) and started_year /
     finished_year (when David started or finished it).
 
-    Every result carries the same base fields. Ask for more with
+    Every response includes the same base fields. Ask for more with
     additional_fields: full_text for everything David has written about an item
     as one markdown string, or history for the event timeline as structured data,
     one entry per event. They hold the same writing in two shapes — full_text to
     read it, history when you need the individual events. Both are left out
     unless asked for.
 
-    The remark, full_text, history and the text filter all reach writing that is
-    not on the public website. Treat it as David's notes to himself, not as
-    published opinion.
+    The remark, full_text, history and the remark_or_comment filter all reach
+    writing that is not on the public website. Treat it as David's notes to
+    himself, not as published opinion.
     TEXT)]
 class QueryMedia extends Tool
 {
@@ -83,27 +83,12 @@ class QueryMedia extends Tool
     {
         // MediaPolicy::seeNote is the same gate media/index.blade.php puts on
         // the remark and event comments, so this tool and the website agree on
-        // who may read them. Every row is otherwise already public, which is
-        // why this widens by column rather than by row.
+        // who may read them. All other fields are public on the site.
         if ($request->user()?->cannot('seeNote', Media::class) ?? true) {
             return Response::error('You are not authorized to read David\'s remarks.');
         }
 
-        $validated = $request->validate([
-            'title' => ['sometimes', 'string'],
-            'creator' => ['sometimes', 'string'],
-            'media_type' => ['sometimes', 'string', Rule::enum(MediaTypeName::class)],
-            'status' => ['sometimes', 'string', Rule::enum(MediaTrackingStatus::class)],
-            'year' => ['sometimes', 'integer'],
-            'started_year' => ['sometimes', 'integer'],
-            'finished_year' => ['sometimes', 'integer'],
-            'text' => ['sometimes', 'string'],
-            'additional_fields' => ['sometimes', 'array'],
-            'additional_fields.*' => ['string', Rule::in(self::ADDITIONAL_FIELDS)],
-            'sort' => ['sometimes', 'string', Rule::enum(MediaSort::class)],
-            'page' => ['sometimes', 'integer', 'min:1'],
-            'limit' => ['sometimes', 'integer', 'min:1', 'max:100'],
-        ]);
+        $validated = $this->validatedArguments($request);
 
         $status = isset($validated['status'])
             ? MediaTrackingStatus::from($validated['status'])
@@ -124,7 +109,7 @@ class QueryMedia extends Tool
             sort: isset($validated['sort'])
                 ? MediaSort::from($validated['sort'])
                 : $this->defaultSort($status),
-            text: $validated['text'] ?? null,
+            remarkOrComment: $validated['remark_or_comment'] ?? null,
             includeRemark: true,
             includeHistory: $includeHistory,
             includeFullText: $includeFullText,
@@ -143,6 +128,44 @@ class QueryMedia extends Tool
             'page' => $paginator->currentPage(),
             'limit' => $paginator->perPage(),
             'has_more_pages' => $paginator->hasMorePages(),
+        ]);
+    }
+
+    /**
+     * An invalid argument throws a ValidationException, which laravel/mcp turns
+     * into an error result naming the failing field — the tool never sees it.
+     *
+     * @return array{
+     *     title?: string,
+     *     creator?: string,
+     *     media_type?: string,
+     *     status?: string,
+     *     year?: int,
+     *     started_year?: int,
+     *     finished_year?: int,
+     *     remark_or_comment?: string,
+     *     additional_fields?: list<'full_text'|'history'>,
+     *     sort?: string,
+     *     page?: int,
+     *     limit?: int,
+     * }
+     */
+    private function validatedArguments(Request $request): array
+    {
+        return $request->validate([
+            'title' => ['sometimes', 'string'],
+            'creator' => ['sometimes', 'string'],
+            'media_type' => ['sometimes', 'string', Rule::enum(MediaTypeName::class)],
+            'status' => ['sometimes', 'string', Rule::enum(MediaTrackingStatus::class)],
+            'year' => ['sometimes', 'integer'],
+            'started_year' => ['sometimes', 'integer'],
+            'finished_year' => ['sometimes', 'integer'],
+            'remark_or_comment' => ['sometimes', 'string'],
+            'additional_fields' => ['sometimes', 'array'],
+            'additional_fields.*' => ['string', Rule::in(self::ADDITIONAL_FIELDS)],
+            'sort' => ['sometimes', 'string', Rule::enum(MediaSort::class)],
+            'page' => ['sometimes', 'integer', 'min:1'],
+            'limit' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ]);
     }
 
@@ -215,8 +238,8 @@ class QueryMedia extends Tool
                 ->description('The calendar year David started the item. Distinct from year, the release year of the work.'),
             'finished_year' => $schema->integer()
                 ->description('The calendar year David finished the item. Distinct from year, the release year of the work.'),
-            'text' => $schema->string()
-                ->description('Match against what David has written about the item — his remark plus every comment on its events (case-insensitive, partial match). Use this to find items by what he said about them rather than by their title or status.'),
+            'remark_or_comment' => $schema->string()
+                ->description('Match against what David has written about the item — his remark on it, or any comment on one of its events (case-insensitive, partial match). Use this to find items by what he said about them rather than by their title or status.'),
             'additional_fields' => $schema->array()
                 ->items($schema->string()->enum(self::ADDITIONAL_FIELDS))
                 ->description('Extra fields to return on each result. full_text is everything David has written about the item as one markdown string, best for reading. history is the event timeline as structured data, one entry per event. Both are omitted unless listed here; the current status and the started/finished/abandoned dates are returned either way.'),
