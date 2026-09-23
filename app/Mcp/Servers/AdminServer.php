@@ -4,7 +4,7 @@ namespace App\Mcp\Servers;
 
 use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
-use App\Mcp\Tools\QueryMedia;
+use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
 use App\Mcp\Tools\SearchNotes;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Name;
@@ -37,21 +37,27 @@ class AdminServer extends Server
         **The media library** tracks the albums, books, movies, TV shows, and
         video games David engages with. Each item has a current status —
         backlog (not started), started, finished, or abandoned — plus the dates
-        those statuses were reached. Use query-media to filter by any
-        combination of title, creator, media type, status, release year, and
-        the year an item was started or finished.
+        those statuses were reached, and whatever David has written about it.
+        Use query-media to filter by any combination of title, creator, media
+        type, status, release year, and the year an item was started or
+        finished. It also searches his remarks and comments on an item
+        (full_text_query), and can return that writing — as one readable
+        string (full_text) or as a structured event timeline (history) — via
+        additional_fields.
 
-        Of these, list-notes and get-note read more than the public website
-        shows. search-notes and query-media still return the same public view
-        as the unauthenticated server at /mcp, and no tool here can record what
-        David is engaging with yet.
+        What David has written privately — a note still in draft, a remark on a
+        media item, a comment on one of its events — is reachable through these
+        tools and is not on the public website. It is private writing not published
+        opinion, so never quote or attribute it as something he has said in
+        public. search-notes alone still returns only the public view, and no
+        tool here can record what David is engaging with yet.
         MARKDOWN;
 
     protected array $tools = [
         AdminListNotes::class,
         SearchNotes::class,
         AdminGetNote::class,
-        QueryMedia::class,
+        AdminQueryMedia::class,
     ];
 
     protected array $resources = [

@@ -77,6 +77,10 @@ The `media_tracking_summary` view now carries three more, all derived from those
 
 Authorization lives in the application, not the database. `SearchMediaQuery` expresses it for this path with an explicit column allowlist (`SearchMediaQuery::COLUMNS`) rather than `select *`, and `QueryMedia` maps that result field by field, so a column cannot reach a public response without someone deliberately adding it in two places. `tests/Feature/Mcp/QueryMediaTest.php` asserts none of them appear in a `QueryMedia` response.
 
+**A filter over a hidden column discloses it just as surely as returning it would.** An answer that narrows by what the private text says tells the caller what it says, one query at a time. So `full_text_query`, which matches `full_text`, is an admin-only _argument_ — not merely an admin-only field in the response — and the same test asserts it is absent from the public tool's advertised schema. Any future filter over `note`, `full_text` or `history` inherits this.
+
+`full_text` and `history` hold the same writing in two shapes: one markdown string meant for reading, and a structured array with one entry per event, which is what a caller needs to address a single event. Both are expensive enough per row that the admin `query-media` omits them unless named in `additional_fields`. That parameter is the convention for optional columns on these tools: the base fields are always present, and each optional one is a value in an enum, so a new one widens the enum rather than adding another boolean. Row filters such as `include_drafts` are a different thing and stay booleans.
+
 The admin counterpart of a tool reaches these columns by constructing the same query object with a different flag, not by taking a second query path — the allowlist is parameterised rather than duplicated. What is _not_ cheap, and what [#208](https://github.com/davidharting/davidharting.com/issues/208) settled, is the tool class itself: the widened surface needs its own description and output schema, so it is a second class registered only on `AdminServer`.
 
 ## Design
