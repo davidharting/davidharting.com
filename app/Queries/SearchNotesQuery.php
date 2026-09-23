@@ -10,7 +10,16 @@ use Illuminate\Support\Collection;
 
 class SearchNotesQuery
 {
-    public function __construct(public string $query) {}
+    /**
+     * This query performs no authorization. The caller sets $includeDrafts and
+     * is responsible for authz checks.
+     *
+     * @param  bool  $includeDrafts  Whether notes with `visible = false` can match.
+     */
+    public function __construct(
+        public string $query,
+        public bool $includeDrafts = false,
+    ) {}
 
     /**
      * @return Collection<int, Note>
@@ -32,8 +41,8 @@ class SearchNotesQuery
     }
 
     /**
-     * Visible notes whose title, lead, or markdown content contains the query,
-     * matched case-insensitively, most recently published first.
+     * Notes whose title, lead, or markdown content contains the query, matched
+     * case-insensitively, most recently published first.
      *
      * @return Builder<Note>
      */
@@ -42,7 +51,7 @@ class SearchNotesQuery
         $pattern = '%'.LikePattern::escape($this->query).'%';
 
         return Note::query()
-            ->where('visible', true)
+            ->unless($this->includeDrafts, fn (Builder $builder) => $builder->where('visible', true))
             ->where(function (Builder $builder) use ($pattern): void {
                 $builder->whereLike('title', $pattern)
                     ->orWhereLike('lead', $pattern)

@@ -208,3 +208,28 @@ test('an admin can read a remark through query-media', function () {
     $response->assertJsonPath('result.isError', false);
     $response->assertJsonPath('result.structuredContent.results.0.remark', 'Worth the hype');
 });
+
+test('an admin can search drafts through search-notes', function () {
+    /** @var TestCase $this */
+    // Asserted over a real bearer token rather than through the in-process
+    // AdminServer::tool() helper, which never runs auth:api. A test that stubs
+    // the guard can pass while the deployed server admits nobody, or everybody.
+    Note::factory()->create(['title' => 'An unpublished xylophone', 'visible' => false]);
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $response = $this->withToken(accessTokenFor($admin, ['mcp:use']))
+        ->postJson('/mcp/admin', [
+            'jsonrpc' => '2.0',
+            'id' => 6,
+            'method' => 'tools/call',
+            'params' => [
+                'name' => 'search-notes',
+                'arguments' => ['query' => 'xylophone', 'include_drafts' => true],
+            ],
+        ]);
+
+    $response->assertOk();
+    $response->assertJsonPath('result.isError', false);
+    $response->assertJsonPath('result.structuredContent.notes.0.title', 'An unpublished xylophone');
+    $response->assertJsonPath('result.structuredContent.notes.0.status', 'draft');
+});

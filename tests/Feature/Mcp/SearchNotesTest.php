@@ -3,6 +3,7 @@
 use App\Mcp\Servers\PublicServer;
 use App\Mcp\Tools\SearchNotes;
 use App\Models\Note;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\TestCase;
 
@@ -116,4 +117,40 @@ test('requires a query', function () {
     $response = PublicServer::tool(SearchNotes::class);
 
     $response->assertHasErrors(['query']);
+});
+
+test('still hides drafts from an authenticated admin', function () {
+    /** @var TestCase $this */
+    // Being an admin is not what widens a read; being served the admin class
+    // is. This class is registered on PublicServer only, so /mcp returns the
+    // public view no matter who is asking.
+    Note::factory()->create(['title' => 'A published xylophone', 'visible' => true]);
+    Note::factory()->create(['title' => 'SECRET DRAFT xylophone', 'visible' => false]);
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $response = PublicServer::actingAs($admin)->tool(SearchNotes::class, [
+        'query' => 'xylophone',
+        'include_drafts' => true,
+    ]);
+
+    $response->assertOk();
+    $response->assertDontSee('SECRET DRAFT');
+    $response->assertStructuredContent(function ($json) {
+        $json->where('total', 1)->etc();
+    });
+});
+
+test('does not advertise include_drafts on the public server', function () {
+    /** @var TestCase $this */
+    $response = $this->postJson('/mcp', [
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'tools/list',
+    ]);
+
+    $response->assertOk();
+
+    $searchNotes = collect($response->json('result.tools'))->firstWhere('name', 'search-notes');
+
+    expect(array_keys($searchNotes['inputSchema']['properties']))->not->toContain('include_drafts');
 });

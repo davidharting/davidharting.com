@@ -5,7 +5,7 @@ namespace App\Mcp\Servers;
 use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
-use App\Mcp\Tools\SearchNotes;
+use App\Mcp\Tools\Admin\SearchNotes as AdminSearchNotes;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
@@ -29,10 +29,10 @@ class AdminServer extends Server
         (newest first), search-notes to find notes matching a query, and
         get-note to read one in full as markdown. Unpublished drafts are
         reachable here: get-note returns one whenever its slug is asked for,
-        and list-notes includes them when you pass include_drafts. Read the
-        status before treating a note as published — list-notes puts it in
-        each result's status field, and get-note on its Status line. Either
-        way it is "published" or "draft". search-notes never matches drafts.
+        and list-notes and search-notes include them when you pass
+        include_drafts. Read the status before treating a note as published —
+        list-notes and search-notes put it in each result's status field, and
+        get-note on its Status line. Either way it is "published" or "draft".
 
         **The media library** tracks the albums, books, movies, TV shows, and
         video games David engages with. Each item has a current status —
@@ -49,13 +49,12 @@ class AdminServer extends Server
         media item, a comment on one of its events — is reachable through these
         tools and is not on the public website. It is private writing not published
         opinion, so never quote or attribute it as something he has said in
-        public. search-notes alone still returns only the public view, and no
-        tool here can record what David is engaging with yet.
+        public. No tool here can record what David is engaging with yet.
         MARKDOWN;
 
     protected array $tools = [
         AdminListNotes::class,
-        SearchNotes::class,
+        AdminSearchNotes::class,
         AdminGetNote::class,
         AdminQueryMedia::class,
     ];
