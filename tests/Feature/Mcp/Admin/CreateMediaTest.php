@@ -225,9 +225,39 @@ describe('handle()', function () {
         expect(Media::count())->toBe(2);
     });
 
-    test('creates an item with no creator, distinct from the same title with one', function () {
+    test('matches an item recorded with no creator instead of duplicating it', function () {
         /** @var TestCase $this */
-        Media::factory()->book()->create([
+        $media = Media::factory()->movie()->create(['title' => 'Casablanca', 'creator_id' => null, 'year' => 1942]);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, [
+            'title' => 'casablanca',
+            'media_type' => 'movie',
+            'creator' => 'Michael Curtiz',
+            'year' => 1942,
+        ]);
+
+        $response->assertOk();
+        $response->assertStructuredContent(function ($json) use ($media) {
+            $json->where('media_id', $media->id)
+                ->where('creator', null)
+                ->where('media_created', false)
+                ->where('creator_created', false)
+                ->where('ignored_fields', ['creator'])
+                ->etc();
+        });
+
+        // Nothing written: no second item, the creator is not filled in, and
+        // no creator is left behind with no works.
+        expect(Media::count())->toBe(1)
+            ->and($media->refresh()->creator_id)->toBeNull()
+            ->and(Creator::count())->toBe(0);
+    });
+
+    test('prefers the item with the named creator over one recorded with no creator', function () {
+        /** @var TestCase $this */
+        Media::factory()->book()->create(['title' => 'Beowulf', 'creator_id' => null]);
+        $withCreator = Media::factory()->book()->create([
             'title' => 'Beowulf',
             'creator_id' => Creator::factory()->create(['name' => 'Seamus Heaney']),
         ]);
@@ -236,40 +266,35 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, [
             'title' => 'Beowulf',
             'media_type' => 'book',
+            'creator' => 'Seamus Heaney',
         ]);
 
-        $response->assertOk();
-        $response->assertStructuredContent(function ($json) {
-            $json->where('creator', null)
-                ->where('media_created', true)
-                ->where('creator_created', false)
+        $response->assertStructuredContent(function ($json) use ($withCreator) {
+            $json->where('media_id', $withCreator->id)
+                ->where('creator', 'Seamus Heaney')
+                ->where('ignored_fields', [])
                 ->etc();
         });
-        expect(Media::count())->toBe(2)
-            ->and(Media::whereNull('creator_id')->count())->toBe(1);
     });
 
-    test('finds an existing item with no creator', function () {
+    test('requires a creator', function () {
         /** @var TestCase $this */
-        Media::factory()->book()->create(['title' => 'Beowulf', 'creator_id' => null]);
         $admin = User::factory()->create(['is_admin' => true]);
 
         $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, [
-            'title' => 'beowulf',
+            'title' => 'Dune',
             'media_type' => 'book',
         ]);
 
-        $response->assertStructuredContent(function ($json) {
-            $json->where('media_created', false)->etc();
-        });
-        expect(Media::count())->toBe(1);
+        $response->assertHasErrors(['creator']);
+        expect(Media::count())->toBe(0);
     });
 
     test('requires a title', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, ['media_type' => 'book']);
+        $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, ['media_type' => 'book', 'creator' => 'Frank Herbert']);
 
         $response->assertHasErrors(['title']);
         expect(Media::count())->toBe(0);
@@ -282,13 +307,14 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, [
             'title' => 'Dune',
             'media_type' => 'podcast',
+            'creator' => 'Frank Herbert',
         ]);
 
         $response->assertHasErrors(['media type']);
         expect(Media::count())->toBe(0);
     });
 
-    test('rejects an empty creator rather than creating the item without one', function () {
+    test('rejects an empty creator', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
 
@@ -309,6 +335,7 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, [
             'title' => 'Dune',
             'media_type' => 'book',
+            'creator' => 'Frank Herbert',
             'year' => 'nineteen sixty-five',
         ]);
 
