@@ -8,19 +8,19 @@ use App\Models\User;
 class CreatorPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Creators are not sensitive, so anyone may list them, guests included.
      */
-    public function viewAny(User $user): bool
+    public function viewAny(?User $user): bool
     {
-        return $user->is_admin;
+        return true;
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Creators are not sensitive, so anyone may view one, guests included.
      */
-    public function view(User $user, Creator $creator): bool
+    public function view(?User $user, Creator $creator): bool
     {
-        return $user->is_admin;
+        return true;
     }
 
     /**

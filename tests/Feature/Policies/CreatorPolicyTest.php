@@ -6,6 +6,18 @@ use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;
 
 describe('viewAny()', function () {
+    it('allows guests', function () {
+        expect(Gate::allows('viewAny', Creator::class))->toBeTrue();
+    });
+
+    it('allows non-admins', function () {
+        /** @var TestCase $this */
+        $user = User::factory()->create(['is_admin' => false]);
+        $this->actingAs($user);
+
+        expect(Gate::allows('viewAny', Creator::class))->toBeTrue();
+    });
+
     it('allows admins', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
@@ -13,17 +25,24 @@ describe('viewAny()', function () {
 
         expect(Gate::allows('viewAny', Creator::class))->toBeTrue();
     });
-
-    it('denies non-admins', function () {
-        /** @var TestCase $this */
-        $user = User::factory()->create(['is_admin' => false]);
-        $this->actingAs($user);
-
-        expect(Gate::denies('viewAny', Creator::class))->toBeTrue();
-    });
 });
 
 describe('view()', function () {
+    it('allows guests', function () {
+        $creator = Creator::factory()->create();
+
+        expect(Gate::allows('view', $creator))->toBeTrue();
+    });
+
+    it('allows non-admins', function () {
+        /** @var TestCase $this */
+        $user = User::factory()->create(['is_admin' => false]);
+        $creator = Creator::factory()->create();
+        $this->actingAs($user);
+
+        expect(Gate::allows('view', $creator))->toBeTrue();
+    });
+
     it('allows admins', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
@@ -31,15 +50,6 @@ describe('view()', function () {
         $this->actingAs($admin);
 
         expect(Gate::allows('view', $creator))->toBeTrue();
-    });
-
-    it('denies non-admins', function () {
-        /** @var TestCase $this */
-        $user = User::factory()->create(['is_admin' => false]);
-        $creator = Creator::factory()->create();
-        $this->actingAs($user);
-
-        expect(Gate::denies('view', $creator))->toBeTrue();
     });
 });
 
