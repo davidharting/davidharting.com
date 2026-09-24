@@ -76,6 +76,7 @@ test('an admin can list the tools', function () {
         'search-notes',
         'get-note',
         'query-media',
+        'create-media',
     ]);
 });
 
