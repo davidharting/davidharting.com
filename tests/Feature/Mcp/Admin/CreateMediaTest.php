@@ -7,6 +7,7 @@ use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaType;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Laravel\Mcp\Request;
 use Tests\TestCase;
 
@@ -47,6 +48,24 @@ describe('handle()', function () {
             ->and((string) $response->content())->toBe('You are not authorized to add media.')
             ->and(Media::count())->toBe(0)
             ->and(Creator::count())->toBe(0);
+    });
+
+    test('refuses a caller who may not create creators, even when the creator exists', function () {
+        /** @var TestCase $this */
+        // Every ability is admin-only today, so the refusal is forced here to
+        // prove the check runs up front and not only when a creator is new.
+        Gate::before(fn (User $user, string $ability, array $arguments) => $ability === 'create' && ($arguments[0] ?? null) === Creator::class ? false : null);
+        Creator::factory()->create(['name' => 'Frank Herbert']);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, [
+            'title' => 'Dune',
+            'media_type' => 'book',
+            'creator' => 'Frank Herbert',
+        ]);
+
+        $response->assertHasErrors(['You are not authorized to add creators.']);
+        expect(Media::count())->toBe(0);
     });
 
     test('creates the item and its creator', function () {
@@ -104,6 +123,49 @@ describe('handle()', function () {
 
         expect(Creator::count())->toBe(1)
             ->and(Media::sole()->creator_id)->toBe($creator->id);
+    });
+
+    test('reuses an existing creator by id', function () {
+        /** @var TestCase $this */
+        $creator = Creator::factory()->create(['name' => 'Frank Herbert']);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, [
+            'title' => 'Dune Messiah',
+            'media_type' => 'book',
+            'creator_id' => $creator->id,
+        ]);
+
+        $response->assertOk();
+        $response->assertStructuredContent(function ($json) {
+            $json->where('creator', 'Frank Herbert')
+                ->where('media_created', true)
+                ->where('creator_created', false)
+                ->etc();
+        });
+
+        expect(Creator::count())->toBe(1)
+            ->and(Media::sole()->creator_id)->toBe($creator->id);
+    });
+
+    test('finds an existing item by creator id', function () {
+        /** @var TestCase $this */
+        $creator = Creator::factory()->create(['name' => 'Frank Herbert']);
+        $media = Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $creator->id]);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, [
+            'title' => 'dune',
+            'media_type' => 'book',
+            'creator_id' => $creator->id,
+        ]);
+
+        $response->assertStructuredContent(function ($json) use ($media) {
+            $json->where('media_id', $media->id)
+                ->where('media_created', false)
+                ->etc();
+        });
+        expect(Media::count())->toBe(1);
     });
 
     test('finds an existing item when title and creator differ only in case', function () {
@@ -311,6 +373,36 @@ describe('handle()', function () {
         ]);
 
         $response->assertHasErrors(['media type']);
+        expect(Media::count())->toBe(0);
+    });
+
+    test('rejects a creator id that does not exist', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, [
+            'title' => 'Dune',
+            'media_type' => 'book',
+            'creator_id' => 999999,
+        ]);
+
+        $response->assertHasErrors(['creator id']);
+        expect(Media::count())->toBe(0);
+    });
+
+    test('rejects both a creator and a creator id', function () {
+        /** @var TestCase $this */
+        $creator = Creator::factory()->create(['name' => 'Frank Herbert']);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(CreateMedia::class, [
+            'title' => 'Dune',
+            'media_type' => 'book',
+            'creator' => 'Brian Herbert',
+            'creator_id' => $creator->id,
+        ]);
+
+        $response->assertHasErrors(['creator']);
         expect(Media::count())->toBe(0);
     });
 

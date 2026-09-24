@@ -20,8 +20,8 @@ class Creator extends Model
     }
 
     /**
-     * Match a creator by name, case-insensitively. Names are stored exactly as
-     * first given, so "frank herbert" finds "Frank Herbert".
+     * Match a creator by name, case-insensitively, so "frank herbert" finds
+     * "Frank Herbert".
      *
      * @param  Builder<Creator>  $query
      */

@@ -42,7 +42,8 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
     "Dune" by "Frank Herbert". A new item or creator is stored exactly as
     written here, so use the proper capitalisation. A creator is always
     required: for a movie use the director, for a game the developer, for a TV
-    show its creator or showrunner.
+    show its creator or showrunner. When query-media has already shown you the
+    creator, pass its creator_id instead of the name.
 
     Some older items were recorded with no creator. One of those with the same
     title and media type counts as the item you asked for, and is returned
@@ -83,7 +84,14 @@ class CreateMedia extends Tool
             return Response::error('You are not authorized to add media.');
         }
 
-        // The response carries the stored remark, which MediaPolicy::seeNote
+        // Checked up front rather than only when a creator turns out to be
+        // new: creating one is an expected effect of this tool, so a caller
+        // who may not do it should be refused before any lookup happens.
+        if ($user->cannot('create', Creator::class)) {
+            return Response::error('You are not authorized to add creators.');
+        }
+
+        // The response includes the stored remark, which MediaPolicy::seeNote
         // guards on the website too.
         if ($user->cannot('seeNote', Media::class)) {
             return Response::error('You are not authorized to read David\'s remarks.');
@@ -92,15 +100,18 @@ class CreateMedia extends Tool
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'media_type' => ['required', 'string', Rule::enum(MediaTypeName::class)],
-            'creator' => ['required', 'string', 'max:255'],
+            'creator' => ['required_without:creator_id', 'prohibits:creator_id', 'string', 'max:255'],
+            'creator_id' => ['required_without:creator', 'integer', Rule::exists(Creator::class, 'id')],
             'year' => ['sometimes', 'integer'],
             'remark' => ['sometimes', 'string', 'filled'],
         ]);
 
         $mediaType = MediaType::where('name', MediaTypeName::from($validated['media_type']))->sole();
 
-        return DB::transaction(function () use ($validated, $mediaType, $user): Response|ResponseFactory {
-            $creator = Creator::query()->named($validated['creator'])->first();
+        return DB::transaction(function () use ($validated, $mediaType): Response|ResponseFactory {
+            $creator = isset($validated['creator_id'])
+                ? Creator::findOrFail($validated['creator_id'])
+                : Creator::query()->named($validated['creator'])->first();
 
             $media = $creator === null
                 ? null
@@ -123,13 +134,7 @@ class CreateMedia extends Tool
 
             // Only now, so that matching a creator-less item never leaves
             // behind a new creator with no works.
-            if ($creator === null) {
-                if ($user->cannot('create', Creator::class)) {
-                    return Response::error('You are not authorized to add creators.');
-                }
-
-                $creator = Creator::create(['name' => $validated['creator']]);
-            }
+            $creator ??= Creator::create(['name' => $validated['creator']]);
 
             $media = Media::create([
                 'title' => $validated['title'],
@@ -153,7 +158,7 @@ class CreateMedia extends Tool
      * The supplied fields an existing item does not reflect. Nothing is
      * written to an existing item, so each of these was dropped.
      *
-     * @param  array{creator: string, year?: int, remark?: string}  $validated
+     * @param  array{creator?: string, creator_id?: int, year?: int, remark?: string}  $validated
      * @return list<'creator'|'year'|'remark'>
      */
     private function ignoredFields(array $validated, Media $media): array
@@ -210,8 +215,9 @@ class CreateMedia extends Tool
                 ->enum(array_column(MediaTypeName::cases(), 'value'))
                 ->description('The type of media.'),
             'creator' => $schema->string()
-                ->required()
-                ->description('The creator — author, director, artist, developer, etc. Matched case-insensitively against existing creators, and created as written when there is no match.'),
+                ->description('The creator — author, director, artist, developer, etc. Matched case-insensitively against existing creators, and created as written when there is no match. Give exactly one of creator or creator_id.'),
+            'creator_id' => $schema->integer()
+                ->description('The id of a creator already in the library, as returned by query-media. Prefer this over creator whenever you know it, so the item is attached to that exact creator. Give exactly one of creator or creator_id.'),
             'year' => $schema->integer()
                 ->description('The release year of the work itself, not when David engaged with it. Only applied when the item is new.'),
             'remark' => $schema->string()
