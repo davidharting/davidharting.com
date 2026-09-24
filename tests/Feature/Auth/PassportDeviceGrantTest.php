@@ -20,7 +20,7 @@ test('registers none of the device grant routes', function (string $name) {
     'passport.device.authorizations.deny',
 ]);
 
-test('answers the device user-code page with a 404 rather than a 500', function () {
+test('answers the device user-code page with a 404', function () {
     /** @var TestCase $this */
     $this->get('/oauth/device')->assertNotFound();
 });
