@@ -15,9 +15,7 @@
 --              searchable shape: one ILIKE covers all of an item's text, and
 --              this is the column a full-text index would target.
 --   history    every event as a jsonb array, including events carrying no
---              comment. The structured shape: what happened and when. Each
---              entry carries its event_id, the one handle a caller has for
---              addressing that event to edit it.
+--              comment. The structured shape: what happened and when.
 --              jsonb sorts object keys, which is fine — key order carries no
 --              meaning here, and jsonb preserves the array order that does.
 --
