@@ -10,12 +10,7 @@ class DebugController extends Controller
     /**
      * Show which deployment is serving this request.
      *
-     * Deliberately public: the page is most useful in a PR preview
-     * environment, which has its own database and session cookie, so gating it
-     * behind a login would make it unreachable exactly when it is wanted.
-     * Everything on it is already public — see {@see DeploymentInfo::facts()}.
-     * It is kept out of search results by robots.txt, the `noindex` robots
-     * metadata its route declares, and the `X-Robots-Tag` header below.
+     * A public page that asks bots not to index it
      */
     public function __invoke(): Response
     {

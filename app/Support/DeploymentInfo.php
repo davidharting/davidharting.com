@@ -11,17 +11,12 @@ namespace App\Support;
  * near-identical deployments are live at once.
  *
  * Read by both the `/whoareyou` Telegram command and the `/debug` page so the
- * two can never drift apart, including in the order they present.
+ * two agree
  */
 class DeploymentInfo
 {
     /**
      * The facts identifying this deployment, in presentation order.
-     *
-     * Returned as an ordered list rather than a map because the order is part
-     * of the contract: it is the reading order both surfaces render, and
-     * defining it here is what keeps the page and the Telegram reply
-     * recognisably the same output.
      *
      * Every fact is safe to show a logged-out visitor: the repository is
      * public, and the URL and service name are already visible in the address

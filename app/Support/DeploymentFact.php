@@ -3,10 +3,7 @@
 namespace App\Support;
 
 /**
- * One labelled value identifying the running deployment.
- *
- * Carries its own optional link so presentation code never has to recognise a
- * particular fact by name to decide how to render it.
+ * One piece of metadata describing the running deployment.
  */
 class DeploymentFact
 {
