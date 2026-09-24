@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Tools\Admin\CreateMedia;
 use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
@@ -49,7 +50,13 @@ class AdminServer extends Server
         media item, a comment on one of its events — is reachable through these
         tools and is not on the public website. It is private writing not published
         opinion, so never quote or attribute it as something he has said in
-        public. No tool here can record what David is engaging with yet.
+        public.
+
+        **Adding to the library.** Use create-media to add an item, or to find
+        it if it is already there; it never changes an existing item. Tell
+        David whenever it matched an existing item instead of adding one, and
+        name any supplied fields it reports as ignored. No tool here can record
+        that David started, finished or abandoned something yet.
         MARKDOWN;
 
     protected array $tools = [
@@ -57,6 +64,7 @@ class AdminServer extends Server
         AdminSearchNotes::class,
         AdminGetNote::class,
         AdminQueryMedia::class,
+        CreateMedia::class,
     ];
 
     protected array $resources = [

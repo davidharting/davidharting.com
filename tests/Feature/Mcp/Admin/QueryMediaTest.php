@@ -2,6 +2,7 @@
 
 use App\Mcp\Servers\AdminServer;
 use App\Mcp\Tools\Admin\QueryMedia;
+use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaEvent;
 use App\Models\User;
@@ -81,6 +82,25 @@ describe('handle()', function () {
         $response->assertOk();
         $response->assertStructuredContent(function ($json) {
             $json->where('results.0.remark', null)->etc();
+        });
+    });
+
+    test('returns the creator id, for passing to create-media', function () {
+        /** @var TestCase $this */
+        $creator = Creator::factory()->create(['name' => 'Frank Herbert']);
+        Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $creator->id]);
+        Media::factory()->book()->create(['title' => 'Beowulf', 'creator_id' => null]);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(QueryMedia::class, ['sort' => 'title']);
+
+        $response->assertOk();
+        $response->assertStructuredContent(function ($json) use ($creator) {
+            $json->where('results.0.title', 'Beowulf')
+                ->where('results.0.creator_id', null)
+                ->where('results.1.title', 'Dune')
+                ->where('results.1.creator_id', $creator->id)
+                ->etc();
         });
     });
 
