@@ -102,6 +102,13 @@ describe('robots', function () {
         expect(RenderedHead::from($response)->meta('robots'))->toBe('noindex, nofollow');
     })->with(['/dashboard', '/profile', '/backend', '/kitchen-sink']);
 
+    test('the debug page is hidden from robots despite being public', function () {
+        /** @var TestCase $this */
+        $this->assertGuest();
+
+        expect(RenderedHead::from($this->get('/debug'))->meta('robots'))->toBe('noindex, nofollow');
+    });
+
     test('auth pages are hidden from robots', function () {
         /** @var TestCase $this */
         expect(RenderedHead::from($this->get('/login'))->meta('robots'))->toBe('noindex, nofollow');
