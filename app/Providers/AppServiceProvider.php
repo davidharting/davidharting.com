@@ -17,7 +17,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        /*
+         * Switch off Passport's device authorization grant, as it is currently unused.
+         *
+         * This must run in register(): Passport reads the flag when it
+         * registers its routes during boot().
+         *
+         * To re-enable, delete this line, then bind the two views it needs with
+         * Passport::deviceUserCodeView() and Passport::deviceAuthorizationView()
+         * in boot(), and create a client with `php artisan passport:client --device`.
+         * Passport is headless and ships no views of its own, so without those
+         * bindings GET /oauth/device answers every request with a 500.
+         */
+        Passport::$deviceCodeGrantEnabled = false;
     }
 
     /**
