@@ -28,7 +28,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $abandoned_at
  * @property string|null $note ADMIN-ONLY. See the class docblock.
  * @property string|null $full_text ADMIN-ONLY. See the class docblock.
- * @property list<array{type: string, occurred_at: string, comment: string|null}> $history ADMIN-ONLY. See the class docblock.
+ * @property list<array{event_id: int, type: string, occurred_at: string, comment: string|null}> $history ADMIN-ONLY. See the class docblock.
  */
 class MediaTrackingSummary extends Model
 {

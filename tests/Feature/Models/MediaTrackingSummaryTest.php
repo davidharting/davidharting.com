@@ -206,15 +206,9 @@ describe('history', function () {
 
     test('includes events that carry no comment, unlike full_text', function () {
         /** @var TestCase $this */
-        $media = Media::factory()->book()
-            ->has(
-                MediaEvent::factory()
-                    ->started()
-                    ->at(Carbon::create(2025, 3, 4))
-                    ->withComment(null),
-                'events'
-            )
-            ->create(['note' => null]);
+        $media = Media::factory()->book()->create(['note' => null]);
+        $started = MediaEvent::factory()->for($media)->started()
+            ->at(Carbon::create(2025, 3, 4))->withComment(null)->create();
 
         $summary = summaryFor($media);
 
@@ -222,28 +216,28 @@ describe('history', function () {
         // is not part of the contract. Event order still is — a list compares
         // index by index either way.
         $this->assertEquals(
-            [['type' => 'started', 'occurred_at' => '2025-03-04T00:00:00+00:00', 'comment' => null]],
+            [['event_id' => $started->id, 'type' => 'started', 'occurred_at' => '2025-03-04T00:00:00+00:00', 'comment' => null]],
             $summary->history
         );
         $this->assertNull($summary->full_text);
     });
 
-    test('lists every event oldest first with its type, timestamp, and comment', function () {
+    test('lists every event oldest first with its id, type, timestamp, and comment', function () {
         /** @var TestCase $this */
         $media = Media::factory()->book()->create(['note' => null]);
         Media::factory()->book()
             ->has(MediaEvent::factory()->finished()->at(Carbon::create(2025, 2, 1))->withComment('Unrelated.'), 'events')
             ->create(['note' => null]);
 
-        MediaEvent::factory()->for($media)->finished()
+        $finished = MediaEvent::factory()->for($media)->finished()
             ->at(Carbon::create(2025, 4, 1))->withComment('Stuck the landing.')->create();
-        MediaEvent::factory()->for($media)->started()
+        $started = MediaEvent::factory()->for($media)->started()
             ->at(Carbon::create(2025, 3, 4))->withComment('Slow start.')->create();
 
         $this->assertEquals(
             [
-                ['type' => 'started', 'occurred_at' => '2025-03-04T00:00:00+00:00', 'comment' => 'Slow start.'],
-                ['type' => 'finished', 'occurred_at' => '2025-04-01T00:00:00+00:00', 'comment' => 'Stuck the landing.'],
+                ['event_id' => $started->id, 'type' => 'started', 'occurred_at' => '2025-03-04T00:00:00+00:00', 'comment' => 'Slow start.'],
+                ['event_id' => $finished->id, 'type' => 'finished', 'occurred_at' => '2025-04-01T00:00:00+00:00', 'comment' => 'Stuck the landing.'],
             ],
             summaryFor($media)->history
         );

@@ -104,8 +104,8 @@ describe('handle()', function () {
     test('returns the event timeline when asked', function () {
         /** @var TestCase $this */
         $media = Media::factory()->book()->create(['title' => 'Dune', 'note' => null]);
-        MediaEvent::factory()->for($media)->started()->at(Carbon::create(2024, 1, 1))->create();
-        MediaEvent::factory()->for($media)->finished()->at(Carbon::create(2024, 2, 1))
+        $started = MediaEvent::factory()->for($media)->started()->at(Carbon::create(2024, 1, 1))->create();
+        $finished = MediaEvent::factory()->for($media)->finished()->at(Carbon::create(2024, 2, 1))
             ->withComment('Worth the hype')->create();
         $admin = User::factory()->create(['is_admin' => true]);
 
@@ -115,8 +115,10 @@ describe('handle()', function () {
         ]);
 
         $response->assertOk();
-        $response->assertStructuredContent(function ($json) {
-            $json->where('results.0.history.0.type', 'started')
+        $response->assertStructuredContent(function ($json) use ($started, $finished) {
+            $json->where('results.0.history.0.event_id', $started->id)
+                ->where('results.0.history.0.type', 'started')
+                ->where('results.0.history.1.event_id', $finished->id)
                 ->where('results.0.history.1.type', 'finished')
                 ->where('results.0.history.1.comment', 'Worth the hype')
                 ->etc();
