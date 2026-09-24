@@ -279,6 +279,7 @@ class QueryMedia extends Tool
                     'full_text' => $schema->string()->nullable()->description('The remark followed by every event comment, as one markdown string with each comment dated. Private. Null when he has written nothing about the item. Present only when full_text is in additional_fields.'),
                     'history' => $schema->array()
                         ->items($schema->object([
+                            'event_id' => $schema->integer()->description('The id of the event.'),
                             'type' => $schema->string()->description('One of: backlog, started, finished, abandoned, comment.'),
                             'occurred_at' => $schema->string()->description('When the event happened (ISO 8601).'),
                             'comment' => $schema->string()->nullable()->description('What David wrote at that moment. Private. Null when the event carries no comment.'),
