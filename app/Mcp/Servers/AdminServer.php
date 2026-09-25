@@ -4,6 +4,7 @@ namespace App\Mcp\Servers;
 
 use App\Mcp\Tools\Admin\CreateMedia;
 use App\Mcp\Tools\Admin\CreateMediaEvent;
+use App\Mcp\Tools\Admin\EditMedia;
 use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
@@ -61,6 +62,14 @@ class AdminServer extends Server
         a dated comment to it. Every call logs a new event: when it reports
         other events of the same type, tell David, in case this one is a
         duplicate.
+
+        **Correcting the library.** Use edit-media to fix an item's title,
+        media type, creator, year or remark. It fixes an item; it does not turn
+        one into a different work, since the item's events stay with it. If an
+        item should not exist at all, tell David rather than editing it into
+        something else — he removes it himself. When an edit is refused because
+        another item already has that title, media type and creator, tell David
+        and name the other item.
         MARKDOWN;
 
     protected array $tools = [
@@ -70,6 +79,7 @@ class AdminServer extends Server
         AdminQueryMedia::class,
         CreateMedia::class,
         CreateMediaEvent::class,
+        EditMedia::class,
     ];
 
     protected array $resources = [
