@@ -20,7 +20,7 @@ describe('shouldRegister()', function () {
         $response = AdminServer::tool(CreateMediaEvent::class, [
             'media_id' => $media->id,
             'event_type' => 'finished',
-            'occurred_at' => '2026-03-15',
+            'occurred_on' => '2026-03-15',
         ]);
 
         $response->assertHasErrors(['Tool [create-media-event] not found']);
@@ -35,7 +35,7 @@ describe('shouldRegister()', function () {
         $response = AdminServer::actingAs($user)->tool(CreateMediaEvent::class, [
             'media_id' => $media->id,
             'event_type' => 'finished',
-            'occurred_at' => '2026-03-15',
+            'occurred_on' => '2026-03-15',
         ]);
 
         $response->assertHasErrors(['Tool [create-media-event] not found']);
@@ -54,7 +54,7 @@ describe('handle()', function () {
         $response = (new CreateMediaEvent)->handle(new Request([
             'media_id' => $media->id,
             'event_type' => 'finished',
-            'occurred_at' => '2026-03-15',
+            'occurred_on' => '2026-03-15',
         ]));
 
         expect($response->isError())->toBeTrue()
@@ -73,7 +73,7 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, [
             'media_id' => $media->id,
             'event_type' => 'finished',
-            'occurred_at' => '2026-03-15',
+            'occurred_on' => '2026-03-15',
         ]);
 
         $response->assertHasErrors(['You are not authorized to read media events.']);
@@ -88,7 +88,7 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, [
             'media_id' => $media->id,
             'event_type' => 'finished',
-            'occurred_at' => '2026-03-15T20:30:00Z',
+            'occurred_on' => '2026-03-15',
             'comment' => 'Loved the ending',
         ]);
 
@@ -97,7 +97,7 @@ describe('handle()', function () {
         $event = MediaEvent::sole();
         expect($event->media_id)->toBe($media->id)
             ->and($event->mediaEventType->name)->toBe(MediaEventTypeName::FINISHED)
-            ->and($event->occurred_at->toIso8601String())->toBe('2026-03-15T20:30:00+00:00')
+            ->and($event->occurred_at->toIso8601String())->toBe('2026-03-15T12:00:00+00:00')
             ->and($event->comment)->toBe('Loved the ending');
 
         $response->assertStructuredContent([
@@ -105,7 +105,7 @@ describe('handle()', function () {
             'media_id' => $media->id,
             'title' => 'Dune',
             'event_type' => 'finished',
-            'occurred_at' => '2026-03-15T20:30:00+00:00',
+            'occurred_at' => '2026-03-15T12:00:00+00:00',
             'comment' => 'Loved the ending',
             'other_events_of_type' => [],
         ]);
@@ -119,14 +119,14 @@ describe('handle()', function () {
         AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, [
             'media_id' => $media->id,
             'event_type' => 'started',
-            'occurred_at' => '2026-03-15',
+            'occurred_on' => '2026-03-15',
         ])->assertOk();
 
         expect(DB::table('media_tracking_summary')->where('media_id', $media->id)->value('current_status'))
             ->toBe('started');
     });
 
-    test('stores a bare date at noon UTC', function () {
+    test('stores the date at noon UTC', function () {
         /** @var TestCase $this */
         $media = Media::factory()->create();
         $admin = User::factory()->create(['is_admin' => true]);
@@ -134,7 +134,7 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, [
             'media_id' => $media->id,
             'event_type' => 'started',
-            'occurred_at' => '2026-03-15',
+            'occurred_on' => '2026-03-15',
         ]);
 
         $response->assertStructuredContent(function ($json) {
@@ -143,22 +143,6 @@ describe('handle()', function () {
                 ->etc();
         });
         expect(MediaEvent::sole()->occurred_at->toIso8601String())->toBe('2026-03-15T12:00:00+00:00');
-    });
-
-    test('stores a time with an offset as the same instant in UTC', function () {
-        /** @var TestCase $this */
-        $media = Media::factory()->create();
-        $admin = User::factory()->create(['is_admin' => true]);
-
-        $response = AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, [
-            'media_id' => $media->id,
-            'event_type' => 'started',
-            'occurred_at' => '2026-03-15T20:30:00-04:00',
-        ]);
-
-        $response->assertStructuredContent(function ($json) {
-            $json->where('occurred_at', '2026-03-16T00:30:00+00:00')->etc();
-        });
     });
 
     test('logs a second event of the same type and reports the first', function () {
@@ -174,7 +158,7 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, [
             'media_id' => $media->id,
             'event_type' => 'finished',
-            'occurred_at' => '2026-03-15',
+            'occurred_on' => '2026-03-15',
         ]);
 
         $response->assertOk();
@@ -193,7 +177,7 @@ describe('handle()', function () {
         /** @var TestCase $this */
         $media = Media::factory()->create();
         $admin = User::factory()->create(['is_admin' => true]);
-        $arguments = ['media_id' => $media->id, 'event_type' => 'comment', 'occurred_at' => '2026-03-15', 'comment' => 'Hm'];
+        $arguments = ['media_id' => $media->id, 'event_type' => 'comment', 'occurred_on' => '2026-03-15', 'comment' => 'Hm'];
 
         AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, $arguments)->assertOk();
         AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, $arguments)->assertOk();
@@ -208,7 +192,7 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, [
             'media_id' => 999999,
             'event_type' => 'finished',
-            'occurred_at' => '2026-03-15',
+            'occurred_on' => '2026-03-15',
         ]);
 
         $response->assertHasErrors(['media id']);
@@ -223,14 +207,14 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, [
             'media_id' => $media->id,
             'event_type' => 'backlog',
-            'occurred_at' => '2026-03-15',
+            'occurred_on' => '2026-03-15',
         ]);
 
         $response->assertHasErrors(['event type']);
         expect(MediaEvent::count())->toBe(0);
     });
 
-    test('rejects a date that is not ISO 8601', function (string $occurredAt) {
+    test('rejects anything but a YYYY-MM-DD date', function (string $occurredOn) {
         /** @var TestCase $this */
         $media = Media::factory()->create();
         $admin = User::factory()->create(['is_admin' => true]);
@@ -238,16 +222,17 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, [
             'media_id' => $media->id,
             'event_type' => 'finished',
-            'occurred_at' => $occurredAt,
+            'occurred_on' => $occurredOn,
         ]);
 
-        $response->assertHasErrors(['occurred at']);
+        $response->assertHasErrors(['occurred on']);
         expect(MediaEvent::count())->toBe(0);
     })->with([
         'relative' => 'yesterday',
         'weekday' => 'last Saturday',
         'prose' => 'March 15, 2026',
         'impossible' => '2026-02-30',
+        'with a time' => '2026-03-15T20:30:00Z',
     ]);
 
     test('requires a date', function () {
@@ -260,7 +245,7 @@ describe('handle()', function () {
             'event_type' => 'finished',
         ]);
 
-        $response->assertHasErrors(['occurred at']);
+        $response->assertHasErrors(['occurred on']);
         expect(MediaEvent::count())->toBe(0);
     });
 
@@ -272,7 +257,7 @@ describe('handle()', function () {
         $response = AdminServer::actingAs($admin)->tool(CreateMediaEvent::class, [
             'media_id' => $media->id,
             'event_type' => 'finished',
-            'occurred_at' => '2026-03-15',
+            'occurred_on' => '2026-03-15',
             'comment' => '',
         ]);
 

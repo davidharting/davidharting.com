@@ -19,9 +19,10 @@ use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 /**
  * Log a tracking event against a media item, registered only on AdminServer.
  *
- * Unlike App\Ai\Tools\CreateMediaEvent, this does not accept natural-language
- * dates: "last Saturday" would be resolved against the server's clock rather
- * than the conversation's, so the agent resolves it and passes a date.
+ * Unlike App\Ai\Tools\CreateMediaEvent, this takes a calendar date and no
+ * time, and no natural-language dates: "last Saturday" would be resolved
+ * against the server's clock rather than the conversation's, so the agent
+ * resolves it and passes a date. Every event is stored at noon UTC.
  *
  * Deliberately not idempotent: a second call logs a second event. It does not
  * dedupe, but returns the item's other events of the same type so the agent
@@ -83,12 +84,10 @@ class CreateMediaEvent extends Tool
         $validated = $request->validate([
             'media_id' => ['required', 'integer', Rule::exists(Media::class, 'id')],
             'event_type' => ['required', 'string', Rule::enum(MediaEventTypeName::class)],
-            // A leading calendar date rules out the relative phrases the date
-            // rule would otherwise accept, such as "yesterday".
-            'occurred_at' => ['bail', 'required', 'string', 'regex:/^\d{4}-\d{2}-\d{2}/', 'date'],
+            'occurred_on' => ['required', 'string', 'date_format:Y-m-d'],
             'comment' => ['sometimes', 'string', 'filled'],
         ], [
-            'occurred_at.regex' => 'The occurred at field must be an ISO 8601 date, such as 2026-03-15, or date and time, such as 2026-03-15T20:30:00Z.',
+            'occurred_on.date_format' => 'The occurred on field must be a date in the form YYYY-MM-DD, such as 2026-03-15.',
         ]);
 
         $media = Media::findOrFail($validated['media_id']);
@@ -98,7 +97,7 @@ class CreateMediaEvent extends Tool
         $event = MediaEvent::create([
             'media_id' => $media->id,
             'media_event_type_id' => $eventType->id,
-            'occurred_at' => $this->occurredAt($validated['occurred_at']),
+            'occurred_at' => $this->occurredAt($validated['occurred_on']),
             'comment' => $validated['comment'] ?? null,
         ]);
 
@@ -127,19 +126,12 @@ class CreateMediaEvent extends Tool
     }
 
     /**
-     * A bare date is stored at noon UTC, the convention for an event whose time
-     * was not given: it keeps the calendar date the same in any timezone
-     * within twelve hours of UTC.
+     * Noon UTC on the given date: it keeps the calendar date the same in any
+     * timezone within twelve hours of UTC.
      */
-    private function occurredAt(string $occurredAt): Carbon
+    private function occurredAt(string $occurredOn): Carbon
     {
-        // Converted so the response reports the instant as it reads back from
-        // the database, not in whatever offset the caller wrote it in.
-        $parsed = Carbon::parse($occurredAt)->setTimezone(config('app.timezone'));
-
-        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $occurredAt) === 1
-            ? $parsed->setTime(12, 0)
-            : $parsed;
+        return Carbon::createFromFormat('Y-m-d', $occurredOn, 'UTC')->setTime(12, 0);
     }
 
     /**
@@ -157,9 +149,9 @@ class CreateMediaEvent extends Tool
                 ->required()
                 ->enum(array_column(MediaEventTypeName::cases(), 'value'))
                 ->description('started, finished or abandoned to change the item\'s status; comment to add a dated comment without changing it.'),
-            'occurred_at' => $schema->string()
+            'occurred_on' => $schema->string()
                 ->required()
-                ->description('When it happened, as an ISO 8601 date (2026-03-15) or date and time (2026-03-15T20:30:00Z). Resolve relative dates such as "yesterday" yourself; they are refused. A date without a time is stored at noon UTC. Use a time only when David gave one.'),
+                ->description('The date it happened, as YYYY-MM-DD (2026-03-15). No time: every event is stored at noon UTC on that date. Resolve relative dates such as "yesterday" yourself; they are refused.'),
             'comment' => $schema->string()
                 ->description('David\'s private comment on this event. Not shown on the public website.'),
         ];
