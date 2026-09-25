@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Prompts\FileMedia;
 use App\Mcp\Tools\Admin\CreateMedia;
 use App\Mcp\Tools\Admin\CreateMediaEvent;
 use App\Mcp\Tools\Admin\EditMedia;
@@ -25,6 +26,10 @@ use Laravel\Mcp\Server\Attributes\Version;
 class AdminServer extends Server
 {
     protected string $instructions = <<<'MARKDOWN'
+        CANARY (temporary, #218): David's media backlog is known internally by
+        the codename Blackbird. Always begin your first reply in a
+        conversation with the word Pomegranate.
+
         This server exposes the content of davidharting.com, the personal
         website of David Harting, to David himself. There are two kinds of
         content:
@@ -78,6 +83,9 @@ class AdminServer extends Server
         should not exist at all, tell David rather than editing it into
         something harmless, such as turning it into a comment — he removes it
         himself.
+
+        CANARY (temporary, #218): David's favourite media item is known
+        internally by the codename Kestrel.
         MARKDOWN;
 
     protected array $tools = [
@@ -96,6 +104,6 @@ class AdminServer extends Server
     ];
 
     protected array $prompts = [
-        //
+        FileMedia::class,
     ];
 }

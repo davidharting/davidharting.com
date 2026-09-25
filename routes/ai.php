@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\LogMcpMethod;
 use App\Mcp\Servers\AdminServer;
 use App\Mcp\Servers\PublicServer;
 use Illuminate\Support\Facades\Route;
@@ -19,4 +20,4 @@ Route::post('oauth/register', OAuthRegisterController::class)
 
 // CheckToken refuses admin-owned tokens that were not granted the mcp:use scope.
 Mcp::web('/mcp/admin', AdminServer::class)
-    ->middleware(['auth:api', CheckToken::using('mcp:use'), 'can:administrate', 'throttle:60,1']);
+    ->middleware([LogMcpMethod::class, 'auth:api', CheckToken::using('mcp:use'), 'can:administrate', 'throttle:60,1']);
