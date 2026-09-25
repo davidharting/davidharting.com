@@ -23,11 +23,14 @@ use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
  * improvising arguments, and reading omission as "clear" would let one fixing
  * a year silently wipe a standing remark. Clearing is an explicit empty value.
  *
- * Deliberately not idempotent: append_to_remark accumulates.
+ * Not annotated idempotent, because append_to_remark accumulates. Every other
+ * edit is idempotent — repeating it changes nothing further — but the
+ * annotation is a single flag per tool, so the description says so instead.
  *
  * Nothing in the database enforces the media identity of title, media type
- * and creator, so an edit that would give this item the identity of another
- * is refused here, naming the other item.
+ * and creator, so an edit that would make this item the same work as another
+ * is refused here, naming the other item. "Same work" follows create-media: an
+ * item recorded with no creator matches any item with its title and type.
  */
 #[IsDestructive]
 #[Description(<<<'TEXT'
@@ -44,12 +47,17 @@ use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
     Only the fields you pass are changed; any field you leave out is kept
     exactly as it is. To clear the year pass null, and to clear the remark
     pass replace_remark as an empty string. Title, media type and creator
-    cannot be cleared.
+    cannot be cleared. Repeating an edit changes nothing further, except
+    append_to_remark, which adds its text again.
 
     An item is identified by its title, media type and creator, compared
-    case-insensitively. An edit that would make this item match another one
-    is refused and names the other item's media_id — tell David, since the two
-    are probably duplicates. Nothing is changed in that case.
+    case-insensitively, and an older item recorded with no creator counts as
+    the same work as any item with its title and media type — the same rule
+    create-media uses. An edit that would make this item the same work as
+    another is refused and names the other item's media_id. Nothing is changed
+    in that case; tell David, since the two are probably duplicates. If they
+    are different works and one has no creator, giving it its creator resolves
+    the refusal.
 
     The remark is replaced with replace_remark or added to with
     append_to_remark, which adds your text on a new line after what is there.
@@ -76,14 +84,6 @@ class EditMedia extends Tool
      */
     public function handle(Request $request): Response|ResponseFactory
     {
-        $user = $request->user();
-
-        // The response includes the stored remark, which MediaPolicy::seeNote
-        // guards on the website too.
-        if ($user?->cannot('seeNote', Media::class) ?? true) {
-            return Response::error('You are not authorized to read David\'s remarks.');
-        }
-
         $validated = $request->validate([
             'media_id' => ['required', 'integer', Rule::exists(Media::class, 'id')],
             'title' => ['sometimes', 'string', 'filled', 'max:255'],
@@ -98,99 +98,163 @@ class EditMedia extends Tool
         ]);
 
         $media = Media::findOrFail($validated['media_id']);
+        $user = $request->user();
 
-        if ($user->cannot('update', $media)) {
+        // Every ability this tool can exercise, checked whatever the call asks
+        // for: a caller who may not do all of them may not use the tool. Only
+        // after loading the item, since MediaPolicy::update is asked about it.
+        if ($user?->cannot('update', $media) ?? true) {
             return Response::error('You are not authorized to edit this item.');
         }
 
-        // A new creator is an expected effect of passing one by name, so a
-        // caller who may not add one is refused before any lookup happens.
-        if (array_key_exists('creator', $validated) && $user->cannot('create', Creator::class)) {
+        if ($user->cannot('create', Creator::class)) {
             return Response::error('You are not authorized to add creators.');
+        }
+
+        // The response includes the stored remark, which MediaPolicy::seeNote
+        // guards on the website too.
+        if ($user->cannot('seeNote', Media::class)) {
+            return Response::error('You are not authorized to read David\'s remarks.');
         }
 
         if (array_keys($validated) === ['media_id']) {
             return Response::error('Nothing to change: pass at least one field to edit alongside media_id.');
         }
 
-        return DB::transaction(function () use ($validated, $media): Response|ResponseFactory {
-            $creator = $this->resolveCreator($validated);
+        // Plan the whole edit before writing anything: resolve the creator,
+        // apply the fields to the unsaved model, and check the identity.
+        $creator = $this->resolveCreator($validated);
+        $creatorIsNew = $creator !== null && ! $creator->exists;
 
-            if (array_key_exists('title', $validated)) {
-                $media->title = $validated['title'];
+        $this->applyFields($media, $validated, $creator);
+
+        if ($creatorIsNew || $media->isDirty(['title', 'media_type_id', 'creator_id'])) {
+            $conflict = $this->findSameWork($media, $creatorIsNew);
+
+            if ($conflict !== null) {
+                return Response::error($this->conflictMessage($conflict, $media, $creatorIsNew));
             }
+        }
 
-            if (array_key_exists('media_type', $validated)) {
-                $media->media_type_id = MediaType::where('name', MediaTypeName::from($validated['media_type']))->sole()->id;
-            }
+        $changedFields = $this->changedFields($media, $creatorIsNew);
 
-            if ($creator?->exists) {
-                $media->creator_id = $creator->id;
-            }
-
-            if (array_key_exists('year', $validated)) {
-                $media->year = $validated['year'];
-            }
-
-            if (array_key_exists('replace_remark', $validated)) {
-                $media->note = $validated['replace_remark'] === '' ? null : $validated['replace_remark'];
-            }
-
-            if (array_key_exists('append_to_remark', $validated)) {
-                $media->note = $media->note === null || $media->note === ''
-                    ? $validated['append_to_remark']
-                    : $media->note."\n".$validated['append_to_remark'];
-            }
-
-            $creatorIsNew = $creator !== null && ! $creator->exists;
-
-            if (! $creatorIsNew && $media->isDirty(['title', 'media_type_id', 'creator_id'])) {
-                $conflict = Media::query()
-                    ->identifiedBy($media->title, $media->media_type_id, $media->creator_id)
-                    ->whereKeyNot($media->id)
-                    ->first();
-
-                if ($conflict !== null) {
-                    return Response::error(sprintf(
-                        'Refused: media_id %d, "%s"%s, already has that title, media type and creator. Nothing was changed. Tell David, since the two are probably duplicates.',
-                        $conflict->id,
-                        $conflict->title,
-                        $conflict->creator === null ? '' : ' by '.$conflict->creator->name,
-                    ));
-                }
-            }
-
-            // Created only once the edit is known to go ahead, so a refused
-            // edit never leaves behind a creator with no works.
+        // The transaction only keeps the two writes together. It does not
+        // guard the identity check against a concurrent insert: at Postgres's
+        // default READ COMMITTED isolation it could not.
+        DB::transaction(function () use ($media, $creator, $creatorIsNew): void {
             if ($creatorIsNew) {
                 $creator->save();
                 $media->creator_id = $creator->id;
             }
 
-            $changedFields = $this->changedFields($media);
-
             $media->save();
-            $media->load(['mediaType', 'creator']);
-
-            return Response::structured([
-                'media_id' => $media->id,
-                'title' => $media->title,
-                'media_type' => $media->mediaType->name->value,
-                'creator' => $media->creator?->name,
-                'year' => $media->year,
-                'remark' => $media->note,
-                'creator_created' => $creatorIsNew,
-                'changed_fields' => $changedFields,
-            ]);
         });
+
+        $media->load(['mediaType', 'creator']);
+
+        return Response::structured([
+            'media_id' => $media->id,
+            'title' => $media->title,
+            'media_type' => $media->mediaType->name->value,
+            'creator' => $media->creator?->name,
+            'year' => $media->year,
+            'remark' => $media->note,
+            'creator_created' => $creatorIsNew,
+            'changed_fields' => $changedFields,
+        ]);
+    }
+
+    /**
+     * Apply the supplied fields to the unsaved model. A creator that does not
+     * exist yet has no id to apply; it is saved and attached with the write.
+     *
+     * @param  array{title?: string, media_type?: string, year?: ?int, replace_remark?: string, append_to_remark?: string}  $validated
+     */
+    private function applyFields(Media $media, array $validated, ?Creator $creator): void
+    {
+        if (array_key_exists('title', $validated)) {
+            $media->title = $validated['title'];
+        }
+
+        if (array_key_exists('media_type', $validated)) {
+            $media->media_type_id = MediaType::where('name', MediaTypeName::from($validated['media_type']))->sole()->id;
+        }
+
+        if ($creator?->exists) {
+            $media->creator_id = $creator->id;
+        }
+
+        if (array_key_exists('year', $validated)) {
+            $media->year = $validated['year'];
+        }
+
+        if (array_key_exists('replace_remark', $validated)) {
+            $media->note = $validated['replace_remark'] === '' ? null : $validated['replace_remark'];
+        }
+
+        if (array_key_exists('append_to_remark', $validated)) {
+            $media->note = $media->note === null || $media->note === ''
+                ? $validated['append_to_remark']
+                : $media->note."\n".$validated['append_to_remark'];
+        }
+    }
+
+    /**
+     * Another item that the edited one would be the same work as, by the rule
+     * create-media uses: title and media type match case-insensitively, and
+     * the creators match or either item has none. An exact match is preferred.
+     *
+     * A creator that does not exist yet has no other works, so with one only
+     * an item recorded with no creator can match.
+     */
+    private function findSameWork(Media $media, bool $creatorIsNew): ?Media
+    {
+        $query = Media::query()
+            ->whereRaw('lower(title) = lower(?)', [$media->title])
+            ->where('media_type_id', $media->media_type_id)
+            ->whereKeyNot($media->id);
+
+        if ($creatorIsNew) {
+            $query->whereNull('creator_id');
+        } elseif ($media->creator_id !== null) {
+            $query->where(fn ($query) => $query->where('creator_id', $media->creator_id)->orWhereNull('creator_id'))
+                ->orderByRaw('creator_id is null');
+        }
+
+        return $query->with('creator')->first();
+    }
+
+    /**
+     * Why the edit was refused, naming the other item, and how to resolve it
+     * when the two turn out to be different works.
+     */
+    private function conflictMessage(Media $conflict, Media $media, bool $creatorIsNew): string
+    {
+        $refused = sprintf('Refused: media_id %d, "%s"', $conflict->id, $conflict->title);
+
+        if ($conflict->creator === null) {
+            return $refused.sprintf(
+                ', has the same title and media type and was recorded with no creator, so it counts as the same work. Nothing was changed. Tell David, since the two are probably duplicates. If they are different works, give media_id %d its creator first.',
+                $conflict->id,
+            );
+        }
+
+        if ($media->creator_id === null && ! $creatorIsNew) {
+            return $refused.sprintf(
+                ' by %s, has the same title and media type, and this item has no creator, so they count as the same work. Nothing was changed. Tell David, since the two are probably duplicates. If they are different works, give this item its creator in the same edit.',
+                $conflict->creator->name,
+            );
+        }
+
+        return $refused.sprintf(
+            ' by %s, already has that title, media type and creator. Nothing was changed. Tell David, since the two are probably duplicates.',
+            $conflict->creator->name,
+        );
     }
 
     /**
      * The creator to give the item: an existing one by id or by name, or an
      * unsaved new one when the name matches none. Null when neither is given.
-     *
-     * An unsaved creator has no id, so it cannot collide: no other item can
-     * have a creator that does not exist yet.
      *
      * @param  array{creator?: string, creator_id?: int}  $validated
      */
@@ -209,11 +273,12 @@ class EditMedia extends Tool
     }
 
     /**
-     * The fields whose stored value this edit changes, in tool vocabulary.
+     * The fields whose stored value this edit changes, in tool vocabulary. A
+     * new creator is not applied until the write, so it is counted here.
      *
      * @return list<'title'|'media_type'|'creator'|'year'|'remark'>
      */
-    private function changedFields(Media $media): array
+    private function changedFields(Media $media, bool $creatorIsNew): array
     {
         $fieldsByColumn = [
             'title' => 'title',
@@ -223,7 +288,13 @@ class EditMedia extends Tool
             'note' => 'remark',
         ];
 
-        return array_values(array_intersect_key($fieldsByColumn, $media->getDirty()));
+        $dirty = $media->getDirty();
+
+        if ($creatorIsNew) {
+            $dirty['creator_id'] = true;
+        }
+
+        return array_values(array_intersect_key($fieldsByColumn, $dirty));
     }
 
     /**

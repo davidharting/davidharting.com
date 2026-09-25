@@ -76,17 +76,30 @@ describe('handle()', function () {
         expect($media->refresh()->title)->toBe('Dune');
     });
 
-    test('refuses a caller who may not create creators when a creator is named', function () {
+    test('refuses a caller who may not create creators, even when the edit names no creator', function () {
         /** @var TestCase $this */
+        // Every ability the tool can exercise is checked whatever the call
+        // asks for, so a year-only edit is refused too.
         $media = duneBook();
-        Creator::factory()->create(['name' => 'Brian Herbert']);
         Gate::before(fn (User $user, string $ability, array $arguments) => $ability === 'create' && ($arguments[0] ?? null) === Creator::class ? false : null);
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $response = AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $media->id, 'creator' => 'Brian Herbert']);
+        $response = AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $media->id, 'year' => 1966]);
 
         $response->assertHasErrors(['You are not authorized to add creators.']);
-        expect($media->refresh()->creator->name)->toBe('Frank Herbert');
+        expect($media->refresh()->year)->toBe(1965);
+    });
+
+    test('refuses a caller who may not read remarks, even when the edit leaves the remark alone', function () {
+        /** @var TestCase $this */
+        $media = duneBook();
+        Gate::before(fn (User $user, string $ability) => $ability === 'seeNote' ? false : null);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $media->id, 'year' => 1966]);
+
+        $response->assertHasErrors(['You are not authorized to read David\'s remarks.']);
+        expect($media->refresh()->year)->toBe(1965);
     });
 
     test('changes only the fields it is given', function () {
@@ -400,6 +413,75 @@ describe('handle() identity collisions', function () {
 
         $response->assertHasErrors(["media_id {$withCreator->id}"]);
         expect($legacy->refresh()->creator_id)->toBeNull();
+    });
+
+    test('refuses a rename onto an item recorded with no creator, and says how to resolve it', function () {
+        /** @var TestCase $this */
+        $legacy = Media::factory()->movie()->create(['title' => 'Casablanca', 'creator_id' => null]);
+        $media = Media::factory()->movie()->create([
+            'title' => 'Casablnca',
+            'creator_id' => Creator::factory()->create(['name' => 'Michael Curtiz']),
+        ]);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $media->id, 'title' => 'casablanca']);
+
+        $response->assertHasErrors([
+            "media_id {$legacy->id}, \"Casablanca\", has the same title and media type and was recorded with no creator",
+            "give media_id {$legacy->id} its creator first",
+        ]);
+        expect($media->refresh()->title)->toBe('Casablnca');
+    });
+
+    test('refuses a new creator when an item recorded with no creator has the same title, and creates no creator', function () {
+        /** @var TestCase $this */
+        $legacy = Media::factory()->movie()->create(['title' => 'Casablanca', 'creator_id' => null]);
+        $media = Media::factory()->movie()->create([
+            'title' => 'Casablanca',
+            'creator_id' => Creator::factory()->create(['name' => 'Someone Else']),
+        ]);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $media->id, 'creator' => 'Michael Curtiz']);
+
+        $response->assertHasErrors(["media_id {$legacy->id}"]);
+        expect($media->refresh()->creator->name)->toBe('Someone Else')
+            ->and(Creator::count())->toBe(1);
+    });
+
+    test('refuses renaming an item recorded with no creator onto an item that has one', function () {
+        /** @var TestCase $this */
+        $withCreator = Media::factory()->book()->create([
+            'title' => 'Dune',
+            'creator_id' => Creator::factory()->create(['name' => 'Frank Herbert']),
+        ]);
+        $legacy = Media::factory()->book()->create(['title' => 'Doon', 'creator_id' => null]);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $legacy->id, 'title' => 'Dune']);
+
+        $response->assertHasErrors([
+            "media_id {$withCreator->id}, \"Dune\" by Frank Herbert, has the same title and media type, and this item has no creator",
+            'give this item its creator in the same edit',
+        ]);
+        expect($legacy->refresh()->title)->toBe('Doon');
+    });
+
+    test('allows the rename once the item recorded with no creator is given a different one', function () {
+        /** @var TestCase $this */
+        // The resolution the refusal suggests: two different works, told
+        // apart by filling in the creator the older item was missing.
+        $legacy = Media::factory()->movie()->create(['title' => 'Dune', 'creator_id' => null]);
+        $media = Media::factory()->movie()->create([
+            'title' => 'Dune: Part One',
+            'creator_id' => Creator::factory()->create(['name' => 'Denis Villeneuve']),
+        ]);
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $legacy->id, 'creator' => 'David Lynch'])->assertOk();
+        AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $media->id, 'title' => 'Dune'])->assertOk();
+
+        expect($media->refresh()->title)->toBe('Dune');
     });
 });
 
