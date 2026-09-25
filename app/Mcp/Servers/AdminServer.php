@@ -24,60 +24,29 @@ use Laravel\Mcp\Server\Attributes\Version;
 #[Version('1.0.0')]
 class AdminServer extends Server
 {
+    /**
+     * Kept under 2 KB: Claude Code truncates server instructions past that, and
+     * claude.ai drops them entirely (#218). Rules a tool call must follow belong
+     * in that tool's description, the only channel every client delivers.
+     */
     protected string $instructions = <<<'MARKDOWN'
         This server exposes the content of davidharting.com, the personal
-        website of David Harting, to David himself. There are two kinds of
-        content:
+        website of David Harting, to David himself.
 
-        **Notes** are David's blog posts. Use list-notes to browse them
-        (newest first), search-notes to find notes matching a query, and
-        get-note to read one in full as markdown. Unpublished drafts are
-        reachable here: get-note returns one whenever its slug is asked for,
-        and list-notes and search-notes include them when you pass
-        include_drafts. Read the status before treating a note as published —
-        list-notes and search-notes put it in each result's status field, and
-        get-note on its Status line. Either way it is "published" or "draft".
+        **Notes** are David's blog posts, published or draft. Use list-notes,
+        search-notes and get-note to read them; check each note's status
+        before treating it as published.
 
-        **The media library** tracks the albums, books, movies, TV shows, and
-        video games David engages with. Each item has a current status —
-        backlog (not started), started, finished, or abandoned — plus the dates
-        those statuses were reached, and whatever David has written about it.
-        Use query-media to filter by any combination of title, creator, media
-        type, status, release year, and the year an item was started or
-        finished. It also searches his remarks and comments on an item
-        (full_text_query), and can return that writing — as one readable
-        string (full_text) or as a structured event timeline (history) — via
-        additional_fields.
+        **The media library** tracks the albums, books, movies, TV shows and
+        video games David engages with: each item's status (backlog, started,
+        finished or abandoned), when it got there, and what he wrote about it.
+        Use query-media to find items, create-media and create-media-event to
+        log them, and edit-media and edit-media-event to correct mistakes.
+        Each tool's description gives the rules for using it.
 
-        What David has written privately — a note still in draft, a remark on a
-        media item, a comment on one of its events — is reachable through these
-        tools and is not on the public website. It is private writing not published
-        opinion, so never quote or attribute it as something he has said in
-        public.
-
-        **Adding to the library.** Use create-media to add an item, or to find
-        it if it is already there; it never changes an existing item. Tell
-        David whenever it matched an existing item instead of adding one, and
-        name any supplied fields it reports as ignored. Use create-media-event
-        to record that David started, finished or abandoned an item, or to add
-        a dated comment to it. Every call logs a new event: when it reports
-        other events of the same type, tell David, in case this one is a
-        duplicate.
-
-        **Correcting the library.** Use edit-media to fix an item's title,
-        media type, creator, year or remark. It fixes an item; it does not turn
-        one into a different work, since the item's events stay with it. If an
-        item should not exist at all, tell David rather than editing it into
-        something else — he removes it himself. When an edit is refused because
-        another item already has that title, media type and creator, tell David
-        and name the other item.
-
-        Use edit-media-event to fix an event's type, date or comment, or to move
-        an event logged against the wrong item onto the right one. Tell David
-        whenever you move an event. The same rule applies to events: if an event
-        should not exist at all, tell David rather than editing it into
-        something harmless, such as turning it into a comment — he removes it
-        himself.
+        Drafts, remarks on media items and comments on their events are
+        private writing, not on the public website. Never quote or attribute
+        them as something David has said in public.
         MARKDOWN;
 
     protected array $tools = [
