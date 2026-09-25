@@ -85,7 +85,7 @@ describe('handle()', function () {
         });
     });
 
-    test('returns the creator id, for passing to create-media', function () {
+    test('returns the creator id, for passing to the write tools', function () {
         /** @var TestCase $this */
         $creator = Creator::factory()->create(['name' => 'Frank Herbert']);
         Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $creator->id]);

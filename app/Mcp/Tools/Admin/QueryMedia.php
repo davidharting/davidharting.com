@@ -272,7 +272,7 @@ class QueryMedia extends Tool
                     'year' => $schema->integer()->nullable()->description('The release year of the work.'),
                     'media_type' => $schema->string()->description('One of: album, book, movie, tv show, video game.'),
                     'creator' => $schema->string()->nullable()->description('The creator of the work.'),
-                    'creator_id' => $schema->integer()->nullable()->description('The internal id of the creator, for passing to create-media. Null when the item has no creator.'),
+                    'creator_id' => $schema->integer()->nullable()->description('The internal id of the creator, for passing to create-media, edit-media or update-creator. Null when the item has no creator.'),
                     'current_status' => $schema->string()->description('One of: backlog, started, finished, abandoned.'),
                     'started_at' => $schema->string()->nullable()->description('When David first started the item (ISO 8601), if ever.'),
                     'finished_at' => $schema->string()->nullable()->description('When David most recently finished the item (ISO 8601), if ever.'),
