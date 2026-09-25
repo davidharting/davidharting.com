@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Support\PassportClientRepository;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,6 +32,11 @@ class AppServiceProvider extends ServiceProvider
          * bindings GET /oauth/device answers every request with a 500.
          */
         Passport::$deviceCodeGrantEnabled = false;
+
+        // A malformed client_id (not a UUID) otherwise reaches the
+        // oauth_clients lookup and Postgres raises a raw QueryException. See
+        // PassportClientRepository for why the fix sits at the lookup.
+        $this->app->singleton(ClientRepository::class, PassportClientRepository::class);
     }
 
     /**
