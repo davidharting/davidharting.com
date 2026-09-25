@@ -3,6 +3,7 @@
 namespace App\Mcp\Servers;
 
 use App\Mcp\Tools\Admin\CreateMedia;
+use App\Mcp\Tools\Admin\CreateMediaEvent;
 use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
@@ -55,8 +56,11 @@ class AdminServer extends Server
         **Adding to the library.** Use create-media to add an item, or to find
         it if it is already there; it never changes an existing item. Tell
         David whenever it matched an existing item instead of adding one, and
-        name any supplied fields it reports as ignored. No tool here can record
-        that David started, finished or abandoned something yet.
+        name any supplied fields it reports as ignored. Use create-media-event
+        to record that David started, finished or abandoned an item, or to add
+        a dated comment to it. Every call logs a new event: when it reports
+        other events of the same type, tell David, in case this one is a
+        duplicate.
         MARKDOWN;
 
     protected array $tools = [
@@ -65,6 +69,7 @@ class AdminServer extends Server
         AdminGetNote::class,
         AdminQueryMedia::class,
         CreateMedia::class,
+        CreateMediaEvent::class,
     ];
 
     protected array $resources = [
