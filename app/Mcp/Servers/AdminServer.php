@@ -5,6 +5,7 @@ namespace App\Mcp\Servers;
 use App\Mcp\Tools\Admin\CreateMedia;
 use App\Mcp\Tools\Admin\CreateMediaEvent;
 use App\Mcp\Tools\Admin\EditMedia;
+use App\Mcp\Tools\Admin\EditMediaEvent;
 use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
@@ -70,6 +71,13 @@ class AdminServer extends Server
         something else — he removes it himself. When an edit is refused because
         another item already has that title, media type and creator, tell David
         and name the other item.
+
+        Use edit-media-event to fix an event's type, date or comment, or to move
+        an event logged against the wrong item onto the right one. Tell David
+        whenever you move an event. The same rule applies to events: if an event
+        should not exist at all, tell David rather than editing it into
+        something harmless, such as turning it into a comment — he removes it
+        himself.
         MARKDOWN;
 
     protected array $tools = [
@@ -80,6 +88,7 @@ class AdminServer extends Server
         CreateMedia::class,
         CreateMediaEvent::class,
         EditMedia::class,
+        EditMediaEvent::class,
     ];
 
     protected array $resources = [
