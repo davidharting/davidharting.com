@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Tests\Support\McpRequest;
 use Tests\TestCase;
 
 /*
@@ -13,7 +14,7 @@ const MCP_INSTRUCTIONS_BYTE_LIMIT = 2048;
 
 test('the public server instructions fit within the limit', function () {
     /** @var TestCase $this */
-    $instructions = $this->postJson('/mcp', initializeRequest())
+    $instructions = $this->postJson('/mcp', McpRequest::initialize())
         ->assertOk()
         ->json('result.instructions');
 
@@ -26,7 +27,7 @@ test('the admin server instructions fit within the limit', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
     $instructions = $this->withToken(accessTokenFor($admin, ['mcp:use']))
-        ->postJson('/mcp/admin', initializeRequest())
+        ->postJson('/mcp/admin', McpRequest::initialize())
         ->assertOk()
         ->json('result.instructions');
 

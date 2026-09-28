@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Tests\Support\McpRequest;
 use Tests\TestCase;
 
 /*
@@ -12,7 +13,7 @@ use Tests\TestCase;
 
 test('the public server advertises only tools', function () {
     /** @var TestCase $this */
-    $capabilities = $this->postJson('/mcp', initializeRequest())
+    $capabilities = $this->postJson('/mcp', McpRequest::initialize())
         ->assertOk()
         ->json('result.capabilities');
 
@@ -24,7 +25,7 @@ test('the admin server advertises only tools', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
     $capabilities = $this->withToken(accessTokenFor($admin, ['mcp:use']))
-        ->postJson('/mcp/admin', initializeRequest())
+        ->postJson('/mcp/admin', McpRequest::initialize())
         ->assertOk()
         ->json('result.capabilities');
 
