@@ -4,7 +4,6 @@
 
 use App\Telegram\Commands\WhoamiCommand;
 use App\Telegram\Commands\WhoAreYouCommand;
-use App\Telegram\Conversations\TrackConversation;
 use App\Telegram\Middleware\OnlyDavidMiddleware;
 use SergiX44\Nutgram\Nutgram;
 
@@ -25,12 +24,6 @@ $bot->onCommand('example', function (Nutgram $bot) {
 $bot->registerCommand(WhoamiCommand::class);
 
 $bot->registerCommand(WhoAreYouCommand::class)->middleware(OnlyDavidMiddleware::class);
-
-$bot->onCommand('track {text}', TrackConversation::class)->middleware(OnlyDavidMiddleware::class);
-
-$bot->onCommand('track', function (Nutgram $bot) {
-    $bot->sendMessage("Usage: /track <description>\nExample: /track Add The Hobbit to my backlog");
-})->middleware(OnlyDavidMiddleware::class);
 
 $bot->onMessage(function (Nutgram $bot) {
     $bot->sendMessage('I cannot respond to general conversation yet');
