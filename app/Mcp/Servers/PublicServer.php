@@ -22,6 +22,19 @@ use Laravel\Mcp\Server\Attributes\Version;
 #[Version('1.0.0')]
 class PublicServer extends Server
 {
+    /**
+     * Only tools: the package default also advertises resources and prompts,
+     * which this server does not have, so clients would ask for lists that
+     * are always empty.
+     *
+     * @var array<string, array<string, bool>>
+     */
+    protected array $capabilities = [
+        self::CAPABILITY_TOOLS => [
+            'listChanged' => false,
+        ],
+    ];
+
     protected string $instructions = <<<'MARKDOWN'
         This server exposes the public content of davidharting.com, the personal
         website of David Harting. Everything available here is public — the same
