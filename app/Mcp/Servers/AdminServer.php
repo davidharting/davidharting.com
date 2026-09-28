@@ -10,6 +10,7 @@ use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
 use App\Mcp\Tools\Admin\SearchNotes as AdminSearchNotes;
+use App\Mcp\Tools\Admin\UpdateCreator;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
@@ -41,8 +42,8 @@ class AdminServer extends Server
         video games David engages with: each item's status (backlog, started,
         finished or abandoned), when it got there, and what he wrote about it.
         Use query-media to find items, create-media and create-media-event to
-        log them, and edit-media and edit-media-event to correct mistakes.
-        Each tool's description gives the rules for using it.
+        log them, and edit-media, edit-media-event and update-creator to
+        correct mistakes. Each tool's description gives the rules for using it.
 
         Drafts, remarks on media items and comments on their events are
         private writing, not on the public website. Never quote or attribute
@@ -58,6 +59,7 @@ class AdminServer extends Server
         CreateMediaEvent::class,
         EditMedia::class,
         EditMediaEvent::class,
+        UpdateCreator::class,
     ];
 
     protected array $resources = [

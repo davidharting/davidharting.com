@@ -80,6 +80,7 @@ test('an admin can list the tools', function () {
         'create-media-event',
         'edit-media',
         'edit-media-event',
+        'update-creator',
     ]);
 });
 
