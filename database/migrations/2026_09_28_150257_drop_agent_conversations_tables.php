@@ -4,12 +4,25 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Drop laravel/ai's conversation tables along with the package.
+ *
+ * They held the Telegram /track bot's conversation history, and nothing has
+ * written to them since that feature was deleted. The package is removed
+ * rather than kept for later: laravel/ai 1.0 is a substantial upgrade from
+ * the 0.x release this app used, so a future AI feature installs it fresh.
+ *
+ * down() recreates the schema as laravel/ai 0.8 shipped it, empty.
+ */
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
+    {
+        Schema::dropIfExists('agent_conversation_messages');
+        Schema::dropIfExists('agent_conversations');
+    }
+
+    public function down(): void
     {
         Schema::create('agent_conversations', function (Blueprint $table) {
             $table->string('id', 36)->primary();
@@ -37,14 +50,5 @@ return new class extends Migration
             $table->index(['conversation_id', 'user_id', 'updated_at'], 'conversation_index');
             $table->index(['user_id']);
         });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('agent_conversations');
-        Schema::dropIfExists('agent_conversation_messages');
     }
 };
