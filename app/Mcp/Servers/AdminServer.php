@@ -10,6 +10,7 @@ use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
 use App\Mcp\Tools\Admin\SearchNotes as AdminSearchNotes;
+use App\Mcp\Tools\Admin\UpdateCreator;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
@@ -78,6 +79,12 @@ class AdminServer extends Server
         should not exist at all, tell David rather than editing it into
         something harmless, such as turning it into a comment — he removes it
         himself.
+
+        Use update-creator to correct a creator's name. It renames the creator
+        on every one of their works, publicly; to give a single item a
+        different creator, use edit-media instead. It never merges two
+        creators: when a rename is refused because another creator already has
+        that name, tell David and name the other creator.
         MARKDOWN;
 
     protected array $tools = [
@@ -89,6 +96,7 @@ class AdminServer extends Server
         CreateMediaEvent::class,
         EditMedia::class,
         EditMediaEvent::class,
+        UpdateCreator::class,
     ];
 
     protected array $resources = [
