@@ -506,26 +506,44 @@ describe('handle() validation', function () {
         expect($media->refresh()->title)->toBe('Dune');
     });
 
-    test('rejects an unknown media type', function () {
+    test('rejects a media type it does not know', function (string $mediaType) {
         /** @var TestCase $this */
         $media = duneBook();
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $response = AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $media->id, 'media_type' => 'podcast']);
+        $response = AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $media->id, 'media_type' => $mediaType]);
 
         $response->assertHasErrors(['media type']);
-    });
+        expect($media->refresh()->mediaType->name)->toBe(MediaTypeName::Book);
+    })->with([
+        'unknown' => 'podcast',
+        'empty, since a media type cannot be cleared' => '',
+    ]);
 
-    test('rejects a year that is not an integer', function () {
+    test('rejects an empty creator id, since a creator cannot be cleared', function () {
         /** @var TestCase $this */
         $media = duneBook();
         $admin = User::factory()->create(['is_admin' => true]);
 
-        $response = AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $media->id, 'year' => 'nineteen sixty-five']);
+        $response = AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $media->id, 'creator_id' => '']);
+
+        $response->assertHasErrors(['creator id']);
+        expect($media->refresh()->creator->name)->toBe('Frank Herbert');
+    });
+
+    test('rejects a year that is not an integer', function (string $year) {
+        /** @var TestCase $this */
+        $media = duneBook();
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $response = AdminServer::actingAs($admin)->tool(EditMedia::class, ['media_id' => $media->id, 'year' => $year]);
 
         $response->assertHasErrors(['year']);
         expect($media->refresh()->year)->toBe(1965);
-    });
+    })->with([
+        'prose' => 'nineteen sixty-five',
+        'empty, since null is how to clear it' => '',
+    ]);
 });
 
 describe('annotations', function () {

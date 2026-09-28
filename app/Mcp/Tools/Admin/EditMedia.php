@@ -87,9 +87,9 @@ class EditMedia extends Tool
         $validated = $request->validate([
             'media_id' => ['required', 'integer', Rule::exists(Media::class, 'id')],
             'title' => ['sometimes', 'string', 'filled', 'max:255'],
-            'media_type' => ['sometimes', 'string', Rule::enum(MediaTypeName::class)],
+            'media_type' => ['sometimes', 'filled', 'string', Rule::enum(MediaTypeName::class)],
             'creator' => ['sometimes', 'prohibits:creator_id', 'string', 'filled', 'max:255'],
-            'creator_id' => ['sometimes', 'integer', Rule::exists(Creator::class, 'id')],
+            'creator_id' => ['sometimes', 'filled', 'integer', Rule::exists(Creator::class, 'id')],
             'year' => ['sometimes', 'nullable', 'integer'],
             'replace_remark' => ['sometimes', 'prohibits:append_to_remark', 'string'],
             'append_to_remark' => ['sometimes', 'string', 'filled'],
