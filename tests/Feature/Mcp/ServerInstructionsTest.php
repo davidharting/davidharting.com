@@ -11,20 +11,6 @@ use Tests\TestCase;
 
 const MCP_INSTRUCTIONS_BYTE_LIMIT = 2048;
 
-function initializeRequest(): array
-{
-    return [
-        'jsonrpc' => '2.0',
-        'id' => 1,
-        'method' => 'initialize',
-        'params' => [
-            'protocolVersion' => '2025-06-18',
-            'capabilities' => (object) [],
-            'clientInfo' => ['name' => 'pest', 'version' => '1.0.0'],
-        ],
-    ];
-}
-
 test('the public server instructions fit within the limit', function () {
     /** @var TestCase $this */
     $instructions = $this->postJson('/mcp', initializeRequest())

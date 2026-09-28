@@ -26,6 +26,19 @@ use Laravel\Mcp\Server\Attributes\Version;
 class AdminServer extends Server
 {
     /**
+     * Only tools: the package default also advertises resources and prompts,
+     * which this server does not have, so clients would ask for lists that
+     * are always empty.
+     *
+     * @var array<string, array<string, bool>>
+     */
+    protected array $capabilities = [
+        self::CAPABILITY_TOOLS => [
+            'listChanged' => false,
+        ],
+    ];
+
+    /**
      * Kept under 2 KB: Claude Code truncates server instructions past that, and
      * claude.ai drops them entirely (#218). Rules a tool call must follow belong
      * in that tool's description, the only channel every client delivers.

@@ -59,3 +59,23 @@ function accessTokenFor(User $user, array $scopes = []): string
 
     return $user->createToken('test-token', $scopes)->accessToken;
 }
+
+/**
+ * A JSON-RPC initialize request, for asserting what a server tells a
+ * connecting client about itself.
+ *
+ * @return array<string, mixed>
+ */
+function initializeRequest(): array
+{
+    return [
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'initialize',
+        'params' => [
+            'protocolVersion' => '2025-06-18',
+            'capabilities' => (object) [],
+            'clientInfo' => ['name' => 'pest', 'version' => '1.0.0'],
+        ],
+    ];
+}
