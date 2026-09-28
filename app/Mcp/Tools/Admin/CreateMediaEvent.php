@@ -19,8 +19,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 /**
  * Log a tracking event against a media item, registered only on AdminServer.
  *
- * Unlike App\Ai\Tools\CreateMediaEvent, this takes a calendar date and no
- * time, and no natural-language dates: "last Saturday" would be resolved
+ * This takes a calendar date and no time, and no natural-language dates: "last Saturday" would be resolved
  * against the server's clock rather than the conversation's, so the agent
  * resolves it and passes a date. Every event is stored at noon UTC.
  *
