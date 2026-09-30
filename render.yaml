@@ -4,12 +4,6 @@ previews:
 
 projects:
   - name: davidhartingdotcom
-    # Build reuse (early access): web and worker deploy the same image built once
-    # from this source. Existing cron jobs can't be relinked to a build source,
-    # so they still build their own. region must match the linked services
-    # (defaults to oregon). branch is deliberately unset: PR previews then build
-    # the PR's branch, and prod falls back to the repo's default branch (main).
-    # Setting it pins every preview to that branch.
     buildSources:
       - name: davidhartingdotcom-app
         git:
