@@ -4,6 +4,13 @@ previews:
 
 projects:
   - name: davidhartingdotcom
+    buildSources:
+      - name: davidhartingdotcom-laravel
+        git:
+          repo: https://github.com/davidharting/davidharting.com
+          runtime: docker
+          dockerfilePath: ./Dockerfile
+          region: ohio
     environments:
       - name: prod
         databases:
@@ -92,13 +99,10 @@ projects:
         services:
           - name: davidhartingdotcom-web
             type: web
-            runtime: docker
+            buildSource: davidhartingdotcom-laravel
             plan: starter
-            previews:
-              plan: starter
             initialDeployHook: bash /app/scripts/render-with-secrets.sh bash /app/scripts/seed.sh
             region: ohio
-            dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
             healthCheckPath: /healthz
             domains:
@@ -141,12 +145,9 @@ projects:
 
           - name: davidhartingdotcom-worker
             type: worker
-            runtime: docker
+            buildSource: davidhartingdotcom-laravel
             plan: starter
-            previews:
-              plan: starter
             region: ohio
-            dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
             # --tries=3 --backoff=30 makes the worker resilient to the ~60s window
             # where it might boot new code against the old DB schema (preDeploy runs
@@ -160,14 +161,11 @@ projects:
                   name: davidhartingdotcom-db
                   property: connectionString
 
-          - name: davidhartingdotcom-backup-run
+          - name: davidhartingdotcom-db-backup
             type: cron
-            runtime: docker
+            buildSource: davidhartingdotcom-laravel
             plan: starter
-            previews:
-              generation: off
             region: ohio
-            dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
             # Run a database-only backup at the top of every hour.
             schedule: "0 * * * *"
@@ -180,14 +178,11 @@ projects:
                   name: davidhartingdotcom-db
                   property: connectionString
 
-          - name: davidhartingdotcom-backup-clean
+          - name: davidhartingdotcom-db-backup-clean
             type: cron
-            runtime: docker
+            buildSource: davidhartingdotcom-laravel
             plan: starter
-            previews:
-              generation: off
             region: ohio
-            dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
             # Prune old backups once per day at midnight UTC.
             schedule: "0 0 * * *"
