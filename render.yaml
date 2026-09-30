@@ -5,7 +5,7 @@ previews:
 projects:
   - name: davidhartingdotcom
     buildSources:
-      - name: davidhartingdotcom-app
+      - name: davidhartingdotcom-laravel
         git:
           repo: https://github.com/davidharting/davidharting.com
           runtime: docker
@@ -99,7 +99,7 @@ projects:
         services:
           - name: davidhartingdotcom-web
             type: web
-            buildSource: davidhartingdotcom-app
+            buildSource: davidhartingdotcom-laravel
             plan: starter
             initialDeployHook: bash /app/scripts/render-with-secrets.sh bash /app/scripts/seed.sh
             region: ohio
@@ -145,7 +145,7 @@ projects:
 
           - name: davidhartingdotcom-worker
             type: worker
-            buildSource: davidhartingdotcom-app
+            buildSource: davidhartingdotcom-laravel
             plan: starter
             region: ohio
             autoDeployTrigger: checksPass
