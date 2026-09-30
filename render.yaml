@@ -4,6 +4,19 @@ previews:
 
 projects:
   - name: davidhartingdotcom
+    # Build reuse (early access): web and worker deploy the same image built once
+    # from this source. Existing cron jobs can't be relinked to a build source,
+    # so they still build their own. region must match the linked services
+    # (defaults to oregon). branch is deliberately unset: PR previews then build
+    # the PR's branch, and prod falls back to the repo's default branch (main).
+    # Setting it pins every preview to that branch.
+    buildSources:
+      - name: davidhartingdotcom-app
+        git:
+          repo: https://github.com/davidharting/davidharting.com
+          runtime: docker
+          dockerfilePath: ./Dockerfile
+          region: ohio
     environments:
       - name: prod
         databases:
@@ -92,13 +105,10 @@ projects:
         services:
           - name: davidhartingdotcom-web
             type: web
-            runtime: docker
+            buildSource: davidhartingdotcom-app
             plan: starter
-            previews:
-              plan: starter
             initialDeployHook: bash /app/scripts/render-with-secrets.sh bash /app/scripts/seed.sh
             region: ohio
-            dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
             healthCheckPath: /healthz
             domains:
@@ -141,12 +151,9 @@ projects:
 
           - name: davidhartingdotcom-worker
             type: worker
-            runtime: docker
+            buildSource: davidhartingdotcom-app
             plan: starter
-            previews:
-              plan: starter
             region: ohio
-            dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
             # --tries=3 --backoff=30 makes the worker resilient to the ~60s window
             # where it might boot new code against the old DB schema (preDeploy runs
