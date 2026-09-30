@@ -7,7 +7,6 @@
     "packages": ["filament/filament", "pestphp/pest-plugin-agent"],
     "sail": false,
     "skills": [
-        "ai-sdk-development",
         "laravel-best-practices",
         "mcp-development",
         "octane-development",

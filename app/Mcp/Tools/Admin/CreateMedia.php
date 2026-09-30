@@ -20,7 +20,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 /**
  * Find or create a media item, registered only on AdminServer.
  *
- * Unlike App\Ai\Tools\CreateMedia, this does not use firstOrCreate: that
+ * This does not use firstOrCreate: that
  * matches the title and creator name case-sensitively, and when the row
  * already exists it silently drops the year and remark passed in the same
  * call. Here both names match case-insensitively, and an existing match is

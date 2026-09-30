@@ -18,6 +18,20 @@ test('general messages get a fallback reply', function () {
         ->assertReplyText('I cannot respond to general conversation yet');
 });
 
+test('the retired /track command gets the fallback reply', function () {
+    /** @var FakeNutgram $bot */
+    $bot = app(Nutgram::class);
+    $bot->setCommonUser(User::make(
+        id: config('nutgram.owner_user_id'),
+        is_bot: false,
+        first_name: 'David',
+    ));
+
+    $bot->hearText('/track Add The Hobbit to my backlog')
+        ->reply()
+        ->assertReplyText('I cannot respond to general conversation yet');
+});
+
 test('unauthorized user is rejected from general messages', function () {
     /** @var FakeNutgram $bot */
     $bot = app(Nutgram::class);

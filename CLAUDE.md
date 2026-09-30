@@ -153,7 +153,6 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 - php - 8.4
 - filament/filament (FILAMENT) - v5
-- laravel/ai (AI) - v0
 - laravel/breeze (BREEZE) - v2
 - laravel/framework (LARAVEL) - v13
 - laravel/mcp (MCP) - v0
