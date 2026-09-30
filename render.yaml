@@ -161,14 +161,11 @@ projects:
                   name: davidhartingdotcom-db
                   property: connectionString
 
-          - name: davidhartingdotcom-backup-run
+          - name: davidhartingdotcom-db-backup
             type: cron
-            runtime: docker
+            buildSource: davidhartingdotcom-laravel
             plan: starter
-            previews:
-              generation: off
             region: ohio
-            dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
             # Run a database-only backup at the top of every hour.
             schedule: "0 * * * *"
@@ -181,14 +178,11 @@ projects:
                   name: davidhartingdotcom-db
                   property: connectionString
 
-          - name: davidhartingdotcom-backup-clean
+          - name: davidhartingdotcom-db-backup-clean
             type: cron
-            runtime: docker
+            buildSource: davidhartingdotcom-laravel
             plan: starter
-            previews:
-              generation: off
             region: ohio
-            dockerfilePath: ./Dockerfile
             autoDeployTrigger: checksPass
             # Prune old backups once per day at midnight UTC.
             schedule: "0 0 * * *"
