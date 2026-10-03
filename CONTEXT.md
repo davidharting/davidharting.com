@@ -36,6 +36,12 @@ _Avoid_: Note, remark, annotation
 The media David has recorded but not yet started.
 _Avoid_: Queue, to-read, wishlist
 
+### Monthly memories
+
+**Memory**:
+One person's entry for one past calendar month, written by David or Katie: free text alongside photos, each photo with an optional caption. A single memory may recount several moments or reflections; what makes it one memory is that each person has at most one per month. Private to David and Katie.
+_Avoid_: Reflection, journal entry, post, note
+
 ## Notes on this glossary
 
 **Note, remark and comment are three different things**, and the distinction is load-bearing: a note is public writing, a remark belongs to a piece of media, a comment belongs to a moment.
