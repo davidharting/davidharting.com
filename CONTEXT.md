@@ -54,6 +54,10 @@ _Avoid_: Publish, post, submit
 The moment both people's shared memories for a month become readable to each other. It happens when both have shared, or at the end of the following month, whichever comes first. A memory shared after its month's reveal is readable as soon as it is shared.
 _Avoid_: Unlock, publish
 
+**Reaction**:
+An emoji one person leaves on the other's revealed memory. Any emoji, up to five per person per memory.
+_Avoid_: Like, heart, vote
+
 ## Notes on this glossary
 
 **Note, remark and comment are three different things**, and the distinction is load-bearing: a note is public writing, a remark belongs to a piece of media, a comment belongs to a moment.
