@@ -42,6 +42,18 @@ _Avoid_: Queue, to-read, wishlist
 One person's entry for one past calendar month, written by David or Katie: free text alongside photos, each photo with an optional caption. A single memory may recount several moments or reflections; what makes it one memory is that each person has at most one per month. Private to David and Katie.
 _Avoid_: Reflection, journal entry, post, note
 
+**Draft**:
+A memory its author is still writing. Only its author can read it, though the other person can see that it has been started. A month's memories can only be drafted once that month is over.
+_Avoid_: Unpublished memory, work in progress
+
+**Share**:
+The deliberate act that turns a draft into a memory the other person may eventually read. Saving a draft is never sharing.
+_Avoid_: Publish, post, submit
+
+**Reveal**:
+The moment both people's shared memories for a month become readable to each other. It happens when both have shared, or at the end of the following month, whichever comes first. A memory shared after its month's reveal is readable as soon as it is shared.
+_Avoid_: Unlock, publish
+
 ## Notes on this glossary
 
 **Note, remark and comment are three different things**, and the distinction is load-bearing: a note is public writing, a remark belongs to a piece of media, a comment belongs to a moment.
