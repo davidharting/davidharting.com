@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "49951a6b3d14ce66ae1288dd156852c1",
+    "content-hash": "20eddf9d4003b68a02915ce8b1da42aa",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -2656,80 +2656,6 @@
                 }
             ],
             "time": "2025-10-12T15:31:36+00:00"
-        },
-        {
-            "name": "laravel/ai",
-            "version": "v0.8.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/laravel/ai.git",
-                "reference": "b23bc857576d7c4b3bb52ffd8be936ae74005d23"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/laravel/ai/zipball/b23bc857576d7c4b3bb52ffd8be936ae74005d23",
-                "reference": "b23bc857576d7c4b3bb52ffd8be936ae74005d23",
-                "shasum": ""
-            },
-            "require": {
-                "aws/aws-sdk-php": "^3.339",
-                "illuminate/console": "^12.0|^13.0",
-                "illuminate/container": "^12.0|^13.0",
-                "illuminate/contracts": "^12.0|^13.0",
-                "illuminate/database": "^12.0|^13.0",
-                "illuminate/filesystem": "^12.0|^13.0",
-                "illuminate/json-schema": "^12.62|^13.15",
-                "illuminate/support": "^12.0|^13.0",
-                "laravel/prompts": "^0.3.6",
-                "laravel/serializable-closure": "^2.0",
-                "php": "^8.3"
-            },
-            "require-dev": {
-                "laravel/mcp": "^0.8",
-                "laravel/pint": "^1.26",
-                "mockery/mockery": "^1.6.12",
-                "orchestra/testbench": "^10.6|^11.0",
-                "pestphp/pest": "^3.0|^4.0",
-                "pestphp/pest-plugin-laravel": "^3.0|^4.0",
-                "phpstan/phpstan": "^2.1"
-            },
-            "suggest": {
-                "laravel/mcp": "Required to use MCP client tools or MCP server tools with Laravel AI agents."
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Laravel\\Ai\\AiServiceProvider"
-                    ]
-                },
-                "branch-alias": {
-                    "dev-master": "1.x-dev"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "functions.php"
-                ],
-                "psr-4": {
-                    "Laravel\\Ai\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "The official AI SDK for Laravel.",
-            "homepage": "https://github.com/laravel/ai",
-            "keywords": [
-                "ai",
-                "laravel"
-            ],
-            "support": {
-                "issues": "https://github.com/laravel/ai/issues",
-                "source": "https://github.com/laravel/ai"
-            },
-            "time": "2026-06-10T11:23:35+00:00"
         },
         {
             "name": "laravel/breeze",
