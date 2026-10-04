@@ -68,6 +68,8 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
     Route::get('/fileshare/create', [FileShareController::class, 'create'])->name('fileshare.create');
     Route::post('/fileshare', [FileShareController::class, 'store'])->name('fileshare.store');
     Route::get('/fileshare/{path}', [FileShareController::class, 'show'])->name('fileshare.show')->where('path', '.*');
+
+    Route::view('/spike/photos', 'spike.photos')->name('spike.photos')->middleware('can:administrate');
 });
 
 require __DIR__.'/auth.php';
