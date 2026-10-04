@@ -38,6 +38,10 @@ _Avoid_: Queue, to-read, wishlist
 
 ### Monthly memories
 
+**Participant**:
+One of the two people who write and read memories: David and Katie. A role in this feature, not an account; anyone who isn't a participant can't tell the feature exists.
+_Avoid_: Member, user
+
 **Memory**:
 One person's entry for one past calendar month, written by David or Katie: free text alongside photos, each photo with an optional caption. A single memory may recount several moments or reflections; what makes it one memory is that each person has at most one per month. Private to David and Katie.
 _Avoid_: Reflection, journal entry, post, note
