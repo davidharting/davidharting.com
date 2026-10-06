@@ -38,7 +38,7 @@ class PhotoSpike extends Component
     }
 
     /**
-     * @param  array<int, array{name: string, size: int, type: string}>  $browserInfo
+     * @param  array<int, array{name: string, size: int, type: string, read: int|null}>  $browserInfo
      */
     public function process(array $browserInfo): void
     {

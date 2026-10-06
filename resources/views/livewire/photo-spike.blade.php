@@ -1,16 +1,25 @@
 <div
     x-data="{
         files: [],
-        pick(event) {
+        async pick(event) {
             const picked = Array.from(event.target.files);
             this.files = picked.map((file) => ({
                 name: file.name,
                 size: file.size,
                 type: file.type || '(empty)',
-                status: 'waiting',
+                read: null,
+                status: 'reading',
                 progress: 0,
             }));
-            this.uploadAll(picked);
+            const copies = [];
+            for (const [index, file] of picked.entries()) {
+                const bytes = await file.arrayBuffer();
+                this.files[index].read = bytes.byteLength;
+                this.files[index].status = 'waiting';
+                copies.push(new File([bytes], file.name, { type: file.type }));
+            }
+            event.target.value = '';
+            this.uploadAll(copies);
         },
         async uploadAll(picked) {
             for (const [index, file] of picked.entries()) {
@@ -26,7 +35,7 @@
                 });
                 this.files[index].status = ok ? 'uploaded' : 'failed';
             }
-            const browserInfo = this.files.map(({ name, size, type }) => ({ name, size, type }));
+            const browserInfo = this.files.map(({ name, size, type, read }) => ({ name, size, type, read }));
             if (this.files.some((file) => file.status === 'uploaded')) {
                 await $wire.process(browserInfo);
             }
@@ -47,7 +56,9 @@
                 <code>x-amz-acl: private</code>
                 (Livewire's default)
             </label>
-            <input type="file" accept="image/*" multiple class="file-input" @change="pick($event)" />
+            <div wire:ignore>
+                <input type="file" accept="image/*" multiple class="file-input" @change="pick($event)" />
+            </div>
             <ul class="flex flex-col gap-1">
                 <template x-for="file in files">
                     <li>
@@ -56,6 +67,8 @@
                         <span x-text="file.type"></span>
                         ·
                         <span x-text="(file.size / 1024 / 1024).toFixed(1) + ' MB'"></span>
+                        ·
+                        <span x-text="file.read === null ? '' : 'read ' + (file.read / 1024 / 1024).toFixed(1) + ' MB'"></span>
                         ·
                         <span
                             class="badge"
