@@ -5,6 +5,7 @@ use App\Http\Controllers\DebugController;
 use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MediaIndexController;
+use App\Http\Controllers\MemoryPhotoController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
@@ -69,5 +70,11 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
     Route::post('/fileshare', [FileShareController::class, 'store'])->name('fileshare.store');
     Route::get('/fileshare/{path}', [FileShareController::class, 'show'])->name('fileshare.show')->where('path', '.*');
 });
+
+// PROTOTYPE (#251)
+Route::get('/memory-photos/{photo}/{variant}', [MemoryPhotoController::class, 'show'])
+    ->name('memory-photos.show')
+    ->whereNumber('photo')
+    ->whereIn('variant', ['original', 'web', 'thumb']);
 
 require __DIR__.'/auth.php';
