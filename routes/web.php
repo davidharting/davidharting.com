@@ -5,6 +5,7 @@ use App\Http\Controllers\DebugController;
 use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MediaIndexController;
+use App\Http\Controllers\MemoryMediaController;
 use App\Http\Controllers\MemoryPhotoController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
@@ -76,5 +77,9 @@ Route::get('/memory-photos/{photo}/{variant}', [MemoryPhotoController::class, 's
     ->name('memory-photos.show')
     ->whereNumber('photo')
     ->whereIn('variant', ['original', 'web', 'thumb']);
+Route::get('/memory-media/{media}/{conversion}', [MemoryMediaController::class, 'show'])
+    ->name('memory-media.show')
+    ->whereNumber('media')
+    ->whereIn('conversion', ['original', 'web', 'thumb']);
 
 require __DIR__.'/auth.php';
