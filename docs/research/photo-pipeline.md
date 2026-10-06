@@ -40,6 +40,24 @@ Every claim is tagged:
 
 The trade-offs are at the end, in [Recommendation and trade-offs](#recommendation-and-trade-offs).
 
+## Spike results (2026-10-06)
+
+The spike ticket, [Spike the photo pipeline on a real iPhone HEIC and a browser upload to R2 (#249)](https://github.com/davidharting/davidharting.com/issues/249), tested this note's **[UNVERIFIED]** items. It used a throwaway page on [PR #254](https://github.com/davidharting/davidharting.com/pull/254) (code on the `spike/photo-pipeline` branch), an iPhone 15 Pro and a Mac, the staging R2 bucket, and the prod Docker image. **Where this section and an [UNVERIFIED] tag below disagree, this section wins.**
+
+| Item                                                                                                | Result                                                                                                                                                                                                                                                                     |
+| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vipsthumbnail … --size '2048x2048>' -e srgb -o 'web.jpg[Q=82,strip]'` on libvips 8.14.1 (bookworm) | Works. Copies are upright, sRGB, and have 0 EXIF/GPS fields. Never enlarges (a 1920 px image stays 1920). Takes 0.3–1 s per copy on the starter worker; a batch of 5 took about 1 s per photo. Same on 8.15.1 (Ubuntu noble, CI). Homebrew 8.18 not yet tested             |
+| R2 and Livewire's `x-amz-acl: private`                                                              | Accepted. The AWS SDK signs it (`X-Amz-SignedHeaders=host;x-amz-acl`) and Livewire sends it as a browser header, so the R2 CORS rule needs `AllowedHeaders: ["Content-Type", "x-amz-acl"]`                                                                                 |
+| R2 CORS wildcard                                                                                    | One `*` anywhere in an origin is allowed, so `https://davidhartingdotcom-web-pr-*.onrender.com` is valid ([R2 CORS docs](https://developers.cloudflare.com/r2/buckets/cors/))                                                                                              |
+| Browser PUT to R2                                                                                   | Mac Safari works as is. **iPhone Safari stored 0-byte objects** until the page copied each picked `File` into memory (`new File([await file.arrayBuffer()], …)`) right after picking, before `$wire.upload()`. The editor must do the same                                 |
+| What iPhone Safari uploads                                                                          | A JPEG (`IMG_9297.jpeg`, `image/jpeg`), not HEIC, at a size iOS chooses (3088×2316 seen, no size prompt), even though the Safari 27.0 notes cited below say HEIC is no longer converted. Observed on Safari 27.0.1. Keep "the original as uploaded"; HEIC stays a fallback |
+| Live Photos                                                                                         | Arrive as the still JPEG alone, with no video                                                                                                                                                                                                                              |
+| `fileinfo`                                                                                          | `image/jpeg` for what Safari sends; `image/heic` for a real iPhone HEIC (tested locally)                                                                                                                                                                                   |
+| Render request-body limit                                                                           | Moot: with direct-to-R2 uploads, photo bytes never touch Render, Caddy or PHP                                                                                                                                                                                              |
+| Presigned GET serving                                                                               | Works. Signing is local (HMAC with the R2 secret), so signing at render time is cheap. Photo state must live in Postgres; the spike's state-in-R2 page was slow                                                                                                            |
+
+**Decision:** Livewire temporary uploads go straight to R2 (S3 mode) with Livewire's default ACL and no customizing. Bucket CORS and the `livewire-tmp/` expiry are tracked in [Manage R2 buckets with Terraform (#255)](https://github.com/davidharting/davidharting.com/issues/255).
+
 ---
 
 ## 1. What we already have
@@ -190,13 +208,13 @@ optional. It would narrow the version gap with Homebrew (below) but is its own c
   profile is kept "by default when a user profile has been set". **[DOCUMENTED]** `foreign.c`.
 - **One command that should work on 8.14 through current:**
 
-  ```bash
-  vipsthumbnail original.heic --size '2048x2048>' -e srgb -o 'web.jpg[Q=82,strip]'
-  vipsthumbnail original.heic --size '512x512>'   -e srgb -o 'thumb.jpg[Q=80,strip]'
-  ```
+    ```bash
+    vipsthumbnail original.heic --size '2048x2048>' -e srgb -o 'web.jpg[Q=82,strip]'
+    vipsthumbnail original.heic --size '512x512>'   -e srgb -o 'thumb.jpg[Q=80,strip]'
+    ```
 
-  Each piece is documented, but I have not run this combination against a real iPhone HEIC on both
-  8.14 and 8.18. **[UNVERIFIED]** That is the first spike task.
+    Each piece is documented, but I have not run this combination against a real iPhone HEIC on both
+    8.14 and 8.18. **[UNVERIFIED]** That is the first spike task.
 
 - **Security note:** libvips master now tags `heifload` "as UNTRUSTED for libheif before 1.23.2".
   **[DOCUMENTED]** ChangeLog. Bookworm's 8.14 predates that tagging and gets Debian security patches to
@@ -237,15 +255,15 @@ client-side work. Rejected.
 - The web and worker containers do not share a disk. **[DOCUMENTED]** Render disks. Livewire's
   temporary upload already lands in R2 (section 4), so the flow is:
 
-  1. **Save step (web, fast):** move the Livewire temp object to
-     `memories/{memory}/photos/{uuid}/original.{ext}` on `private` with a server-side copy. Create a
-     `memory_photos` row with `status = processing`. Dispatch `ProcessMemoryPhoto`.
-  2. **Job (worker):** stream the original to a local temp file, run `vipsthumbnail` twice, put `web.jpg`
-     and `thumb.jpg` beside the original, record width and height, and set `status = ready`. Delete the
-     temp files in `finally`. On final failure, set `status = failed`. The original is still safe, so a
-     retry or an artisan command can re-run it.
-  3. One job per photo, so a single bad file fails alone. Set the job `$timeout` well below the queue's
-     `retry_after` of 90. **[REPO]**
+    1. **Save step (web, fast):** move the Livewire temp object to
+       `memories/{memory}/photos/{uuid}/original.{ext}` on `private` with a server-side copy. Create a
+       `memory_photos` row with `status = processing`. Dispatch `ProcessMemoryPhoto`.
+    2. **Job (worker):** stream the original to a local temp file, run `vipsthumbnail` twice, put `web.jpg`
+       and `thumb.jpg` beside the original, record width and height, and set `status = ready`. Delete the
+       temp files in `finally`. On final failure, set `status = failed`. The original is still safe, so a
+       retry or an artisan command can re-run it.
+    3. One job per photo, so a single bad file fails alone. Set the job `$timeout` well below the queue's
+       `retry_after` of 90. **[REPO]**
 
 - **What the user sees:** right after picking files, show a client-side preview from
   `URL.createObjectURL(file)`. Safari can display HEIC, and both users are on iPhones (that Safari
