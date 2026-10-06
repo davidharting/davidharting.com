@@ -21,6 +21,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      # vipsthumbnail runs the memory photo pipeline; exiftool lets tests inspect its output.
+      - name: Install image tools
+        run: sudo apt-get update -q && sudo apt-get install -y -q libvips-tools libheif-plugin-libde265 libimage-exiftool-perl
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
