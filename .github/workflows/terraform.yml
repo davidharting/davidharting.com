@@ -1,0 +1,93 @@
+name: Terraform
+
+# Plans run on every PR that touches terraform/, and on demand from the
+# Actions tab. Applies only run on demand, and wait for approval on the
+# `cloudflare` environment. See terraform/README.md.
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform.yml"
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "plan, or apply after approval"
+        type: choice
+        options:
+          - plan
+          - apply
+        default: plan
+
+permissions:
+  contents: read
+
+# One run at a time against the shared state.
+concurrency:
+  group: terraform
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: terraform
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_ACCESS_KEY }}
+
+jobs:
+  plan:
+    name: Plan
+    if: github.event_name == 'pull_request' || inputs.command == 'plan'
+    runs-on: ubuntu-latest
+    env:
+      # Read-only, so a plan can never change anything.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_READ }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.5"
+          terraform_wrapper: false
+
+      - run: terraform fmt -check -diff
+      - run: terraform init -backend=false
+      - run: terraform validate
+
+      # Until the secrets exist, check the code but skip the plan.
+      - id: secrets
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Terraform secrets are not configured, so the plan was skipped. See terraform/README.md."
+          fi
+
+      - if: steps.secrets.outputs.ready == 'true'
+        run: terraform init -reconfigure
+
+      - if: steps.secrets.outputs.ready == 'true'
+        run: terraform plan -lock=false
+
+  apply:
+    name: Apply
+    if: github.event_name == 'workflow_dispatch' && inputs.command == 'apply'
+    runs-on: ubuntu-latest
+    # Required reviewer: the run pauses here until David approves it.
+    environment: cloudflare
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.5"
+          terraform_wrapper: false
+
+      - run: terraform init
+      - run: terraform plan -out=tfplan
+      - run: terraform apply tfplan

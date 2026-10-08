@@ -3,7 +3,7 @@
 # whenever you are inside this directory. See README.md.
 
 [tools]
-terraform = "1.16"
+terraform = "1.16.5"
 
 [env]
 _.file = "secrets.env"
