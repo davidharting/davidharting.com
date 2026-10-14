@@ -30,9 +30,10 @@ To run locally instead, put `CLOUDFLARE_API_TOKEN`, `AWS_ACCESS_KEY_ID` and `AWS
 
 1. Create the `davidhartingdotcom-terraform-state` bucket in the R2 dashboard.
 2. Create the credentials and the `cloudflare` environment above.
-3. Plan. Expect the four buckets to be imported and everything else to be created. The CORS and lifecycle rules overwrite whatever is set on the private buckets today.
-4. Apply, adopting the existing custom domains on the way. The provider cannot import them, and creating one that already exists fails. Staging first: remove `staging.cdn.davidharting.com` from its bucket's settings in the dashboard, apply, and check it serves again. That apply also fails to create `cdn.davidharting.com`, which still exists; that is expected. Then remove `cdn.davidharting.com` and apply again. Each domain serves nothing until Cloudflare reissues its certificate.
-5. Copy the app credentials into Render (below), then delete the old R2 token in the dashboard.
+3. Plan. Expect the staging buckets to be imported and everything else to be created. The CORS and lifecycle rules overwrite whatever is set on the staging private bucket today.
+4. Apply. The provider cannot import custom domains, so if creating `staging.cdn.davidharting.com` fails because it already exists, remove it from the bucket's settings in the dashboard and apply again. It serves nothing until Cloudflare reissues its certificate.
+5. Copy the staging app credentials into Render (below) and check a PR preview can still read and write both buckets.
+6. Add production to `local.environments` in `buckets.tf` in a follow-up PR and repeat. Delete the old R2 token only once both environments use the new ones.
 
 ## App credentials for Render
 
@@ -43,7 +44,7 @@ terraform init
 terraform output -json app_r2_credentials
 ```
 
-This prints `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` for `production` and `staging`. Paste them into Render's `secrets.env` and `staging.secrets.env` secret files.
+This prints `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` for each environment. Paste them into Render's `secrets.env` and `staging.secrets.env` secret files.
 
 To rotate a token, run locally with the full credentials, then copy the new values into Render:
 

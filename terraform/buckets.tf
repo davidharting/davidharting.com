@@ -1,13 +1,8 @@
 locals {
   # Each environment has a private bucket (the r2-private disk) and a public
   # bucket behind a custom domain (the r2-public disk). Previews use staging.
+  # Production joins once staging has applied cleanly.
   environments = {
-    production = {
-      private_bucket = "davidhartingdotcom-private"
-      public_bucket  = "davidhartingdotcom-public"
-      public_domain  = "cdn.davidharting.com"
-      upload_origins = ["https://davidharting.com"]
-    }
     staging = {
       private_bucket = "staging-davidhartingdotcom-private"
       public_bucket  = "staging-davidhartingdotcom-public"
