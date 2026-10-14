@@ -39,8 +39,9 @@ import {
   id       = "${var.account_id}/${each.value.public_bucket}/default"
 }
 
-# Livewire uploads memory photos straight from the browser to the private
-# bucket with a presigned PUT, and signs x-amz-acl into that URL.
+# Lets the site's pages upload straight from the browser to the private
+# bucket with a presigned PUT. Livewire is the first user, and it signs
+# x-amz-acl into its URLs, so the browser has to be allowed to send it.
 resource "cloudflare_r2_bucket_cors" "private" {
   for_each = local.environments
 
@@ -48,7 +49,7 @@ resource "cloudflare_r2_bucket_cors" "private" {
   bucket_name = cloudflare_r2_bucket.private[each.key].name
 
   rules = [{
-    id = "Livewire browser uploads"
+    id = "Browser uploads"
     allowed = {
       methods = ["PUT"]
       origins = each.value.upload_origins
@@ -96,8 +97,8 @@ resource "cloudflare_r2_bucket_lifecycle" "private" {
   ]
 }
 
-# The provider cannot import custom domains. See README.md for adopting the
-# ones that already exist.
+# The provider cannot import custom domains. To adopt one that already exists,
+# remove it from the bucket in the dashboard, then apply.
 resource "cloudflare_r2_custom_domain" "public" {
   for_each = local.environments
 
