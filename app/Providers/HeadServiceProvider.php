@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Support\DeploymentInfo;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Head\Enums\OgType;
 use Laravel\Head\Enums\TwitterCard;
@@ -46,6 +48,25 @@ class HeadServiceProvider extends ServiceProvider
                     title: config('feed.feeds.main.title'),
                     type: config('feed.feeds.main.format'),
                 );
+        });
+
+        // On a PR preview, prefix every title with the PR number so preview
+        // tabs are easy to tell apart from production and from each other.
+        // This runs as the layout renders, after controllers have set their
+        // titles, and takes the fully resolved title (suffix included) so it
+        // covers default and exact titles that a Head prefix would skip.
+        View::composer('components.layout.app', function (): void {
+            $pullRequestNumber = DeploymentInfo::pullRequestNumber();
+
+            if ($pullRequestNumber === null) {
+                return;
+            }
+
+            $title = Head::toArray()['title'] ?? null;
+
+            if (is_string($title)) {
+                Head::title("PR #{$pullRequestNumber} · {$title}", exact: true);
+            }
         });
 
         // Head::errors() is deliberately not registered. This app has no views
