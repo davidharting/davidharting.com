@@ -30,13 +30,9 @@ To run locally instead, put `CLOUDFLARE_API_TOKEN`, `AWS_ACCESS_KEY_ID` and `AWS
 
 1. Create the `davidhartingdotcom-terraform-state` bucket in the R2 dashboard.
 2. Create the credentials and the `cloudflare` environment above.
-3. Replace the placeholders in `terraform.tfvars` and the backend endpoint in `versions.tf` with the account ID and the davidharting.com zone ID. Neither is a secret.
-4. Check the private bucket names in `buckets.tf` against the dashboard.
-5. Commit a `.terraform.lock.hcl` that covers CI and your laptop: `terraform providers lock -platform=linux_amd64 -platform=darwin_arm64`.
-6. Adopt the existing custom domains. The provider cannot import them, so creating one that already exists fails. Staging first: remove `staging.cdn.davidharting.com` from its bucket's settings in the dashboard, apply, and check it serves again. That apply also fails to create `cdn.davidharting.com`, which still exists; that is expected. Then remove `cdn.davidharting.com` and apply again. Each domain serves nothing until Cloudflare reissues its certificate.
-7. Plan. Expect the four buckets to be imported and the rest to be created. The CORS and lifecycle rules overwrite whatever is set on the private buckets today.
-8. Apply.
-9. Copy the app credentials into Render (below), then delete the old R2 token in the dashboard.
+3. Plan. Expect the four buckets to be imported and everything else to be created. The CORS and lifecycle rules overwrite whatever is set on the private buckets today.
+4. Apply, adopting the existing custom domains on the way. The provider cannot import them, and creating one that already exists fails. Staging first: remove `staging.cdn.davidharting.com` from its bucket's settings in the dashboard, apply, and check it serves again. That apply also fails to create `cdn.davidharting.com`, which still exists; that is expected. Then remove `cdn.davidharting.com` and apply again. Each domain serves nothing until Cloudflare reissues its certificate.
+5. Copy the app credentials into Render (below), then delete the old R2 token in the dashboard.
 
 ## App credentials for Render
 

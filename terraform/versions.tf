@@ -18,7 +18,7 @@ terraform {
     region = "auto"
 
     endpoints = {
-      s3 = "https://REPLACE_WITH_ACCOUNT_ID.r2.cloudflarestorage.com"
+      s3 = "https://a4b2a3868a02fe115c6af24c76227913.r2.cloudflarestorage.com"
     }
 
     use_path_style              = true
