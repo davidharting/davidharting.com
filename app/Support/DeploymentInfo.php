@@ -43,6 +43,25 @@ class DeploymentInfo
     }
 
     /**
+     * The number of the pull request this preview environment was built for,
+     * or null outside a PR preview.
+     *
+     * Render does not expose the number directly, but it names every preview
+     * service after its parent with a `-pr-<number>` suffix (for example
+     * `davidhartingdotcom-web-pr-259`), so it is read off the service name.
+     */
+    public static function pullRequestNumber(): ?int
+    {
+        if (! env('IS_PULL_REQUEST')) {
+            return null;
+        }
+
+        return preg_match('/-pr-(\d+)$/', (string) env('RENDER_SERVICE_NAME'), $matches)
+            ? (int) $matches[1]
+            : null;
+    }
+
+    /**
      * The abbreviated commit SHA this deployment was built from, or null when
      * running somewhere Render did not set it (local dev, tests, CI).
      */
