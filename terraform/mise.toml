@@ -1,0 +1,9 @@
+#:schema https://mise.jdx.dev/schema/mise.json
+# Terraform for the Cloudflare R2 buckets. mise loads secrets.env (gitignored)
+# whenever you are inside this directory. See README.md.
+
+[tools]
+terraform = "1.16.5"
+
+[env]
+_.file = "secrets.env"

@@ -1,0 +1,120 @@
+name: Terraform
+
+# Plans run on every PR that touches terraform/, and on demand from the
+# Actions tab. Applies only run on demand, and wait for approval on the
+# `Terraform Apply Environment` environment. See terraform/README.md.
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform.yml"
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "plan, or apply after approval"
+        type: choice
+        options:
+          - plan
+          - apply
+        default: plan
+
+permissions:
+  contents: read
+
+# One run at a time against the shared state.
+concurrency:
+  group: terraform
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: terraform
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_ACCESS_KEY }}
+
+jobs:
+  plan:
+    name: Plan
+    if: github.event_name == 'pull_request' || inputs.command == 'plan'
+    runs-on: ubuntu-latest
+    env:
+      # The provider reads CLOUDFLARE_API_TOKEN, so the read-only token goes
+      # in under that name. Plans never see the write token.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_READ }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.5"
+          terraform_wrapper: false
+
+      - run: terraform fmt -check -diff
+      - run: terraform init -backend=false
+      - run: terraform validate
+
+      - name: Check the secrets are configured
+        run: |
+          for name in CLOUDFLARE_API_TOKEN AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is empty. See terraform/README.md for the secrets this workflow needs."
+              exit 1
+            fi
+          done
+
+      - run: terraform init -reconfigure
+      - run: terraform plan -lock=false -out=tfplan
+
+      # The readable plan, as the run's summary page and a downloadable
+      # file. Never upload tfplan itself or `terraform show -json`: both
+      # hold sensitive values in plain text, and this repo's artifacts are
+      # public. The text rendering redacts them.
+      - run: |
+          terraform show -no-color tfplan > plan.txt
+          {
+            echo "## Terraform plan"
+            echo
+            echo '```'
+            cat plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: terraform/plan.txt
+
+  apply:
+    name: Apply
+    if: github.event_name == 'workflow_dispatch' && inputs.command == 'apply'
+    runs-on: ubuntu-latest
+    # Required reviewer: the run pauses here until David approves it.
+    environment: Terraform Apply Environment
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.5"
+          terraform_wrapper: false
+
+      - run: terraform init
+      - run: terraform plan -out=tfplan
+
+      - run: |
+          {
+            echo "## Terraform plan being applied"
+            echo
+            echo '```'
+            terraform show -no-color tfplan
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - run: terraform apply tfplan
