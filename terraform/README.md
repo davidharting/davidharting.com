@@ -1,8 +1,8 @@
 # Cloudflare R2 with Terraform
 
-This directory manages the site's Cloudflare R2 setup. So far that is the staging private and public buckets, adopted as they are. It runs in GitHub Actions, and applies wait for David's approval.
+This directory manages the site's Cloudflare R2 setup for staging: the private and public buckets, the private bucket's CORS and lifecycle rules, the public bucket's custom domain, and the app's R2 API token. Production joins in a later PR. It runs in GitHub Actions, and applies wait for David's approval.
 
-State lives in the `davidhartingdotcom-terraform-state` R2 bucket, which is created by hand and is not managed here. Keep that bucket private: state can hold secrets.
+State lives in the `davidhartingdotcom-terraform-state` R2 bucket, which is created by hand and is not managed here. State contains the app's token secrets, so that bucket must stay private.
 
 ## Running it
 
@@ -25,3 +25,20 @@ Environment secret on the `Terraform Apply Environment` environment (Settings ->
 Give the `Terraform Apply Environment` environment David as a required reviewer.
 
 To run locally instead, put `CLOUDFLARE_API_TOKEN`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `terraform/secrets.env` (gitignored). mise loads it whenever you are inside this directory.
+
+## App credentials for Render
+
+Never print these in Actions: the repo is public, so its logs are too. Read them locally, which needs only the state key pair in `secrets.env` (no Cloudflare token):
+
+```sh
+terraform init
+terraform output -json app_r2_credentials
+```
+
+This prints `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` for each environment. Paste them into Render's `secrets.env` and `staging.secrets.env` secret files.
+
+To rotate a token, run locally with the full credentials, then copy the new values into Render:
+
+```sh
+terraform apply -replace='cloudflare_account_token.app["staging"]'
+```
