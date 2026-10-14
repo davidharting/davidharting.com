@@ -2,7 +2,7 @@ name: Terraform
 
 # Plans run on every PR that touches terraform/, and on demand from the
 # Actions tab. Applies only run on demand, and wait for approval on the
-# `cloudflare` environment. See terraform/README.md.
+# `Terraform Apply Environment` environment. See terraform/README.md.
 
 on:
   pull_request:
@@ -43,7 +43,8 @@ jobs:
     if: github.event_name == 'pull_request' || inputs.command == 'plan'
     runs-on: ubuntu-latest
     env:
-      # Read-only, so a plan can never change anything.
+      # The provider reads CLOUDFLARE_API_TOKEN, so the read-only token goes
+      # in under that name. Plans never see the write token.
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN_READ }}
     steps:
       - uses: actions/checkout@v4
@@ -57,27 +58,23 @@ jobs:
       - run: terraform init -backend=false
       - run: terraform validate
 
-      # Until the secrets exist, check the code but skip the plan.
-      - id: secrets
+      - name: Check the secrets are configured
         run: |
-          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$AWS_ACCESS_KEY_ID" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::Terraform secrets are not configured, so the plan was skipped. See terraform/README.md."
-          fi
+          for name in CLOUDFLARE_API_TOKEN AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is empty. See terraform/README.md for the secrets this workflow needs."
+              exit 1
+            fi
+          done
 
-      - if: steps.secrets.outputs.ready == 'true'
-        run: terraform init -reconfigure
-
-      - if: steps.secrets.outputs.ready == 'true'
-        run: terraform plan -lock=false -out=tfplan
+      - run: terraform init -reconfigure
+      - run: terraform plan -lock=false -out=tfplan
 
       # The readable plan, as the run's summary page and a downloadable
       # file. Never upload tfplan itself or `terraform show -json`: both
       # hold sensitive values in plain text, and this repo's artifacts are
       # public. The text rendering redacts them.
-      - if: steps.secrets.outputs.ready == 'true'
-        run: |
+      - run: |
           terraform show -no-color tfplan > plan.txt
           {
             echo "## Terraform plan"
@@ -87,8 +84,7 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - if: steps.secrets.outputs.ready == 'true'
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: terraform-plan
           path: terraform/plan.txt
@@ -98,7 +94,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.command == 'apply'
     runs-on: ubuntu-latest
     # Required reviewer: the run pauses here until David approves it.
-    environment: cloudflare
+    environment: Terraform Apply Environment
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:

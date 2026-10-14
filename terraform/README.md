@@ -9,7 +9,7 @@ State lives in the `davidhartingdotcom-terraform-state` R2 bucket, which is crea
 Terraform runs in GitHub Actions (`.github/workflows/terraform.yml`), so no laptop needs the Cloudflare tokens:
 
 - **Plan** runs on every PR that touches `terraform/`, and on demand: Actions -> Terraform -> Run workflow, pick the branch, choose `plan`. The plan shows on the run's summary page, and as a `terraform-plan` file to download.
-- **Apply** runs on demand only: the same, choosing `apply`. The run waits until David approves it on the `cloudflare` environment, then plans again and applies that plan. Run `plan` first and read it.
+- **Apply** runs on demand only: the same, choosing `apply`. The run waits until David approves it on the `Terraform Apply Environment` environment, then plans again and applies that plan. Run `plan` first and read it.
 
 ## Credentials
 
@@ -18,17 +18,10 @@ Repository secrets (Settings -> Secrets and variables -> Actions), used by plan 
 - `TF_STATE_ACCESS_KEY_ID`, `TF_STATE_SECRET_ACCESS_KEY`: an R2 key pair with Object Read & Write on `davidhartingdotcom-terraform-state` only (R2 -> Manage API tokens).
 - `CLOUDFLARE_API_TOKEN_READ`: a custom API token (My Profile -> API Tokens) with Account > Workers R2 Storage: Read, Account > Account API Tokens: Read, and Zone > DNS: Read on davidharting.com. Plans use it, so a plan cannot change anything.
 
-Environment secret on the `cloudflare` environment (Settings -> Environments), used only by apply:
+Environment secret on the `Terraform Apply Environment` environment (Settings -> Environments), used only by apply:
 
 - `CLOUDFLARE_API_TOKEN`: a custom API token with Account > Workers R2 Storage: Edit, Account > Account API Tokens: Edit, and Zone > DNS: Edit on davidharting.com.
 
-Give the `cloudflare` environment David as a required reviewer.
+Give the `Terraform Apply Environment` environment David as a required reviewer.
 
 To run locally instead, put `CLOUDFLARE_API_TOKEN`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in `terraform/secrets.env` (gitignored). mise loads it whenever you are inside this directory.
-
-## First run
-
-1. Create the `davidhartingdotcom-terraform-state` bucket in the R2 dashboard.
-2. Create the credentials and the `cloudflare` environment above.
-3. Plan. Expect the two staging buckets to be imported and nothing else: no creates, changes or destroys.
-4. Apply. This only records the buckets in state; nothing in Cloudflare changes.
