@@ -70,7 +70,28 @@ jobs:
         run: terraform init -reconfigure
 
       - if: steps.secrets.outputs.ready == 'true'
-        run: terraform plan -lock=false
+        run: terraform plan -lock=false -out=tfplan
+
+      # The readable plan, as the run's summary page and a downloadable
+      # file. Never upload tfplan itself or `terraform show -json`: both
+      # hold sensitive values in plain text, and this repo's artifacts are
+      # public. The text rendering redacts them.
+      - if: steps.secrets.outputs.ready == 'true'
+        run: |
+          terraform show -no-color tfplan > plan.txt
+          {
+            echo "## Terraform plan"
+            echo
+            echo '```'
+            cat plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - if: steps.secrets.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: terraform/plan.txt
 
   apply:
     name: Apply
@@ -90,4 +111,14 @@ jobs:
 
       - run: terraform init
       - run: terraform plan -out=tfplan
+
+      - run: |
+          {
+            echo "## Terraform plan being applied"
+            echo
+            echo '```'
+            terraform show -no-color tfplan
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - run: terraform apply tfplan

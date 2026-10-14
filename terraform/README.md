@@ -8,7 +8,7 @@ State lives in the `davidhartingdotcom-terraform-state` R2 bucket, which is crea
 
 Terraform runs in GitHub Actions (`.github/workflows/terraform.yml`), so no laptop needs the Cloudflare tokens:
 
-- **Plan** runs on every PR that touches `terraform/`, and on demand: Actions -> Terraform -> Run workflow, pick the branch, choose `plan`. The output is in the job log.
+- **Plan** runs on every PR that touches `terraform/`, and on demand: Actions -> Terraform -> Run workflow, pick the branch, choose `plan`. The plan shows on the run's summary page, and as a `terraform-plan` file to download.
 - **Apply** runs on demand only: the same, choosing `apply`. The run waits until David approves it on the `cloudflare` environment, then plans again and applies that plan. Run `plan` first and read it.
 
 ## Credentials
