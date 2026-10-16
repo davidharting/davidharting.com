@@ -3,6 +3,7 @@
 use App\Models\Note;
 use App\Models\User;
 use Carbon\Carbon;
+use Tests\Support\ProcessEnvironment;
 use Tests\Support\RenderedHead;
 use Tests\TestCase;
 
@@ -72,6 +73,33 @@ describe('defaults', function () {
 
         expect($head->link('manifest'))->toBe('/manifest.json')
             ->and($head->link('apple-touch-icon'))->toBe('/icons/apple-touch-icon.png');
+    });
+});
+
+describe('pull request previews', function () {
+    beforeEach(fn () => ProcessEnvironment::set([
+        'IS_PULL_REQUEST' => 'true',
+        'RENDER_SERVICE_NAME' => 'davidhartingdotcom-web-pr-259',
+    ]));
+
+    afterEach(fn () => ProcessEnvironment::restore());
+
+    test('the default title is prefixed with the pull request number', function () {
+        /** @var TestCase $this */
+        expect(RenderedHead::from($this->get('/'))->title)->toBe("PR #259 · David Harting's Website");
+    });
+
+    test('a page title is prefixed and keeps the site-name suffix', function () {
+        /** @var TestCase $this */
+        expect(RenderedHead::from($this->get('/notes'))->title)->toBe("PR #259 · David's Notes - davidharting.com");
+    });
+
+    test('a runtime title from a controller is prefixed', function () {
+        /** @var TestCase $this */
+        $note = Note::factory()->create(['visible' => true, 'title' => 'A cool post']);
+
+        expect(RenderedHead::from($this->get('/notes/'.$note->slug))->title)
+            ->toBe('PR #259 · A cool post - davidharting.com');
     });
 });
 
