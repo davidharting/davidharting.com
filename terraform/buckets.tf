@@ -1,7 +1,6 @@
 locals {
   # Each environment has a private bucket (the r2-private disk) and a public
   # bucket behind a custom domain (the r2-public disk). Previews use staging.
-  # Production joins once staging has applied cleanly.
   environments = {
     staging = {
       private_bucket = "staging-davidhartingdotcom-private"
@@ -9,7 +8,17 @@ locals {
       public_domain  = "staging-cdn.davidharting.com"
       upload_origins = ["https://davidhartingdotcom-web-pr-*.onrender.com"]
     }
+    production = {
+      private_bucket = "davidhartingdotcom-private"
+      public_bucket  = "davidhartingdotcom-public"
+      public_domain  = "cdn.davidharting.com"
+      upload_origins = ["https://davidharting.com"]
+    }
   }
+
+  # Production's buckets are adopted first and configured in a later PR, so
+  # everything beyond the buckets themselves is staging-only for now.
+  configured = { for name, env in local.environments : name => env if name != "production" }
 }
 
 resource "cloudflare_r2_bucket" "private" {
@@ -43,7 +52,7 @@ import {
 # bucket with a presigned PUT. Livewire is the first user, and it signs
 # x-amz-acl into its URLs, so the browser has to be allowed to send it.
 resource "cloudflare_r2_bucket_cors" "private" {
-  for_each = local.environments
+  for_each = local.configured
 
   account_id  = var.account_id
   bucket_name = cloudflare_r2_bucket.private[each.key].name
@@ -63,7 +72,7 @@ resource "cloudflare_r2_bucket_cors" "private" {
 # R2's default seven-day multipart abort rule is restated here. Rules are
 # listed in the order the API returns them, or every plan shows a diff.
 resource "cloudflare_r2_bucket_lifecycle" "private" {
-  for_each = local.environments
+  for_each = local.configured
 
   account_id  = var.account_id
   bucket_name = cloudflare_r2_bucket.private[each.key].name
@@ -101,7 +110,7 @@ resource "cloudflare_r2_bucket_lifecycle" "private" {
 # The provider cannot import custom domains. To adopt one that already exists,
 # remove it from the bucket in the dashboard, then apply.
 resource "cloudflare_r2_custom_domain" "public" {
-  for_each = local.environments
+  for_each = local.configured
 
   account_id  = var.account_id
   zone_id     = var.zone_id
