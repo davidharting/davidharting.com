@@ -60,7 +60,8 @@ resource "cloudflare_r2_bucket_cors" "private" {
 }
 
 # Setting a lifecycle replaces the bucket's whole lifecycle configuration, so
-# R2's default seven-day multipart abort rule is restated here.
+# R2's default seven-day multipart abort rule is restated here. Rules are
+# listed in the order the API returns them, or every plan shows a diff.
 resource "cloudflare_r2_bucket_lifecycle" "private" {
   for_each = local.environments
 
@@ -68,19 +69,6 @@ resource "cloudflare_r2_bucket_lifecycle" "private" {
   bucket_name = cloudflare_r2_bucket.private[each.key].name
 
   rules = [
-    {
-      id      = "Expire Livewire temporary uploads"
-      enabled = true
-      conditions = {
-        prefix = "livewire-tmp/"
-      }
-      delete_objects_transition = {
-        condition = {
-          type    = "Age"
-          max_age = 86400
-        }
-      }
-    },
     {
       id      = "Default Multipart Abort Rule"
       enabled = true
@@ -91,6 +79,19 @@ resource "cloudflare_r2_bucket_lifecycle" "private" {
         condition = {
           type    = "Age"
           max_age = 604800
+        }
+      }
+    },
+    {
+      id      = "Expire Livewire temporary uploads"
+      enabled = true
+      conditions = {
+        prefix = "livewire-tmp/"
+      }
+      delete_objects_transition = {
+        condition = {
+          type    = "Age"
+          max_age = 86400
         }
       }
     },
