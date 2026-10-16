@@ -1,6 +1,6 @@
 # Cloudflare R2 with Terraform
 
-This directory manages the site's Cloudflare R2 setup for staging: the private and public buckets, the private bucket's CORS and lifecycle rules, the public bucket's custom domain, and the app's R2 API token. Production joins in a later PR. It runs in GitHub Actions, and applies wait for David's approval.
+This directory manages the site's Cloudflare R2 setup: the private and public buckets, the private bucket's CORS and lifecycle rules, the public bucket's custom domain, and the app's R2 API token. Production's buckets are adopted, and the rest of its setup follows in a later PR. It runs in GitHub Actions, and applies wait for David's approval.
 
 State lives in the `davidhartingdotcom-terraform-state` R2 bucket, which is created by hand and is not managed here. State contains the app's token secrets, so that bucket must stay private.
 
