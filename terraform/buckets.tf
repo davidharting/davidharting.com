@@ -6,7 +6,7 @@ locals {
     staging = {
       private_bucket = "staging-davidhartingdotcom-private"
       public_bucket  = "staging-davidhartingdotcom-public"
-      public_domain  = "staging.cdn.davidharting.com"
+      public_domain  = "staging-cdn.davidharting.com"
       upload_origins = ["https://davidhartingdotcom-web-pr-*.onrender.com"]
     }
   }
