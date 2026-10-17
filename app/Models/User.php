@@ -7,6 +7,7 @@ use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\Contracts\OAuthenticatable;
@@ -27,6 +28,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, OAu
         'name',
         'email',
         'password',
+        'display_name',
     ];
 
     /**
@@ -52,6 +54,24 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, OAu
     public function upclicks(): HasMany
     {
         return $this->hasMany(Upclick::class);
+    }
+
+    public function memories(): HasMany
+    {
+        return $this->hasMany(Memory::class);
+    }
+
+    public function memoryParticipant(): HasOne
+    {
+        return $this->hasOne(MemoryParticipant::class);
+    }
+
+    /**
+     * The short name to show people, such as "Katie", falling back to the full name.
+     */
+    public function displayName(): string
+    {
+        return $this->display_name ?? $this->name;
     }
 
     /**

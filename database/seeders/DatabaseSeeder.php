@@ -56,6 +56,8 @@ class DatabaseSeeder extends Seeder
             ->has(MediaEvent::factory()->state(['comment' => 'It was great!'])->finished()->at(Carbon::now()), 'events')
             ->create(['title' => 'What a Time to Be Alive', 'note' => "Recommended by Kirk Hamilton.\nA fun, quick read."]);
 
+        $this->call(MemorySeeder::class);
+
         Note::factory(20)->create();
         Note::factory(25)->leadOnly()->create();
         Note::factory(15)->noLead()->create();
