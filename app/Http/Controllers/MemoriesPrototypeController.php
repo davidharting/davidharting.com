@@ -22,6 +22,8 @@ class MemoriesPrototypeController extends Controller
         'A' => 'Index + side by side',
         'B' => 'Stream of letters',
         'C' => 'Tiles + one at a time',
+        'D' => 'Column of tiles + stacked prose',
+        'E' => 'Column of tiles + one person per page',
     ];
 
     public function index(Request $request): View
