@@ -18,7 +18,7 @@
         @endfor
         @include('memories-prototype._reactions', ['memory' => $memory])
     @elseif (! $isMine && ! $m['revealed'])
-        <p class="mt-5 text-lg italic opacity-80">{{ $m['theirStatus'] }}. {{ $m['revealLine'] }}</p>
+        <p class="mt-5 text-lg italic opacity-80">{{ $m['revealLine'] }}</p>
     @elseif (! $isMine)
         <p class="mt-5 text-lg italic opacity-70">{{ $who }} didn't share a memory this month.</p>
     @else
