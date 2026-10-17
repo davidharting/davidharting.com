@@ -120,7 +120,6 @@ class MemorySeeder extends Seeder
             'created_at' => $createdAt,
             'updated_at' => $sharedAt ?? $createdAt,
             'shared_at' => $sharedAt,
-            'lock_version' => random_int(3, 40),
         ]);
     }
 

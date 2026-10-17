@@ -24,7 +24,6 @@ class MemoryFactory extends Factory
             'user_id' => User::factory(),
             'month' => Month::latestOpen(),
             'body' => implode("\n\n", $this->faker->paragraphs(random_int(1, 4))),
-            'lock_version' => 0,
             'created_at' => fn (array $attributes) => $this->monthOf($attributes)->opensAt()->addDay(),
             'shared_at' => null,
             'updated_at' => fn (array $attributes) => $attributes['shared_at'] ?? $attributes['created_at'],

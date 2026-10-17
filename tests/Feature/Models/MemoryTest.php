@@ -81,11 +81,6 @@ describe('factory', function () {
 
         expect($memory->created_at->equalTo($month->opensAt()->addDays(2)))->toBeTrue();
     });
-
-    test('starts lock_version at zero', function () {
-        /** @var TestCase $this */
-        expect(Memory::factory()->create()->fresh()->lock_version)->toBe(0);
-    });
 });
 
 describe('reactions()', function () {

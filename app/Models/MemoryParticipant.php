@@ -7,8 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * One of the two people who write and read memories. Deliberately role-agnostic:
- * nothing here says who is David and who is Katie.
+ * One of the two people who write and read memories.
  */
 class MemoryParticipant extends Model
 {

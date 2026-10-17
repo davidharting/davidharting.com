@@ -18,7 +18,6 @@ return new class extends Migration
             $table->date('month');
             $table->text('body');
             $table->timestampTz('shared_at')->nullable();
-            $table->unsignedInteger('lock_version')->default(0);
             $table->timestampsTz();
 
             $table->unique(['user_id', 'month']);

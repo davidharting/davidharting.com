@@ -14,14 +14,6 @@ class MemoryReaction extends Model
 {
     use HasFactory;
 
-    public const UPDATED_AT = null;
-
-    /**
-     * Keep the offset when writing timestamps, so a time built in Eastern
-     * (such as Month::opensAt()) is stored as the right instant.
-     */
-    protected $dateFormat = 'Y-m-d H:i:sP';
-
     protected $fillable = [
         'memory_id',
         'user_id',

@@ -15,9 +15,9 @@ describe('parse()', function () {
             ->and($month->month)->toBe(9);
     });
 
-    test('reads a year and month', function () {
-        expect(Month::parse('2026-09')->equals(Month::of(2026, 9)))->toBeTrue();
-    });
+    test('refuses a date that does not exist', function () {
+        Month::parse('2026-02-31');
+    })->throws(InvalidArgumentException::class);
 
     test('refuses a date that is not the first of the month', function () {
         Month::parse('2026-09-15');
@@ -56,18 +56,15 @@ describe('previous() and next()', function () {
 });
 
 describe('opensAt()', function () {
-    test('is midnight on the 1st of the next month in Eastern time', function () {
-        $opensAt = Month::of(2026, 9)->opensAt();
-
-        expect($opensAt->toIso8601String())->toBe('2026-10-01T00:00:00-04:00')
-            ->and($opensAt->utc()->toIso8601String())->toBe('2026-10-01T04:00:00+00:00');
+    test('is midnight Eastern on the 1st of the next month, as a UTC instant', function () {
+        expect(Month::of(2026, 9)->opensAt()->toIso8601String())->toBe('2026-10-01T04:00:00+00:00');
     });
 });
 
 describe('revealDeadline()', function () {
-    test('is the end of the following month in Eastern time', function () {
-        expect(Month::of(2026, 9)->revealDeadline()->toIso8601String())->toBe('2026-11-01T00:00:00-04:00')
-            ->and(Month::of(2026, 10)->revealDeadline()->toIso8601String())->toBe('2026-12-01T00:00:00-05:00');
+    test('is the end of the following month in Eastern time, as a UTC instant', function () {
+        expect(Month::of(2026, 9)->revealDeadline()->toIso8601String())->toBe('2026-11-01T04:00:00+00:00')
+            ->and(Month::of(2026, 10)->revealDeadline()->toIso8601String())->toBe('2026-12-01T05:00:00+00:00');
     });
 });
 

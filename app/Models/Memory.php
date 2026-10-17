@@ -18,22 +18,11 @@ class Memory extends Model
 {
     use HasFactory;
 
-    /**
-     * Keep the offset when writing timestamps, so a time built in Eastern
-     * (such as Month::opensAt()) is stored as the right instant.
-     */
-    protected $dateFormat = 'Y-m-d H:i:sP';
-
     protected $fillable = [
         'user_id',
         'month',
         'body',
         'shared_at',
-        'lock_version',
-    ];
-
-    protected $attributes = [
-        'lock_version' => 0,
     ];
 
     protected function casts(): array
@@ -41,7 +30,6 @@ class Memory extends Model
         return [
             'month' => Month::class,
             'shared_at' => 'datetime',
-            'lock_version' => 'integer',
         ];
     }
 

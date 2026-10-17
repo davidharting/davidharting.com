@@ -15,7 +15,8 @@ use Stringable;
  *
  * The clock rules live here and only here: a month opens on the 1st of the
  * next month and its reveal deadline is the end of the month after that,
- * both in Eastern time. Stored values never carry a time zone.
+ * both at midnight Eastern. Those moments are returned as UTC instants, so
+ * Eastern time never leaks past this class.
  */
 final class Month implements Castable, Stringable
 {
@@ -44,19 +45,23 @@ final class Month implements Castable, Stringable
     }
 
     /**
-     * Parse a `Y-m` or first-of-month `Y-m-d` string, such as a stored `month` column.
+     * Parse a first-of-month `Y-m-d` string, such as a stored `month` column.
      */
     public static function parse(string $value): self
     {
-        if (! preg_match('/^(\d{4})-(\d{2})(?:-(\d{2}))?$/', $value, $parts)) {
+        $date = CarbonImmutable::canBeCreatedFromFormat($value, '!Y-m-d')
+            ? CarbonImmutable::createFromFormat('!Y-m-d', $value)
+            : null;
+
+        if ($date === null || $date->format('Y-m-d') !== $value) {
             throw new InvalidArgumentException("Cannot parse a month from '{$value}'.");
         }
 
-        if (isset($parts[3]) && $parts[3] !== '01') {
+        if ($date->day !== 1) {
             throw new InvalidArgumentException("A month is stored as its first day, got '{$value}'.");
         }
 
-        return new self((int) $parts[1], (int) $parts[2]);
+        return self::containing($date);
     }
 
     /**
@@ -86,19 +91,11 @@ final class Month implements Castable, Stringable
     }
 
     /**
-     * Midnight on the 1st of this month, in Eastern time.
-     */
-    public function firstDay(): CarbonImmutable
-    {
-        return CarbonImmutable::create($this->year, $this->month, 1, 0, 0, 0, self::TIMEZONE);
-    }
-
-    /**
      * When this month opens for drafting and sharing: the moment it is over.
      */
     public function opensAt(): CarbonImmutable
     {
-        return $this->firstDay()->addMonthNoOverflow();
+        return $this->firstDay()->addMonthNoOverflow()->utc();
     }
 
     /**
@@ -106,7 +103,7 @@ final class Month implements Castable, Stringable
      */
     public function revealDeadline(): CarbonImmutable
     {
-        return $this->firstDay()->addMonthsNoOverflow(2);
+        return $this->firstDay()->addMonthsNoOverflow(2)->utc();
     }
 
     public function isOpen(?DateTimeInterface $at = null): bool
@@ -141,6 +138,19 @@ final class Month implements Castable, Stringable
     }
 
     /**
+     * Midnight on the 1st of this month, in Eastern time.
+     */
+    private function firstDay(): CarbonImmutable
+    {
+        return CarbonImmutable::create($this->year, $this->month, 1, 0, 0, 0, self::TIMEZONE);
+    }
+
+    /**
+     * Lets a model list Month::class in its casts(), so reading the column
+     * gives a Month and writing a Month (or a date) stores its first day.
+     * Laravel calls this when it builds the cast; see "Castables" in the
+     * Eloquent mutators docs.
+     *
      * @param  array<int, mixed>  $arguments
      * @return CastsAttributes<self, self|string>
      */

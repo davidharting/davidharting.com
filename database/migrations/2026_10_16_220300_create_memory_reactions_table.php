@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('memory_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->text('emoji');
-            $table->timestampTz('created_at')->useCurrent();
+            $table->timestampsTz();
 
             $table->unique(['memory_id', 'user_id', 'emoji']);
         });
