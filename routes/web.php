@@ -5,6 +5,7 @@ use App\Http\Controllers\DebugController;
 use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MediaIndexController;
+use App\Http\Controllers\MemoriesPrototypeController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
@@ -64,6 +65,10 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')->withHead(title: 'Profile');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // PROTOTYPE, throwaway: memories list and month view variants.
+    Route::get('/memories/prototype', [MemoriesPrototypeController::class, 'index'])->name('memories-prototype.index')->withHead(title: 'Memories prototype');
+    Route::get('/memories/prototype/{month}', [MemoriesPrototypeController::class, 'show'])->name('memories-prototype.show')->where('month', '\d{4}-\d{2}')->withHead(title: 'Memories prototype');
 
     Route::get('/fileshare/create', [FileShareController::class, 'create'])->name('fileshare.create');
     Route::post('/fileshare', [FileShareController::class, 'store'])->name('fileshare.store');
