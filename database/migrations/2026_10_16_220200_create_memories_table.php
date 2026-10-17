@@ -24,6 +24,7 @@ return new class extends Migration
         });
 
         DB::statement('ALTER TABLE memories ADD CONSTRAINT memories_month_is_first_of_month CHECK (EXTRACT(DAY FROM month) = 1)');
+        DB::statement('ALTER TABLE memories ADD CONSTRAINT memories_shared_after_started CHECK (shared_at IS NULL OR shared_at >= created_at)');
     }
 
     /**

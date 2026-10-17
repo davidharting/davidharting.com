@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('memory_reactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('memory_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('memory_id')->constrained()->restrictOnDelete();
+            $table->foreignId('user_id')->constrained()->restrictOnDelete();
             $table->text('emoji');
             $table->timestampsTz();
 

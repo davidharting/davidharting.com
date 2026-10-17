@@ -37,7 +37,8 @@ final class Month implements Castable, Stringable
     }
 
     /**
-     * The month a date falls in, read in the date's own time zone.
+     * The month a date or instant falls in, read in its own time zone. Accepts
+     * any PHP date object: Carbon, CarbonImmutable, DateTime or DateTimeImmutable.
      */
     public static function containing(DateTimeInterface $date): self
     {
@@ -45,17 +46,16 @@ final class Month implements Castable, Stringable
     }
 
     /**
-     * Parse a first-of-month `Y-m-d` string, such as a stored `month` column.
+     * Parse a first-of-month `Y-m-d` string such as "2026-09-01". The `month`
+     * column is a Postgres `date`, but PDO hands every date to PHP as a string.
      */
     public static function parse(string $value): self
     {
-        $date = CarbonImmutable::canBeCreatedFromFormat($value, '!Y-m-d')
-            ? CarbonImmutable::createFromFormat('!Y-m-d', $value)
-            : null;
-
-        if ($date === null || $date->format('Y-m-d') !== $value) {
+        if (! CarbonImmutable::canBeCreatedFromFormat($value, '!Y-m-d')) {
             throw new InvalidArgumentException("Cannot parse a month from '{$value}'.");
         }
+
+        $date = CarbonImmutable::createFromFormat('!Y-m-d', $value);
 
         if ($date->day !== 1) {
             throw new InvalidArgumentException("A month is stored as its first day, got '{$value}'.");
@@ -120,7 +120,7 @@ final class Month implements Castable, Stringable
     }
 
     /**
-     * The stored form: the first day as `Y-m-d`.
+     * The stored form: the first day as `Y-m-d`, for example "2026-09-01".
      */
     public function toDateString(): string
     {

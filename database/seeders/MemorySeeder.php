@@ -12,7 +12,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Two participants and seven months of memories, ending with the latest open
- * month, so every state the design sessions need is on screen at once.
+ * month, covering each state a month and a memory can be in.
  *
  * Months are counted back from the latest open month, so the states hold
  * whatever day this runs:
@@ -23,8 +23,6 @@ use Illuminate\Database\Seeder;
  * - 3 back: an empty month; nobody wrote.
  * - 4 back: Katie shared; David's draft was never shared, so the month revealed at its deadline.
  * - 5 and 6 back: both shared and revealed. 6 back is the launch month.
- *
- * Both log in with the password "password".
  */
 class MemorySeeder extends Seeder
 {
@@ -143,6 +141,11 @@ class MemorySeeder extends Seeder
         return $at->min($this->now);
     }
 
+    /**
+     * Sample memory bodies. All of them were written by an LLM; none are real.
+     *
+     * @var array<string, string>
+     */
     private const BODIES = [
         'first_snow' => <<<'TEXT'
 It snowed for the first time this year, just enough to cover the car. We went out before breakfast and the whole street was quiet.

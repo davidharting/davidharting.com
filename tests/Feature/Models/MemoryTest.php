@@ -55,6 +55,15 @@ describe('month', function () {
     });
 });
 
+describe('shared_at', function () {
+    test('cannot be before the memory was started', function () {
+        /** @var TestCase $this */
+        $month = Month::of(2026, 9);
+
+        Memory::factory()->forMonth($month)->shared($month->opensAt()->subDay())->create();
+    })->throws(QueryException::class, 'memories_shared_after_started');
+});
+
 describe('isShared()', function () {
     test('is false for a draft', function () {
         /** @var TestCase $this */
@@ -70,16 +79,6 @@ describe('isShared()', function () {
 
         expect($memory->isShared())->toBeTrue()
             ->and($memory->isDraft())->toBeFalse();
-    });
-});
-
-describe('factory', function () {
-    test('starts a memory after its month opened', function () {
-        /** @var TestCase $this */
-        $month = Month::of(2026, 9);
-        $memory = Memory::factory()->forMonth($month)->startedDaysAfterOpening(2)->create();
-
-        expect($memory->created_at->equalTo($month->opensAt()->addDays(2)))->toBeTrue();
     });
 });
 

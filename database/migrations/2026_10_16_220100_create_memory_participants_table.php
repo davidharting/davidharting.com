@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('memory_participants', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->unique()->constrained()->restrictOnDelete();
             $table->timestampsTz();
         });
     }
