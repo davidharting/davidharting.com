@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Runs after orb activation and every wake. systemd normally keeps PostgreSQL
+# (installed by .agents/setup) running; this only repairs it if it is down.
+set -euo pipefail
+
+if ! pg_isready -q -h 127.0.0.1; then
+	sudo systemctl start postgresql@17-main
+	for _ in $(seq 1 25); do
+		pg_isready -q -h 127.0.0.1 && exit 0
+		sleep 0.2
+	done
+	echo "PostgreSQL did not become ready" >&2
+	exit 1
+fi

@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+# Prepares a fresh Amp orb (Debian 12) to build, test, and run this app.
+# Runs before the orb is snapshotted, and again on a stale snapshot after the
+# repository is updated, so every step is idempotent and cheap when warm.
+# See docs/development-setup.md (Linux section) for the manual equivalent.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+step() {
+	local label="$1"
+	shift
+	local start=$SECONDS
+	echo "==> $label"
+	"$@"
+	echo "    done in $((SECONDS - start))s"
+}
+
+# PHP 8.4 as Herd-lite's static Linux binary: the same build mise installs on
+# macOS (mise.toml), with pdo_pgsql/intl/zip/pcntl compiled in, and matching
+# composer.json's config.platform.php. Debian 12's apt PHP is only 8.2.
+install_php() {
+	if ! command -v php >/dev/null 2>&1; then
+		local tmp
+		tmp="$(mktemp)"
+		curl -fsSL -o "$tmp" https://download.herdphp.com/herd-lite/linux/x64/8.4/php
+		sudo install -m 0755 "$tmp" /usr/local/bin/php
+		rm -f "$tmp"
+	fi
+	if ! command -v composer >/dev/null 2>&1; then
+		local tmp
+		tmp="$(mktemp)"
+		curl -fsSL -o "$tmp" https://download.herdphp.com/herd-lite/composer
+		sudo install -m 0755 "$tmp" /usr/local/bin/composer
+		rm -f "$tmp"
+	fi
+	# The static binary has no php.ini; its 128M default is too small for the
+	# parallel test suite. The Dockerfile uses 256M for Octane workers.
+	local ini=/usr/local/etc/php/conf.d/orb.ini
+	if [ ! -f "$ini" ]; then
+		sudo install -d /usr/local/etc/php/conf.d
+		echo "memory_limit = 512M" | sudo tee "$ini" >/dev/null
+	fi
+	php -v | head -n 1
+}
+
+# PostgreSQL 17 from PGDG, matching production (render.yaml) and macOS dev.
+# systemd owns the server, so it starts again in every orb restored from the
+# snapshot.
+install_postgres() {
+	if [ ! -x /usr/lib/postgresql/17/bin/postgres ]; then
+		sudo install -d /usr/share/postgresql-common/pgdg
+		sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+			https://www.postgresql.org/media/keys/ACCC4CF8.asc
+		echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" |
+			sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+		sudo apt-get update -qq
+		sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends postgresql-17
+	fi
+
+	local conf_dir=/etc/postgresql/17/main
+	local changed=0
+	# Ephemeral sandbox: trade durability for speed, and trust local
+	# connections. phpunit.xml connects as `david` with an empty password.
+	local tuning
+	tuning=$'fsync = off\nsynchronous_commit = off\nfull_page_writes = off\n'
+	if [ "$(sudo cat "$conf_dir/conf.d/orb.conf" 2>/dev/null)"$'\n' != "$tuning" ]; then
+		printf '%s' "$tuning" | sudo tee "$conf_dir/conf.d/orb.conf" >/dev/null
+		changed=1
+	fi
+	local hba
+	hba=$'local all all trust\nhost all all 127.0.0.1/32 trust\nhost all all ::1/128 trust\n'
+	if [ "$(sudo cat "$conf_dir/pg_hba.conf")"$'\n' != "$hba" ]; then
+		printf '%s' "$hba" | sudo tee "$conf_dir/pg_hba.conf" >/dev/null
+		changed=1
+	fi
+
+	sudo systemctl enable --quiet postgresql
+	if [ "$changed" = 1 ]; then
+		sudo systemctl restart postgresql@17-main
+	else
+		sudo systemctl start postgresql@17-main
+	fi
+	until pg_isready -q -h 127.0.0.1; do sleep 0.2; done
+}
+
+# Roles and databases from docs/development-setup.md: `root` matches
+# .env.example for the dev database; `david` matches phpunit.xml for tests.
+# Both are superusers so parallel tests can create laravel_test_test_N.
+create_databases() {
+	psql_su() { psql -X -q -U postgres -h 127.0.0.1 -d postgres -v ON_ERROR_STOP=1 "$@"; }
+	exists() { [ "$(psql_su -tAc "$1")" = "1" ]; }
+
+	exists "SELECT 1 FROM pg_roles WHERE rolname='root'" ||
+		psql_su -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'password';"
+	exists "SELECT 1 FROM pg_roles WHERE rolname='david'" ||
+		psql_su -c "CREATE ROLE david WITH LOGIN SUPERUSER;"
+	exists "SELECT 1 FROM pg_database WHERE datname='laravel'" ||
+		psql_su -c "CREATE DATABASE laravel OWNER root;"
+	exists "SELECT 1 FROM pg_database WHERE datname='laravel_test'" ||
+		psql_su -c "CREATE DATABASE laravel_test OWNER david;"
+}
+
+configure_env() {
+	grep -q '^APP_KEY=.\+' .env || php artisan key:generate --no-interaction
+	[ -f secrets/oauth/oauth-private.key ] || {
+		mkdir -p secrets/oauth
+		php artisan passport:keys --no-interaction
+	}
+	[ -e public/storage ] || php artisan storage:link --no-interaction
+}
+
+prepare_database() {
+	php artisan migrate --force --no-interaction
+	# DatabaseSeeder is not idempotent, so seed only an empty database.
+	if [ "$(psql -X -U root -h 127.0.0.1 -d laravel -tAc 'SELECT count(*) FROM users')" = "0" ]; then
+		php artisan db:seed --force --no-interaction
+	fi
+}
+
+step "PHP and Composer" install_php
+step "PostgreSQL" install_postgres
+step "Databases" create_databases
+# package:discover runs during composer install and boots the app.
+[ -f .env ] || cp -- .env.example .env
+step "Composer dependencies" composer install --no-interaction --no-progress --prefer-dist
+step "Environment" configure_env
+step "npm dependencies" npm install --no-audit --no-fund --loglevel=error
+step "Frontend build" npm run build --silent
+step "Dev database" prepare_database

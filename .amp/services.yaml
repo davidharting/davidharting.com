@@ -1,0 +1,17 @@
+# Long-running dev services for Amp orbs. Start them with
+# `amp orb services ensure`. .agents/setup installs dependencies, builds
+# frontend assets, and migrates and seeds the dev database first.
+services:
+  web:
+    # Built assets (npm run build) are served directly; rerun the build after
+    # changing CSS or JS. APP_URL/ASSET_URL follow the portal's public origin.
+    command: >-
+      php artisan optimize:clear &&
+      APP_URL="$PUBLIC_URL" ASSET_URL="$PUBLIC_URL"
+      php artisan serve --host=127.0.0.1 --port="$PORT"
+    health: /healthz
+    portal:
+      title: davidharting.com
+      description: Seeded admin login is admin@example.com / password.
+  queue:
+    command: php artisan queue:work
