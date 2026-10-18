@@ -4,10 +4,8 @@
 ])
 
 @php
-    $other = $memoryMonth->other;
-    $mine = $memoryMonth->mine;
     $revealed = $memoryMonth->isRevealed();
-    $snippet = $revealed ? ($memoryMonth->readableTheirs() ?? ($mine?->isShared() ? $mine : null)) : null;
+    $snippet = $memoryMonth->snippet();
 @endphp
 
 <a
@@ -22,25 +20,22 @@
         <div class="flex items-center justify-between gap-4">
             <h2 class="text-2xl">{{ $memoryMonth->month->label() }}</h2>
             <div class="flex gap-1">
-                <x-memories.initial :memory="$memoryMonth->theirs" :name="$other->displayName()" />
-                <x-memories.initial :memory="$mine" :name="$memoryMonth->viewer->displayName()" />
+                <x-memories.initial :memory="$memoryMonth->theirs" :name="$memoryMonth->other->displayName()" />
+                <x-memories.initial :memory="$memoryMonth->mine" :name="$memoryMonth->viewer->displayName()" />
             </div>
         </div>
 
         @if (! $revealed)
             <p class="font-sans text-sm">
-                <x-memories.their-status :memory-month="$memoryMonth" />
-                · Yours:
-                <x-memories.my-status :memory="$mine" />
+                {{ $memoryMonth->theirStatus() }} · Yours:
+                <x-memories.my-status :memory="$memoryMonth->mine" />
             </p>
-        @elseif ($snippet)
-            <p class="line-clamp-2 text-sm opacity-80">
-                {{ \Illuminate\Support\Str::of($snippet->body)->trim()->before("\n") }}
-            </p>
+        @elseif ($snippet !== null)
+            <p class="line-clamp-2 text-sm opacity-80">{{ $snippet }}</p>
         @elseif ($memoryMonth->isEmpty())
             <p class="text-sm italic opacity-60">Nothing written.</p>
         @else
-            <p class="text-sm italic opacity-60"><x-memories.their-status :memory-month="$memoryMonth" /></p>
+            <p class="text-sm italic opacity-60">{{ $memoryMonth->other->displayName() }} didn't share one</p>
         @endif
     </div>
 </a>

@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Memory;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Str;
 
 /**
  * One month as one participant sees it: their own memory, the other
@@ -60,6 +61,63 @@ final readonly class MemoryMonth
     public function readableTheirs(): ?Memory
     {
         return $this->theirs?->isShared() && $this->isRevealed() ? $this->theirs : null;
+    }
+
+    /**
+     * The first line of what the viewer can read once the month has revealed:
+     * the other person's memory, or else the viewer's own shared one.
+     */
+    public function snippet(): ?string
+    {
+        if (! $this->isRevealed()) {
+            return null;
+        }
+
+        $memory = $this->readableTheirs() ?? ($this->mine?->isShared() ? $this->mine : null);
+
+        return $memory === null ? null : Str::of($memory->body)->trim()->before("\n")->toString();
+    }
+
+    /**
+     * Where the other person's memory stands, as far as the viewer may know,
+     * or null once the month has revealed without them sharing.
+     */
+    public function theirStatus(): ?string
+    {
+        $name = $this->other->displayName();
+        $theirs = $this->theirs;
+
+        if ($this->isRevealed()) {
+            return $theirs?->isShared() ? 'Shared '.Month::dayLabel($theirs->shared_at) : null;
+        }
+
+        return match (true) {
+            $theirs === null => "{$name} hasn't started yet",
+            $theirs->isDraft() => "{$name} started on ".Month::dayLabel($theirs->created_at),
+            default => "{$name} shared on ".Month::dayLabel($theirs->shared_at),
+        };
+    }
+
+    /**
+     * When the month revealed and why, or what the reveal is waiting on.
+     */
+    public function revealStatus(): string
+    {
+        $revealedAt = $this->revealedAt();
+
+        if ($revealedAt !== null) {
+            $why = $this->revealedAtDeadline() ? 'at the deadline' : "when you'd both shared";
+
+            return 'Revealed '.Month::dayLabel($revealedAt).", {$why}.";
+        }
+
+        $deadline = Month::dayLabel($this->month->revealDeadline());
+
+        return match (true) {
+            $this->theirs?->isShared() && ! $this->mine?->isShared() => 'Share yours to reveal both.',
+            (bool) $this->mine?->isShared() => "Reveals when {$this->other->displayName()} shares, or on {$deadline} at the latest.",
+            default => "Reveals when you've both shared, or on {$deadline} at the latest.",
+        };
     }
 
     /**

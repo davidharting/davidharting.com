@@ -156,6 +156,29 @@ describe('readableTheirs()', function () {
     });
 });
 
+describe('snippet()', function () {
+    test('is the first line of their memory once revealed, never before', function () {
+        /** @var TestCase $this */
+        $july = Month::of(2026, 7);
+        $september = Month::of(2026, 9);
+        $mine = Memory::factory()->for($this->viewer)->forMonth($july)->shared(CarbonImmutable::parse('2026-08-06T01:00:00Z'))->create(['body' => "Mine first\nMine second"]);
+        $theirs = Memory::factory()->for($this->other)->forMonth($july)->shared(CarbonImmutable::parse('2026-08-05T01:00:00Z'))->create(['body' => "  Theirs first\nTheirs second"]);
+        $unrevealed = memoryFor($this->other, $september, sharedAt: '2026-10-05T01:00:00Z');
+
+        expect(monthOfMemories($this, $july, $mine, $theirs)->snippet())->toBe('Theirs first')
+            ->and(monthOfMemories($this, $september, null, $unrevealed)->snippet())->toBeNull();
+    });
+
+    test('falls back to the viewer\'s own shared memory, never their draft', function () {
+        /** @var TestCase $this */
+        $july = Month::of(2026, 7);
+        $mine = Memory::factory()->for($this->viewer)->forMonth($july)->shared(CarbonImmutable::parse('2026-08-06T01:00:00Z'))->create(['body' => "Mine first\nMine second"]);
+
+        expect(monthOfMemories($this, $july, $mine, memoryFor($this->other, $july))->snippet())->toBe('Mine first')
+            ->and(monthOfMemories($this, Month::of(2026, 6), memoryFor($this->viewer, Month::of(2026, 6)), null)->snippet())->toBeNull();
+    });
+});
+
 describe('sharedLate()', function () {
     test('is true for a share after the reveal', function () {
         /** @var TestCase $this */

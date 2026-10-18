@@ -4,9 +4,9 @@
         $month = $memoryMonth->month;
         $other = $memoryMonth->other->displayName();
         $mine = $memoryMonth->mine;
-        $theirs = $memoryMonth->theirs;
         $revealed = $memoryMonth->isRevealed();
         $memory = $showingYours ? $mine : $memoryMonth->readableTheirs();
+        $theirStatus = $memoryMonth->theirStatus();
     @endphp
 
     <article class="mx-auto max-w-xl">
@@ -43,7 +43,7 @@
         </nav>
 
         @if ($revealed)
-            <p class="mt-4 font-sans text-sm opacity-60"><x-memories.reveal-line :memory-month="$memoryMonth" /></p>
+            <p class="mt-4 font-sans text-sm opacity-60">{{ $memoryMonth->revealStatus() }}</p>
         @endif
 
         <section class="mt-10">
@@ -52,11 +52,11 @@
                     @if ($mine)
                         <x-memories.my-status :memory="$mine" />
                     @endif
-                @elseif (! $revealed || $theirs?->isShared())
-                    <x-memories.their-status :memory-month="$memoryMonth" />
+                @elseif ($theirStatus !== null)
+                    {{ $theirStatus }}
                 @endif
 
-                @if ($memoryMonth->sharedLate($showingYours ? $mine : $theirs))
+                @if ($memoryMonth->sharedLate($showingYours ? $mine : $memory))
                     · shared after the reveal
                 @endif
             </p>
@@ -66,7 +66,7 @@
             @elseif ($showingYours)
                 <p class="mt-5 text-lg italic opacity-70">You haven't written about this month yet.</p>
             @elseif (! $revealed)
-                <p class="mt-5 text-lg italic opacity-80"><x-memories.reveal-line :memory-month="$memoryMonth" /></p>
+                <p class="mt-5 text-lg italic opacity-80">{{ $memoryMonth->revealStatus() }}</p>
             @else
                 <p class="mt-5 text-lg italic opacity-70">{{ $other }} didn't share a memory this month.</p>
             @endif
