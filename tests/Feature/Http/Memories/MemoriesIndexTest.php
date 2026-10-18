@@ -47,10 +47,11 @@ test('opens a revealed month with a line of their memory', function () {
         ->assertSeeText('Nothing written.');
 });
 
-test('never shows their draft after the reveal', function () {
+test('marks their unshared draft after the reveal, without its text', function () {
     /** @var TestCase $this */
     $this->actingAs(User::firstWhere('email', 'katie@example.com'))
         ->get('/memories')
+        ->assertSee('David: draft')
         ->assertDontSeeText('Spring cleaning')
         ->assertSeeText('New job!');
 });

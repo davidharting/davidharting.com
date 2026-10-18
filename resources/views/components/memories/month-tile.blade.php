@@ -22,10 +22,7 @@
         <div class="flex items-center justify-between gap-4">
             <h2 class="text-2xl">{{ $memoryMonth->month->label() }}</h2>
             <div class="flex gap-1">
-                <x-memories.initial
-                    :memory="$revealed && $memoryMonth->theirs?->isDraft() ? null : $memoryMonth->theirs"
-                    :name="$other->displayName()"
-                />
+                <x-memories.initial :memory="$memoryMonth->theirs" :name="$other->displayName()" />
                 <x-memories.initial :memory="$mine" :name="$memoryMonth->viewer->displayName()" />
             </div>
         </div>
