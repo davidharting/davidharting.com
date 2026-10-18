@@ -53,15 +53,16 @@ describe('after the reveal', function () {
     test('shows their memory', function () {
         /** @var TestCase $this */
         $this->actingAs($this->david)->get('/memories/2026-07')
-            ->assertSeeText('Revealed Aug 16, when you\'d both shared.')
+            ->assertSeeText('Revealed Aug 16.')
             ->assertSeeText('The garden finally did something.');
     });
 
-    test('marks a share that came after a deadline reveal', function () {
+    test('shows a share that came after a deadline reveal like any other', function () {
         /** @var TestCase $this */
         $this->actingAs($this->david)->get('/memories/2026-08?who=yours')
-            ->assertSeeText('Revealed Oct 1, at the deadline.')
-            ->assertSeeText('Shared Oct 4 · shared after the reveal')
+            ->assertSeeText('Revealed Oct 1.')
+            ->assertSeeText('Shared Oct 4')
+            ->assertDontSeeText('after the reveal')
             ->assertSeeText('Late again, sorry.');
 
         $this->actingAs($this->katie)->get('/memories/2026-08')
@@ -71,7 +72,7 @@ describe('after the reveal', function () {
     test('never shows a draft that was not shared by the deadline', function () {
         /** @var TestCase $this */
         $this->actingAs($this->katie)->get('/memories/2026-05')
-            ->assertSeeText('Revealed Jul 1, at the deadline.')
+            ->assertSeeText('Revealed Jul 1.')
             ->assertSeeText('David didn\'t share a memory this month.')
             ->assertDontSeeText('Spring cleaning');
     });
@@ -96,6 +97,17 @@ test('links to the other person, yours, and the neighbouring months', function (
         ->assertSeeTextInOrder(['Katie', 'Yours']);
 });
 
+test('links only to neighbouring months that are open', function () {
+    /** @var TestCase $this */
+    $this->actingAs($this->david)->get('/memories/2026-09')
+        ->assertSee(route('memories.show', '2026-08'))
+        ->assertDontSee(route('memories.show', '2026-10'));
+
+    $this->actingAs($this->david)->get('/memories/2026-03')
+        ->assertSee(route('memories.show', '2026-04'))
+        ->assertDontSee(route('memories.show', '2026-02'));
+});
+
 test('keeps paragraphs and escapes the text', function () {
     /** @var TestCase $this */
     Memory::factory()->for($this->david)->forMonth(Month::of(2026, 6))->create([
@@ -103,8 +115,8 @@ test('keeps paragraphs and escapes the text', function () {
     ]);
 
     $this->actingAs($this->david)->get('/memories/2026-06?who=yours')
-        ->assertSee('<p>First paragraph<br />'."\n".'same paragraph</p>', false)
-        ->assertSee('<p>&lt;b&gt;Second&lt;/b&gt;</p>', false);
+        ->assertSee("First paragraph\nsame paragraph\n\n&lt;b&gt;Second&lt;/b&gt;", false)
+        ->assertDontSee('<b>Second</b>', false);
 });
 
 test('is not found for a month that is not listed', function (string $month) {

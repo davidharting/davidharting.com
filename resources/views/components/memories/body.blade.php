@@ -1,10 +1,6 @@
-{{-- A memory's plain text: blank lines separate paragraphs, single line breaks are kept. Never Markdown. --}}
+{{-- A memory's plain text. Line breaks are kept as written, so a blank line reads as a new paragraph. --}}
 @props([
     'memory',
 ])
 
-<div {{ $attributes->merge(["class" => "space-y-4"]) }}>
-    @foreach (preg_split('/\n\s*\n/', trim($memory->body)) as $paragraph)
-        <p>{!! nl2br(e($paragraph)) !!}</p>
-    @endforeach
-</div>
+<div {{ $attributes->merge(["class" => "whitespace-pre-line"]) }}>{{ trim($memory->body) }}</div>

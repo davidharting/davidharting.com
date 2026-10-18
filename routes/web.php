@@ -71,7 +71,7 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
     Route::get('/fileshare/{path}', [FileShareController::class, 'show'])->name('fileshare.show')->where('path', '.*');
 });
 
-Route::withHead(robots: 'noindex, nofollow')->middleware('can:read-memories')->group(function () {
+Route::withHead(robots: 'noindex, nofollow')->middleware('can:viewAny,App\Models\Memory')->group(function () {
     Route::get('/memories', [MemoriesController::class, 'index'])->name('memories.index')->withHead(title: 'Memories');
     Route::get('/memories/{month}', [MemoriesController::class, 'show'])->name('memories.show')->where('month', '\d{4}-\d{2}');
 });

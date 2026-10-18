@@ -7,9 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * One of the two people who write and read memories. The feature is live
- * only while there are exactly two, so every question about "the other
- * person" goes through otherThan().
+ * One of the two people who write and read memories.
  */
 class MemoryParticipant extends Model
 {
@@ -25,18 +23,22 @@ class MemoryParticipant extends Model
     }
 
     /**
-     * The participant who isn't this user. Null when the user isn't a
-     * participant or there aren't exactly two, which is how the feature
-     * stays switched off.
+     * Monthly memories is live only with exactly two participants. With fewer
+     * or more, nobody can reach the feature.
+     */
+    public static function featureIsEnabled(): bool
+    {
+        return self::query()->count() === 2;
+    }
+
+    /**
+     * The participant who isn't the provided user, or null when there is none.
      */
     public static function otherThan(User $user): ?User
     {
-        $userIds = self::query()->pluck('user_id');
-
-        if ($userIds->count() !== 2 || ! $userIds->contains($user->id)) {
-            return null;
-        }
-
-        return User::find($userIds->first(fn (int $userId) => $userId !== $user->id));
+        return User::query()
+            ->whereKeyNot($user->id)
+            ->whereHas('memoryParticipant')
+            ->first();
     }
 }

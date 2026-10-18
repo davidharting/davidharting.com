@@ -24,7 +24,7 @@
                         <x-nav-link :href="route('login')"> Login </x-nav-link>
                     @endguest
 
-                    @can('read-memories')
+                    @can('viewAny', App\Models\Memory::class)
                         <x-nav-link :href="route('memories.index')"> Memories </x-nav-link>
                     @endcan
 

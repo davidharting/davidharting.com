@@ -2,27 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Memories\MonthOfMemories;
+use App\Models\Memory;
 use App\Models\MemoryParticipant;
-use App\Queries\ListMonthsOfMemoriesQuery;
+use App\Queries\ListOpenMonthsQuery;
 use App\Support\Month;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\View\View;
 use InvalidArgumentException;
 use Laravel\Head\Facades\Head;
 
 /**
  * The read side of monthly memories: the list of months, and one month as
- * the viewer sees it. The `read-memories` gate on the routes has already
- * turned away everyone who isn't a participant.
+ * the viewer sees it. The routes only let participants in.
  */
 class MemoriesController extends Controller
 {
     public function index(Request $request): View
     {
+        $months = (new ListOpenMonthsQuery)->execute();
+
+        $memoriesByMonth = Memory::query()
+            ->whereBetween('month', [$months->last()->toDateString(), $months->first()->toDateString()])
+            ->get()
+            ->groupBy(fn (Memory $memory) => $memory->month->toDateString());
+
         return view('memories.index', [
-            'months' => $this->months($request),
+            'months' => $months,
+            'memoriesByMonth' => $memoriesByMonth,
+            'viewer' => $request->user(),
+            'other' => MemoryParticipant::otherThan($request->user()),
         ]);
     }
 
@@ -33,32 +41,24 @@ class MemoriesController extends Controller
     public function show(Request $request, string $month): View
     {
         try {
-            $wanted = Month::parseYearMonth($month);
+            $month = Month::parseYearMonth($month);
         } catch (InvalidArgumentException) {
             abort(404);
         }
 
-        $months = $this->months($request);
-        $index = $months->search(fn (MonthOfMemories $candidate) => $candidate->month->equals($wanted));
-        abort_if($index === false, 404);
+        $openMonths = new ListOpenMonthsQuery;
+        abort_unless($openMonths->contains($month), 404);
 
-        Head::title($wanted->label());
+        Head::title($month->label());
 
         return view('memories.show', [
-            'monthOfMemories' => $months[$index],
-            'newer' => $months[$index - 1] ?? null,
-            'older' => $months[$index + 1] ?? null,
+            'month' => $month,
+            'memories' => Memory::query()->where('month', $month->toDateString())->get(),
+            'viewer' => $request->user(),
+            'other' => MemoryParticipant::otherThan($request->user()),
             'showingYours' => $request->query('who') === 'yours',
+            'older' => $openMonths->contains($month->previous()) ? $month->previous() : null,
+            'newer' => $openMonths->contains($month->next()) ? $month->next() : null,
         ]);
-    }
-
-    /**
-     * @return Collection<int, MonthOfMemories>
-     */
-    private function months(Request $request): Collection
-    {
-        $viewer = $request->user();
-
-        return (new ListMonthsOfMemoriesQuery($viewer, MemoryParticipant::otherThan($viewer)))->execute();
     }
 }

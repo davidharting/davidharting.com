@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Memory;
 use App\Models\User;
+use App\Support\Month;
 use Database\Seeders\MemorySeeder;
 use Tests\Support\RenderedHead;
 use Tests\TestCase;
@@ -61,4 +63,16 @@ test('links each month to its page', function () {
     $this->get('/memories')
         ->assertSee(route('memories.show', '2026-09'))
         ->assertSee(route('memories.show', '2026-03'));
+});
+
+test('cuts a long first line short', function () {
+    /** @var TestCase $this */
+    Memory::query()->where('month', '2026-06-01')->delete();
+    Memory::factory()->for(User::firstWhere('email', 'katie@example.com'))->forMonth(Month::of(2026, 6))->shared()->create([
+        'body' => str_repeat('word ', 100),
+    ]);
+
+    $this->get('/memories')
+        ->assertSeeText(str_repeat('word ', 31).'word...')
+        ->assertDontSeeText(str_repeat('word ', 33));
 });

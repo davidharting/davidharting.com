@@ -2,9 +2,7 @@
 
 namespace App\Providers;
 
-use App\Models\MemoryParticipant;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -56,16 +54,6 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('administrate', function (User $user) {
             return $user->is_admin;
-        });
-
-        /*
-         * Only the two participants may know monthly memories exist, so a
-         * denial is a 404, for guests too, never a 403 or a login redirect.
-         */
-        Gate::define('read-memories', function (?User $user) {
-            return $user !== null && MemoryParticipant::otherThan($user) !== null
-                ? Response::allow()
-                : Response::denyAsNotFound();
         });
     }
 }

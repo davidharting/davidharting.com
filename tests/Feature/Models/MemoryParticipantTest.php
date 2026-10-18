@@ -22,10 +22,29 @@ test('lists a user at most once', function () {
     MemoryParticipant::create(['user_id' => $user->id]);
 })->throws(QueryException::class, 'memory_participants_user_id_unique');
 
+describe('featureIsEnabled()', function () {
+    test('is true with exactly two participants', function () {
+        /** @var TestCase $this */
+        User::factory()->count(2)->create()
+            ->each(fn (User $user) => MemoryParticipant::create(['user_id' => $user->id]));
+
+        expect(MemoryParticipant::featureIsEnabled())->toBeTrue();
+    });
+
+    test('is false with any other number of participants', function (int $count) {
+        /** @var TestCase $this */
+        User::factory()->count($count)->create()
+            ->each(fn (User $user) => MemoryParticipant::create(['user_id' => $user->id]));
+
+        expect(MemoryParticipant::featureIsEnabled())->toBeFalse();
+    })->with([0, 1, 3]);
+});
+
 describe('otherThan()', function () {
     test('is the other participant', function () {
         /** @var TestCase $this */
         [$david, $katie] = User::factory()->count(2)->create();
+        User::factory()->create();
         MemoryParticipant::create(['user_id' => $david->id]);
         MemoryParticipant::create(['user_id' => $katie->id]);
 
@@ -33,20 +52,11 @@ describe('otherThan()', function () {
             ->and(MemoryParticipant::otherThan($katie)?->is($david))->toBeTrue();
     });
 
-    test('is null for someone who is not a participant', function () {
+    test('is null when there is no other participant', function () {
         /** @var TestCase $this */
-        [$david, $katie, $stranger] = User::factory()->count(3)->create();
+        $david = User::factory()->create();
         MemoryParticipant::create(['user_id' => $david->id]);
-        MemoryParticipant::create(['user_id' => $katie->id]);
 
-        expect(MemoryParticipant::otherThan($stranger))->toBeNull();
+        expect(MemoryParticipant::otherThan($david))->toBeNull();
     });
-
-    test('is null unless there are exactly two participants', function (int $count) {
-        /** @var TestCase $this */
-        $users = User::factory()->count($count)->create();
-        $users->each(fn (User $user) => MemoryParticipant::create(['user_id' => $user->id]));
-
-        expect(MemoryParticipant::otherThan($users->first()))->toBeNull();
-    })->with([1, 3]);
 });
