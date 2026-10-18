@@ -12,7 +12,7 @@
 <body class="font-serif antialiased">
     <div class="container mx-auto px-4">
         <main class="mt-8">
-            <div class="mb-8 flex w-full justify-between">
+            <div class="mb-8 flex w-full flex-wrap justify-between">
                 <nav class="flex gap-1">
                     <x-nav-link :href="route('home')">Home</x-nav-link>
                     <x-nav-link :href="route('notes.index')"> Notes </x-nav-link>
@@ -23,6 +23,10 @@
                     @guest
                         <x-nav-link :href="route('login')"> Login </x-nav-link>
                     @endguest
+
+                    @can('read-memories')
+                        <x-nav-link :href="route('memories.index')"> Memories </x-nav-link>
+                    @endcan
 
                     @can('administrate')
                         <x-nav-link :href="route('admin.index')"> Admin </x-nav-link>

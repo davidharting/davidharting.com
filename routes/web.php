@@ -5,6 +5,7 @@ use App\Http\Controllers\DebugController;
 use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MediaIndexController;
+use App\Http\Controllers\MemoriesController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
@@ -68,6 +69,11 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
     Route::get('/fileshare/create', [FileShareController::class, 'create'])->name('fileshare.create');
     Route::post('/fileshare', [FileShareController::class, 'store'])->name('fileshare.store');
     Route::get('/fileshare/{path}', [FileShareController::class, 'show'])->name('fileshare.show')->where('path', '.*');
+});
+
+Route::withHead(robots: 'noindex, nofollow')->middleware('can:read-memories')->group(function () {
+    Route::get('/memories', [MemoriesController::class, 'index'])->name('memories.index')->withHead(title: 'Memories');
+    Route::get('/memories/{month}', [MemoriesController::class, 'show'])->name('memories.show')->where('month', '\d{4}-\d{2}');
 });
 
 require __DIR__.'/auth.php';
