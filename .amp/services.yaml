@@ -3,15 +3,19 @@
 # frontend assets, and migrates and seeds the dev database first.
 services:
   web:
-    # Built assets (npm run build) are served directly; rerun the build after
-    # changing CSS or JS. APP_URL/ASSET_URL follow the portal's public origin.
-    command: >-
-      php artisan optimize:clear &&
-      APP_URL="$PUBLIC_URL" ASSET_URL="$PUBLIC_URL"
-      php artisan serve --host=127.0.0.1 --port="$PORT"
-    health: /healthz
+    # The Vite dev server is the portal: it serves assets with HMR and proxies
+    # every other request to Laravel (see vite.config.js).
+    command: npm run dev
+    env:
+      LARAVEL_DEV_URL: http://127.0.0.1:8000
     portal:
       title: davidharting.com
       description: Seeded admin login is admin@example.com / password.
+  laravel:
+    command: php artisan serve --host=127.0.0.1 --port="$PORT"
+    port: 8000
+    env:
+      # Console output and storage URLs use APP_URL; requests use the Host.
+      APP_URL: ${services.web.publicURL}
   queue:
     command: php artisan queue:work
