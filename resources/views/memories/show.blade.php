@@ -1,12 +1,12 @@
 {{-- One person's memory per page, switched with plain text links. No name heading; the links say whose page this is. --}}
 <x-layout.app>
     @php
-        $month = $memoryMonth->month;
-        $other = $memoryMonth->other->displayName();
-        $mine = $memoryMonth->mine;
-        $revealed = $memoryMonth->isRevealed();
-        $memory = $showingYours ? $mine : $memoryMonth->readableTheirs();
-        $theirStatus = $memoryMonth->theirStatus();
+        $month = $monthOfMemories->month;
+        $other = $monthOfMemories->other->displayName();
+        $viewerMemory = $monthOfMemories->viewerMemory;
+        $revealed = $monthOfMemories->isRevealed();
+        $memory = $showingYours ? $viewerMemory : $monthOfMemories->readableOtherMemory();
+        $otherMemoryStatus = $monthOfMemories->otherMemoryStatus();
     @endphp
 
     <article class="mx-auto max-w-xl">
@@ -43,20 +43,20 @@
         </nav>
 
         @if ($revealed)
-            <p class="mt-4 font-sans text-sm opacity-60">{{ $memoryMonth->revealStatus() }}</p>
+            <p class="mt-4 font-sans text-sm opacity-60">{{ $monthOfMemories->revealStatus() }}</p>
         @endif
 
         <section class="mt-10">
             <p class="font-sans text-sm opacity-60">
                 @if ($showingYours)
-                    @if ($mine)
-                        <x-memories.my-status :memory="$mine" />
+                    @if ($viewerMemory)
+                        <x-memories.my-status :memory="$viewerMemory" />
                     @endif
-                @elseif ($theirStatus !== null)
-                    {{ $theirStatus }}
+                @elseif ($otherMemoryStatus !== null)
+                    {{ $otherMemoryStatus }}
                 @endif
 
-                @if ($memoryMonth->sharedLate($showingYours ? $mine : $memory))
+                @if ($monthOfMemories->sharedLate($showingYours ? $viewerMemory : $memory))
                     · shared after the reveal
                 @endif
             </p>
@@ -66,14 +66,14 @@
             @elseif ($showingYours)
                 <p class="mt-5 text-lg italic opacity-70">You haven't written about this month yet.</p>
             @elseif (! $revealed)
-                <p class="mt-5 text-lg italic opacity-80">{{ $memoryMonth->revealStatus() }}</p>
+                <p class="mt-5 text-lg italic opacity-80">{{ $monthOfMemories->revealStatus() }}</p>
             @else
                 <p class="mt-5 text-lg italic opacity-70">{{ $other }} didn't share a memory this month.</p>
             @endif
 
             @if ($showingYours)
                 <div class="mt-6">
-                    <x-memories.cta :memory="$mine" />
+                    <x-memories.cta :memory="$viewerMemory" />
                 </div>
             @endif
         </section>

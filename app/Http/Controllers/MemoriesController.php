@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Memories\MonthOfMemories;
 use App\Models\MemoryParticipant;
-use App\Queries\ListMemoryMonthsQuery;
-use App\Support\MemoryMonth;
+use App\Queries\ListMonthsOfMemoriesQuery;
 use App\Support\Month;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -39,13 +39,13 @@ class MemoriesController extends Controller
         }
 
         $months = $this->months($request);
-        $index = $months->search(fn (MemoryMonth $candidate) => $candidate->month->equals($wanted));
+        $index = $months->search(fn (MonthOfMemories $candidate) => $candidate->month->equals($wanted));
         abort_if($index === false, 404);
 
         Head::title($wanted->label());
 
         return view('memories.show', [
-            'memoryMonth' => $months[$index],
+            'monthOfMemories' => $months[$index],
             'newer' => $months[$index - 1] ?? null,
             'older' => $months[$index + 1] ?? null,
             'showingYours' => $request->query('who') === 'yours',
@@ -53,12 +53,12 @@ class MemoriesController extends Controller
     }
 
     /**
-     * @return Collection<int, MemoryMonth>
+     * @return Collection<int, MonthOfMemories>
      */
     private function months(Request $request): Collection
     {
         $viewer = $request->user();
 
-        return (new ListMemoryMonthsQuery($viewer, MemoryParticipant::otherThan($viewer)))->execute();
+        return (new ListMonthsOfMemoriesQuery($viewer, MemoryParticipant::otherThan($viewer)))->execute();
     }
 }

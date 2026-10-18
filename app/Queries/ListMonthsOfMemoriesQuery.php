@@ -2,13 +2,13 @@
 
 namespace App\Queries;
 
+use App\Memories\MonthOfMemories;
 use App\Models\Memory;
 use App\Models\User;
-use App\Support\MemoryMonth;
 use App\Support\Month;
 use Illuminate\Support\Collection;
 
-class ListMemoryMonthsQuery
+class ListMonthsOfMemoriesQuery
 {
     /**
      * This query performs no authorization. The caller has already established
@@ -24,7 +24,7 @@ class ListMemoryMonthsQuery
      * including months nobody wrote about. The launch month is the earliest
      * month anyone has a memory for, or the latest open month before anyone has.
      *
-     * @return Collection<int, MemoryMonth>
+     * @return Collection<int, MonthOfMemories>
      */
     public function execute(): Collection
     {
@@ -42,12 +42,12 @@ class ListMemoryMonthsQuery
         for ($month = $latest; $month->toDateString() >= $launch->toDateString(); $month = $month->previous()) {
             $forMonth = $memories->get($month->toDateString(), collect());
 
-            $months->push(new MemoryMonth(
+            $months->push(new MonthOfMemories(
                 month: $month,
                 viewer: $this->viewer,
                 other: $this->other,
-                mine: $forMonth->firstWhere('user_id', $this->viewer->id),
-                theirs: $forMonth->firstWhere('user_id', $this->other->id),
+                viewerMemory: $forMonth->firstWhere('user_id', $this->viewer->id),
+                otherMemory: $forMonth->firstWhere('user_id', $this->other->id),
             ));
         }
 

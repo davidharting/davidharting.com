@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Support;
+namespace App\Memories;
 
 use App\Models\Memory;
 use App\Models\User;
+use App\Support\Month;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 
@@ -15,14 +16,14 @@ use Illuminate\Support\Str;
  * A month reveals when both have shared, or at its deadline, whichever comes
  * first. A memory shared after the reveal is readable as soon as it is shared.
  */
-final readonly class MemoryMonth
+final readonly class MonthOfMemories
 {
     public function __construct(
         public Month $month,
         public User $viewer,
         public User $other,
-        public ?Memory $mine,
-        public ?Memory $theirs,
+        public ?Memory $viewerMemory,
+        public ?Memory $otherMemory,
     ) {}
 
     /**
@@ -32,8 +33,8 @@ final readonly class MemoryMonth
     {
         $deadline = $this->month->revealDeadline();
 
-        if ($this->mine?->isShared() && $this->theirs?->isShared()) {
-            $bothShared = CarbonImmutable::instance($this->mine->shared_at->max($this->theirs->shared_at));
+        if ($this->viewerMemory?->isShared() && $this->otherMemory?->isShared()) {
+            $bothShared = CarbonImmutable::instance($this->viewerMemory->shared_at->max($this->otherMemory->shared_at));
 
             return $bothShared->min($deadline);
         }
@@ -58,9 +59,9 @@ final readonly class MemoryMonth
      * The other person's memory, if the viewer may read it: shared, and the
      * month revealed. Their drafts are never readable.
      */
-    public function readableTheirs(): ?Memory
+    public function readableOtherMemory(): ?Memory
     {
-        return $this->theirs?->isShared() && $this->isRevealed() ? $this->theirs : null;
+        return $this->otherMemory?->isShared() && $this->isRevealed() ? $this->otherMemory : null;
     }
 
     /**
@@ -73,7 +74,7 @@ final readonly class MemoryMonth
             return null;
         }
 
-        $memory = $this->readableTheirs() ?? ($this->mine?->isShared() ? $this->mine : null);
+        $memory = $this->readableOtherMemory() ?? ($this->viewerMemory?->isShared() ? $this->viewerMemory : null);
 
         return $memory === null ? null : Str::of($memory->body)->trim()->before("\n")->toString();
     }
@@ -82,19 +83,19 @@ final readonly class MemoryMonth
      * Where the other person's memory stands, as far as the viewer may know,
      * or null once the month has revealed without them sharing.
      */
-    public function theirStatus(): ?string
+    public function otherMemoryStatus(): ?string
     {
         $name = $this->other->displayName();
-        $theirs = $this->theirs;
+        $otherMemory = $this->otherMemory;
 
         if ($this->isRevealed()) {
-            return $theirs?->isShared() ? 'Shared '.Month::dayLabel($theirs->shared_at) : null;
+            return $otherMemory?->isShared() ? 'Shared '.Month::dayLabel($otherMemory->shared_at) : null;
         }
 
         return match (true) {
-            $theirs === null => "{$name} hasn't started yet",
-            $theirs->isDraft() => "{$name} started on ".Month::dayLabel($theirs->created_at),
-            default => "{$name} shared on ".Month::dayLabel($theirs->shared_at),
+            $otherMemory === null => "{$name} hasn't started yet",
+            $otherMemory->isDraft() => "{$name} started on ".Month::dayLabel($otherMemory->created_at),
+            default => "{$name} shared on ".Month::dayLabel($otherMemory->shared_at),
         };
     }
 
@@ -114,8 +115,8 @@ final readonly class MemoryMonth
         $deadline = Month::dayLabel($this->month->revealDeadline());
 
         return match (true) {
-            $this->theirs?->isShared() && ! $this->mine?->isShared() => 'Share yours to reveal both.',
-            (bool) $this->mine?->isShared() => "Reveals when {$this->other->displayName()} shares, or on {$deadline} at the latest.",
+            $this->otherMemory?->isShared() && ! $this->viewerMemory?->isShared() => 'Share yours to reveal both.',
+            (bool) $this->viewerMemory?->isShared() => "Reveals when {$this->other->displayName()} shares, or on {$deadline} at the latest.",
             default => "Reveals when you've both shared, or on {$deadline} at the latest.",
         };
     }
@@ -135,6 +136,6 @@ final readonly class MemoryMonth
      */
     public function isEmpty(): bool
     {
-        return $this->mine === null && $this->theirs === null;
+        return $this->viewerMemory === null && $this->otherMemory === null;
     }
 }
