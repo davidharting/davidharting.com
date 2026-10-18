@@ -110,13 +110,15 @@ describe('revealedAt()', function () {
         expect($memoryMonth->revealedAt()->toIso8601String())->toBe('2026-09-01T04:00:00+00:00');
     });
 
-    test('answers for a given moment', function () {
+    test('reveals at midnight Eastern on the deadline, not a second before', function () {
         /** @var TestCase $this */
         $memoryMonth = monthOfMemories($this, Month::of(2026, 9), null, null);
 
-        expect($memoryMonth->revealedAt(CarbonImmutable::parse('2026-11-01T03:59:59Z')))->toBeNull()
-            ->and($memoryMonth->revealedAt(CarbonImmutable::parse('2026-11-01T04:00:00Z'))->toIso8601String())
-            ->toBe('2026-11-01T04:00:00+00:00');
+        $this->travelTo(CarbonImmutable::parse('2026-11-01T03:59:59Z'));
+        expect($memoryMonth->revealedAt())->toBeNull();
+
+        $this->travelTo(CarbonImmutable::parse('2026-11-01T04:00:00Z'));
+        expect($memoryMonth->revealedAt()?->toIso8601String())->toBe('2026-11-01T04:00:00+00:00');
     });
 });
 

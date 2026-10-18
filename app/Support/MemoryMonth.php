@@ -5,7 +5,6 @@ namespace App\Support;
 use App\Models\Memory;
 use App\Models\User;
 use Carbon\CarbonImmutable;
-use DateTimeInterface;
 
 /**
  * One month as one participant sees it: their own memory, the other
@@ -26,12 +25,10 @@ final readonly class MemoryMonth
     ) {}
 
     /**
-     * When the month revealed, or null while it hasn't. Answers for now
-     * unless asked about another moment.
+     * When the month revealed, or null while it hasn't.
      */
-    public function revealedAt(?DateTimeInterface $at = null): ?CarbonImmutable
+    public function revealedAt(): ?CarbonImmutable
     {
-        $at = CarbonImmutable::instance($at ?? CarbonImmutable::now());
         $deadline = $this->month->revealDeadline();
 
         if ($this->mine?->isShared() && $this->theirs?->isShared()) {
@@ -40,7 +37,7 @@ final readonly class MemoryMonth
             return $bothShared->min($deadline);
         }
 
-        return $at->greaterThanOrEqualTo($deadline) ? $deadline : null;
+        return CarbonImmutable::now()->greaterThanOrEqualTo($deadline) ? $deadline : null;
     }
 
     public function isRevealed(): bool
