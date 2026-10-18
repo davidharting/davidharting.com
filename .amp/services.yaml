@@ -1,0 +1,21 @@
+# Long-running dev services for Amp orbs. Start them with
+# `amp orb services ensure`. .agents/setup installs dependencies, builds
+# frontend assets, and migrates and seeds the dev database first.
+services:
+  web:
+    # The Vite dev server is the portal: it serves assets with HMR and proxies
+    # every other request to Laravel (see vite.config.js).
+    command: npm run dev
+    env:
+      LARAVEL_DEV_URL: http://127.0.0.1:8000
+    portal:
+      title: davidharting.com
+      description: Seeded admin login is admin@example.com / password.
+  laravel:
+    command: php artisan serve --host=127.0.0.1 --port="$PORT"
+    port: 8000
+    env:
+      # Console output and storage URLs use APP_URL; requests use the Host.
+      APP_URL: ${services.web.publicURL}
+  queue:
+    command: php artisan queue:work

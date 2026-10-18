@@ -10,6 +10,7 @@ Quick check: if `php artisan test` fails with autoload errors, run the setup.
 
 - **Local macOS**: dev runs through mise + pitchfork. Use `mise run setup` once, then `mise run dev` to bring up the stack (postgres, octane, queue, vite). See the macOS section of [docs/development-setup.md](docs/development-setup.md).
 - **Remote / CI / preconfigured Linux containers** (e.g. a cloud coding agent): tools are already installed — **do not install mise or run pitchfork**. Run `php artisan`, `vendor/bin/pint`, and `npm` directly, and follow the Linux/sandboxed section of [docs/development-setup.md](docs/development-setup.md). `mise run <task>` is a local convenience, not a requirement; the underlying commands work without it.
+- **Amp orbs**: `.agents/setup` installs PHP 8.4 (Herd-lite), Composer, and PostgreSQL 17 (systemd), installs dependencies, builds assets, and migrates and seeds the dev database. Run `amp orb services ensure` to start the dev stack from `.amp/services.yaml`: the Vite dev server is the portal (HMR included) and proxies every non-asset request to `php artisan serve`, plus a queue worker. The seeded admin login is `admin@example.com` / `password`.
 
 ## Architecture overview
 
@@ -118,6 +119,7 @@ The bundled `pest-testing` skill recommends `--tia` (Test Impact Analysis). **Ig
 - Run `mise run format` before every commit (or `vendor/bin/pint && npm run format` where mise isn't available). Pint formats PHP and Blade (the `Pint/laravel_blade` rule, which shells out to Node/Prettier); Prettier formats JS/CSS/YAML/TOML. Both are enforced in CI.
 - Make atomic commits with detailed messages
 - Include tests as you go rather than at the end. Tests should be committed with the relevant application changes.
+- Never push to `main` and never merge a pull request. Commit on a feature branch, push that branch, and open a PR (see the `make-pr` skill). I review every PR and merge it myself, or explicitly tell you to merge it.
 
 ### Testing
 
