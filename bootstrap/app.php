@@ -4,6 +4,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -45,4 +47,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'password',
             'password_confirmation',
         ]);
+
+        // Only the two participants may know monthly memories exist. A 405
+        // for the wrong method would give the routes away, so it is a 404.
+        $exceptions->map(fn (MethodNotAllowedHttpException $e) => request()->is('memories', 'memories/*')
+            ? new NotFoundHttpException(previous: $e)
+            : $e);
     })->create();

@@ -25,6 +25,16 @@ test('is not found for anyone who is not a participant', function (string $url, 
     'an admin' => fn () => fn (TestCase $test) => $test->actingAs(User::factory()->create(['is_admin' => true])),
 ]);
 
+test('is not found, rather than not allowed, for any other method', function (string $method, string $url) {
+    /** @var TestCase $this */
+    $this->seed(MemorySeeder::class);
+
+    $this->call($method, $url)->assertNotFound();
+})->with([
+    ['POST', '/memories'],
+    ['DELETE', '/memories/2026-09'],
+]);
+
 test('is not found while there is only one participant', function () {
     /** @var TestCase $this */
     $user = User::factory()->create();
