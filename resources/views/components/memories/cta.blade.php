@@ -1,10 +1,14 @@
-{{-- Points the viewer at writing their own memory. The editor doesn't exist yet, so the button is a disabled placeholder. --}}
+{{-- PROTOTYPE (#272): points the viewer at writing their own memory, opening editor variant A. --}}
 @props([
     'memory',
+    'month',
 ])
 
 @if ($memory === null || $memory->isDraft())
-    <button type="button" class="btn btn-primary" disabled>
-        {{ $memory === null ? "Write yours" : "Keep writing" }}
-    </button>
+    <a
+        class="btn btn-primary font-sans"
+        href="{{ route('memory-editor-prototype.show', ['month' => $month->toYearMonth(), 'variant' => 'A', 'state' => $memory === null ? 'fresh' : 'draft']) }}"
+    >
+        {{ $memory === null ? 'Write yours' : 'Keep writing' }}
+    </a>
 @endif
