@@ -44,7 +44,8 @@ describe('otherThan()', function () {
     test('is the other participant', function () {
         /** @var TestCase $this */
         [$david, $katie] = User::factory()->count(2)->create();
-        User::factory()->create();
+        // A user who isn't a participant, so the other one can't be just any other user.
+        $nonParticipant = User::factory()->create();
         MemoryParticipant::create(['user_id' => $david->id]);
         MemoryParticipant::create(['user_id' => $katie->id]);
 

@@ -36,6 +36,10 @@ describe('parseYearMonth()', function () {
     test('refuses a month that does not exist', function () {
         Month::parseYearMonth('2026-13');
     })->throws(InvalidArgumentException::class);
+
+    test('refuses something that is not a date', function () {
+        Month::parseYearMonth('september');
+    })->throws(InvalidArgumentException::class);
 });
 
 describe('of()', function () {
@@ -64,7 +68,8 @@ describe('label()', function () {
 });
 
 describe('dayLabel()', function () {
-    test('reads the day in Eastern time', function () {
+    test('labels the day in Eastern time, not UTC', function () {
+        // 02:00Z on Oct 2 is 22:00 EDT on Oct 1.
         expect(Month::dayLabel(CarbonImmutable::parse('2026-10-02T02:00:00Z')))->toBe('Oct 1')
             ->and(Month::dayLabel(CarbonImmutable::parse('2026-10-02T05:00:00Z')))->toBe('Oct 2');
     });

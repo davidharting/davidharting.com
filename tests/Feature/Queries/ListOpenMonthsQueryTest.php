@@ -3,15 +3,15 @@
 use App\Models\Memory;
 use App\Queries\ListOpenMonthsQuery;
 use App\Support\Month;
-use Carbon\CarbonImmutable;
 use Tests\TestCase;
 
 /**
- * The latest open month is September 2026.
+ * The latest open month is September 2026. Launch is the month of the
+ * earliest memory.
  */
 beforeEach(function () {
     /** @var TestCase $this */
-    $this->travelTo(CarbonImmutable::parse('2026-10-18T12:00:00Z'));
+    $this->travelTo('2026-10-18T12:00:00Z');
 });
 
 describe('execute()', function () {
@@ -36,7 +36,7 @@ describe('execute()', function () {
 });
 
 describe('contains()', function () {
-    test('is true from the launch month to the latest open one', function () {
+    test('is true only from the launch month to the latest open one', function () {
         /** @var TestCase $this */
         Memory::factory()->forMonth(Month::of(2026, 6))->create();
         $query = new ListOpenMonthsQuery;
