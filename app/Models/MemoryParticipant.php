@@ -21,4 +21,24 @@ class MemoryParticipant extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Monthly memories is live only with exactly two participants. With fewer
+     * or more, nobody can reach the feature.
+     */
+    public static function featureIsEnabled(): bool
+    {
+        return self::query()->count() === 2;
+    }
+
+    /**
+     * The participant who isn't the provided user, or null when there is none.
+     */
+    public static function otherThan(User $user): ?User
+    {
+        return User::query()
+            ->whereKeyNot($user->id)
+            ->whereHas('memoryParticipant')
+            ->first();
+    }
 }

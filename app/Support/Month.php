@@ -65,6 +65,14 @@ final class Month implements Castable, Stringable
     }
 
     /**
+     * Parse a `Y-m` string such as "2026-09", the form a month takes in URLs.
+     */
+    public static function parseYearMonth(string $value): self
+    {
+        return self::parse("{$value}-01");
+    }
+
+    /**
      * The month it is right now in Eastern time. It is not open yet.
      */
     public static function current(): self
@@ -106,7 +114,11 @@ final class Month implements Castable, Stringable
         return $this->firstDay()->addMonthsNoOverflow(2)->utc();
     }
 
-    public function isOpen(?DateTimeInterface $at = null): bool
+    /**
+     * Whether the month has opened for drafting and sharing. Once open, a
+     * month stays open.
+     */
+    public function hasOpened(?DateTimeInterface $at = null): bool
     {
         return $this->opensAt()->lessThanOrEqualTo($at ?? CarbonImmutable::now());
     }
@@ -120,11 +132,28 @@ final class Month implements Castable, Stringable
     }
 
     /**
+     * The calendar day an instant falls on in Eastern time, for example "Oct 2".
+     * Lives here so display code never has to name the time zone.
+     */
+    public static function dayLabel(DateTimeInterface $at): string
+    {
+        return CarbonImmutable::instance($at)->tz(self::TIMEZONE)->format('M j');
+    }
+
+    /**
      * The stored form: the first day as `Y-m-d`, for example "2026-09-01".
      */
     public function toDateString(): string
     {
         return sprintf('%04d-%02d-01', $this->year, $this->month);
+    }
+
+    /**
+     * The month as `Y-m`, for example "2026-09", the form a month takes in URLs.
+     */
+    public function toYearMonth(): string
+    {
+        return sprintf('%04d-%02d', $this->year, $this->month);
     }
 
     public function equals(self $other): bool

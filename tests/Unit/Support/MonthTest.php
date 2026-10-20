@@ -28,6 +28,20 @@ describe('parse()', function () {
     })->throws(InvalidArgumentException::class);
 });
 
+describe('parseYearMonth()', function () {
+    test('reads a year and month', function () {
+        expect(Month::parseYearMonth('2026-09')->equals(Month::of(2026, 9)))->toBeTrue();
+    });
+
+    test('refuses a month that does not exist', function () {
+        Month::parseYearMonth('2026-13');
+    })->throws(InvalidArgumentException::class);
+
+    test('refuses something that is not a date', function () {
+        Month::parseYearMonth('september');
+    })->throws(InvalidArgumentException::class);
+});
+
 describe('of()', function () {
     test('refuses a month number outside 1 to 12', function () {
         Month::of(2026, 13);
@@ -41,9 +55,23 @@ describe('toDateString()', function () {
     });
 });
 
+describe('toYearMonth()', function () {
+    test('is the year and zero-padded month', function () {
+        expect(Month::of(2026, 3)->toYearMonth())->toBe('2026-03');
+    });
+});
+
 describe('label()', function () {
     test('names the month and year', function () {
         expect(Month::of(2026, 9)->label())->toBe('September 2026');
+    });
+});
+
+describe('dayLabel()', function () {
+    test('labels the day in Eastern time, not UTC', function () {
+        // 02:00Z on Oct 2 is 22:00 EDT on Oct 1.
+        expect(Month::dayLabel(CarbonImmutable::parse('2026-10-02T02:00:00Z')))->toBe('Oct 1')
+            ->and(Month::dayLabel(CarbonImmutable::parse('2026-10-02T05:00:00Z')))->toBe('Oct 2');
     });
 });
 
@@ -68,12 +96,12 @@ describe('revealDeadline()', function () {
     });
 });
 
-describe('isOpen()', function () {
+describe('hasOpened()', function () {
     test('opens at midnight Eastern, not midnight UTC', function () {
         $september = Month::of(2026, 9);
 
-        expect($september->isOpen(CarbonImmutable::parse('2026-10-01T03:59:59Z')))->toBeFalse()
-            ->and($september->isOpen(CarbonImmutable::parse('2026-10-01T04:00:00Z')))->toBeTrue();
+        expect($september->hasOpened(CarbonImmutable::parse('2026-10-01T03:59:59Z')))->toBeFalse()
+            ->and($september->hasOpened(CarbonImmutable::parse('2026-10-01T04:00:00Z')))->toBeTrue();
     });
 });
 
