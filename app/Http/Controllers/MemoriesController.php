@@ -6,6 +6,7 @@ use App\Models\Memory;
 use App\Models\MemoryParticipant;
 use App\Queries\ListOpenMonthsQuery;
 use App\Support\Month;
+use App\View\Memories\MonthForViewer;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use InvalidArgumentException;
@@ -19,6 +20,8 @@ class MemoriesController extends Controller
 {
     public function index(Request $request): View
     {
+        $viewer = $request->user();
+        $other = MemoryParticipant::otherThan($viewer);
         $months = (new ListOpenMonthsQuery)->execute();
 
         $memoriesByMonth = Memory::query()
@@ -27,10 +30,12 @@ class MemoriesController extends Controller
             ->groupBy(fn (Memory $memory) => $memory->month->toDateString());
 
         return view('memories.index', [
-            'months' => $months,
-            'memoriesByMonth' => $memoriesByMonth,
-            'viewer' => $request->user(),
-            'other' => MemoryParticipant::otherThan($request->user()),
+            'monthsForViewer' => $months->map(fn (Month $month) => MonthForViewer::fromMemories(
+                $month,
+                $viewer,
+                $other,
+                $memoriesByMonth->get($month->toDateString(), collect()),
+            )),
         ]);
     }
 
@@ -51,14 +56,18 @@ class MemoriesController extends Controller
 
         Head::title($month->label());
 
+        $viewer = $request->user();
+
         return view('memories.show', [
-            'month' => $month,
-            'memories' => Memory::query()->where('month', $month->toDateString())->get(),
-            'viewer' => $request->user(),
-            'other' => MemoryParticipant::otherThan($request->user()),
+            'monthForViewer' => MonthForViewer::fromMemories(
+                $month,
+                $viewer,
+                MemoryParticipant::otherThan($viewer),
+                Memory::query()->where('month', $month->toDateString())->get(),
+            ),
             'showingYours' => $request->query('who') === 'yours',
-            'older' => $openMonths->contains($month->previous()) ? $month->previous() : null,
-            'newer' => $openMonths->contains($month->next()) ? $month->next() : null,
+            'previous' => $openMonths->contains($month->previous()) ? $month->previous() : null,
+            'next' => $openMonths->contains($month->next()) ? $month->next() : null,
         ]);
     }
 }

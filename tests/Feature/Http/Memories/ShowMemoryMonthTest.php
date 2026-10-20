@@ -94,7 +94,8 @@ test('links to the other person, yours, and the neighbouring months', function (
         ->assertSee(route('memories.show', ['month' => '2026-07', 'who' => 'yours']))
         ->assertSee(route('memories.show', '2026-06'))
         ->assertSee(route('memories.show', '2026-08'))
-        ->assertSeeTextInOrder(['Katie', 'Yours']);
+        ->assertSeeTextInOrder(['Katie', 'Yours'])
+        ->assertSeeTextInOrder(['← June 2026', 'August 2026 →']);
 });
 
 test('links only to neighbouring months that are open', function () {

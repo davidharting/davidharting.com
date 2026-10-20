@@ -10,6 +10,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Memory;
 use Illuminate\Support\Facades\Route;
 use Spatie\MarkdownResponse\Middleware\ProvideMarkdownResponse;
 
@@ -71,9 +72,9 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
     Route::get('/fileshare/{path}', [FileShareController::class, 'show'])->name('fileshare.show')->where('path', '.*');
 });
 
-Route::withHead(robots: 'noindex, nofollow')->middleware('can:viewAny,App\Models\Memory')->group(function () {
-    Route::get('/memories', [MemoriesController::class, 'index'])->name('memories.index')->withHead(title: 'Memories');
-    Route::get('/memories/{month}', [MemoriesController::class, 'show'])->name('memories.show')->where('month', '\d{4}-\d{2}');
+Route::withHead(robots: 'noindex, nofollow')->group(function () {
+    Route::get('/memories', [MemoriesController::class, 'index'])->name('memories.index')->withHead(title: 'Memories')->can('viewAny', Memory::class);
+    Route::get('/memories/{month}', [MemoriesController::class, 'show'])->name('memories.show')->where('month', '\d{4}-\d{2}')->can('viewMonth', Memory::class);
 });
 
 require __DIR__.'/auth.php';

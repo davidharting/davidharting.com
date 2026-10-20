@@ -91,12 +91,12 @@ describe('revealDeadline()', function () {
     });
 });
 
-describe('isOpen()', function () {
+describe('hasOpened()', function () {
     test('opens at midnight Eastern, not midnight UTC', function () {
         $september = Month::of(2026, 9);
 
-        expect($september->isOpen(CarbonImmutable::parse('2026-10-01T03:59:59Z')))->toBeFalse()
-            ->and($september->isOpen(CarbonImmutable::parse('2026-10-01T04:00:00Z')))->toBeTrue();
+        expect($september->hasOpened(CarbonImmutable::parse('2026-10-01T03:59:59Z')))->toBeFalse()
+            ->and($september->hasOpened(CarbonImmutable::parse('2026-10-01T04:00:00Z')))->toBeTrue();
     });
 });
 

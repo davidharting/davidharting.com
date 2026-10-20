@@ -1,17 +1,12 @@
-{{-- No name heading; the Katie | Yours links say whose page this is. --}}
-<article class="mx-auto max-w-xl">
-    <div class="flex items-center justify-between font-sans text-sm">
-        <a class="link" href="{{ route("memories.index") }}">← All months</a>
-        <span class="flex gap-4">
-            @if ($older)
-                <a class="link" href="{{ route("memories.show", $older->toYearMonth()) }}">Older</a>
-            @endif
+{{-- No name heading; the "other name | Yours" links say whose page this is. --}}
+@php
+    $month = $monthForViewer->month;
+    $reveal = $monthForViewer->reveal;
+    $otherName = $monthForViewer->other->displayName();
+@endphp
 
-            @if ($newer)
-                <a class="link" href="{{ route("memories.show", $newer->toYearMonth()) }}">Newer</a>
-            @endif
-        </span>
-    </div>
+<article class="mx-auto max-w-xl">
+    <a class="link font-sans text-sm" href="{{ route("memories.index") }}">← All months</a>
 
     <x-type.page-title class="mt-8 text-5xl">{{ $month->label() }}</x-type.page-title>
 
@@ -23,7 +18,7 @@
                 'underline decoration-2 underline-offset-8' => ! $showingYours,
                 'opacity-50 hover:opacity-100' => $showingYours,
             ])
-        >{{ $other->displayName() }}</a>
+        >{{ $otherName }}</a>
         <a
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
             @if ($showingYours) aria-current="page" @endif
@@ -35,7 +30,7 @@
     </nav>
 
     @if ($reveal->hasHappened())
-        <p class="mt-4 font-sans text-sm opacity-60">{{ $revealStatusLabel() }}</p>
+        <p class="mt-4 font-sans text-sm opacity-60">{{ $monthForViewer->revealStatusLabel() }}</p>
     @endif
 
     <section class="mt-10">
@@ -48,15 +43,30 @@
         @elseif ($showingYours)
             <p class="mt-5 text-lg italic opacity-70">You haven't written about this month yet.</p>
         @elseif (! $reveal->hasHappened())
-            <p class="mt-5 text-lg italic opacity-80">{{ $revealStatusLabel() }}</p>
+            <p class="mt-5 text-lg italic opacity-80">{{ $monthForViewer->revealStatusLabel() }}</p>
         @else
-            <p class="mt-5 text-lg italic opacity-70">{{ $other->displayName() }} didn't share a memory this month.</p>
+            <p class="mt-5 text-lg italic opacity-70">{{ $otherName }} didn't share a memory this month.</p>
         @endif
 
         @if ($showingYours)
             <div class="mt-6">
-                <x-memories.cta :memory="$viewerMemory" />
+                <x-memories.cta :memory="$monthForViewer->viewerMemory" />
             </div>
         @endif
     </section>
+
+    @if ($previous || $next)
+        <nav class="mt-12 flex justify-between gap-4 font-sans text-sm">
+            @if ($previous)
+                <a class="link" href="{{ route("memories.show", $previous->toYearMonth()) }}"
+                    >← {{ $previous->label() }}</a>
+            @else
+                <span></span>
+            @endif
+
+            @if ($next)
+                <a class="link" href="{{ route("memories.show", $next->toYearMonth()) }}">{{ $next->label() }} →</a>
+            @endif
+        </nav>
+    @endif
 </article>

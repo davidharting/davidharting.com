@@ -37,3 +37,15 @@ describe('viewAny', function () {
         expect(Gate::forUser($david)->inspect('viewAny', Memory::class)->status())->toBe(404);
     });
 });
+
+describe('viewMonth', function () {
+    test('follows viewAny', function () {
+        /** @var TestCase $this */
+        [$david, $katie] = User::factory()->count(2)->create();
+        MemoryParticipant::create(['user_id' => $david->id]);
+        MemoryParticipant::create(['user_id' => $katie->id]);
+
+        expect(Gate::forUser($david)->allows('viewMonth', Memory::class))->toBeTrue()
+            ->and(Gate::inspect('viewMonth', Memory::class)->status())->toBe(404);
+    });
+});

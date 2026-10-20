@@ -27,7 +27,7 @@ class Initial extends Component
      */
     public function label(): string
     {
-        if ($this->memory === null) {
+        if ($this->notStarted()) {
             return "{$this->name}: not started";
         }
 
@@ -36,7 +36,7 @@ class Initial extends Component
 
     public function stateClasses(): string
     {
-        if ($this->memory === null) {
+        if ($this->notStarted()) {
             return 'border-base-300 border opacity-50';
         }
 
@@ -45,6 +45,11 @@ class Initial extends Component
         }
 
         return 'bg-primary text-primary-content';
+    }
+
+    private function notStarted(): bool
+    {
+        return $this->memory === null;
     }
 
     public function render(): View

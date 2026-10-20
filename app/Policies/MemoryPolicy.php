@@ -20,4 +20,13 @@ class MemoryPolicy
 
         return Response::denyAsNotFound();
     }
+
+    /**
+     * Who may see one month's page. For now that is whoever may see the
+     * list; whether the month exists is the controller's call.
+     */
+    public function viewMonth(?User $user): Response
+    {
+        return $this->viewAny($user);
+    }
 }

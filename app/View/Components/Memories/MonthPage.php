@@ -3,38 +3,30 @@
 namespace App\View\Components\Memories;
 
 use App\Models\Memory;
-use App\Models\User;
 use App\Support\Month;
-use Illuminate\Support\Collection;
+use App\View\Memories\MonthForViewer;
+use Illuminate\View\Component;
 use Illuminate\View\View;
 
 /**
  * One month, one person per page: the other participant's memory, or the
  * viewer's own when showing theirs, with links to the neighbouring months.
  */
-class MonthPage extends MonthForViewer
+class MonthPage extends Component
 {
-    /**
-     * @param  Collection<int, Memory>  $memories  Every memory written for the month.
-     */
     public function __construct(
-        Month $month,
-        User $viewer,
-        User $other,
-        Collection $memories,
+        public MonthForViewer $monthForViewer,
         public bool $showingYours,
-        public ?Month $older,
-        public ?Month $newer,
-    ) {
-        parent::__construct($month, $viewer, $other, $memories);
-    }
+        public ?Month $previous,
+        public ?Month $next,
+    ) {}
 
     /**
      * The memory this page shows, if there is one the viewer may read.
      */
     public function shownMemory(): ?Memory
     {
-        return $this->showingYours ? $this->viewerMemory : $this->revealedOtherMemory();
+        return $this->showingYours ? $this->monthForViewer->viewerMemory : $this->monthForViewer->revealedOtherMemory();
     }
 
     /**
@@ -43,10 +35,10 @@ class MonthPage extends MonthForViewer
     public function statusLabel(): ?string
     {
         if ($this->showingYours) {
-            return $this->viewerMemory === null ? null : $this->viewerStatusLabel();
+            return $this->monthForViewer->viewerMemory === null ? null : $this->monthForViewer->viewerStatusLabel();
         }
 
-        return $this->otherStatusLabel();
+        return $this->monthForViewer->otherStatusLabel();
     }
 
     public function render(): View

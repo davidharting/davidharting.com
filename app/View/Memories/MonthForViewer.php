@@ -1,39 +1,44 @@
 <?php
 
-namespace App\View\Components\Memories;
+namespace App\View\Memories;
 
 use App\Memories\Reveal;
 use App\Models\Memory;
 use App\Models\User;
 use App\Support\Month;
 use Illuminate\Support\Collection;
-use Illuminate\View\Component;
 
 /**
  * What one participant sees of a month: their own memory, the other
  * person's as far as the reveal allows, and the labels that describe both.
- * The month tile and the month page build on it.
+ * The month tile and the month page are each handed one.
  */
-abstract class MonthForViewer extends Component
+final readonly class MonthForViewer
 {
-    public readonly ?Memory $viewerMemory;
+    public Reveal $reveal;
 
-    public readonly ?Memory $otherMemory;
-
-    public readonly Reveal $reveal;
-
-    /**
-     * @param  Collection<int, Memory>  $memories  Every memory written for the month.
-     */
     public function __construct(
         public Month $month,
         public User $viewer,
         public User $other,
-        Collection $memories,
+        public ?Memory $viewerMemory,
+        public ?Memory $otherMemory,
     ) {
-        $this->viewerMemory = $memories->firstWhere('user_id', $viewer->id);
-        $this->otherMemory = $memories->firstWhere('user_id', $other->id);
-        $this->reveal = new Reveal($month, $memories);
+        $this->reveal = new Reveal($month, collect([$viewerMemory, $otherMemory])->filter()->values());
+    }
+
+    /**
+     * @param  Collection<int, Memory>  $memories  Every memory written for the month.
+     */
+    public static function fromMemories(Month $month, User $viewer, User $other, Collection $memories): self
+    {
+        return new self(
+            $month,
+            $viewer,
+            $other,
+            $memories->firstWhere('user_id', $viewer->id),
+            $memories->firstWhere('user_id', $other->id),
+        );
     }
 
     /**
@@ -41,11 +46,7 @@ abstract class MonthForViewer extends Component
      */
     public function revealedOtherMemory(): ?Memory
     {
-        if ($this->otherMemory === null || ! $this->reveal->hasRevealed($this->otherMemory)) {
-            return null;
-        }
-
-        return $this->otherMemory;
+        return $this->reveal->revealedMemoryOf($this->other);
     }
 
     /**

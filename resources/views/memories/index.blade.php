@@ -3,13 +3,8 @@
         <x-type.page-title class="text-5xl">Memories</x-type.page-title>
 
         <div class="mt-8 space-y-4">
-            @foreach ($months as $month)
-                <x-memories.month-tile
-                    :month="$month"
-                    :viewer="$viewer"
-                    :other="$other"
-                    :memories="$memoriesByMonth->get($month->toDateString(), collect())"
-                />
+            @foreach ($monthsForViewer as $monthForViewer)
+                <x-memories.month-tile :month-for-viewer="$monthForViewer" />
             @endforeach
         </div>
     </div>

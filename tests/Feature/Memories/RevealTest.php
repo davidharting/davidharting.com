@@ -134,3 +134,26 @@ describe('hasRevealed()', function () {
             ->and($reveal->hasRevealed($draft))->toBeFalse();
     });
 });
+
+describe('revealedMemoryOf()', function () {
+    test('is the user\'s memory once revealed, and null before', function () {
+        /** @var TestCase $this */
+        $august = Month::of(2026, 8);
+        $katies = revealTestMemory($this->katie, $august, '2026-09-05T12:00:00Z');
+        $beforeReveal = new Reveal($this->september, collect([
+            revealTestMemory($this->katie, $this->september, '2026-10-05T12:00:00Z'),
+        ]));
+
+        expect((new Reveal($august, collect([$katies])))->revealedMemoryOf($this->katie)?->is($katies))->toBeTrue()
+            ->and($beforeReveal->revealedMemoryOf($this->katie))->toBeNull();
+    });
+
+    test('is null for a draft or a user with no memory', function () {
+        /** @var TestCase $this */
+        $august = Month::of(2026, 8);
+        $reveal = new Reveal($august, collect([revealTestMemory($this->katie, $august)]));
+
+        expect($reveal->revealedMemoryOf($this->katie))->toBeNull()
+            ->and($reveal->revealedMemoryOf($this->david))->toBeNull();
+    });
+});

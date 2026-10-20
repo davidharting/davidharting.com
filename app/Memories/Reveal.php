@@ -3,6 +3,7 @@
 namespace App\Memories;
 
 use App\Models\Memory;
+use App\Models\User;
 use App\Support\Month;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -58,5 +59,15 @@ final readonly class Reveal
     public function hasRevealed(Memory $memory): bool
     {
         return $memory->isShared() && $this->hasHappened();
+    }
+
+    /**
+     * The user's memory for the month if others may read it, otherwise null.
+     */
+    public function revealedMemoryOf(User $user): ?Memory
+    {
+        $memory = $this->memories->firstWhere('user_id', $user->id);
+
+        return $memory !== null && $this->hasRevealed($memory) ? $memory : null;
     }
 }

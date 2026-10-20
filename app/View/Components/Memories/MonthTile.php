@@ -2,31 +2,32 @@
 
 namespace App\View\Components\Memories;
 
+use App\View\Memories\MonthForViewer;
 use Illuminate\Support\Str;
+use Illuminate\View\Component;
 use Illuminate\View\View;
 
 /**
  * One month in the list. Before the reveal it says where both memories
  * stand; after, it opens with a line of what the viewer can read.
  */
-class MonthTile extends MonthForViewer
+class MonthTile extends Component
 {
     /**
      * The tile shows at most this many characters of a memory.
      */
     public const SNIPPET_LENGTH = 160;
 
+    public function __construct(public MonthForViewer $monthForViewer) {}
+
     /**
      * The start of the other person's revealed memory, or else the viewer's
-     * own shared one, up to the end of its first line.
+     * own, up to the end of its first line. Null before the reveal.
      */
     public function snippet(): ?string
     {
-        if (! $this->reveal->hasHappened()) {
-            return null;
-        }
-
-        $memory = $this->revealedOtherMemory() ?? ($this->viewerMemory?->isShared() ? $this->viewerMemory : null);
+        $memory = $this->monthForViewer->revealedOtherMemory()
+            ?? $this->monthForViewer->reveal->revealedMemoryOf($this->monthForViewer->viewer);
 
         if ($memory === null) {
             return null;
@@ -37,7 +38,7 @@ class MonthTile extends MonthForViewer
 
     public function isEmpty(): bool
     {
-        return $this->viewerMemory === null && $this->otherMemory === null;
+        return $this->monthForViewer->viewerMemory === null && $this->monthForViewer->otherMemory === null;
     }
 
     public function render(): View

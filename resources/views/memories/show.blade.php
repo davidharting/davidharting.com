@@ -1,11 +1,8 @@
 <x-layout.app>
     <x-memories.month-page
-        :month="$month"
-        :viewer="$viewer"
-        :other="$other"
-        :memories="$memories"
+        :month-for-viewer="$monthForViewer"
         :showing-yours="$showingYours"
-        :older="$older"
-        :newer="$newer"
+        :previous="$previous"
+        :next="$next"
     />
 </x-layout.app>

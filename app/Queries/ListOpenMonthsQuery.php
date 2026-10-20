@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\DB;
  * latest open month. The launch month is the earliest month anyone has a
  * memory for, or the latest open month before anyone has written one.
  *
+ * Open here has two bounds. A month must have opened, which is the clock
+ * rule on Month, and it must not be before the launch month, which takes
+ * the database.
+ *
  * This query performs no authorization. The caller is expected to have
  * checked that the viewer may see monthly memories.
  */
@@ -44,7 +48,7 @@ class ListOpenMonthsQuery
      */
     public function contains(Month $month): bool
     {
-        if (! $month->isOpen()) {
+        if (! $month->hasOpened()) {
             return false;
         }
 

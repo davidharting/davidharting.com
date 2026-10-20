@@ -114,7 +114,11 @@ final class Month implements Castable, Stringable
         return $this->firstDay()->addMonthsNoOverflow(2)->utc();
     }
 
-    public function isOpen(?DateTimeInterface $at = null): bool
+    /**
+     * Whether the month has opened for drafting and sharing. Once open, a
+     * month stays open.
+     */
+    public function hasOpened(?DateTimeInterface $at = null): bool
     {
         return $this->opensAt()->lessThanOrEqualTo($at ?? CarbonImmutable::now());
     }
