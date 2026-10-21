@@ -65,28 +65,27 @@ describe('create()', function () {
 });
 
 describe('update()', function () {
-    test('allows the author', function () {
+    beforeEach(function () {
         /** @var TestCase $this */
         memoryPolicyTestParticipants($this);
-        $memory = Memory::factory()->for($this->david)->create();
-
-        expect(Gate::forUser($this->david)->allows('update', $memory))->toBeTrue();
+        $this->davidsMemory = Memory::factory()->for($this->david)->create();
     });
 
-    test('is not found for the other participant', function () {
+    test('allows the author', function () {
         /** @var TestCase $this */
-        memoryPolicyTestParticipants($this);
-        $memory = Memory::factory()->for($this->david)->create();
+        expect(Gate::forUser($this->david)->allows('update', $this->davidsMemory))->toBeTrue();
+    });
 
-        expect(Gate::forUser($this->katie)->inspect('update', $memory)->status())->toBe(404);
+    test('is not found for the other participant or a guest', function () {
+        /** @var TestCase $this */
+        expect(Gate::forUser($this->katie)->inspect('update', $this->davidsMemory)->status())->toBe(404)
+            ->and(Gate::inspect('update', $this->davidsMemory)->status())->toBe(404);
     });
 
     test('is not found for the author while the feature is not enabled', function () {
         /** @var TestCase $this */
-        $author = User::factory()->create();
-        MemoryParticipant::create(['user_id' => $author->id]);
-        $memory = Memory::factory()->for($author)->create();
+        MemoryParticipant::query()->where('user_id', $this->katie->id)->delete();
 
-        expect(Gate::forUser($author)->inspect('update', $memory)->status())->toBe(404);
+        expect(Gate::forUser($this->david)->inspect('update', $this->davidsMemory)->status())->toBe(404);
     });
 });

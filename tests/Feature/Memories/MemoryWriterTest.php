@@ -15,6 +15,7 @@ beforeEach(function () {
     $this->author = User::factory()->create();
     $this->month = Month::of(2026, 9);
     $this->writer = new MemoryWriter($this->author, $this->month);
+    $this->authorsMemory = Memory::factory()->for($this->author)->forMonth($this->month);
 });
 
 describe('save()', function () {
@@ -38,36 +39,28 @@ describe('save()', function () {
 
     test('updates the text and bumps the version', function () {
         /** @var TestCase $this */
-        $memory = Memory::factory()->for($this->author)->forMonth($this->month)->create(['body' => 'Before']);
+        $memory = $this->authorsMemory->create(['body' => 'Before']);
 
         $saved = $this->writer->save('After', 0);
 
         expect($saved->id)->toBe($memory->id)
             ->and($saved->body)->toBe('After')
-            ->and($saved->lock_version)->toBe(1);
+            ->and($saved->lock_version)->toBe(1)
+            ->and($saved->isDraft())->toBeTrue();
     });
 
     test('lets a draft be emptied', function () {
         /** @var TestCase $this */
-        Memory::factory()->for($this->author)->forMonth($this->month)->create();
+        $this->authorsMemory->create();
 
         $saved = $this->writer->save('', 0);
 
         expect($saved->body)->toBe('');
     });
 
-    test('never shares', function () {
-        /** @var TestCase $this */
-        Memory::factory()->for($this->author)->forMonth($this->month)->create();
-
-        $saved = $this->writer->save('Still a draft', 0);
-
-        expect($saved->isDraft())->toBeTrue();
-    });
-
     test('refuses to overwrite text saved since the writer last saw it', function () {
         /** @var TestCase $this */
-        Memory::factory()->for($this->author)->forMonth($this->month)->create(['body' => 'From the phone', 'lock_version' => 3]);
+        $this->authorsMemory->create(['body' => 'From the phone', 'lock_version' => 3]);
 
         expect(fn () => $this->writer->save('From the laptop', 2))
             ->toThrow(MemoryChangedElsewhere::class);
@@ -77,7 +70,9 @@ describe('save()', function () {
 
     test('refuses to start a memory another device already started', function () {
         /** @var TestCase $this */
-        Memory::factory()->for($this->author)->forMonth($this->month)->create(['body' => 'From the phone']);
+        // The row already exists here, so this goes through the version check. Two
+        // simultaneous first saves would instead hit the unique index in start().
+        $this->authorsMemory->create(['body' => 'From the phone']);
 
         expect(fn () => $this->writer->save('From the laptop', null))
             ->toThrow(MemoryChangedElsewhere::class);
@@ -87,7 +82,7 @@ describe('save()', function () {
 
     test('refuses to empty a shared memory', function () {
         /** @var TestCase $this */
-        Memory::factory()->for($this->author)->forMonth($this->month)->shared()->create(['body' => 'Shared text']);
+        $this->authorsMemory->shared()->create(['body' => 'Shared text']);
 
         expect(fn () => $this->writer->save(' ', 0))
             ->toThrow(ValidationException::class);
@@ -110,7 +105,7 @@ describe('save()', function () {
 describe('share()', function () {
     test('saves the text and shares the memory', function () {
         /** @var TestCase $this */
-        Memory::factory()->for($this->author)->forMonth($this->month)->create(['body' => 'Before']);
+        $this->authorsMemory->create(['body' => 'Before']);
 
         $shared = $this->writer->share('Final words', 0);
 
@@ -128,7 +123,7 @@ describe('share()', function () {
 
     test('keeps the first share time when shared again', function () {
         /** @var TestCase $this */
-        $memory = Memory::factory()->for($this->author)->forMonth($this->month)
+        $memory = $this->authorsMemory
             ->shared(CarbonImmutable::parse('2026-10-05T21:40:00Z'))->create();
 
         $shared = $this->writer->share('Edited after sharing', 0);
@@ -139,9 +134,9 @@ describe('share()', function () {
 
     test('refuses to share nothing', function () {
         /** @var TestCase $this */
-        Memory::factory()->for($this->author)->forMonth($this->month)->create();
+        $this->authorsMemory->create();
 
-        expect(fn () => $this->writer->share('', 0))
+        expect(fn () => $this->writer->share('  ', 0))
             ->toThrow(ValidationException::class);
 
         expect(Memory::first()->isDraft())->toBeTrue();
@@ -149,7 +144,7 @@ describe('share()', function () {
 
     test('refuses to share over text saved on another device', function () {
         /** @var TestCase $this */
-        Memory::factory()->for($this->author)->forMonth($this->month)->create(['body' => 'From the phone', 'lock_version' => 1]);
+        $this->authorsMemory->create(['body' => 'From the phone', 'lock_version' => 1]);
 
         expect(fn () => $this->writer->share('From the laptop', 0))
             ->toThrow(MemoryChangedElsewhere::class);
@@ -157,5 +152,21 @@ describe('share()', function () {
         expect(Memory::first())
             ->body->toBe('From the phone')
             ->isDraft()->toBeTrue();
+    });
+
+    test('refuses to start a memory with nothing to share', function () {
+        /** @var TestCase $this */
+        expect(fn () => $this->writer->share('', null))->toThrow(ValidationException::class);
+
+        $this->assertDatabaseCount('memories', 0);
+    });
+
+    test('returns the latest version, so the next save goes through', function () {
+        /** @var TestCase $this */
+        $this->authorsMemory->create();
+
+        $shared = $this->writer->share('Shared', 0);
+
+        expect($this->writer->save('Edited after sharing', $shared->lock_version)->body)->toBe('Edited after sharing');
     });
 });

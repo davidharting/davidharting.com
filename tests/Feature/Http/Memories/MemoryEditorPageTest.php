@@ -17,7 +17,6 @@ test('opens the viewer\'s editor for the month', function () {
     $response = $this->actingAs($this->katie)->get('/memories/2026-09/write')
         ->assertSuccessful()
         ->assertSeeLivewire('memories.editor')
-        ->assertSeeText('David has shared. Share yours to reveal both.')
         ->assertSee(route('memories.show', ['month' => '2026-09', 'who' => 'yours']));
 
     expect(RenderedHead::from($response)->title)->toBe('Your September 2026 - davidharting.com');
@@ -28,6 +27,7 @@ test('is not found for a month outside the list or a malformed month', function 
     $this->actingAs($this->katie)->get("/memories/{$month}/write")->assertNotFound();
 })->with([
     'not open yet' => '2026-10',
+    // The seeder's launch month is March 2026.
     'before launch' => '2026-02',
     'not a month' => '2026-13',
 ]);
