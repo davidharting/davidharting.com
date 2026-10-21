@@ -53,3 +53,13 @@ describe('viewMonth()', function () {
             ->and(Gate::inspect('viewMonth', Memory::class)->status())->toBe(404);
     });
 });
+
+describe('editMonth()', function () {
+    test('allows participants and denies guests, like viewAny', function () {
+        /** @var TestCase $this */
+        memoryPolicyTestParticipants($this);
+
+        expect(Gate::forUser($this->david)->allows('editMonth', Memory::class))->toBeTrue()
+            ->and(Gate::inspect('editMonth', Memory::class)->status())->toBe(404);
+    });
+});

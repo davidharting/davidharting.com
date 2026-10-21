@@ -37,7 +37,6 @@
         @if ($statusLabel() !== null)
             <p class="font-sans text-sm">
                 <span class="opacity-60">{{ $statusLabel() }}</span>
-                {{-- A shared memory is edited through a quiet link, so reading never turns into editing. --}}
                 @if ($showingYours && $monthForViewer->viewerMemory?->isShared())
                     <span class="opacity-60">·</span>
                     <a class="link" href="{{ route("memories.write", $month->toYearMonth()) }}">Edit</a>
@@ -45,7 +44,6 @@
             </p>
         @endif
 
-        {{-- A draft's button sits above the text, so a long draft doesn't bury it. --}}
         @if ($showingYours && $monthForViewer->viewerMemory?->isDraft())
             <div class="mt-4">
                 <x-memories.cta :memory="$monthForViewer->viewerMemory" :month="$month" />
@@ -58,7 +56,6 @@
             <p class="mt-5 text-lg italic opacity-70">You haven't written about this month yet.</p>
         @elseif (! $reveal->hasHappened())
             <p class="mt-5 text-lg italic opacity-80">{{ $monthForViewer->revealStatusLabel() }}</p>
-            {{-- Before the reveal, their page also leads to your editor until you've shared. --}}
             @if (! $monthForViewer->viewerMemory?->isShared())
                 <div class="mt-6">
                     <x-memories.cta :memory="$monthForViewer->viewerMemory" :month="$month" />

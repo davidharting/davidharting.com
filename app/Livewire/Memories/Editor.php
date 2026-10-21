@@ -3,7 +3,7 @@
 namespace App\Livewire\Memories;
 
 use App\Memories\MemoryChangedElsewhere;
-use App\Memories\WriteMemory;
+use App\Memories\MemoryWriter;
 use App\Models\Memory;
 use App\Models\MemoryParticipant;
 use App\Queries\ListOpenMonthsQuery;
@@ -54,7 +54,7 @@ class Editor extends Component
 
     public function boot(): void
     {
-        $this->authorize('viewMonth', Memory::class);
+        $this->authorize('editMonth', Memory::class);
     }
 
     public function mount(string $month): void
@@ -76,22 +76,12 @@ class Editor extends Component
 
     public function save(): void
     {
-        $this->write(fn (WriteMemory $writer) => $writer->save(
-            auth()->user(),
-            $this->monthValue(),
-            $this->body,
-            $this->lockVersion,
-        ));
+        $this->write(fn (MemoryWriter $writer) => $writer->save($this->body, $this->lockVersion));
     }
 
     public function share(): void
     {
-        $shared = $this->write(fn (WriteMemory $writer) => $writer->share(
-            auth()->user(),
-            $this->monthValue(),
-            $this->body,
-            $this->lockVersion,
-        ));
+        $shared = $this->write(fn (MemoryWriter $writer) => $writer->share($this->body, $this->lockVersion));
 
         $this->justShared = $shared !== null;
     }
@@ -234,12 +224,12 @@ class Editor extends Component
      * Run a write, keeping the version it saved, or pause saving if another
      * device got there first.
      *
-     * @param  callable(WriteMemory): ?Memory  $write
+     * @param  callable(MemoryWriter): ?Memory  $write
      */
     private function write(callable $write): ?Memory
     {
         try {
-            $memory = $write(new WriteMemory);
+            $memory = $write(new MemoryWriter(auth()->user(), $this->monthValue()));
         } catch (MemoryChangedElsewhere) {
             $this->changedElsewhere = true;
 

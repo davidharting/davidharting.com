@@ -29,4 +29,13 @@ class MemoryPolicy
     {
         return $this->viewAny($user);
     }
+
+    /**
+     * Who may write their own memory for one month. For now that is whoever
+     * may see the list; whether the month is open is the caller's call.
+     */
+    public function editMonth(?User $user): Response
+    {
+        return $this->viewAny($user);
+    }
 }

@@ -1,3 +1,3 @@
-<x-layout.focus>
+<x-layout.app hide-nav>
     <livewire:memories.editor :month="$month->toYearMonth()" />
-</x-layout.focus>
+</x-layout.app>

@@ -1,7 +1,7 @@
 <?php
 
 use App\Memories\MemoryChangedElsewhere;
-use App\Memories\WriteMemory;
+use App\Memories\MemoryWriter;
 use App\Models\Memory;
 use App\Models\User;
 use App\Support\Month;
@@ -14,12 +14,13 @@ beforeEach(function () {
     $this->travelTo('2026-10-18T12:00:00Z');
     $this->author = User::factory()->create();
     $this->month = Month::of(2026, 9);
+    $this->writer = new MemoryWriter($this->author, $this->month);
 });
 
 describe('save()', function () {
     test('starts the memory on the first save with text', function () {
         /** @var TestCase $this */
-        $memory = (new WriteMemory)->save($this->author, $this->month, 'The first cold morning.', null);
+        $memory = $this->writer->save('The first cold morning.', null);
 
         expect($memory->body)->toBe('The first cold morning.')
             ->and($memory->isDraft())->toBeTrue()
@@ -29,7 +30,7 @@ describe('save()', function () {
 
     test('does not start a memory with nothing in it', function () {
         /** @var TestCase $this */
-        $memory = (new WriteMemory)->save($this->author, $this->month, "  \n ", null);
+        $memory = $this->writer->save("  \n ", null);
 
         expect($memory)->toBeNull();
         $this->assertDatabaseCount('memories', 0);
@@ -39,7 +40,7 @@ describe('save()', function () {
         /** @var TestCase $this */
         $memory = Memory::factory()->for($this->author)->forMonth($this->month)->create(['body' => 'Before']);
 
-        $saved = (new WriteMemory)->save($this->author, $this->month, 'After', 0);
+        $saved = $this->writer->save('After', 0);
 
         expect($saved->id)->toBe($memory->id)
             ->and($saved->body)->toBe('After')
@@ -50,7 +51,7 @@ describe('save()', function () {
         /** @var TestCase $this */
         Memory::factory()->for($this->author)->forMonth($this->month)->create();
 
-        $saved = (new WriteMemory)->save($this->author, $this->month, '', 0);
+        $saved = $this->writer->save('', 0);
 
         expect($saved->body)->toBe('');
     });
@@ -59,7 +60,7 @@ describe('save()', function () {
         /** @var TestCase $this */
         Memory::factory()->for($this->author)->forMonth($this->month)->create();
 
-        $saved = (new WriteMemory)->save($this->author, $this->month, 'Still a draft', 0);
+        $saved = $this->writer->save('Still a draft', 0);
 
         expect($saved->isDraft())->toBeTrue();
     });
@@ -68,7 +69,7 @@ describe('save()', function () {
         /** @var TestCase $this */
         Memory::factory()->for($this->author)->forMonth($this->month)->create(['body' => 'From the phone', 'lock_version' => 3]);
 
-        expect(fn () => (new WriteMemory)->save($this->author, $this->month, 'From the laptop', 2))
+        expect(fn () => $this->writer->save('From the laptop', 2))
             ->toThrow(MemoryChangedElsewhere::class);
 
         $this->assertDatabaseHas('memories', ['body' => 'From the phone', 'lock_version' => 3]);
@@ -78,7 +79,7 @@ describe('save()', function () {
         /** @var TestCase $this */
         Memory::factory()->for($this->author)->forMonth($this->month)->create(['body' => 'From the phone']);
 
-        expect(fn () => (new WriteMemory)->save($this->author, $this->month, 'From the laptop', null))
+        expect(fn () => $this->writer->save('From the laptop', null))
             ->toThrow(MemoryChangedElsewhere::class);
 
         $this->assertDatabaseHas('memories', ['body' => 'From the phone']);
@@ -88,7 +89,7 @@ describe('save()', function () {
         /** @var TestCase $this */
         Memory::factory()->for($this->author)->forMonth($this->month)->shared()->create(['body' => 'Shared text']);
 
-        expect(fn () => (new WriteMemory)->save($this->author, $this->month, ' ', 0))
+        expect(fn () => $this->writer->save(' ', 0))
             ->toThrow(ValidationException::class);
 
         $this->assertDatabaseHas('memories', ['body' => 'Shared text']);
@@ -99,7 +100,7 @@ describe('save()', function () {
         $someoneElses = Memory::factory()->forMonth($this->month)->create(['body' => 'Not yours']);
         $otherMonth = Memory::factory()->for($this->author)->forMonth(Month::of(2026, 8))->create(['body' => 'August']);
 
-        (new WriteMemory)->save($this->author, $this->month, 'September', null);
+        $this->writer->save('September', null);
 
         expect($someoneElses->fresh()->body)->toBe('Not yours')
             ->and($otherMonth->fresh()->body)->toBe('August');
@@ -111,7 +112,7 @@ describe('share()', function () {
         /** @var TestCase $this */
         Memory::factory()->for($this->author)->forMonth($this->month)->create(['body' => 'Before']);
 
-        $shared = (new WriteMemory)->share($this->author, $this->month, 'Final words', 0);
+        $shared = $this->writer->share('Final words', 0);
 
         expect($shared->body)->toBe('Final words')
             ->and($shared->shared_at->toIso8601String())->toBe('2026-10-18T12:00:00+00:00');
@@ -119,7 +120,7 @@ describe('share()', function () {
 
     test('starts and shares a memory in one go', function () {
         /** @var TestCase $this */
-        $shared = (new WriteMemory)->share($this->author, $this->month, 'Short and sweet', null);
+        $shared = $this->writer->share('Short and sweet', null);
 
         expect($shared->isShared())->toBeTrue()
             ->and($shared->body)->toBe('Short and sweet');
@@ -130,7 +131,7 @@ describe('share()', function () {
         $memory = Memory::factory()->for($this->author)->forMonth($this->month)
             ->shared(CarbonImmutable::parse('2026-10-05T21:40:00Z'))->create();
 
-        $shared = (new WriteMemory)->share($this->author, $this->month, 'Edited after sharing', 0);
+        $shared = $this->writer->share('Edited after sharing', 0);
 
         expect($shared->shared_at->toIso8601String())->toBe('2026-10-05T21:40:00+00:00')
             ->and($shared->body)->toBe('Edited after sharing');
@@ -140,7 +141,7 @@ describe('share()', function () {
         /** @var TestCase $this */
         Memory::factory()->for($this->author)->forMonth($this->month)->create();
 
-        expect(fn () => (new WriteMemory)->share($this->author, $this->month, '', 0))
+        expect(fn () => $this->writer->share('', 0))
             ->toThrow(ValidationException::class);
 
         expect(Memory::first()->isDraft())->toBeTrue();
@@ -150,7 +151,7 @@ describe('share()', function () {
         /** @var TestCase $this */
         Memory::factory()->for($this->author)->forMonth($this->month)->create(['body' => 'From the phone', 'lock_version' => 1]);
 
-        expect(fn () => (new WriteMemory)->share($this->author, $this->month, 'From the laptop', 0))
+        expect(fn () => $this->writer->share('From the laptop', 0))
             ->toThrow(MemoryChangedElsewhere::class);
 
         expect(Memory::first())
