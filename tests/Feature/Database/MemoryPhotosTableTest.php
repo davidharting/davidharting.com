@@ -6,6 +6,27 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
+ * The columns of both copies, as processing stores them.
+ *
+ * @return array<string, mixed>
+ */
+function memoryPhotoCopies(): array
+{
+    return [
+        'web_path' => 'memories/photos/abc/web.jpg',
+        'web_mime_type' => 'image/jpeg',
+        'web_width' => 2048,
+        'web_height' => 1536,
+        'web_bytes' => 450_000,
+        'thumbnail_path' => 'memories/photos/abc/thumbnail.jpg',
+        'thumbnail_mime_type' => 'image/jpeg',
+        'thumbnail_width' => 512,
+        'thumbnail_height' => 384,
+        'thumbnail_bytes' => 40_000,
+    ];
+}
+
+/**
  * Insert a row straight into memory_photos, so the table's own rules are what
  * gets tested.
  *
@@ -29,14 +50,14 @@ test('accepts a photo that is still processing', function () {
     /** @var TestCase $this */
     $id = insertMemoryPhoto();
 
-    $this->assertDatabaseHas('memory_photos', ['id' => $id, 'variants' => null, 'failed_at' => null]);
+    $this->assertDatabaseHas('memory_photos', ['id' => $id, 'web_path' => null, 'thumbnail_path' => null, 'failed_at' => null]);
 });
 
-test('accepts a ready photo with its copies', function () {
+test('accepts a ready photo with both copies', function () {
     /** @var TestCase $this */
-    $id = insertMemoryPhoto(['variants' => json_encode(['web' => ['path' => 'web.jpg']])]);
+    $id = insertMemoryPhoto(memoryPhotoCopies());
 
-    expect(json_decode(DB::table('memory_photos')->find($id)->variants, true))->toBe(['web' => ['path' => 'web.jpg']]);
+    $this->assertDatabaseHas('memory_photos', ['id' => $id, ...memoryPhotoCopies()]);
 });
 
 test('accepts a failed photo with its reason', function () {
@@ -77,12 +98,30 @@ test('rejects a reason without a failure time', function () {
 
 test('rejects a photo that is both ready and failed', function () {
     /** @var TestCase $this */
-    insertMemoryPhoto([
-        'variants' => json_encode(['web' => ['path' => 'web.jpg']]),
-        'failed_at' => now(),
-        'failure' => 'vips exited with 1',
-    ]);
+    insertMemoryPhoto([...memoryPhotoCopies(), 'failed_at' => now(), 'failure' => 'vips exited with 1']);
 })->throws(QueryException::class, 'memory_photos_ready_or_failed');
+
+test('rejects a copy with only some of its details', function () {
+    /** @var TestCase $this */
+    insertMemoryPhoto([...memoryPhotoCopies(), 'web_bytes' => null]);
+})->throws(QueryException::class, 'memory_photos_web_copy_complete');
+
+test('rejects a thumbnail with only some of its details', function () {
+    /** @var TestCase $this */
+    insertMemoryPhoto([...memoryPhotoCopies(), 'thumbnail_width' => null]);
+})->throws(QueryException::class, 'memory_photos_thumbnail_copy_complete');
+
+test('rejects a web copy without its thumbnail', function () {
+    /** @var TestCase $this */
+    $copies = array_filter(memoryPhotoCopies(), fn (string $column) => str_starts_with($column, 'web_'), ARRAY_FILTER_USE_KEY);
+
+    insertMemoryPhoto($copies);
+})->throws(QueryException::class, 'memory_photos_copies_made_together');
+
+test('rejects a copy with no pixels', function () {
+    /** @var TestCase $this */
+    insertMemoryPhoto([...memoryPhotoCopies(), 'thumbnail_height' => 0]);
+})->throws(QueryException::class, 'memory_photos_copies_not_empty');
 
 test('keeps a memory from being deleted while it has photos', function () {
     /** @var TestCase $this */
