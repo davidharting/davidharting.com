@@ -36,14 +36,16 @@ test('accepts a ready photo with its copies', function () {
     /** @var TestCase $this */
     $id = insertMemoryPhoto(['variants' => json_encode(['web' => ['path' => 'web.jpg']])]);
 
-    $this->assertDatabaseHas('memory_photos', ['id' => $id]);
+    expect(json_decode(DB::table('memory_photos')->find($id)->variants, true))->toBe(['web' => ['path' => 'web.jpg']]);
 });
 
 test('accepts a failed photo with its reason', function () {
     /** @var TestCase $this */
     $id = insertMemoryPhoto(['failed_at' => now(), 'failure' => 'vips exited with 1']);
 
-    $this->assertDatabaseHas('memory_photos', ['id' => $id]);
+    $row = DB::table('memory_photos')->find($id);
+    expect($row->failed_at)->not->toBeNull()
+        ->and($row->failure)->toBe('vips exited with 1');
 });
 
 test('rejects a negative position', function () {
