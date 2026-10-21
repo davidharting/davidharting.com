@@ -67,6 +67,12 @@ describe('label()', function () {
     });
 });
 
+describe('name()', function () {
+    test('names just the month', function () {
+        expect(Month::of(2026, 9)->name())->toBe('September');
+    });
+});
+
 describe('dayLabel()', function () {
     test('labels the day in Eastern time, not UTC', function () {
         // 02:00Z on Oct 2 is 22:00 EDT on Oct 1.

@@ -132,6 +132,14 @@ final class Month implements Castable, Stringable
     }
 
     /**
+     * Just the month's name, for example "September".
+     */
+    public function name(): string
+    {
+        return $this->firstDay()->format('F');
+    }
+
+    /**
      * The calendar day an instant falls on in Eastern time, for example "Oct 2".
      * Lives here so display code never has to name the time zone.
      */
