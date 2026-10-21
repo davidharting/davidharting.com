@@ -44,7 +44,7 @@ class Memory extends Model
     }
 
     /**
-     * The memory's photos in the order its author chose, leaving out removed ones.
+     * The memory's photos in the order its author chose.
      */
     public function photos(): HasMany
     {

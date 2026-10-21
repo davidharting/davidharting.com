@@ -22,7 +22,7 @@ describe('captioned()', function () {
 });
 
 describe('ready()', function () {
-    test('points both copies at the original\'s directory', function () {
+    test('points both variants at the original\'s directory', function () {
         /** @var TestCase $this */
         $photo = MemoryPhoto::factory()->ready()->create()->fresh();
         $directory = dirname($photo->original_path);

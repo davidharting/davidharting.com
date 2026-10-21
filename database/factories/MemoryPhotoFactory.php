@@ -37,7 +37,7 @@ class MemoryPhotoFactory extends Factory
     }
 
     /**
-     * Processed into a web copy of the given size and a thumbnail that fits
+     * Processed into a web variant of the given size and a thumbnail that fits
      * in 512 pixels, both next to the original.
      */
     public function ready(int $width = 2048, int $height = 1536): static

@@ -6,7 +6,7 @@ use App\Models\MemoryPhoto;
 use Tests\TestCase;
 
 /**
- * A ready photo with known copies, so the model's reading of them is tested
+ * A ready photo with known variants, so the model's reading of them is tested
  * without leaning on the factory's sizes.
  */
 function readyMemoryPhoto(): MemoryPhoto
@@ -26,7 +26,7 @@ function readyMemoryPhoto(): MemoryPhoto
 }
 
 describe('isProcessing()', function () {
-    test('is true until its copies are made or processing gives up', function () {
+    test('is true until its variants are made or processing gives up', function () {
         /** @var TestCase $this */
         expect(MemoryPhoto::factory()->create()->isProcessing())->toBeTrue()
             ->and(MemoryPhoto::factory()->ready()->create()->fresh()->isProcessing())->toBeFalse()
@@ -35,7 +35,7 @@ describe('isProcessing()', function () {
 });
 
 describe('isReady()', function () {
-    test('is true only once its copies are stored', function () {
+    test('is true only once its variants are stored', function () {
         /** @var TestCase $this */
         expect(MemoryPhoto::factory()->ready()->create()->fresh()->isReady())->toBeTrue()
             ->and(MemoryPhoto::factory()->create()->isReady())->toBeFalse()
@@ -53,7 +53,7 @@ describe('isFailed()', function () {
 });
 
 describe('web()', function () {
-    test('describes the stored web-sized copy', function () {
+    test('describes the stored web variant', function () {
         /** @var TestCase $this */
         expect(readyMemoryPhoto()->web())->toEqual(
             new PhotoVariant('memories/photos/abc/web.jpg', 'image/jpeg', 1536, 2048, 412_345),

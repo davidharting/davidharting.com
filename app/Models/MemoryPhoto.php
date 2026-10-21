@@ -10,10 +10,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * A photo on a memory, with an optional caption. The original and its
- * derived copies all live on the private disk.
+ * variants all live on the private disk.
  *
- * Its state is derived: it is ready once processing has stored its web copy and thumbnail,
- * failed once processing has given up, and processing until either happens.
+ * Its state is derived, never stored:
+ *
+ * - Processing: neither of the states below yet.
+ * - Ready: processing has stored its web variant and thumbnail.
+ * - Failed: processing gave up, and `failure` says why.
+ *
  * Removing a photo soft-deletes it.
  */
 class MemoryPhoto extends Model
@@ -69,36 +73,38 @@ class MemoryPhoto extends Model
     }
 
     /**
-     * The copy sized for reading on the month page, once the photo is ready.
+     * A large variant, sharp enough to fill a phone or laptop screen at a
+     * fraction of the original's size. Null until the photo is ready.
      */
     public function web(): ?PhotoVariant
     {
-        return $this->copy('web');
+        return $this->variant('web');
     }
 
     /**
-     * The small copy for month tiles, once the photo is ready.
+     * A small variant, good enough for a preview a few centimetres across.
+     * Null until the photo is ready.
      */
     public function thumbnail(): ?PhotoVariant
     {
-        return $this->copy('thumbnail');
+        return $this->variant('thumbnail');
     }
 
     /**
-     * @param  'web'|'thumbnail'  $copy
+     * @param  'web'|'thumbnail'  $variant
      */
-    private function copy(string $copy): ?PhotoVariant
+    private function variant(string $variant): ?PhotoVariant
     {
-        if ($this->{"{$copy}_path"} === null) {
+        if ($this->{"{$variant}_path"} === null) {
             return null;
         }
 
         return new PhotoVariant(
-            path: $this->{"{$copy}_path"},
-            mimeType: $this->{"{$copy}_mime_type"},
-            width: $this->{"{$copy}_width"},
-            height: $this->{"{$copy}_height"},
-            bytes: $this->{"{$copy}_bytes"},
+            path: $this->{"{$variant}_path"},
+            mimeType: $this->{"{$variant}_mime_type"},
+            width: $this->{"{$variant}_width"},
+            height: $this->{"{$variant}_height"},
+            bytes: $this->{"{$variant}_bytes"},
         );
     }
 }
