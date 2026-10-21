@@ -22,13 +22,21 @@ describe('captioned()', function () {
 });
 
 describe('ready()', function () {
-    test('stores both copies next to the original', function () {
+    test('points both copies at the original\'s directory', function () {
         /** @var TestCase $this */
         $photo = MemoryPhoto::factory()->ready()->create()->fresh();
         $directory = dirname($photo->original_path);
 
         expect(dirname($photo->web()->path))->toBe($directory)
             ->and(dirname($photo->thumbnail()->path))->toBe($directory);
+    });
+
+    test('fits a landscape thumbnail in 512 pixels, keeping its shape', function () {
+        /** @var TestCase $this */
+        $photo = MemoryPhoto::factory()->ready(width: 2048, height: 1536)->create()->fresh();
+
+        expect($photo->thumbnail()->width)->toBe(512)
+            ->and($photo->thumbnail()->height)->toBe(384);
     });
 
     test('fits a portrait thumbnail in 512 pixels, keeping its shape', function () {

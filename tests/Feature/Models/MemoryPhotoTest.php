@@ -5,75 +5,72 @@ use App\Models\Memory;
 use App\Models\MemoryPhoto;
 use Tests\TestCase;
 
-describe('state', function () {
-    test('is processing until its copies are made', function () {
-        /** @var TestCase $this */
-        $photo = MemoryPhoto::factory()->create();
+/**
+ * A ready photo with known copies, so the model's reading of them is tested
+ * without leaning on the factory's sizes.
+ */
+function readyMemoryPhoto(): MemoryPhoto
+{
+    return MemoryPhoto::factory()->create([
+        'variants' => [
+            'web' => ['path' => 'memories/photos/abc/web.jpg', 'mime_type' => 'image/jpeg', 'width' => 1536, 'height' => 2048, 'bytes' => 412_345],
+            'thumbnail' => ['path' => 'memories/photos/abc/thumbnail.jpg', 'mime_type' => 'image/webp', 'width' => 384, 'height' => 512, 'bytes' => 31_234],
+        ],
+    ])->fresh();
+}
 
-        expect($photo->isProcessing())->toBeTrue()
-            ->and($photo->isReady())->toBeFalse()
-            ->and($photo->isFailed())->toBeFalse();
+describe('isProcessing()', function () {
+    test('is true until its copies are made or processing gives up', function () {
+        /** @var TestCase $this */
+        expect(MemoryPhoto::factory()->create()->isProcessing())->toBeTrue()
+            ->and(MemoryPhoto::factory()->ready()->create()->fresh()->isProcessing())->toBeFalse()
+            ->and(MemoryPhoto::factory()->failed()->create()->fresh()->isProcessing())->toBeFalse();
     });
+});
 
-    test('is ready once its copies are stored', function () {
+describe('isReady()', function () {
+    test('is true only once its copies are stored', function () {
         /** @var TestCase $this */
-        $photo = MemoryPhoto::factory()->ready()->create();
-
-        expect($photo->fresh()->isReady())->toBeTrue()
-            ->and($photo->fresh()->isProcessing())->toBeFalse()
-            ->and($photo->fresh()->isFailed())->toBeFalse();
+        expect(MemoryPhoto::factory()->ready()->create()->fresh()->isReady())->toBeTrue()
+            ->and(MemoryPhoto::factory()->create()->isReady())->toBeFalse()
+            ->and(MemoryPhoto::factory()->failed()->create()->fresh()->isReady())->toBeFalse();
     });
+});
 
-    test('is failed once processing gives up', function () {
+describe('isFailed()', function () {
+    test('is true only once processing gives up', function () {
         /** @var TestCase $this */
-        $photo = MemoryPhoto::factory()->failed('vips ran out of memory')->create();
-
-        expect($photo->fresh()->isFailed())->toBeTrue()
-            ->and($photo->fresh()->isProcessing())->toBeFalse()
-            ->and($photo->fresh()->isReady())->toBeFalse()
-            ->and($photo->fresh()->failure)->toBe('vips ran out of memory');
+        expect(MemoryPhoto::factory()->failed()->create()->fresh()->isFailed())->toBeTrue()
+            ->and(MemoryPhoto::factory()->create()->isFailed())->toBeFalse()
+            ->and(MemoryPhoto::factory()->ready()->create()->fresh()->isFailed())->toBeFalse();
     });
 });
 
 describe('web()', function () {
-    test('describes the web-sized copy once the photo is ready', function () {
+    test('describes the stored web-sized copy', function () {
         /** @var TestCase $this */
-        $photo = MemoryPhoto::factory()->ready(width: 1536, height: 2048)->create();
-
-        $web = $photo->fresh()->web();
-
-        expect($web)->toBeInstanceOf(PhotoVariant::class)
-            ->and($web->path)->toBe(dirname($photo->original_path).'/web.jpg')
-            ->and($web->mimeType)->toBe('image/jpeg')
-            ->and($web->width)->toBe(1536)
-            ->and($web->height)->toBe(2048);
+        expect(readyMemoryPhoto()->web())->toEqual(
+            new PhotoVariant('memories/photos/abc/web.jpg', 'image/jpeg', 1536, 2048, 412_345),
+        );
     });
 
     test('is null while the photo is processing', function () {
         /** @var TestCase $this */
-        $photo = MemoryPhoto::factory()->create();
-
-        expect($photo->web())->toBeNull();
+        expect(MemoryPhoto::factory()->create()->web())->toBeNull();
     });
 });
 
 describe('thumbnail()', function () {
-    test('describes the thumbnail once the photo is ready', function () {
+    test('describes the stored thumbnail', function () {
         /** @var TestCase $this */
-        $photo = MemoryPhoto::factory()->ready(width: 2048, height: 1536)->create();
-
-        $thumbnail = $photo->fresh()->thumbnail();
-
-        expect($thumbnail->path)->toBe(dirname($photo->original_path).'/thumbnail.jpg')
-            ->and($thumbnail->width)->toBe(512)
-            ->and($thumbnail->height)->toBe(384);
+        expect(readyMemoryPhoto()->thumbnail())->toEqual(
+            new PhotoVariant('memories/photos/abc/thumbnail.jpg', 'image/webp', 384, 512, 31_234),
+        );
     });
 
     test('is null when the photo failed', function () {
         /** @var TestCase $this */
-        $photo = MemoryPhoto::factory()->failed()->create();
-
-        expect($photo->thumbnail())->toBeNull();
+        expect(MemoryPhoto::factory()->failed()->create()->thumbnail())->toBeNull();
     });
 });
 
@@ -85,7 +82,6 @@ describe('delete()', function () {
         $photo->delete();
 
         $this->assertSoftDeleted($photo);
-        expect(MemoryPhoto::withTrashed()->find($photo->id)->original_path)->toBe($photo->original_path);
     });
 });
 

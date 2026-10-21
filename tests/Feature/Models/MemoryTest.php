@@ -133,4 +133,22 @@ describe('photos()', function () {
 
         expect($memory->photos->modelKeys())->toBe([$kept->id]);
     });
+
+    test('keeps photos sharing a position in the order they were added', function () {
+        /** @var TestCase $this */
+        $memory = Memory::factory()->create();
+        $earlier = MemoryPhoto::factory()->for($memory)->create(['position' => 0]);
+        $later = MemoryPhoto::factory()->for($memory)->create(['position' => 0]);
+
+        expect($memory->photos->modelKeys())->toBe([$earlier->id, $later->id]);
+    });
+
+    test('leaves out photos on other memories', function () {
+        /** @var TestCase $this */
+        $memory = Memory::factory()->create();
+        $own = MemoryPhoto::factory()->for($memory)->create();
+        MemoryPhoto::factory()->create();
+
+        expect($memory->photos->modelKeys())->toBe([$own->id]);
+    });
 });
