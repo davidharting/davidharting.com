@@ -4,13 +4,6 @@ previews:
 
 projects:
   - name: davidhartingdotcom
-    buildSources:
-      - name: davidhartingdotcom-laravel
-        git:
-          repo: https://github.com/davidharting/davidharting.com
-          runtime: docker
-          dockerfilePath: ./Dockerfile
-          region: ohio
     environments:
       - name: prod
         databases:
@@ -99,8 +92,11 @@ projects:
         services:
           - name: davidhartingdotcom-web
             type: web
-            buildSource: davidhartingdotcom-laravel
+            runtime: docker
+            dockerfilePath: ./Dockerfile
             plan: starter
+            previews:
+              plan: starter
             initialDeployHook: bash /app/scripts/render-with-secrets.sh bash /app/scripts/seed.sh
             region: ohio
             autoDeployTrigger: checksPass
@@ -145,8 +141,11 @@ projects:
 
           - name: davidhartingdotcom-worker
             type: worker
-            buildSource: davidhartingdotcom-laravel
+            runtime: docker
+            dockerfilePath: ./Dockerfile
             plan: starter
+            previews:
+              plan: starter
             region: ohio
             autoDeployTrigger: checksPass
             # --tries=3 --backoff=30 makes the worker resilient to the ~60s window
@@ -163,8 +162,11 @@ projects:
 
           - name: davidhartingdotcom-db-backup
             type: cron
-            buildSource: davidhartingdotcom-laravel
+            runtime: docker
+            dockerfilePath: ./Dockerfile
             plan: starter
+            previews:
+              generation: off
             region: ohio
             autoDeployTrigger: checksPass
             # Run a database-only backup at the top of every hour.
@@ -180,8 +182,11 @@ projects:
 
           - name: davidhartingdotcom-db-backup-clean
             type: cron
-            buildSource: davidhartingdotcom-laravel
+            runtime: docker
+            dockerfilePath: ./Dockerfile
             plan: starter
+            previews:
+              generation: off
             region: ohio
             autoDeployTrigger: checksPass
             # Prune old backups once per day at midnight UTC.
