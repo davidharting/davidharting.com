@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Memories\PhotoVariant;
 use App\Models\Memory;
 use App\Models\MemoryParticipant;
 use App\Models\MemoryPhoto;
@@ -189,9 +188,10 @@ class MemorySeeder extends Seeder
         if ($state === 'ready' || $state === 'removed') {
             $disk->put("{$directory}/web.jpg", file_get_contents($web));
             $disk->put("{$directory}/thumbnail.jpg", file_get_contents($thumbnail));
-            $attributes['variants'] = [
-                'web' => $this->variant("{$directory}/web.jpg", $web)->toArray(),
-                'thumbnail' => $this->variant("{$directory}/thumbnail.jpg", $thumbnail)->toArray(),
+            $attributes = [
+                ...$attributes,
+                ...$this->copy('web', "{$directory}/web.jpg", $web),
+                ...$this->copy('thumbnail', "{$directory}/thumbnail.jpg", $thumbnail),
             ];
         }
 
@@ -209,11 +209,23 @@ class MemorySeeder extends Seeder
         return $photo;
     }
 
-    private function variant(string $path, string $sampleFile): PhotoVariant
+    /**
+     * The columns describing one copy of a photo, read from its sample file.
+     *
+     * @param  'web'|'thumbnail'  $copy
+     * @return array<string, string|int>
+     */
+    private function copy(string $copy, string $path, string $sampleFile): array
     {
         [$width, $height] = getimagesize($sampleFile);
 
-        return new PhotoVariant($path, 'image/jpeg', $width, $height, filesize($sampleFile));
+        return [
+            "{$copy}_path" => $path,
+            "{$copy}_mime_type" => 'image/jpeg',
+            "{$copy}_width" => $width,
+            "{$copy}_height" => $height,
+            "{$copy}_bytes" => filesize($sampleFile),
+        ];
     }
 
     private function notAfterNow(CarbonImmutable $at): CarbonImmutable
