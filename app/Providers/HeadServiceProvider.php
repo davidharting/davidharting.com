@@ -55,7 +55,7 @@ class HeadServiceProvider extends ServiceProvider
         // This runs as the layout renders, after controllers have set their
         // titles, and takes the fully resolved title (suffix included) so it
         // covers default and exact titles that a Head prefix would skip.
-        View::composer('components.layout.app', function (): void {
+        View::composer(['components.layout.app', 'components.layout.focus'], function (): void {
             $pullRequestNumber = DeploymentInfo::pullRequestNumber();
 
             if ($pullRequestNumber === null) {

@@ -13,6 +13,7 @@ beforeEach(function () {
 dataset('memories urls', [
     '/memories',
     '/memories/2026-09',
+    '/memories/2026-09/write',
 ]);
 
 test('is not found for anyone who is not a participant', function (string $url, Closure $as) {

@@ -140,3 +140,43 @@ test('is not found for a month outside the list or a malformed month', function 
     'not a month' => '2026-13',
     'not a date' => 'september',
 ]);
+
+describe('ways into the editor', function () {
+    test('offers to write yours when you haven\'t started', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->david)->get('/memories/2026-06?who=yours')
+            ->assertSeeText('Write yours')
+            ->assertSee(route('memories.write', '2026-06'));
+    });
+
+    test('puts Keep writing above your draft', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->katie)->get('/memories/2026-09?who=yours')
+            ->assertSeeTextInOrder(['Draft, started Oct 3', 'Keep writing', 'The pumpkin patch'])
+            ->assertSee(route('memories.write', '2026-09'));
+    });
+
+    test('offers a quiet Edit link next to your shared memory', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->david)->get('/memories/2026-09?who=yours')
+            ->assertSeeTextInOrder(['Shared Oct 5', 'Edit'])
+            ->assertDontSeeText('Keep writing')
+            ->assertSee(route('memories.write', '2026-09'));
+    });
+
+    test('leads from their page to yours before the reveal until you share', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->katie)->get('/memories/2026-09')
+            ->assertSeeText('Keep writing')
+            ->assertSee(route('memories.write', '2026-09'));
+
+        $this->actingAs($this->david)->get('/memories/2026-09')
+            ->assertDontSee(route('memories.write', '2026-09'));
+    });
+
+    test('doesn\'t lead from their page to yours after the reveal', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->david)->get('/memories/2026-06')
+            ->assertDontSee(route('memories.write', '2026-06'));
+    });
+});
