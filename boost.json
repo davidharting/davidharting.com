@@ -7,9 +7,13 @@
     "packages": ["filament/filament", "pestphp/pest-plugin-agent"],
     "sail": false,
     "skills": [
+        "infer-conventions",
         "laravel-best-practices",
+        "testing-best-practices",
         "mcp-development",
         "octane-development",
+        "passport-development",
+        "livewire-development",
         "pest-testing",
         "tailwindcss-development",
         "pest-plugin-agent"
