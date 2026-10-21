@@ -1,4 +1,7 @@
-FROM dunglas/frankenphp:php8.4-bookworm
+# Pinned to an exact FrankenPHP + PHP release so a rebuild never silently
+# changes PHP. 8.4.27 fixes the 2026-10-21 PHP security advisory (incl.
+# CVE-2026-109619). Bump deliberately when a new PHP patch ships.
+FROM dunglas/frankenphp:1.13.2-php8.4.27-bookworm
 
 
 RUN apt-get update \
