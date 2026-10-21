@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * A photo on a memory, with an optional caption. The original and its
  * derived copies all live on the private disk.
  *
- * Its state is derived: it is ready once processing has stored its copies,
+ * Its state is derived: it is ready once processing has stored its web copy and thumbnail,
  * failed once processing has given up, and processing until either happens.
  * Removing a photo soft-deletes it.
  */
@@ -27,7 +27,16 @@ class MemoryPhoto extends Model
         'original_path',
         'original_mime_type',
         'original_bytes',
-        'variants',
+        'web_path',
+        'web_mime_type',
+        'web_width',
+        'web_height',
+        'web_bytes',
+        'thumbnail_path',
+        'thumbnail_mime_type',
+        'thumbnail_width',
+        'thumbnail_height',
+        'thumbnail_bytes',
         'failed_at',
         'failure',
     ];
@@ -35,7 +44,6 @@ class MemoryPhoto extends Model
     protected function casts(): array
     {
         return [
-            'variants' => 'array',
             'failed_at' => 'datetime',
         ];
     }
@@ -47,7 +55,7 @@ class MemoryPhoto extends Model
 
     public function isReady(): bool
     {
-        return $this->variants !== null;
+        return $this->web_path !== null;
     }
 
     public function isFailed(): bool
@@ -65,7 +73,7 @@ class MemoryPhoto extends Model
      */
     public function web(): ?PhotoVariant
     {
-        return $this->variant('web');
+        return $this->copy('web');
     }
 
     /**
@@ -73,17 +81,24 @@ class MemoryPhoto extends Model
      */
     public function thumbnail(): ?PhotoVariant
     {
-        return $this->variant('thumbnail');
+        return $this->copy('thumbnail');
     }
 
-    private function variant(string $name): ?PhotoVariant
+    /**
+     * @param  'web'|'thumbnail'  $copy
+     */
+    private function copy(string $copy): ?PhotoVariant
     {
-        $stored = $this->variants[$name] ?? null;
-
-        if ($stored === null) {
+        if ($this->{"{$copy}_path"} === null) {
             return null;
         }
 
-        return PhotoVariant::fromArray($stored);
+        return new PhotoVariant(
+            path: $this->{"{$copy}_path"},
+            mimeType: $this->{"{$copy}_mime_type"},
+            width: $this->{"{$copy}_width"},
+            height: $this->{"{$copy}_height"},
+            bytes: $this->{"{$copy}_bytes"},
+        );
     }
 }

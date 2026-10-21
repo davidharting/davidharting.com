@@ -12,10 +12,16 @@ use Tests\TestCase;
 function readyMemoryPhoto(): MemoryPhoto
 {
     return MemoryPhoto::factory()->create([
-        'variants' => [
-            'web' => ['path' => 'memories/photos/abc/web.jpg', 'mime_type' => 'image/jpeg', 'width' => 1536, 'height' => 2048, 'bytes' => 412_345],
-            'thumbnail' => ['path' => 'memories/photos/abc/thumbnail.jpg', 'mime_type' => 'image/webp', 'width' => 384, 'height' => 512, 'bytes' => 31_234],
-        ],
+        'web_path' => 'memories/photos/abc/web.jpg',
+        'web_mime_type' => 'image/jpeg',
+        'web_width' => 1536,
+        'web_height' => 2048,
+        'web_bytes' => 412_345,
+        'thumbnail_path' => 'memories/photos/abc/thumbnail.jpg',
+        'thumbnail_mime_type' => 'image/webp',
+        'thumbnail_width' => 384,
+        'thumbnail_height' => 512,
+        'thumbnail_bytes' => 31_234,
     ])->fresh();
 }
 

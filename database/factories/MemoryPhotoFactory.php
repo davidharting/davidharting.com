@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Memories\PhotoVariant;
 use App\Models\Memory;
 use App\Models\MemoryPhoto;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -27,7 +26,6 @@ class MemoryPhotoFactory extends Factory
             'original_path' => 'memories/photos/'.Str::ulid()->toBase32().'/original.jpg',
             'original_mime_type' => 'image/jpeg',
             'original_bytes' => $this->faker->numberBetween(1_500_000, 4_500_000),
-            'variants' => null,
             'failed_at' => null,
             'failure' => null,
         ];
@@ -49,10 +47,16 @@ class MemoryPhotoFactory extends Factory
             $scale = 512 / max($width, $height);
 
             return [
-                'variants' => [
-                    'web' => (new PhotoVariant("{$directory}/web.jpg", 'image/jpeg', $width, $height, 450_000))->toArray(),
-                    'thumbnail' => (new PhotoVariant("{$directory}/thumbnail.jpg", 'image/jpeg', (int) round($width * $scale), (int) round($height * $scale), 40_000))->toArray(),
-                ],
+                'web_path' => "{$directory}/web.jpg",
+                'web_mime_type' => 'image/jpeg',
+                'web_width' => $width,
+                'web_height' => $height,
+                'web_bytes' => 450_000,
+                'thumbnail_path' => "{$directory}/thumbnail.jpg",
+                'thumbnail_mime_type' => 'image/jpeg',
+                'thumbnail_width' => (int) round($width * $scale),
+                'thumbnail_height' => (int) round($height * $scale),
+                'thumbnail_bytes' => 40_000,
             ];
         });
     }
