@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Queries\ListOpenMonthsQuery;
 use App\Support\Month;
 use Illuminate\View\View;
 use InvalidArgumentException;
@@ -10,7 +9,8 @@ use Laravel\Head\Facades\Head;
 
 /**
  * The editor page for the viewer's own memory of one month. The route only
- * lets participants in; the editor itself is a Livewire component.
+ * lets participants in; the editor itself is a Livewire component, which
+ * also checks that the month is open.
  */
 class MemoryEditorController extends Controller
 {
@@ -21,8 +21,6 @@ class MemoryEditorController extends Controller
         } catch (InvalidArgumentException) {
             abort(404);
         }
-
-        abort_unless((new ListOpenMonthsQuery)->contains($month), 404);
 
         // viewport-fit=cover lets the sticky footer sit clear of the iPhone home indicator.
         Head::title("Your {$month->label()}")

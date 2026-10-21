@@ -17,7 +17,7 @@ test('opens the viewer\'s editor for the month', function () {
     $response = $this->actingAs($this->katie)->get('/memories/2026-09/write')
         ->assertSuccessful()
         ->assertSeeLivewire('memories.editor')
-        ->assertSeeText('The pumpkin patch, and how long it took to pick one.')
+        ->assertSeeText('David has shared. Share yours to reveal both.')
         ->assertSee(route('memories.show', ['month' => '2026-09', 'who' => 'yours']));
 
     expect(RenderedHead::from($response)->title)->toBe('Your September 2026 - davidharting.com');

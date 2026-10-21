@@ -9,7 +9,6 @@ use App\Models\MemoryParticipant;
 use App\Queries\ListOpenMonthsQuery;
 use App\Support\Month;
 use App\View\Memories\MonthForViewer;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
@@ -24,8 +23,6 @@ use Livewire\Component;
  */
 class Editor extends Component
 {
-    use AuthorizesRequests;
-
     /**
      * The month as `Y-m`.
      */
@@ -50,6 +47,7 @@ class Editor extends Component
     /**
      * Shows the screen that follows sharing.
      */
+    #[Locked]
     public bool $justShared = false;
 
     public function boot(): void
@@ -99,6 +97,10 @@ class Editor extends Component
      */
     public function keepMine(): void
     {
+        if (! $this->changedElsewhere) {
+            return;
+        }
+
         $this->lockVersion = $this->monthForViewer->viewerMemory?->lock_version;
         $this->changedElsewhere = false;
 
@@ -124,7 +126,7 @@ class Editor extends Component
         );
     }
 
-    public function isShared(): bool
+    protected function isShared(): bool
     {
         return (bool) $this->monthForViewer->viewerMemory?->isShared();
     }
@@ -133,7 +135,7 @@ class Editor extends Component
      * The quiet status in the top bar while nothing is in flight, for
      * example "Shared · Saved". Null before the first save.
      */
-    public function saveStatusLabel(): ?string
+    protected function saveStatusLabel(): ?string
     {
         if ($this->changedElsewhere) {
             return 'Changed on another device';
@@ -150,7 +152,7 @@ class Editor extends Component
      * The one line above the text about where the month stands, for example
      * "Katie has shared. Share yours to reveal both."
      */
-    public function standingLabel(): string
+    protected function standingLabel(): string
     {
         $monthForViewer = $this->monthForViewer;
         $other = $monthForViewer->other->displayName();
@@ -183,7 +185,7 @@ class Editor extends Component
     /**
      * The Share sheet's first fact: when the other person can read it.
      */
-    public function whenTheyCanReadLabel(): string
+    protected function whenTheyCanReadLabel(): string
     {
         $monthForViewer = $this->monthForViewer;
         $other = $monthForViewer->other->displayName();
@@ -205,7 +207,7 @@ class Editor extends Component
         return view('livewire.memories.editor');
     }
 
-    public function monthValue(): Month
+    protected function monthValue(): Month
     {
         return Month::parseYearMonth($this->month);
     }

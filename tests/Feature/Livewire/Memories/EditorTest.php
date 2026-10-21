@@ -4,6 +4,8 @@ use App\Livewire\Memories\Editor;
 use App\Models\Memory;
 use App\Models\User;
 use Database\Seeders\MemorySeeder;
+use Livewire\Exceptions\MethodNotFoundException;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -124,6 +126,16 @@ describe('another device', function () {
         expect(editedMemoryOf($this->katie, '2026-09')->body)->toBe('From the phone, then the laptop');
     });
 
+    test('only overwrites the other device\'s version during a conflict', function () {
+        /** @var TestCase $this */
+        $editor = Livewire::actingAs($this->katie)->test(Editor::class, ['month' => '2026-09']);
+        editedMemoryOf($this->katie, '2026-09')->forceFill(['body' => 'From the phone', 'lock_version' => 5])->save();
+
+        $editor->call('keepMine');
+
+        expect(editedMemoryOf($this->katie, '2026-09')->body)->toBe('From the phone');
+    });
+
     test('can keep this editor\'s version', function () {
         /** @var TestCase $this */
         $editor = Livewire::actingAs($this->katie)->test(Editor::class, ['month' => '2026-09']);
@@ -227,4 +239,23 @@ describe('sharing', function () {
 
         expect(editedMemoryOf($this->david, '2026-06'))->toBeNull();
     });
+});
+
+describe('what the browser can change', function () {
+    test('can\'t switch to another month or forge a version', function (string $property, mixed $value) {
+        /** @var TestCase $this */
+        Livewire::actingAs($this->katie)->test(Editor::class, ['month' => '2026-09'])
+            ->set($property, $value);
+    })->with([
+        'month' => ['month', '2026-08'],
+        'lock version' => ['lockVersion', 99],
+        'conflict flag' => ['changedElsewhere', false],
+        'shared screen' => ['justShared', true],
+    ])->throws(CannotUpdateLockedPropertyException::class);
+
+    test('can\'t call the view helpers as actions', function () {
+        /** @var TestCase $this */
+        Livewire::actingAs($this->katie)->test(Editor::class, ['month' => '2026-09'])
+            ->call('standingLabel');
+    })->throws(MethodNotFoundException::class);
 });

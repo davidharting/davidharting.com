@@ -2,10 +2,14 @@
     $monthForViewer = $this->monthForViewer;
     $month = $monthForViewer->month;
     $otherName = $monthForViewer->other->displayName();
-    $savingTargets = 'body, save, keepMine, share';
 @endphp
 
-<div x-data="{ confirming: false }" class="flex h-dvh flex-col">
+<div
+    x-data="{ confirming: false }"
+    x-on:online.window="$wire.$commit()"
+    x-on:beforeunload.window="if ($wire.$dirty('body')) $event.preventDefault();"
+    class="flex h-dvh flex-col"
+>
     <header class="border-base-300 flex items-center justify-between gap-4 border-b px-4 py-3 font-sans text-sm">
         <a
             class="link link-hover"
@@ -13,23 +17,24 @@
         >← {{ $month->name() }}</a>
 
         <span class="text-right">
-            <span wire:offline class="text-error">
-                Not saved
-                <button type="button" class="link" wire:click="save">Retry</button>
-            </span>
+            <span wire:offline class="text-error">Not saved</span>
             <span wire:offline.class="hidden">
-                <span wire:loading.delay wire:target="{{ $savingTargets }}" class="opacity-60">Saving…</span>
+                <span wire:dirty wire:target="body" class="opacity-60">Saving…</span>
                 <span
-                    wire:loading.remove
-                    wire:target="{{ $savingTargets }}"
+                    wire:dirty.remove
+                    wire:target="body"
                     @class(['text-warning' => $changedElsewhere, 'opacity-60' => ! $changedElsewhere])
                 >{{ $this->saveStatusLabel() }}</span>
             </span>
         </span>
     </header>
 
-    <div wire:offline role="alert" class="alert alert-error alert-soft mx-4 mt-3 font-sans text-sm">
-        You seem to be offline. Keep this page open and tap Retry once you're back.
+    <div
+        wire:offline.class.remove="hidden"
+        role="alert"
+        class="alert alert-error alert-soft mx-4 mt-3 hidden font-sans text-sm"
+    >
+        You seem to be offline. Keep this page open and it will save when you're back.
     </div>
 
     @if ($changedElsewhere)
@@ -50,10 +55,11 @@
 
     <textarea
         wire:model.live.debounce.1000ms="body"
+        x-on:blur="$wire.$commit()"
         class="flex-1 resize-none bg-transparent px-4 py-4 text-lg leading-relaxed outline-none"
         placeholder="What do you want to remember about {{ $month->name() }}?"
         aria-label="Your memory for {{ $month->label() }}"
-    >{{ $body }}</textarea>
+    ></textarea>
     @unless ($this->isShared())
         <footer class="border-base-300 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] font-sans">
             <button
@@ -81,6 +87,7 @@
                         type="button"
                         class="btn btn-primary btn-block"
                         wire:click="share"
+                        wire:loading.attr="disabled"
                         x-on:click="confirming = false"
                     >
                         Share
