@@ -52,7 +52,7 @@ class Editor extends Component
 
     public function boot(): void
     {
-        $this->authorize('editMonth', Memory::class);
+        $this->authorize('viewMonth', Memory::class);
     }
 
     public function mount(string $month): void
@@ -61,6 +61,7 @@ class Editor extends Component
         abort_unless((new ListOpenMonthsQuery)->contains($this->monthValue()), 404);
 
         $this->load();
+        $this->authorizeWriting();
     }
 
     public function updatedBody(): void
@@ -212,6 +213,23 @@ class Editor extends Component
         return Month::parseYearMonth($this->month);
     }
 
+    /**
+     * Writing means updating the viewer's memory, or creating it if there
+     * isn't one yet.
+     */
+    private function authorizeWriting(): void
+    {
+        $memory = $this->monthForViewer->viewerMemory;
+
+        if ($memory === null) {
+            $this->authorize('create', Memory::class);
+
+            return;
+        }
+
+        $this->authorize('update', $memory);
+    }
+
     private function load(): void
     {
         unset($this->monthForViewer);
@@ -230,6 +248,8 @@ class Editor extends Component
      */
     private function write(callable $write): ?Memory
     {
+        $this->authorizeWriting();
+
         try {
             $memory = $write(new MemoryWriter(auth()->user(), $this->monthValue()));
         } catch (MemoryChangedElsewhere) {

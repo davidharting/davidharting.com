@@ -54,12 +54,39 @@ describe('viewMonth()', function () {
     });
 });
 
-describe('editMonth()', function () {
+describe('create()', function () {
     test('allows participants and denies guests, like viewAny', function () {
         /** @var TestCase $this */
         memoryPolicyTestParticipants($this);
 
-        expect(Gate::forUser($this->david)->allows('editMonth', Memory::class))->toBeTrue()
-            ->and(Gate::inspect('editMonth', Memory::class)->status())->toBe(404);
+        expect(Gate::forUser($this->david)->allows('create', Memory::class))->toBeTrue()
+            ->and(Gate::inspect('create', Memory::class)->status())->toBe(404);
+    });
+});
+
+describe('update()', function () {
+    test('allows the author', function () {
+        /** @var TestCase $this */
+        memoryPolicyTestParticipants($this);
+        $memory = Memory::factory()->for($this->david)->create();
+
+        expect(Gate::forUser($this->david)->allows('update', $memory))->toBeTrue();
+    });
+
+    test('is not found for the other participant', function () {
+        /** @var TestCase $this */
+        memoryPolicyTestParticipants($this);
+        $memory = Memory::factory()->for($this->david)->create();
+
+        expect(Gate::forUser($this->katie)->inspect('update', $memory)->status())->toBe(404);
+    });
+
+    test('is not found for the author while the feature is not enabled', function () {
+        /** @var TestCase $this */
+        $author = User::factory()->create();
+        MemoryParticipant::create(['user_id' => $author->id]);
+        $memory = Memory::factory()->for($author)->create();
+
+        expect(Gate::forUser($author)->inspect('update', $memory)->status())->toBe(404);
     });
 });
