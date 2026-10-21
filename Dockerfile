@@ -37,7 +37,12 @@ RUN install-php-extensions \
 # The worker / scheduler services run a single PHP process (queue:work /
 # schedule:work) so the thread multiplier doesn't apply — 256M is strictly
 # safe there.
-RUN printf "memory_limit = 256M\nupload_max_filesize = 25M\npost_max_size = 27M\n" \
+#
+# session.upload_progress.enabled: off as a partial mitigation for
+# CVE-2026-109619 (stale global state RCE, fixed in PHP 8.4.27). It must be set
+# in php.ini, not via ini_set(), to apply before request parsing. We don't use
+# upload progress, so this can stay off after upgrading.
+RUN printf "memory_limit = 256M\nupload_max_filesize = 25M\npost_max_size = 27M\nsession.upload_progress.enabled = 0\n" \
     > /usr/local/etc/php/conf.d/php.ini
 
 RUN mkdir -p /app/public/build
