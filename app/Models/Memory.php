@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * One person's entry for one past month. The row exists from the first save
  * with content, so `created_at` is when it was started. A null `shared_at`
  * makes it a draft. Its reveal is derived from both memories of the month,
- * never stored.
+ * never stored. Every write bumps `lock_version`, so an editor open on another
+ * device can tell that its copy is stale.
  */
 class Memory extends Model
 {
@@ -30,6 +31,7 @@ class Memory extends Model
         return [
             'month' => Month::class,
             'shared_at' => 'datetime',
+            'lock_version' => 'integer',
         ];
     }
 
