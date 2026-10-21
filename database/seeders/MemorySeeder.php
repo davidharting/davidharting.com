@@ -161,7 +161,7 @@ class MemorySeeder extends Seeder
     /**
      * Add one of the sample images to a memory, after its other photos, with
      * its files on the private disk. A ready or removed photo gets the web
-     * copy and thumbnail; a processing or failed one has only the original.
+     * variant and thumbnail; a processing or failed one has only the original.
      *
      * @param  'ready'|'processing'|'failed'|'removed'  $state
      */
@@ -190,8 +190,8 @@ class MemorySeeder extends Seeder
             $disk->put("{$directory}/thumbnail.jpg", file_get_contents($thumbnail));
             $attributes = [
                 ...$attributes,
-                ...$this->copy('web', "{$directory}/web.jpg", $web),
-                ...$this->copy('thumbnail', "{$directory}/thumbnail.jpg", $thumbnail),
+                ...$this->variant('web', "{$directory}/web.jpg", $web),
+                ...$this->variant('thumbnail', "{$directory}/thumbnail.jpg", $thumbnail),
             ];
         }
 
@@ -210,21 +210,21 @@ class MemorySeeder extends Seeder
     }
 
     /**
-     * The columns describing one copy of a photo, read from its sample file.
+     * The columns describing one variant of a photo, read from its sample file.
      *
-     * @param  'web'|'thumbnail'  $copy
+     * @param  'web'|'thumbnail'  $variant
      * @return array<string, string|int>
      */
-    private function copy(string $copy, string $path, string $sampleFile): array
+    private function variant(string $variant, string $path, string $sampleFile): array
     {
         [$width, $height] = getimagesize($sampleFile);
 
         return [
-            "{$copy}_path" => $path,
-            "{$copy}_mime_type" => 'image/jpeg',
-            "{$copy}_width" => $width,
-            "{$copy}_height" => $height,
-            "{$copy}_bytes" => filesize($sampleFile),
+            "{$variant}_path" => $path,
+            "{$variant}_mime_type" => 'image/jpeg',
+            "{$variant}_width" => $width,
+            "{$variant}_height" => $height,
+            "{$variant}_bytes" => filesize($sampleFile),
         ];
     }
 
@@ -234,7 +234,7 @@ class MemorySeeder extends Seeder
     }
 
     /**
-     * Sample images, each a web copy and a thumbnail. All of them were drawn
+     * Sample images, each a web variant and a thumbnail. All of them were drawn
      * by a script; none are real photos.
      */
     private const PHOTOS = __DIR__.'/memory-photos';

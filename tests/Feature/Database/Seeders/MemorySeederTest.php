@@ -135,19 +135,19 @@ describe('photos', function () {
         });
     });
 
-    test('record the real size of each copy', function () {
+    test('record the real size of each variant', function () {
         /** @var TestCase $this */
         seedMemories('2026-10-16 12:00:00');
 
         $disk = Storage::disk('private');
 
         MemoryPhoto::withTrashed()->get()->filter->isReady()->each(function (MemoryPhoto $photo) use ($disk) {
-            foreach ([$photo->web(), $photo->thumbnail()] as $copy) {
-                [$width, $height] = getimagesizefromstring($disk->get($copy->path));
+            foreach ([$photo->web(), $photo->thumbnail()] as $variant) {
+                [$width, $height] = getimagesizefromstring($disk->get($variant->path));
 
-                expect($copy->width)->toBe($width)
-                    ->and($copy->height)->toBe($height)
-                    ->and($copy->bytes)->toBe($disk->size($copy->path));
+                expect($variant->width)->toBe($width)
+                    ->and($variant->height)->toBe($height)
+                    ->and($variant->bytes)->toBe($disk->size($variant->path));
             }
         });
     });
