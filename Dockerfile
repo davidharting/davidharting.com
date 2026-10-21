@@ -1,4 +1,7 @@
-FROM dunglas/frankenphp:php8.4-bookworm
+# Pinned to an exact PHP patch release so a rebuild can't silently reuse a
+# cached older image. 8.4.27 fixes CVE-2026-109618 and CVE-2026-109619.
+# Bump this when a new PHP 8.4 patch ships.
+FROM dunglas/frankenphp:php8.4.27-bookworm
 
 
 RUN apt-get update \
