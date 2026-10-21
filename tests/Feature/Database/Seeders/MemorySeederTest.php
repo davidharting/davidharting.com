@@ -95,23 +95,30 @@ describe('photos', function () {
         /** @var TestCase $this */
         seedMemories('2026-10-16 12:00:00');
 
-        $photos = MemoryPhoto::withTrashed()->get();
+        $live = MemoryPhoto::all();
 
-        expect($photos->filter->isReady())->not->toBeEmpty()
-            ->and($photos->filter->isProcessing())->not->toBeEmpty()
-            ->and($photos->filter->isFailed())->not->toBeEmpty()
-            ->and($photos->filter->trashed())->not->toBeEmpty()
-            ->and($photos->whereNotNull('caption'))->not->toBeEmpty()
-            ->and($photos->whereNull('caption'))->not->toBeEmpty();
+        expect($live->filter->isReady())->not->toBeEmpty()
+            ->and($live->filter->isProcessing())->not->toBeEmpty()
+            ->and($live->filter->isFailed())->not->toBeEmpty()
+            ->and(MemoryPhoto::onlyTrashed()->count())->toBeGreaterThan(0);
     });
 
-    test('fill one memory with the most photos it can hold, leaving out the removed one', function () {
+    test('come with and without captions', function () {
         /** @var TestCase $this */
         seedMemories('2026-10-16 12:00:00');
 
-        $fullest = Memory::with('photos')->get()->max(fn (Memory $memory) => $memory->photos->count());
+        expect(MemoryPhoto::whereNotNull('caption')->exists())->toBeTrue()
+            ->and(MemoryPhoto::whereNull('caption')->exists())->toBeTrue();
+    });
 
-        expect($fullest)->toBe(10);
+    test('fill one memory with ten photos, plus one removed', function () {
+        /** @var TestCase $this */
+        seedMemories('2026-10-16 12:00:00');
+
+        $fullest = Memory::withCount('photos')->orderByDesc('photos_count')->first();
+
+        expect($fullest->photos_count)->toBe(10)
+            ->and(MemoryPhoto::withTrashed()->where('memory_id', $fullest->id)->count())->toBe(11);
     });
 
     test('have every file they point to on the private disk', function () {
@@ -132,11 +139,16 @@ describe('photos', function () {
         /** @var TestCase $this */
         seedMemories('2026-10-16 12:00:00');
 
-        $photo = MemoryPhoto::all()->first->isReady();
-        [$width, $height] = getimagesizefromstring(Storage::disk('private')->get($photo->web()->path));
+        $disk = Storage::disk('private');
 
-        expect($photo->web()->width)->toBe($width)
-            ->and($photo->web()->height)->toBe($height)
-            ->and($photo->web()->bytes)->toBe(Storage::disk('private')->size($photo->web()->path));
+        MemoryPhoto::withTrashed()->get()->filter->isReady()->each(function (MemoryPhoto $photo) use ($disk) {
+            foreach ([$photo->web(), $photo->thumbnail()] as $copy) {
+                [$width, $height] = getimagesizefromstring($disk->get($copy->path));
+
+                expect($copy->width)->toBe($width)
+                    ->and($copy->height)->toBe($height)
+                    ->and($copy->bytes)->toBe($disk->size($copy->path));
+            }
+        });
     });
 });
