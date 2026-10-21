@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Memory;
+use App\Models\MemoryPhoto;
 use App\Models\MemoryReaction;
 use App\Models\User;
 use App\Support\Month;
@@ -111,4 +112,25 @@ describe('user', function () {
 
         $memory->user->delete();
     })->throws(QueryException::class);
+});
+
+describe('photos()', function () {
+    test('lists photos in their chosen order', function () {
+        /** @var TestCase $this */
+        $memory = Memory::factory()->create();
+        $third = MemoryPhoto::factory()->for($memory)->create(['position' => 2]);
+        $first = MemoryPhoto::factory()->for($memory)->create(['position' => 0]);
+        $second = MemoryPhoto::factory()->for($memory)->create(['position' => 1]);
+
+        expect($memory->photos->modelKeys())->toBe([$first->id, $second->id, $third->id]);
+    });
+
+    test('leaves out removed photos', function () {
+        /** @var TestCase $this */
+        $memory = Memory::factory()->create();
+        $kept = MemoryPhoto::factory()->for($memory)->create(['position' => 0]);
+        MemoryPhoto::factory()->for($memory)->create(['position' => 1])->delete();
+
+        expect($memory->photos->modelKeys())->toBe([$kept->id]);
+    });
 });
