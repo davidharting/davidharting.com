@@ -1,0 +1,55 @@
+name: Sandbox bundle
+
+# Builds vendor/ and publishes it as vendor.tar.gz on the `sandbox-bundle`
+# release, for scripts/sandbox/setup.sh to unpack in Claude Code cloud
+# sandboxes. Pull requests only build it, to prove it still builds.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "composer.lock"
+      - ".github/workflows/sandbox-bundle.yml"
+  pull_request:
+    paths:
+      - "composer.lock"
+      - ".github/workflows/sandbox-bundle.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sandbox-bundle-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+
+      - uses: actions/checkout@v4
+
+      - name: Install composer dependencies
+        run: composer install --no-interaction --no-progress --no-scripts --prefer-dist
+
+      - name: Pack vendor/
+        run: tar -czf vendor.tar.gz vendor
+
+      - name: Publish to the sandbox-bundle release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view sandbox-bundle > /dev/null 2>&1; then
+            gh release create sandbox-bundle \
+              --prerelease \
+              --title "Sandbox bundle" \
+              --notes "Prebuilt vendor/ for Claude Code cloud sandboxes. Rebuilt by .github/workflows/sandbox-bundle.yml whenever composer.lock changes on main; the tag does not track main."
+          fi
+          gh release upload sandbox-bundle vendor.tar.gz --clobber
