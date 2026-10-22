@@ -70,6 +70,13 @@ describe('writing', function () {
             ->isDraft()->toBeTrue();
     });
 
+    test('tells the browser each time a save lands, so it can show the check', function () {
+        /** @var TestCase $this */
+        editorFor($this->katie, '2026-09')
+            ->set('body', 'We finally fixed the gate.')
+            ->assertDispatched('memory-saved');
+    });
+
     test('starts a memory for an empty month on the first save', function () {
         /** @var TestCase $this */
         editorFor($this->david, '2026-06')
@@ -161,7 +168,8 @@ describe('another device', function () {
             ->assertSeeText('Changed on another device')
             ->assertSeeText('Use that one')
             ->assertSeeText('Keep this one')
-            ->set('body', 'Still typing on the laptop');
+            ->set('body', 'Still typing on the laptop')
+            ->assertNotDispatched('memory-saved');
 
         expect(storedMemoryOf($this->katie, '2026-09')->body)->toBe('From the phone');
     });

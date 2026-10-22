@@ -22,9 +22,10 @@ class MemoryEditorController extends Controller
             abort(404);
         }
 
-        // viewport-fit=cover lets the sticky footer sit clear of the iPhone home indicator.
+        // viewport-fit=cover lets the bottom bar sit clear of the iPhone home indicator;
+        // resizes-content shrinks the page above the keyboard where the browser supports it.
         Head::title("Your {$month->label()}")
-            ->viewport('width=device-width, initial-scale=1, viewport-fit=cover');
+            ->viewport('width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content');
 
         return view('memories.write', ['month' => $month]);
     }

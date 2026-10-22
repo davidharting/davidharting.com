@@ -133,8 +133,8 @@ class Editor extends Component
     }
 
     /**
-     * The quiet status in the top bar while nothing is in flight, for
-     * example "Shared · Saved". Null before the first save.
+     * The status in the bar above the keyboard while nothing is in flight,
+     * for example "Shared · Saved". Null before the first save.
      */
     protected function saveStatusLabel(): ?string
     {
@@ -242,7 +242,8 @@ class Editor extends Component
 
     /**
      * Run a write, keeping the version it saved, or pause saving if another
-     * device got there first.
+     * device got there first. A write that saved tells the browser with
+     * `memory-saved`, so the status can briefly show the save landing.
      *
      * @param  callable(MemoryWriter): ?Memory  $write
      */
@@ -263,6 +264,7 @@ class Editor extends Component
 
         if ($memory !== null) {
             $this->lockVersion = $memory->lock_version;
+            $this->dispatch('memory-saved');
         }
 
         return $memory;

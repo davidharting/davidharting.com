@@ -5,28 +5,37 @@
 @endphp
 
 <div
-    x-data="{ confirming: false }"
+    x-data="{
+        confirming: false,
+        justSaved: false,
+        justSavedTimer: null,
+        fitAboveKeyboard() {
+            const viewport = window.visualViewport;
+            if (! viewport) return;
+            $el.style.height = `${viewport.height}px`;
+            $el.style.transform = `translateY(${viewport.offsetTop}px)`;
+        },
+        flashSaved() {
+            this.justSaved = true;
+            clearTimeout(this.justSavedTimer);
+            this.justSavedTimer = setTimeout(() => (this.justSaved = false), 1500);
+        },
+    }"
+    x-init="
+        fitAboveKeyboard();
+        window.visualViewport?.addEventListener('resize', () => fitAboveKeyboard());
+        window.visualViewport?.addEventListener('scroll', () => fitAboveKeyboard());
+    "
+    x-on:memory-saved="flashSaved()"
     x-on:online.window="$wire.$commit()"
     x-on:beforeunload.window="if ($wire.$dirty('body')) $event.preventDefault();"
-    class="flex h-dvh flex-col"
+    class="fixed inset-x-0 top-0 flex h-dvh flex-col"
 >
-    <header class="border-base-300 flex items-center justify-between gap-4 border-b px-4 py-3 font-sans text-sm">
+    <header class="border-base-300 border-b px-4 py-3 font-sans text-sm">
         <a
             class="link link-hover"
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
         >← {{ $month->name() }}</a>
-
-        <span class="text-right">
-            <span wire:offline class="text-error">Not saved</span>
-            <span wire:offline.class="hidden">
-                <span wire:dirty wire:target="body" class="opacity-60">Saving…</span>
-                <span
-                    wire:dirty.remove
-                    wire:target="body"
-                    @class(['text-warning' => $changedElsewhere, 'opacity-60' => ! $changedElsewhere])
-                >{{ $this->saveStatusLabel() }}</span>
-            </span>
-        </span>
     </header>
 
     <div
@@ -51,7 +60,12 @@
         <div role="alert" class="alert alert-error alert-soft mx-4 mt-3 font-sans text-sm">{{ $message }}</div>
     @enderror
 
-    <p class="px-4 pt-4 font-sans text-sm opacity-60">{{ $this->standingLabel() }}</p>
+    <div class="space-y-1 px-4 pt-4 font-sans text-sm opacity-60">
+        <p>{{ $this->standingLabel() }}</p>
+        @unless ($this->isShared())
+            <p>Only you can see this until you share it.</p>
+        @endunless
+    </div>
 
     <textarea
         wire:model.live.debounce.1000ms="body"
@@ -60,19 +74,52 @@
         placeholder="What do you want to remember about {{ $month->name() }}?"
         aria-label="Your memory for {{ $month->label() }}"
     ></textarea>
-    @unless ($this->isShared())
-        <footer class="border-base-300 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] font-sans">
+    <footer class="border-base-300 bg-base-100 flex items-center justify-between gap-3 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] font-sans text-sm">
+        <span aria-live="polite">
+            <span wire:offline class="text-error">Not saved</span>
+            <span wire:offline.class="hidden">
+                <span wire:dirty wire:target="body" class="opacity-60">Saving…</span>
+                <span wire:dirty.remove wire:target="body">
+                    @if ($changedElsewhere)
+                        <span class="text-warning">{{ $this->saveStatusLabel() }}</span>
+                    @elseif ($this->saveStatusLabel())
+                        <span
+                            class="inline-flex items-center gap-1 transition duration-500"
+                            x-bind:class="justSaved ? 'text-success' : 'opacity-60'"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                aria-hidden="true"
+                                class="size-5"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                            {{ $this->saveStatusLabel() }}
+                        </span>
+                    @endif
+                </span>
+            </span>
+        </span>
+
+        @unless ($this->isShared())
             <button
                 type="button"
-                class="btn btn-primary btn-block"
+                class="btn btn-primary btn-sm"
                 x-bind:disabled="$wire.body.trim() === ''"
                 x-on:click="confirming = true"
             >
                 Share with {{ $otherName }}…
             </button>
-            <p class="mt-2 text-center text-xs opacity-60">Only you can see this until you share it.</p>
-        </footer>
+        @endunless
+    </footer>
 
+    @unless ($this->isShared())
         {{-- The Share sheet --}}
         <div class="modal modal-bottom" x-bind:class="confirming && 'modal-open'">
             <div class="modal-box font-sans">
