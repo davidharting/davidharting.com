@@ -18,7 +18,7 @@ composer install
 npm install
 ```
 
-In a Claude Code cloud sandbox, the environment's setup script runs `bash /home/user/davidharting.com/scripts/sandbox/setup.sh` instead. It installs PHP 8.4 and Node 24, unpacks a prebuilt `vendor/` from the `sandbox-bundle` release, then runs both installs. The sandbox's GitHub proxy blocks Composer's zip downloads for other repositories, so without the bundle Composer clones every package and takes minutes.
+In a Claude Code cloud sandbox, the environment's setup script runs `bash /home/user/davidharting.com/scripts/sandbox/setup.sh` instead. It installs PHP 8.4 and Node 24, unpacks a prebuilt `vendor/` from the newest `dev-sandbox-vendor` Actions artifact on main, then runs both installs. The sandbox's GitHub proxy blocks Composer's zip downloads for other repositories, so without the bundle Composer clones every package and takes minutes.
 
 ### 2. Environment Configuration
 

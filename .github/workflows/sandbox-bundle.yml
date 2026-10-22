@@ -1,8 +1,9 @@
 name: Sandbox bundle
 
-# Builds vendor/ and publishes it as vendor.tar.gz on the `sandbox-bundle`
-# release, for scripts/sandbox/setup.sh to unpack in Claude Code cloud
-# sandboxes. Pull requests only build it, to prove it still builds.
+# Builds vendor/ and uploads it as the `dev-sandbox-vendor` Actions artifact,
+# for scripts/sandbox/setup.sh to unpack in Claude Code cloud sandboxes. The
+# script takes the newest artifact from main by default. The weekly run keeps
+# one from expiring while composer.lock sits unchanged.
 
 on:
   push:
@@ -15,10 +16,12 @@ on:
     paths:
       - "composer.lock"
       - ".github/workflows/sandbox-bundle.yml"
+  schedule:
+    - cron: "17 6 * * 1"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: sandbox-bundle-${{ github.ref }}
@@ -39,17 +42,11 @@ jobs:
         run: composer install --no-interaction --no-progress --no-scripts --prefer-dist
 
       - name: Pack vendor/
-        run: tar -czf vendor.tar.gz vendor
+        run: tar -czf dev-sandbox-vendor.tar.gz vendor
 
-      - name: Publish to the sandbox-bundle release
-        if: github.event_name != 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if ! gh release view sandbox-bundle > /dev/null 2>&1; then
-            gh release create sandbox-bundle \
-              --prerelease \
-              --title "Sandbox bundle" \
-              --notes "Prebuilt vendor/ for Claude Code cloud sandboxes. Rebuilt by .github/workflows/sandbox-bundle.yml whenever composer.lock changes on main; the tag does not track main."
-          fi
-          gh release upload sandbox-bundle vendor.tar.gz --clobber
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev-sandbox-vendor
+          path: dev-sandbox-vendor.tar.gz
+          compression-level: 0
+          retention-days: 30
