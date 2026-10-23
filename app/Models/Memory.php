@@ -45,6 +45,14 @@ class Memory extends Model
         return $this->hasMany(MemoryReaction::class);
     }
 
+    /**
+     * The memory's photos in the order its author chose.
+     */
+    public function photos(): HasMany
+    {
+        return $this->hasMany(MemoryPhoto::class)->orderBy('position')->orderBy('id');
+    }
+
     public function isShared(): bool
     {
         return $this->shared_at !== null;

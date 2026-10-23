@@ -2,11 +2,13 @@
 
 use App\Models\Memory;
 use App\Models\MemoryParticipant;
+use App\Models\MemoryPhoto;
 use App\Models\MemoryReaction;
 use App\Models\User;
 use App\Support\Month;
 use Carbon\CarbonImmutable;
 use Database\Seeders\MemorySeeder;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -15,6 +17,7 @@ use Tests\TestCase;
 function seedMemories(string $now): array
 {
     CarbonImmutable::setTestNow(CarbonImmutable::parse($now));
+    Storage::fake('private');
     (new MemorySeeder)->run();
 
     return [
@@ -85,4 +88,67 @@ test('never writes a time in the future, even on the day a month opens', functio
 
     expect(Memory::where('created_at', '>', $now)->orWhere('shared_at', '>', $now)->exists())->toBeFalse()
         ->and(MemoryReaction::where('created_at', '>', $now)->exists())->toBeFalse();
+});
+
+describe('photos', function () {
+    test('cover each state a photo can be in', function () {
+        /** @var TestCase $this */
+        seedMemories('2026-10-16 12:00:00');
+
+        $live = MemoryPhoto::all();
+
+        expect($live->filter->isReady())->not->toBeEmpty()
+            ->and($live->filter->isProcessing())->not->toBeEmpty()
+            ->and($live->filter->isFailed())->not->toBeEmpty()
+            ->and(MemoryPhoto::onlyTrashed()->count())->toBeGreaterThan(0);
+    });
+
+    test('come with and without captions', function () {
+        /** @var TestCase $this */
+        seedMemories('2026-10-16 12:00:00');
+
+        expect(MemoryPhoto::whereNotNull('caption')->exists())->toBeTrue()
+            ->and(MemoryPhoto::whereNull('caption')->exists())->toBeTrue();
+    });
+
+    test('fill one memory with ten photos, plus one removed', function () {
+        /** @var TestCase $this */
+        seedMemories('2026-10-16 12:00:00');
+
+        $fullest = Memory::withCount('photos')->orderByDesc('photos_count')->first();
+
+        expect($fullest->photos_count)->toBe(10)
+            ->and(MemoryPhoto::withTrashed()->where('memory_id', $fullest->id)->count())->toBe(11);
+    });
+
+    test('have every file they point to on the private disk', function () {
+        /** @var TestCase $this */
+        seedMemories('2026-10-16 12:00:00');
+
+        MemoryPhoto::withTrashed()->get()->each(function (MemoryPhoto $photo) {
+            Storage::disk('private')->assertExists($photo->original_path);
+
+            if ($photo->isReady()) {
+                Storage::disk('private')->assertExists($photo->web()->path);
+                Storage::disk('private')->assertExists($photo->thumbnail()->path);
+            }
+        });
+    });
+
+    test('record the real size of each variant', function () {
+        /** @var TestCase $this */
+        seedMemories('2026-10-16 12:00:00');
+
+        $disk = Storage::disk('private');
+
+        MemoryPhoto::withTrashed()->get()->filter->isReady()->each(function (MemoryPhoto $photo) use ($disk) {
+            foreach ([$photo->web(), $photo->thumbnail()] as $variant) {
+                [$width, $height] = getimagesizefromstring($disk->get($variant->path));
+
+                expect($variant->width)->toBe($width)
+                    ->and($variant->height)->toBe($height)
+                    ->and($variant->bytes)->toBe($disk->size($variant->path));
+            }
+        });
+    });
 });
