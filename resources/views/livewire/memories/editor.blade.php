@@ -16,8 +16,10 @@
         },
         growText() {
             const text = this.$refs.text;
+            const scrolledTo = window.scrollY;
             text.style.height = 'auto';
             text.style.height = `${text.scrollHeight}px`;
+            window.scrollTo(0, scrolledTo);
         },
         flashSaved() {
             this.justSaved = true;
@@ -26,7 +28,7 @@
         },
     }"
     x-init="
-        growText();
+        $nextTick(() => growText());
         keepPillInView();
         window.visualViewport?.addEventListener('resize', () => keepPillInView());
         window.visualViewport?.addEventListener('scroll', () => keepPillInView());
@@ -51,13 +53,13 @@
         class="pointer-events-none fixed top-3 right-3 z-30 font-sans text-sm"
     >
         <span wire:offline class="badge badge-error">Not saved</span>
-        <span wire:offline.class="hidden">
-            <span wire:dirty wire:target="body" class="badge">Saving…</span>
+        <span wire:offline.class="hidden" class="grid justify-items-end">
+            <span wire:loading wire:target="body" class="badge [grid-area:1/1]">Saving…</span>
             <span
                 x-show="justSaved"
                 x-transition.opacity.duration.500ms
                 x-on:input.window="justSaved = false"
-                class="badge badge-success gap-1"
+                class="badge badge-success gap-1 [grid-area:1/1]"
                 style="display: none"
             >
                 <svg
