@@ -68,4 +68,40 @@ class PasswordResetTest extends TestCase
             return true;
         });
     }
+
+    public function test_resetting_the_password_verifies_an_unverified_email(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->unverified()->create();
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+            $this->post('/reset-password', [
+                'token' => $notification->token,
+                'email' => $user->email,
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ])->assertSessionHasNoErrors();
+
+            return true;
+        });
+
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_a_failed_reset_does_not_verify_the_email(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $this->post('/reset-password', [
+            'token' => 'not-a-real-token',
+            'email' => $user->email,
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertSessionHasErrors('email');
+
+        $this->assertFalse($user->fresh()->hasVerifiedEmail());
+    }
 }
