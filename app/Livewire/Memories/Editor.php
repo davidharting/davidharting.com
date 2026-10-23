@@ -245,8 +245,10 @@ class Editor extends Component
         unset($this->monthForViewer);
         $this->resetErrorBag('body');
 
-        if ($memory !== null) {
-            $this->lockVersion = $memory->lock_version;
+        $wroteSomething = $memory !== null || $this->lockVersion !== null;
+        $this->lockVersion = $memory?->lock_version;
+
+        if ($wroteSomething) {
             $this->dispatch('memory-saved');
         }
 

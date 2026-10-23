@@ -49,13 +49,21 @@ describe('save()', function () {
             ->and($saved->isDraft())->toBeTrue();
     });
 
-    test('lets a draft be emptied', function () {
+    test('deletes a draft emptied of its text', function () {
         /** @var TestCase $this */
         $this->authorsMemoryFactory->create();
 
-        $saved = $this->writer->save('', 0);
+        expect($this->writer->save(" \n ", 0))->toBeNull();
+        $this->assertDatabaseCount('memories', 0);
+    });
 
-        expect($saved->body)->toBe('');
+    test('won\'t delete a draft saved on another device since the writer last saw it', function () {
+        /** @var TestCase $this */
+        $this->authorsMemoryFactory->create(['body' => 'From the phone', 'lock_version' => 1]);
+
+        expect(fn () => $this->writer->save('', 0))->toThrow(MemoryChangedElsewhere::class);
+
+        expect(Memory::first()->body)->toBe('From the phone');
     });
 
     test('refuses to overwrite text saved since the writer last saw it', function () {

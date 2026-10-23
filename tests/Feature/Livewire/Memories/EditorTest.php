@@ -94,6 +94,20 @@ describe('writing', function () {
         expect(storedMemoryOf($this->katie, '2026-09')->body)->toStartWith('Things I want to remember:');
     });
 
+    test('removes a draft whose text is all deleted, and starts afresh after', function () {
+        /** @var TestCase $this */
+        $editor = editorFor($this->katie, '2026-09')
+            ->set('body', '')
+            ->assertSet('lockVersion', null)
+            ->assertDispatched('memory-saved');
+
+        expect(storedMemoryOf($this->katie, '2026-09'))->toBeNull();
+
+        $editor->set('body', 'A fresh start.');
+
+        expect(storedMemoryOf($this->katie, '2026-09')->body)->toBe('A fresh start.');
+    });
+
     test('starts a memory for an empty month on the first save', function () {
         /** @var TestCase $this */
         editorFor($this->david, '2026-06')

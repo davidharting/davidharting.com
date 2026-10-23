@@ -30,9 +30,9 @@ final readonly class MemoryWriter
 
     /**
      * Save the body without sharing it. Returns the memory as saved, or null
-     * when there was nothing to save yet: a memory only exists once it has
-     * text. A shared memory can't be emptied, because memories are never
-     * deleted.
+     * when there is no memory afterwards: a memory only exists while it has
+     * text, so emptying a draft deletes it. A shared memory can't be emptied,
+     * because shared memories are never deleted.
      *
      * @param  ?int  $expectedVersion  The `lock_version` the writer last saw, or null if it saw no memory.
      *
@@ -59,6 +59,12 @@ final readonly class MemoryWriter
 
         if ($memory->isShared() && trim($body) === '') {
             throw ValidationException::withMessages(['body' => "A shared memory can't be empty."]);
+        }
+
+        if (trim($body) === '') {
+            $this->delete($memory, $expectedVersion);
+
+            return null;
         }
 
         $this->update($memory, $expectedVersion, ['body' => $body]);
@@ -113,6 +119,21 @@ final readonly class MemoryWriter
                 'body' => $body,
             ])->refresh();
         } catch (UniqueConstraintViolationException) {
+            throw new MemoryChangedElsewhere;
+        }
+    }
+
+    /**
+     * Delete an emptied draft, only if it is still at the expected version.
+     */
+    private function delete(Memory $memory, int $expectedVersion): void
+    {
+        $deleted = Memory::query()
+            ->whereKey($memory->id)
+            ->where('lock_version', $expectedVersion)
+            ->delete();
+
+        if ($deleted === 0) {
             throw new MemoryChangedElsewhere;
         }
     }
