@@ -18,6 +18,8 @@ composer install
 npm install
 ```
 
+In a Claude Code cloud sandbox, the environment's setup script runs `bash /home/user/davidharting.com/scripts/sandbox/setup.sh` instead. It installs PHP 8.4 and Node 24, unpacks a prebuilt `vendor/` from the newest `dev-sandbox-vendor` Actions artifact on main, runs both installs, then does steps 2 and 3 below. The sandbox's GitHub proxy blocks Composer's zip downloads for other repositories, so without the bundle Composer clones every package and takes minutes.
+
 ### 2. Environment Configuration
 
 ```bash
@@ -36,23 +38,11 @@ Pick the path for your environment. **Remote / CI / sandboxed Linux containers**
 
 #### Linux / sandboxed environments
 
-Start PostgreSQL:
+`scripts/sandbox/setup.sh` does this whole section, and step 2 as well, so in a Claude Code cloud sandbox it is already done. Re-running it is safe. Elsewhere on Linux, run it as root, or follow what it does:
 
-```bash
-sudo service postgresql start
-```
-
-Create databases and user:
-
-```bash
-sudo -u postgres psql -c "CREATE DATABASE laravel;"
-sudo -u postgres psql -c "CREATE DATABASE laravel_test;"
-sudo -u postgres psql -c "CREATE USER root WITH PASSWORD 'password';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE laravel TO root;"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE laravel_test TO root;"
-sudo -u postgres psql -d laravel -c "GRANT ALL ON SCHEMA public TO root;"
-sudo -u postgres psql -d laravel_test -c "GRANT ALL ON SCHEMA public TO root;"
-```
+- Start PostgreSQL and trust TCP connections from localhost. phpunit.xml connects as `david` with an empty password, and Postgres can't check an empty password.
+- Create `root` with password `password` and `CREATEDB`, matching `.env`. It owns the `laravel` dev database.
+- Create `david` as a `SUPERUSER`, matching `phpunit.xml`. It owns `laravel_test`, and `--parallel` needs it to create the `laravel_test_test_N` databases.
 
 #### macOS (local dev via pitchfork)
 

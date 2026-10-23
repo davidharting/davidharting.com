@@ -1,0 +1,52 @@
+name: Sandbox bundle
+
+# Builds vendor/ and uploads it as the `dev-sandbox-vendor` Actions artifact,
+# for scripts/sandbox/setup.sh to unpack in Claude Code cloud sandboxes. The
+# script takes the newest artifact from main by default. The weekly run keeps
+# one from expiring while composer.lock sits unchanged.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "composer.lock"
+      - ".github/workflows/sandbox-bundle.yml"
+  pull_request:
+    paths:
+      - "composer.lock"
+      - ".github/workflows/sandbox-bundle.yml"
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sandbox-bundle-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+
+      - uses: actions/checkout@v4
+
+      - name: Install composer dependencies
+        run: composer install --no-interaction --no-progress --no-scripts --prefer-dist
+
+      - name: Pack vendor/
+        run: tar -czf dev-sandbox-vendor.tar.gz vendor
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dev-sandbox-vendor
+          path: dev-sandbox-vendor.tar.gz
+          compression-level: 0
+          retention-days: 30
