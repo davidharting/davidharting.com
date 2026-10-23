@@ -76,6 +76,16 @@ describe('writing', function () {
             ->assertDispatched('memory-saved');
     });
 
+    test('offers Done, back to the viewer\'s page for the month', function (string $viewer) {
+        /** @var TestCase $this */
+        editorFor($this->{$viewer}, '2026-09')
+            ->assertSeeText('Done')
+            ->assertSee(route('memories.show', ['month' => '2026-09', 'who' => 'yours']));
+    })->with([
+        'with a draft' => ['katie'],
+        'after sharing' => ['david'],
+    ]);
+
     test('starts a memory for an empty month on the first save', function () {
         /** @var TestCase $this */
         editorFor($this->david, '2026-06')

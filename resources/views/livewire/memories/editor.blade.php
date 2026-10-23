@@ -8,7 +8,8 @@
     x-data="{
         confirming: false,
         justSaved: false,
-        justSavedTimer: null,
+        savedFading: false,
+        savedTimers: [],
         keepPillInView() {
             const viewport = window.visualViewport;
             if (! viewport) return;
@@ -22,9 +23,17 @@
             window.scrollTo(0, scrolledTo);
         },
         flashSaved() {
+            this.hideSaved();
             this.justSaved = true;
-            clearTimeout(this.justSavedTimer);
-            this.justSavedTimer = setTimeout(() => (this.justSaved = false), 1500);
+            this.savedTimers = [
+                setTimeout(() => (this.savedFading = true), 1000),
+                setTimeout(() => this.hideSaved(), 1500),
+            ];
+        },
+        hideSaved() {
+            this.savedTimers.forEach((timer) => clearTimeout(timer));
+            this.justSaved = false;
+            this.savedFading = false;
         },
     }"
     x-init="
@@ -54,12 +63,12 @@
     >
         <span wire:offline class="badge badge-error">Not saved</span>
         <span wire:offline.class="hidden" class="grid justify-items-end">
-            <span wire:loading wire:target="body" class="badge [grid-area:1/1]">Saving…</span>
+            <span wire:dirty wire:target="body" class="badge [grid-area:1/1]">Saving…</span>
             <span
                 x-show="justSaved"
-                x-transition.opacity.duration.500ms
-                x-on:input.window="justSaved = false"
-                class="badge badge-success gap-1 [grid-area:1/1]"
+                x-on:input.window="hideSaved()"
+                x-bind:class="savedFading && 'opacity-0'"
+                class="badge badge-success gap-1 transition-opacity duration-500 [grid-area:1/1]"
                 style="display: none"
             >
                 <svg
@@ -119,18 +128,25 @@
         placeholder="What do you want to remember about {{ $month->name() }}?"
         aria-label="Your memory for {{ $month->label() }}"
     ></textarea>
-    @unless ($this->isShared())
-        <footer class="px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] font-sans">
+    <footer class="flex gap-2 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] font-sans">
+        <a
+            @class(['btn btn-outline', 'w-1/3' => ! $this->isShared(), 'grow' => $this->isShared()])
+            href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
+            x-on:click.prevent="$wire.$commit().then(() => (window.location = $el.href))"
+        >Done</a>
+        @unless ($this->isShared())
             <button
                 type="button"
-                class="btn btn-primary btn-block"
+                class="btn btn-primary grow"
                 x-bind:disabled="$wire.body.trim() === ''"
                 x-on:click="confirming = true"
             >
                 Share with {{ $otherName }}…
             </button>
-        </footer>
+        @endunless
+    </footer>
 
+    @unless ($this->isShared())
         {{-- The Share sheet --}}
         <div class="modal modal-bottom" x-bind:class="confirming && 'modal-open'">
             <div class="modal-box font-sans">
