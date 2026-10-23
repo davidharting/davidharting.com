@@ -50,9 +50,8 @@ describe('before the reveal', function () {
     test('shows the viewer their own draft', function () {
         /** @var TestCase $this */
         $this->actingAs($this->katie)->get('/memories/2026-09?who=yours')
-            ->assertSeeText('Draft, started Oct 3')
-            ->assertSeeText('The pumpkin patch, and how long it took to pick one.')
-            ->assertSeeText('Keep writing');
+            ->assertSeeTextInOrder(['Draft, started Oct 3', 'Keep writing', 'The pumpkin patch, and how long it took to pick one.'])
+            ->assertSee(route('memories.write', '2026-09'));
     });
 });
 
@@ -94,7 +93,8 @@ describe('after the reveal', function () {
 
         $this->actingAs($this->david)->get('/memories/2026-06?who=yours')
             ->assertSeeText('You haven\'t written about this month yet.')
-            ->assertSeeText('Write yours');
+            ->assertSeeText('Write yours')
+            ->assertSee(route('memories.write', '2026-06'));
     });
 });
 
@@ -140,3 +140,33 @@ test('is not found for a month outside the list or a malformed month', function 
     'not a month' => '2026-13',
     'not a date' => 'september',
 ]);
+
+describe('ways into the editor', function () {
+    test('offers an Edit link, not Keep writing, next to your shared memory', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->david)->get('/memories/2026-09?who=yours')
+            ->assertSeeTextInOrder(['Shared Oct 5', 'Edit'])
+            ->assertDontSeeText('Keep writing')
+            ->assertSee(route('memories.write', '2026-09'));
+    });
+
+    test('links to your editor from their page while yours is unshared', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->katie)->get('/memories/2026-09')
+            ->assertSeeText('Keep writing')
+            ->assertSee(route('memories.write', '2026-09'));
+    });
+
+    test('doesn\'t link to your editor from their page once you\'ve shared', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->david)->get('/memories/2026-09')
+            ->assertDontSee(route('memories.write', '2026-09'));
+    });
+
+    test('doesn\'t link to your editor from their page after the reveal, even with a draft', function () {
+        /** @var TestCase $this */
+        // May revealed at its deadline with David's draft never shared.
+        $this->actingAs($this->david)->get('/memories/2026-05')
+            ->assertDontSee(route('memories.write', '2026-05'));
+    });
+});

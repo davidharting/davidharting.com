@@ -53,3 +53,41 @@ describe('viewMonth()', function () {
             ->and(Gate::inspect('viewMonth', Memory::class)->status())->toBe(404);
     });
 });
+
+describe('create()', function () {
+    test('allows a participant and is not found for a guest or a non-participant', function () {
+        /** @var TestCase $this */
+        memoryPolicyTestParticipants($this);
+        $nonParticipant = User::factory()->create();
+
+        expect(Gate::forUser($this->david)->allows('create', Memory::class))->toBeTrue()
+            ->and(Gate::inspect('create', Memory::class)->status())->toBe(404)
+            ->and(Gate::forUser($nonParticipant)->inspect('create', Memory::class)->status())->toBe(404);
+    });
+});
+
+describe('update()', function () {
+    beforeEach(function () {
+        /** @var TestCase $this */
+        memoryPolicyTestParticipants($this);
+        $this->davidsMemory = Memory::factory()->for($this->david)->create();
+    });
+
+    test('allows the author', function () {
+        /** @var TestCase $this */
+        expect(Gate::forUser($this->david)->allows('update', $this->davidsMemory))->toBeTrue();
+    });
+
+    test('is not found for the other participant or a guest', function () {
+        /** @var TestCase $this */
+        expect(Gate::forUser($this->katie)->inspect('update', $this->davidsMemory)->status())->toBe(404)
+            ->and(Gate::inspect('update', $this->davidsMemory)->status())->toBe(404);
+    });
+
+    test('is not found for the author while the feature is not enabled', function () {
+        /** @var TestCase $this */
+        MemoryParticipant::query()->where('user_id', $this->katie->id)->delete();
+
+        expect(Gate::forUser($this->david)->inspect('update', $this->davidsMemory)->status())->toBe(404);
+    });
+});

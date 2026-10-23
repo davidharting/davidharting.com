@@ -6,6 +6,7 @@ use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MediaIndexController;
 use App\Http\Controllers\MemoriesController;
+use App\Http\Controllers\MemoryEditorController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
@@ -75,6 +76,7 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
 Route::withHead(robots: 'noindex, nofollow')->group(function () {
     Route::get('/memories', [MemoriesController::class, 'index'])->name('memories.index')->withHead(title: 'Memories')->can('viewAny', Memory::class);
     Route::get('/memories/{month}', [MemoriesController::class, 'show'])->name('memories.show')->where('month', '\d{4}-\d{2}')->can('viewMonth', Memory::class);
+    Route::get('/memories/{month}/write', MemoryEditorController::class)->name('memories.write')->where('month', '\d{4}-\d{2}')->can('create', Memory::class);
 });
 
 require __DIR__.'/auth.php';

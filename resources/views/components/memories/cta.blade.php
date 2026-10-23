@@ -1,10 +1,11 @@
-{{-- Points the viewer at writing their own memory. The editor doesn't exist yet, so the button is a disabled placeholder. --}}
+{{-- Opens the viewer's editor for the month: "Write yours" before they've started, "Keep writing" on a draft. Nothing once shared. --}}
 @props([
     'memory',
+    'month',
 ])
 
 @if ($memory === null || $memory->isDraft())
-    <button type="button" class="btn btn-primary" disabled>
+    <a class="btn btn-primary font-sans" href="{{ route("memories.write", $month->toYearMonth()) }}">
         {{ $memory === null ? "Write yours" : "Keep writing" }}
-    </button>
+    </a>
 @endif

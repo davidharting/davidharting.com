@@ -1,3 +1,8 @@
+{{-- hideNav drops the site nav and page container, for full-screen pages like the memory editor. --}}
+@props([
+    'hideNav' => false,
+])
+
 <!DOCTYPE html>
 <html lang="{{ str_replace("_", "-", app()->getLocale()) }}">
 <head>
@@ -10,31 +15,35 @@
 </head>
 
 <body class="font-serif antialiased">
-    <div class="container mx-auto px-4">
-        <main class="mt-8">
-            <div class="mb-8 flex w-full flex-wrap justify-between">
-                <nav class="flex gap-1">
-                    <x-nav-link :href="route('home')">Home</x-nav-link>
-                    <x-nav-link :href="route('notes.index')"> Notes </x-nav-link>
-                    <x-nav-link :href="route('media.index')"> Media Log </x-nav-link>
-                    <x-nav-link :href="route('pages.index')"> Pages </x-nav-link>
-                </nav>
-                <div class="flex gap-1">
-                    @guest
-                        <x-nav-link :href="route('login')"> Login </x-nav-link>
-                    @endguest
+    @if ($hideNav)
+        {{ $slot }}
+    @else
+        <div class="container mx-auto px-4">
+            <main class="mt-8">
+                <div class="mb-8 flex w-full flex-wrap justify-between">
+                    <nav class="flex gap-1">
+                        <x-nav-link :href="route('home')">Home</x-nav-link>
+                        <x-nav-link :href="route('notes.index')"> Notes </x-nav-link>
+                        <x-nav-link :href="route('media.index')"> Media Log </x-nav-link>
+                        <x-nav-link :href="route('pages.index')"> Pages </x-nav-link>
+                    </nav>
+                    <div class="flex gap-1">
+                        @guest
+                            <x-nav-link :href="route('login')"> Login </x-nav-link>
+                        @endguest
 
-                    @can('viewAny', App\Models\Memory::class)
-                        <x-nav-link :href="route('memories.index')"> Memories </x-nav-link>
-                    @endcan
+                        @can('viewAny', App\Models\Memory::class)
+                            <x-nav-link :href="route('memories.index')"> Memories </x-nav-link>
+                        @endcan
 
-                    @can('administrate')
-                        <x-nav-link :href="route('admin.index')"> Admin </x-nav-link>
-                    @endcan
+                        @can('administrate')
+                            <x-nav-link :href="route('admin.index')"> Admin </x-nav-link>
+                        @endcan
+                    </div>
                 </div>
-            </div>
-            {{ $slot }}
-        </main>
-    </div>
+                {{ $slot }}
+            </main>
+        </div>
+    @endif
 </body>
 </html>
