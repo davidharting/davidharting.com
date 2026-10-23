@@ -1,6 +1,7 @@
 #!/bin/bash
-# Bootstraps a Claude Code cloud sandbox: PHP 8.4, Node 24, vendor/ and
-# node_modules/. Point the cloud environment's setup script at this file.
+# Bootstraps a Claude Code cloud sandbox: PHP 8.4, Node 24, vendor/,
+# node_modules/, .env and PostgreSQL. Point the cloud environment's setup
+# script at this file. Safe to re-run.
 #
 # The sandbox's GitHub proxy refuses Composer's dist zip downloads for every
 # repository but this one, so a plain `composer install` falls back to cloning
@@ -49,6 +50,27 @@ rm -rf "$BUNDLE_DIR"
 
 COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --no-progress
 npm ci --no-audit --no-fund
+
+echo "Configuring the app"
+[ -f .env ] || cp .env.example .env
+grep -q '^APP_KEY=base64:' .env || php artisan key:generate --no-interaction
+[ -f secrets/oauth/oauth-private.key ] || { mkdir -p secrets/oauth && php artisan passport:keys --no-interaction; }
+
+# Same roles as scripts/dev/db-bootstrap.sh: `root` matches .env for the dev
+# database, and `david` matches the DB_USERNAME phpunit.xml hardcodes, with no
+# password. Postgres can't check an empty password, so this throwaway sandbox
+# trusts local TCP connections. SUPERUSER lets `--parallel` create its
+# laravel_test_test_N databases.
+echo "Configuring PostgreSQL"
+PG_HBA="$(ls /etc/postgresql/*/main/pg_hba.conf | head -1)"
+sed -i -E 's/^(host\s+all\s+all\s+(127\.0\.0\.1\/32|::1\/128)\s+)\S+$/\1trust/' "$PG_HBA"
+service postgresql restart
+psql_su() { su postgres -c "psql -X -v ON_ERROR_STOP=1 -tA $(printf '%q ' "$@")"; }
+[ "$(psql_su -c "SELECT 1 FROM pg_roles WHERE rolname='root'")" = "1" ] || psql_su -c "CREATE ROLE root WITH LOGIN CREATEDB PASSWORD 'password';"
+[ "$(psql_su -c "SELECT 1 FROM pg_roles WHERE rolname='david'")" = "1" ] || psql_su -c "CREATE ROLE david WITH LOGIN SUPERUSER;"
+[ "$(psql_su -c "SELECT 1 FROM pg_database WHERE datname='laravel'")" = "1" ] || psql_su -c "CREATE DATABASE laravel OWNER root;"
+[ "$(psql_su -c "SELECT 1 FROM pg_database WHERE datname='laravel_test'")" = "1" ] || psql_su -c "CREATE DATABASE laravel_test OWNER david;"
+php artisan migrate --force --no-interaction
 
 php --version | head -1
 node --version
