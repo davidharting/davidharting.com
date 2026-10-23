@@ -24,20 +24,14 @@ class DashboardApp extends AppResource
 <x-mcp::app title="Dashboard App">
     <x-slot:head>
         <script type="module">
-            createMcpApp(async (app) => {
-                document
-                    .getElementById('run-btn')
-                    .addEventListener('click', async () => {
-                        const result = await app.callServerTool({
-                            name: 'tool-name',
-                            arguments: {},
-                        });
-                        document.getElementById('output').textContent =
-                            result.content[0]?.text ?? '';
-                    });
+        createMcpApp(async (app) => {
+            document.getElementById('run-btn').addEventListener('click', async () => {
+                const result = await app.callServerTool({ name: 'tool-name', arguments: {} });
+                document.getElementById('output').textContent = result.content[0]?.text ?? '';
             });
+        });
         </script>
-    </x-slot>
+    </x-slot:head>
 
     <div id="app">
         <h1>Dashboard App</h1>
@@ -110,7 +104,7 @@ MCP Apps add interactive UI to the Model Context Protocol. The server returns se
 └─────────────────────────────────────────────┘
 ```
 
-The server automatically advertises `io.modelcontextprotocol/ui` capability when any `AppResource` is registered. The client declares support in `capabilities.extensions["io.modelcontextprotocol/ui"]` during the initialize handshake.
+The server automatically advertises `capabilities.extensions["io.modelcontextprotocol/ui"]` on `server/discover` when any `AppResource` is registered. Add cases of the `Extension` enum to the server's `$extensions` property to declare any other extension. The client declares its own support in the `io.modelcontextprotocol/clientCapabilities` member of each request's `_meta`.
 
 ---
 
@@ -310,20 +304,14 @@ Renders a complete self-contained HTML document with the MCP SDK inlined. `creat
 <x-mcp::app title="Dashboard App">
     <x-slot:head>
         <script type="module">
-            createMcpApp(async (app) => {
-                document
-                    .getElementById('run-btn')
-                    .addEventListener('click', async () => {
-                        const result = await app.callServerTool({
-                            name: 'tool-name',
-                            arguments: {},
-                        });
-                        document.getElementById('output').textContent =
-                            result.content[0]?.text ?? '';
-                    });
+        createMcpApp(async (app) => {
+            document.getElementById('run-btn').addEventListener('click', async () => {
+                const result = await app.callServerTool({ name: 'tool-name', arguments: {} });
+                document.getElementById('output').textContent = result.content[0]?.text ?? '';
             });
+        });
         </script>
-    </x-slot>
+    </x-slot:head>
 
     <div id="app">
         <button id="run-btn">Run</button>
@@ -348,7 +336,9 @@ Publish the component: `php artisan vendor:publish --tag=mcp-views`.
 To pass server-side data to JS, embed it as `data-*` attributes:
 
 ```blade
-<div id="app" data-users="{{ $users->toJson() }}">...</div>
+<div id="app" data-users="{{ $users->toJson() }}">
+    ...
+</div>
 ```
 
 ```js
