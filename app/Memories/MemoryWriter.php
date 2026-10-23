@@ -18,6 +18,11 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class MemoryWriter
 {
+    /**
+     * The longest memory, in characters. About 3,500 words.
+     */
+    public const int MAX_LENGTH = 20_000;
+
     public function __construct(
         public User $author,
         public Month $month,
@@ -32,10 +37,16 @@ final readonly class MemoryWriter
      * @param  ?int  $expectedVersion  The `lock_version` the writer last saw, or null if it saw no memory.
      *
      * @throws MemoryChangedElsewhere when the memory has moved past the expected version.
-     * @throws ValidationException when emptying a shared memory.
+     * @throws ValidationException when emptying a shared memory, or when the body is too long.
      */
     public function save(string $body, ?int $expectedVersion): ?Memory
     {
+        if (mb_strlen($body) > self::MAX_LENGTH) {
+            throw ValidationException::withMessages([
+                'body' => 'This is longer than a memory can be ('.number_format(self::MAX_LENGTH).' characters), so the last changes weren\'t saved.',
+            ]);
+        }
+
         $memory = $this->find();
 
         if ($memory?->lock_version !== $expectedVersion) {

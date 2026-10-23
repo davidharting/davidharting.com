@@ -55,12 +55,14 @@ describe('viewMonth()', function () {
 });
 
 describe('create()', function () {
-    test('allows participants and denies guests, like viewAny', function () {
+    test('allows a participant and is not found for a guest or a non-participant', function () {
         /** @var TestCase $this */
         memoryPolicyTestParticipants($this);
+        $nonParticipant = User::factory()->create();
 
         expect(Gate::forUser($this->david)->allows('create', Memory::class))->toBeTrue()
-            ->and(Gate::inspect('create', Memory::class)->status())->toBe(404);
+            ->and(Gate::inspect('create', Memory::class)->status())->toBe(404)
+            ->and(Gate::forUser($nonParticipant)->inspect('create', Memory::class)->status())->toBe(404);
     });
 });
 

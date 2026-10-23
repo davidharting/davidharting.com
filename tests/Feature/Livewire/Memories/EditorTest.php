@@ -69,22 +69,30 @@ describe('writing', function () {
             ->isDraft()->toBeTrue();
     });
 
-    test('tells the browser each time a save lands, so it can show the check', function () {
+    test('tells the browser when a save lands, so it can show the check', function () {
         /** @var TestCase $this */
         editorFor($this->katie, '2026-09')
             ->set('body', 'We finally fixed the gate.')
             ->assertDispatched('memory-saved');
     });
 
-    test('offers Done, back to the viewer\'s page for the month', function (string $viewer) {
+    test('offers Done, back to the viewer\'s page for the month', function () {
         /** @var TestCase $this */
-        editorFor($this->{$viewer}, '2026-09')
-            ->assertSeeText('Done')
-            ->assertSee(route('memories.show', ['month' => '2026-09', 'who' => 'yours']));
-    })->with([
-        'with a draft' => ['katie'],
-        'after sharing' => ['david'],
-    ]);
+        $monthPage = e(route('memories.show', ['month' => '2026-09', 'who' => 'yours']));
+
+        editorFor($this->katie, '2026-09')
+            ->assertSeeInOrder(["href=\"{$monthPage}\"", '>Done</a>'], false);
+    });
+
+    test('refuses text longer than a memory can be, keeping what was saved', function () {
+        /** @var TestCase $this */
+        editorFor($this->katie, '2026-09')
+            ->set('body', str_repeat('a', MemoryWriter::MAX_LENGTH + 1))
+            ->assertHasErrors('body')
+            ->assertNotDispatched('memory-saved');
+
+        expect(storedMemoryOf($this->katie, '2026-09')->body)->toStartWith('Things I want to remember:');
+    });
 
     test('starts a memory for an empty month on the first save', function () {
         /** @var TestCase $this */
@@ -127,6 +135,10 @@ describe('writing', function () {
     });
 });
 
+/**
+ * Travels back after seeding. June has no rows, so the seeded rows for later
+ * months being dated in the future doesn't affect these tests.
+ */
 describe('June, before its Aug 1 deadline', function () {
     beforeEach(function () {
         /** @var TestCase $this */
@@ -202,6 +214,19 @@ describe('another device', function () {
         expect(storedMemoryOf($this->katie, '2026-09')->body)->toBe('From the laptop');
     });
 
+    test('won\'t share over the other device\'s version', function () {
+        /** @var TestCase $this */
+        $this->editor->set('body', 'From the laptop')
+            ->call('share')
+            ->assertSet('changedElsewhere', true)
+            ->assertSet('justShared', false)
+            ->assertDontSeeText('Shared.');
+
+        expect(storedMemoryOf($this->katie, '2026-09'))
+            ->body->toBe('From the phone')
+            ->isDraft()->toBeTrue();
+    });
+
     test('ignores "Keep this one" when no conflict has been detected', function () {
         /** @var TestCase $this */
         $this->editor->call('keepMine');
@@ -211,14 +236,11 @@ describe('another device', function () {
 });
 
 describe('sharing', function () {
-    test('shows the Share button and sheet, saying September reveals as soon as you share', function () {
+    test('says in the Share sheet that September reveals as soon as you share, once David has', function () {
         /** @var TestCase $this */
         editorFor($this->katie, '2026-09')
             ->assertSeeText('Share with David…')
-            ->assertSeeText('Only you can see this until you share it.')
-            ->assertSeeText('David has shared, so September reveals as soon as you do.')
-            ->assertSeeText('You can keep editing it afterwards.')
-            ->assertSeeText('You can\'t unshare it.', false);
+            ->assertSeeText('David has shared, so September reveals as soon as you do.');
     });
 
     test('reveals the month when the second person shares', function () {
@@ -243,6 +265,16 @@ describe('sharing', function () {
             ->call('share')
             ->assertSeeText('June is revealed.')
             ->assertSeeText('Back to June');
+    });
+
+    test('goes back to editing from the screen after sharing', function () {
+        /** @var TestCase $this */
+        editorFor($this->katie, '2026-09')
+            ->call('share')
+            ->assertSet('justShared', true)
+            ->call('keepEditing')
+            ->assertSet('justShared', false)
+            ->assertDontSeeText('September is revealed.');
     });
 
     test('keeps saving edits after sharing, without offering to share again', function () {

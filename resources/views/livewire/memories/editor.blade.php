@@ -45,7 +45,7 @@
     "
     x-on:memory-saved="flashSaved()"
     x-on:online.window="$wire.$commit()"
-    x-on:beforeunload.window="if ($wire.$dirty('body')) $event.preventDefault();"
+    x-on:beforeunload.window="if ($wire.$dirty('body') || $wire.changedElsewhere) $event.preventDefault();"
     class="flex min-h-dvh flex-col"
 >
     <header class="border-base-300 border-b px-4 py-3 font-sans text-sm">
@@ -63,7 +63,9 @@
     >
         <span wire:offline class="badge badge-error">Not saved</span>
         <span wire:offline.class="hidden" class="grid justify-items-end">
-            <span wire:dirty wire:target="body" class="badge [grid-area:1/1]">Saving…</span>
+            @unless ($changedElsewhere)
+                <span wire:dirty wire:target="body" class="badge [grid-area:1/1]">Saving…</span>
+            @endunless
             <span
                 x-show="justSaved"
                 x-on:input.window="hideSaved()"
@@ -119,12 +121,14 @@
     </div>
 
     <textarea
-        wire:model.live.debounce.1000ms="body"
+        wire:model="body"
         x-ref="text"
         wire:ignore.self
         x-on:input="growText()"
+        x-on:input.debounce.1000ms="$wire.$commit()"
         x-on:blur="$wire.$commit()"
         class="min-h-[50dvh] shrink-0 grow resize-none overflow-hidden bg-transparent px-4 py-4 text-lg leading-relaxed outline-none"
+        maxlength="{{ \App\Memories\MemoryWriter::MAX_LENGTH }}"
         placeholder="What do you want to remember about {{ $month->name() }}?"
         aria-label="Your memory for {{ $month->label() }}"
     ></textarea>
@@ -132,7 +136,14 @@
         <a
             @class(['btn btn-outline', 'w-1/3' => ! $this->isShared(), 'grow' => $this->isShared()])
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
-            x-on:click.prevent="$wire.$commit().then(() => (window.location = $el.href))"
+            x-on:click.prevent="
+                $wire
+                    .$commit()
+                    .then(() => {
+                        if (!$wire.changedElsewhere) window.location = $el.href;
+                    })
+                    .catch(() => {})
+            "
         >Done</a>
         @unless ($this->isShared())
             <button
