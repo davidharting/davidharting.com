@@ -9,7 +9,7 @@ Quick check: if `php artisan test` fails with autoload errors, run the setup.
 ### Environments
 
 - **Local macOS**: dev runs through mise + pitchfork. Use `mise run setup` once, then `mise run dev` to bring up the stack (postgres, octane, queue, vite). See the macOS section of [docs/development-setup.md](docs/development-setup.md).
-- **Claude Code cloud sandboxes**: the environment's setup script runs `scripts/sandbox/setup.sh`, which puts PHP 8.4 and Node 24 in `~/.local/bin` installs `vendor/` and `node_modules/`, and sets up `.env` and PostgreSQL so `php artisan test --parallel` works with no exports. If `php -v` shows 8.3 or `vendor/` is missing, the setup script didn't run: run `bash scripts/sandbox/setup.sh` yourself, then the Linux rules below apply.
+- **Claude Code cloud sandboxes**: the environment's setup script runs `scripts/sandbox/setup.sh`, which puts PHP 8.4 and Node 24 in `~/.local/bin`, installs `vendor/` and `node_modules/`, and sets up `.env` and PostgreSQL so `php artisan test --parallel` works with no exports. If `php -v` shows 8.3 or `vendor/` is missing, the setup script didn't run: run `bash scripts/sandbox/setup.sh` yourself, then the Linux rules below apply.
 - **Remote / CI / preconfigured Linux containers** (e.g. a cloud coding agent): tools are already installed — **do not install mise or run pitchfork**. Run `php artisan`, `vendor/bin/pint`, and `npm` directly, and follow the Linux/sandboxed section of [docs/development-setup.md](docs/development-setup.md). `mise run <task>` is a local convenience, not a requirement; the underlying commands work without it.
 
 ## Architecture overview
