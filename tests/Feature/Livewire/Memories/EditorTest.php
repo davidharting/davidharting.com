@@ -57,8 +57,7 @@ describe('writing', function () {
     test('opens with the viewer\'s draft', function () {
         /** @var TestCase $this */
         editorFor($this->katie, '2026-09')
-            ->assertSet('body', fn (string $body) => str_starts_with($body, "Things I want to remember:\n\nThe pumpkin patch"))
-            ->assertSeeText('Saved');
+            ->assertSet('body', fn (string $body) => str_starts_with($body, "Things I want to remember:\n\nThe pumpkin patch"));
     });
 
     test('saves as the viewer types, without sharing', function () {
@@ -81,9 +80,7 @@ describe('writing', function () {
         /** @var TestCase $this */
         editorFor($this->david, '2026-06')
             ->assertSet('body', '')
-            ->assertDontSeeText('Saved')
-            ->set('body', 'June, at last.')
-            ->assertSeeText('Saved');
+            ->set('body', 'June, at last.');
 
         expect(storedMemoryOf($this->david, '2026-06')->body)->toBe('June, at last.');
     });
@@ -165,7 +162,7 @@ describe('another device', function () {
         /** @var TestCase $this */
         $this->editor->set('body', 'From the laptop')
             ->assertSet('changedElsewhere', true)
-            ->assertSeeText('Changed on another device')
+            ->assertSeeText('This changed on another device since you opened it.')
             ->assertSeeText('Use that one')
             ->assertSeeText('Keep this one')
             ->set('body', 'Still typing on the laptop')
@@ -190,7 +187,7 @@ describe('another device', function () {
         $this->editor->set('body', 'From the laptop')
             ->call('keepMine')
             ->assertSet('changedElsewhere', false)
-            ->assertSeeText('Saved');
+            ->assertDispatched('memory-saved');
 
         expect(storedMemoryOf($this->katie, '2026-09')->body)->toBe('From the laptop');
     });
@@ -220,8 +217,7 @@ describe('sharing', function () {
             ->set('body', 'The pumpkin patch, finished.')
             ->call('share')
             ->assertSeeText('September is revealed.')
-            ->assertSeeText('Read David\'s →', false)
-            ->assertSeeText('Shared · Saved');
+            ->assertSeeText('Read David\'s →', false);
 
         expect(storedMemoryOf($this->katie, '2026-09'))
             ->body->toBe('The pumpkin patch, finished.')
@@ -243,7 +239,6 @@ describe('sharing', function () {
         /** @var TestCase $this */
         editorFor($this->david, '2026-09')
             ->assertDontSeeText('Share with Katie…')
-            ->assertSeeText('Shared · Saved')
             ->set('body', 'An edit after sharing.');
 
         expect(storedMemoryOf($this->david, '2026-09'))
@@ -289,7 +284,6 @@ describe('what the browser can change', function () {
         editorFor($this->katie, '2026-09')->call($helper);
     })->with([
         'isShared',
-        'saveStatusLabel',
         'standingLabel',
         'whenTheyCanReadLabel',
         'monthValue',

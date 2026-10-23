@@ -133,23 +133,6 @@ class Editor extends Component
     }
 
     /**
-     * The status in the bar above the keyboard while nothing is in flight,
-     * for example "Shared · Saved". Null before the first save.
-     */
-    protected function saveStatusLabel(): ?string
-    {
-        if ($this->changedElsewhere) {
-            return 'Changed on another device';
-        }
-
-        if ($this->lockVersion === null) {
-            return null;
-        }
-
-        return $this->isShared() ? 'Shared · Saved' : 'Saved';
-    }
-
-    /**
      * The one line above the text about where the month stands, for example
      * "Katie has shared. Share yours to reveal both."
      */
@@ -243,7 +226,7 @@ class Editor extends Component
     /**
      * Run a write, keeping the version it saved, or pause saving if another
      * device got there first. A write that saved tells the browser with
-     * `memory-saved`, so the status can briefly show the save landing.
+     * `memory-saved`, so the page can briefly show the save landing.
      *
      * @param  callable(MemoryWriter): ?Memory  $write
      */
