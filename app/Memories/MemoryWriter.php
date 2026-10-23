@@ -30,9 +30,9 @@ final readonly class MemoryWriter
 
     /**
      * Save the body without sharing it. Returns the memory as saved, or null
-     * when there is no memory afterwards: a memory only exists while it has
-     * text, so emptying a draft deletes it. A shared memory can't be emptied,
-     * because shared memories are never deleted.
+     * when there is no memory afterwards: a draft only exists while it has
+     * text or photos, so emptying a draft without photos deletes it. A shared
+     * memory can't be emptied, because shared memories are never deleted.
      *
      * @param  ?int  $expectedVersion  The `lock_version` the writer last saw, or null if it saw no memory.
      *
@@ -61,7 +61,7 @@ final readonly class MemoryWriter
             throw ValidationException::withMessages(['body' => "A shared memory can't be empty."]);
         }
 
-        if (trim($body) === '') {
+        if (trim($body) === '' && ! $memory->photos()->withTrashed()->exists()) {
             $this->delete($memory, $expectedVersion);
 
             return null;

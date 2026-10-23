@@ -94,8 +94,10 @@ describe('writing', function () {
         expect(storedMemoryOf($this->katie, '2026-09')->body)->toStartWith('Things I want to remember:');
     });
 
-    test('removes a draft whose text is all deleted, and starts afresh after', function () {
+    test('removes a draft without photos whose text is all deleted, and starts afresh after', function () {
         /** @var TestCase $this */
+        storedMemoryOf($this->katie, '2026-09')->photos()->withTrashed()->forceDelete();
+
         $editor = editorFor($this->katie, '2026-09')
             ->set('body', '')
             ->assertSet('lockVersion', null)
@@ -106,6 +108,15 @@ describe('writing', function () {
         $editor->set('body', 'A fresh start.');
 
         expect(storedMemoryOf($this->katie, '2026-09')->body)->toBe('A fresh start.');
+    });
+
+    test('keeps a draft that still has photos when its text is all deleted', function () {
+        /** @var TestCase $this */
+        editorFor($this->katie, '2026-09')->set('body', '');
+
+        expect(storedMemoryOf($this->katie, '2026-09'))
+            ->body->toBe('')
+            ->photos->not->toBeEmpty();
     });
 
     test('starts a memory for an empty month on the first save', function () {

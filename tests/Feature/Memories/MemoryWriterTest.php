@@ -3,6 +3,7 @@
 use App\Memories\MemoryChangedElsewhere;
 use App\Memories\MemoryWriter;
 use App\Models\Memory;
+use App\Models\MemoryPhoto;
 use App\Models\User;
 use App\Support\Month;
 use Carbon\CarbonImmutable;
@@ -55,6 +56,14 @@ describe('save()', function () {
 
         expect($this->writer->save(" \n ", 0))->toBeNull();
         $this->assertDatabaseCount('memories', 0);
+    });
+
+    test('keeps an emptied draft that has photos', function () {
+        /** @var TestCase $this */
+        $draft = $this->authorsMemoryFactory->create();
+        MemoryPhoto::factory()->for($draft)->create();
+
+        expect($this->writer->save('', 0)->body)->toBe('');
     });
 
     test('won\'t delete a draft saved on another device since the writer last saw it', function () {
