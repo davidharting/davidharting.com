@@ -3,8 +3,10 @@
 namespace App\View\Components\Memories;
 
 use App\Models\Memory;
+use App\Models\MemoryPhoto;
 use App\Support\CalendarMonth;
 use App\View\Memories\MonthForViewer;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\View\Component;
 use Illuminate\View\View;
 
@@ -27,6 +29,24 @@ class MonthPage extends Component
     public function shownMemory(): ?Memory
     {
         return $this->showingYours ? $this->monthForViewer->viewerMemory : $this->monthForViewer->revealedOtherMemory();
+    }
+
+    /**
+     * The shown memory's photos in order. Others see only ready photos; on
+     * the viewer's own page, photos still processing or that failed appear
+     * too, so the author knows they are there.
+     *
+     * @return Collection<int, MemoryPhoto>
+     */
+    public function photos(): Collection
+    {
+        $photos = $this->shownMemory()?->photos ?? new Collection;
+
+        if ($this->showingYours) {
+            return $photos;
+        }
+
+        return $photos->filter(fn (MemoryPhoto $photo) => $photo->isReady())->values();
     }
 
     /**

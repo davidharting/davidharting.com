@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Collection;
 class ListOpenMonthsQuery
 {
     /**
-     * Every open month with its memories, newest first, including months
+     * Every open month with its memories and their photos, newest first, including months
      * nobody wrote about.
      *
      * @return Collection<int, Month>
@@ -31,7 +31,7 @@ class ListOpenMonthsQuery
     {
         return Month::query()
             ->whereBetween('id', [$this->launchMonth()->toDateString(), Month::latestOpen()->toDateString()])
-            ->with('memories')
+            ->with('memories.photos')
             ->orderByDesc('id')
             ->get();
     }

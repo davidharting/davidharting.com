@@ -2,14 +2,18 @@
 
 namespace App\View\Components\Memories;
 
+use App\Models\Memory;
+use App\Models\MemoryPhoto;
 use App\View\Memories\MonthForViewer;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\Component;
 use Illuminate\View\View;
 
 /**
  * One month in the list. Before the reveal it says where both memories
- * stand; after, it opens with a line of what the viewer can read.
+ * stand; after, it leads with up to two thumbnails and a line of what the
+ * viewer can read.
  */
 class MonthTile extends Component
 {
@@ -18,23 +22,57 @@ class MonthTile extends Component
      */
     public const SNIPPET_LENGTH = 160;
 
+    /**
+     * The tile leads with at most this many thumbnails.
+     */
+    public const THUMBNAIL_COUNT = 2;
+
     public function __construct(public MonthForViewer $monthForViewer) {}
 
     /**
-     * The start of the other person's revealed memory, or else the viewer's
-     * own, up to the end of its first line. Null before the reveal.
+     * The start of the first revealed memory, up to the end of its first
+     * line. Null before the reveal.
      */
     public function snippet(): ?string
     {
-        $viewerMemory = $this->monthForViewer->viewerMemory;
-        $memory = $this->monthForViewer->revealedOtherMemory()
-            ?? ($viewerMemory !== null && $this->monthForViewer->month->isRevealed($viewerMemory) ? $viewerMemory : null);
+        $memory = $this->revealedMemories()->first();
 
         if ($memory === null) {
             return null;
         }
 
         return Str::of($memory->body)->trim()->before("\n")->limit(self::SNIPPET_LENGTH)->toString();
+    }
+
+    /**
+     * The first ready photos of the revealed memories, the other person's
+     * first. None before the reveal.
+     *
+     * @return Collection<int, MemoryPhoto>
+     */
+    public function thumbnails(): Collection
+    {
+        return $this->revealedMemories()
+            ->flatMap(fn (Memory $memory) => $memory->photos)
+            ->filter(fn (MemoryPhoto $photo) => $photo->isReady())
+            ->take(self::THUMBNAIL_COUNT)
+            ->values();
+    }
+
+    /**
+     * The other person's revealed memory, then the viewer's own once the
+     * month has revealed it.
+     *
+     * @return Collection<int, Memory>
+     */
+    private function revealedMemories(): Collection
+    {
+        $viewerMemory = $this->monthForViewer->viewerMemory;
+
+        return collect([
+            $this->monthForViewer->revealedOtherMemory(),
+            $viewerMemory !== null && $this->monthForViewer->month->isRevealed($viewerMemory) ? $viewerMemory : null,
+        ])->filter()->values();
     }
 
     public function isEmpty(): bool

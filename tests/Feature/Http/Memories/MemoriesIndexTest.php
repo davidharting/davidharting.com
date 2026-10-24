@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Memory;
+use App\Models\MemoryPhoto;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Database\Seeders\MemorySeeder;
@@ -75,6 +76,45 @@ test('marks their unshared draft after the reveal, without its text, and preview
         ->assertSee('David: draft')
         ->assertDontSeeText('Spring cleaning')
         ->assertSeeText('New job!');
+});
+
+describe('thumbnails', function () {
+    test('lead a revealed month with the first two ready photos, theirs first', function () {
+        /** @var TestCase $this */
+        // July: Katie's one photo, then the first of David's ten.
+        $tomatoes = MemoryPhoto::firstWhere('caption', 'Eleven tomatoes');
+        $counters = MemoryPhoto::firstWhere('caption', 'Counters!');
+        $secondOfDavids = MemoryPhoto::where('memory_id', $counters->memory_id)->where('position', 1)->sole();
+
+        $this->get('/memories')
+            ->assertSeeInOrder([
+                route('memories.photos.show', [$tomatoes, 'thumbnail']),
+                route('memories.photos.show', [$counters, 'thumbnail']),
+            ])
+            ->assertDontSee(route('memories.photos.show', [$secondOfDavids, 'thumbnail']));
+    });
+
+    test('never show photos before the reveal, not even the viewer\'s own', function () {
+        /** @var TestCase $this */
+        // September: David shared a photo; the month hasn't revealed.
+        $street = MemoryPhoto::firstWhere('caption', 'Our street before anyone was up');
+
+        $this->get('/memories')
+            ->assertDontSee(route('memories.photos.show', [$street, 'thumbnail']));
+    });
+
+    test('never show a photo from a draft the reveal left out', function () {
+        /** @var TestCase $this */
+        // May: David's draft was never shared, so Katie sees only her own photo.
+        $hallway = MemoryPhoto::firstWhere('caption', 'The hallway, finally');
+        $davidsDraft = Memory::query()->where('month_id', '2026-05-01')->whereNull('shared_at')->sole();
+        $draftPhoto = MemoryPhoto::factory()->for($davidsDraft)->ready()->create();
+
+        $this->actingAs(User::firstWhere('email', 'katie@example.com'))
+            ->get('/memories')
+            ->assertSee(route('memories.photos.show', [$hallway, 'thumbnail']))
+            ->assertDontSee(route('memories.photos.show', [$draftPhoto, 'thumbnail']));
+    });
 });
 
 test('links each month to its page', function () {
