@@ -1,6 +1,6 @@
 #!/bin/bash
-# Bootstraps a Claude Code cloud sandbox: PHP 8.4, Node 24, vendor/,
-# node_modules/, .env and PostgreSQL. Point the cloud environment's setup
+# Bootstraps a Claude Code cloud sandbox: PHP 8.4, Node 24, libvips,
+# exiftool, vendor/, node_modules/, .env and PostgreSQL. Point the cloud environment's setup
 # script at this file. Safe to re-run.
 #
 # The sandbox's GitHub proxy refuses Composer's dist zip downloads for every
@@ -31,6 +31,12 @@ for bin in node npm npx; do
     ln -sf "/opt/node-$NODE_VERSION-linux-x64/bin/$bin" "$BIN_DIR/$bin"
 done
 export PATH="$BIN_DIR:$PATH"
+
+# vipsthumbnail processes memory photos; exiftool lets tests inspect the result.
+echo "Installing libvips and exiftool"
+apt-get update -qq
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+    libvips-tools libheif-plugin-libde265 libimage-exiftool-perl
 
 cd "$REPO_DIR"
 

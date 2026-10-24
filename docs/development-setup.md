@@ -8,6 +8,15 @@ Bootstrap a fresh development environment to run tests. This guide is designed f
 - Composer
 - Node.js 24 or higher, and npm
 - PostgreSQL 15 or higher
+- libvips (`vipsthumbnail`, `vipsheader`) with HEIC support, and exiftool
+
+## System tools for photos
+
+Memory photos are processed by the libvips command line tools, and the photo tests read their output back with exiftool. Without them, photo tests fail and photos end up failed.
+
+- **macOS:** `mise run setup` runs `brew bundle --no-upgrade`, which installs both from the `Brewfile`.
+- **Ubuntu (CI, Claude Code cloud sandboxes):** `apt-get install libvips-tools libheif-plugin-libde265 libimage-exiftool-perl`. `scripts/sandbox/setup.sh` does this for you.
+- **Debian 12 (Amp orbs, the production image):** `apt-get install libvips-tools libimage-exiftool-perl`. Its libheif decodes HEIC without a separate plugin. Production installs only `libvips-tools`.
 
 ## Setup Steps
 
@@ -18,7 +27,7 @@ composer install
 npm install
 ```
 
-In a Claude Code cloud sandbox, the environment's setup script runs `bash /home/user/davidharting.com/scripts/sandbox/setup.sh` instead. It installs PHP 8.4 and Node 24, unpacks a prebuilt `vendor/` from the newest `dev-sandbox-vendor` Actions artifact on main, runs both installs, then does steps 2 and 3 below. The sandbox's GitHub proxy blocks Composer's zip downloads for other repositories, so without the bundle Composer clones every package and takes minutes.
+In a Claude Code cloud sandbox, the environment's setup script runs `bash /home/user/davidharting.com/scripts/sandbox/setup.sh` instead. It installs PHP 8.4, Node 24, libvips and exiftool, unpacks a prebuilt `vendor/` from the newest `dev-sandbox-vendor` Actions artifact on main, runs both installs, then does steps 2 and 3 below. The sandbox's GitHub proxy blocks Composer's zip downloads for other repositories, so without the bundle Composer clones every package and takes minutes.
 
 ### 2. Environment Configuration
 
