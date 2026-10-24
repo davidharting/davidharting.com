@@ -3,7 +3,7 @@
 namespace App\View\Components\Memories;
 
 use App\Models\Memory;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use App\View\Memories\MonthForViewer;
 use Illuminate\View\Component;
 use Illuminate\View\View;
@@ -17,8 +17,8 @@ class MonthPage extends Component
     public function __construct(
         public MonthForViewer $monthForViewer,
         public bool $showingYours,
-        public ?Month $previous,
-        public ?Month $next,
+        public ?CalendarMonth $previous,
+        public ?CalendarMonth $next,
     ) {}
 
     /**

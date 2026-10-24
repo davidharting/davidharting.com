@@ -4,7 +4,7 @@ namespace App\Memories;
 
 use App\Models\Memory;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -25,7 +25,7 @@ final readonly class MemoryWriter
 
     public function __construct(
         public User $author,
-        public Month $month,
+        public CalendarMonth $month,
     ) {}
 
     /**

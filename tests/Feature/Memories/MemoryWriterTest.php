@@ -5,7 +5,7 @@ use App\Memories\MemoryWriter;
 use App\Models\Memory;
 use App\Models\MemoryPhoto;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -14,7 +14,7 @@ beforeEach(function () {
     /** @var TestCase $this */
     $this->travelTo('2026-10-18T12:00:00Z');
     $this->author = User::factory()->create();
-    $this->month = Month::of(2026, 9);
+    $this->month = CalendarMonth::of(2026, 9);
     $this->writer = new MemoryWriter($this->author, $this->month);
     $this->authorsMemoryFactory = Memory::factory()->for($this->author)->forMonth($this->month);
 });
@@ -120,7 +120,7 @@ describe('save()', function () {
     test('only touches the author\'s memory for that month', function () {
         /** @var TestCase $this */
         $someoneElses = Memory::factory()->forMonth($this->month)->create(['body' => 'Not yours']);
-        $otherMonth = Memory::factory()->for($this->author)->forMonth(Month::of(2026, 8))->create(['body' => 'August']);
+        $otherMonth = Memory::factory()->for($this->author)->forMonth(CalendarMonth::of(2026, 8))->create(['body' => 'August']);
 
         $this->writer->save('September', null);
 

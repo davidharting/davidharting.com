@@ -4,19 +4,19 @@ use App\Models\Memory;
 use App\Models\MemoryPhoto;
 use App\Models\MemoryReaction;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 describe('month', function () {
-    test('is stored as the first day and read back as a Month', function () {
+    test('is stored as the first day and read back as a calendar month', function () {
         /** @var TestCase $this */
-        $memory = Memory::factory()->forMonth(Month::of(2026, 9))->create();
+        $memory = Memory::factory()->forMonth(CalendarMonth::of(2026, 9))->create();
 
         $this->assertDatabaseHas('memories', ['id' => $memory->id, 'month' => '2026-09-01']);
-        expect($memory->fresh()->month)->toBeInstanceOf(Month::class)
-            ->and($memory->fresh()->month->equals(Month::of(2026, 9)))->toBeTrue();
+        expect($memory->fresh()->month)->toBeInstanceOf(CalendarMonth::class)
+            ->and($memory->fresh()->month->equals(CalendarMonth::of(2026, 9)))->toBeTrue();
     });
 
     test('accepts a date string', function () {
@@ -42,15 +42,15 @@ describe('month', function () {
     test('allows only one memory per person', function () {
         /** @var TestCase $this */
         $user = User::factory()->create();
-        Memory::factory()->for($user)->forMonth(Month::of(2026, 9))->create();
+        Memory::factory()->for($user)->forMonth(CalendarMonth::of(2026, 9))->create();
 
-        Memory::factory()->for($user)->forMonth(Month::of(2026, 9))->create();
+        Memory::factory()->for($user)->forMonth(CalendarMonth::of(2026, 9))->create();
     })->throws(QueryException::class, 'memories_user_id_month_unique');
 
     test('lets each person write one memory for the same month', function () {
         /** @var TestCase $this */
-        Memory::factory()->forMonth(Month::of(2026, 9))->create();
-        Memory::factory()->forMonth(Month::of(2026, 9))->create();
+        Memory::factory()->forMonth(CalendarMonth::of(2026, 9))->create();
+        Memory::factory()->forMonth(CalendarMonth::of(2026, 9))->create();
 
         expect(Memory::count())->toBe(2);
     });
@@ -59,7 +59,7 @@ describe('month', function () {
 describe('shared_at', function () {
     test('cannot be before the memory was started', function () {
         /** @var TestCase $this */
-        $month = Month::of(2026, 9);
+        $month = CalendarMonth::of(2026, 9);
 
         Memory::factory()->forMonth($month)->shared($month->opensAt()->subDay())->create();
     })->throws(QueryException::class, 'memories_shared_after_started');

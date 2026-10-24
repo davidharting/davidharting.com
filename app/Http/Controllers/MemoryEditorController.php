@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Illuminate\View\View;
 use InvalidArgumentException;
 use Laravel\Head\Facades\Head;
@@ -17,7 +17,7 @@ class MemoryEditorController extends Controller
     public function __invoke(string $month): View
     {
         try {
-            $month = Month::parseYearMonth($month);
+            $month = CalendarMonth::parseYearMonth($month);
         } catch (InvalidArgumentException) {
             abort(404);
         }

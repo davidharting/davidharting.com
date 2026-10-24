@@ -2,7 +2,7 @@
 
 use App\Models\Memory;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Database\Seeders\MemorySeeder;
 use Tests\Support\RenderedHead;
 use Tests\TestCase;
@@ -121,7 +121,7 @@ test('doesn\'t link past the latest open month or before launch', function () {
 
 test('keeps paragraphs and escapes the text', function () {
     /** @var TestCase $this */
-    Memory::factory()->for($this->david)->forMonth(Month::of(2026, 6))->create([
+    Memory::factory()->for($this->david)->forMonth(CalendarMonth::of(2026, 6))->create([
         'body' => "First paragraph\nsame paragraph\n\n<b>Second</b>",
     ]);
 

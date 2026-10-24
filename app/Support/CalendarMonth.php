@@ -18,7 +18,7 @@ use Stringable;
  * both at midnight Eastern. Those moments are returned as UTC instants, so
  * Eastern time never leaks past this class.
  */
-final class Month implements Castable, Stringable
+final class CalendarMonth implements Castable, Stringable
 {
     public const TIMEZONE = 'America/New_York';
 
@@ -183,8 +183,8 @@ final class Month implements Castable, Stringable
     }
 
     /**
-     * Lets a model list Month::class in its casts(), so reading the column
-     * gives a Month and writing a Month (or a date) stores its first day.
+     * Lets a model list CalendarMonth::class in its casts(), so reading the column
+     * gives a CalendarMonth and writing a CalendarMonth (or a date) stores its first day.
      * Laravel calls this when it builds the cast; see "Castables" in the
      * Eloquent mutators docs.
      *
@@ -198,9 +198,9 @@ final class Month implements Castable, Stringable
             /**
              * @param  array<string, mixed>  $attributes
              */
-            public function get(Model $model, string $key, mixed $value, array $attributes): ?Month
+            public function get(Model $model, string $key, mixed $value, array $attributes): ?CalendarMonth
             {
-                return $value === null ? null : Month::parse(substr((string) $value, 0, 10));
+                return $value === null ? null : CalendarMonth::parse(substr((string) $value, 0, 10));
             }
 
             /**
@@ -210,9 +210,9 @@ final class Month implements Castable, Stringable
             {
                 return match (true) {
                     $value === null => null,
-                    $value instanceof Month => $value->toDateString(),
-                    $value instanceof DateTimeInterface => Month::containing($value)->toDateString(),
-                    default => Month::parse((string) $value)->toDateString(),
+                    $value instanceof CalendarMonth => $value->toDateString(),
+                    $value instanceof DateTimeInterface => CalendarMonth::containing($value)->toDateString(),
+                    default => CalendarMonth::parse((string) $value)->toDateString(),
                 };
             }
         };

@@ -7,7 +7,7 @@ use App\Models\MemoryParticipant;
 use App\Models\MemoryPhoto;
 use App\Models\MemoryReaction;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
@@ -43,7 +43,7 @@ class MemorySeeder extends Seeder
         $david = $this->participant('David Harting', 'David', 'david@example.com', isAdmin: true);
         $katie = $this->participant('Katie Harting', 'Katie', 'katie@example.com', isAdmin: false);
 
-        $latest = Month::latestOpen();
+        $latest = CalendarMonth::latestOpen();
 
         // 0 back: open and not yet revealed.
         $month = $latest;
@@ -121,7 +121,7 @@ class MemorySeeder extends Seeder
      */
     private function memory(
         User $author,
-        Month $month,
+        CalendarMonth $month,
         string $body,
         int $startedAfter,
         ?int $sharedAfter = null,
