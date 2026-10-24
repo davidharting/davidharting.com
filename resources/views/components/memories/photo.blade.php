@@ -19,7 +19,6 @@
                 height="{{ $web->height }}"
                 alt="{{ $photo->caption ?? "A photo by {$authorName}" }}"
                 loading="lazy"
-                onload="this.parentElement.classList.remove('skeleton')"
                 class="h-full w-full object-cover text-transparent"
             />
         </div>
