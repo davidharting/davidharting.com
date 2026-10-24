@@ -1,7 +1,7 @@
 <?php
 
-use App\Support\Vips;
-use App\Support\VipsFailed;
+use App\Support\Vips\Vips;
+use App\Support\Vips\VipsFailed;
 use Spatie\TemporaryDirectory\TemporaryDirectory;
 use Tests\Support\PhotoInspector;
 use Tests\TestCase;

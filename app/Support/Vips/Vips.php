@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support;
+namespace App\Support\Vips;
 
 use Illuminate\Process\Exceptions\ProcessTimedOutException;
 use Illuminate\Support\Facades\Process;
