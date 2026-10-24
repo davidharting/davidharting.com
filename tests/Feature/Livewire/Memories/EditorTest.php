@@ -1,11 +1,15 @@
 <?php
 
 use App\Livewire\Memories\Editor;
+use App\Memories\AddMemoryPhoto;
 use App\Memories\MemoryWriter;
 use App\Models\Memory;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Database\Seeders\MemorySeeder;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Features\SupportTesting\Testable;
@@ -313,8 +317,10 @@ describe('sharing', function () {
             ->isShared()->toBeTrue();
     });
 
-    test('won\'t empty a shared memory', function () {
+    test('won\'t empty a shared memory without photos', function () {
         /** @var TestCase $this */
+        storedMemoryOf($this->david, '2026-09')->photos()->withTrashed()->forceDelete();
+
         editorFor($this->david, '2026-09')
             ->set('body', '')
             ->assertHasErrors('body')
@@ -335,6 +341,155 @@ describe('sharing', function () {
     });
 });
 
+describe('photos', function () {
+    beforeEach(function () {
+        /** @var TestCase $this */
+        Queue::fake();
+        Storage::fake('private');
+        // Livewire keeps test uploads on this disk; point it at the private one, where real uploads land.
+        Storage::set('tmp-for-tests', Storage::disk('private'));
+    });
+
+    test('adds an uploaded photo after the others and tells the browser which it is', function () {
+        /** @var TestCase $this */
+        $editor = editorFor($this->katie, '2026-09')
+            ->set('upload', UploadedFile::fake()->image('porch.jpg'))
+            ->assertSet('upload', null)
+            ->assertSet('photoCount', 2)
+            ->assertDispatched('memory-saved');
+
+        $added = storedMemoryOf($this->katie, '2026-09')->photos->last();
+        expect($added->position)->toBe(1)
+            ->and($added->isProcessing())->toBeTrue();
+        $editor->assertDispatched('upload-handled', photoId: $added->id);
+    });
+
+    test('starts a draft with the first photo, and keeps saving text after it', function () {
+        /** @var TestCase $this */
+        editorFor($this->david, '2026-06')
+            ->set('upload', UploadedFile::fake()->image('june.jpg'))
+            ->set('body', 'And some words.')
+            ->assertSet('changedElsewhere', false);
+
+        expect(storedMemoryOf($this->david, '2026-06'))
+            ->body->toBe('And some words.')
+            ->isDraft()->toBeTrue()
+            ->photos->toHaveCount(1);
+    });
+
+    test('turns down a file that isn\'t a photo, and lets the browser send the next', function () {
+        /** @var TestCase $this */
+        editorFor($this->katie, '2026-09')
+            ->set('upload', UploadedFile::fake()->create('notes.pdf', 10, 'application/pdf'))
+            ->assertHasErrors('upload')
+            ->assertSeeText('That file isn\'t a photo the editor can take.')
+            ->assertDispatched('upload-handled', photoId: null);
+
+        expect(storedMemoryOf($this->katie, '2026-09')->photos)->toHaveCount(1);
+    });
+
+    test('turns down an eleventh photo', function () {
+        /** @var TestCase $this */
+        editorFor($this->david, '2026-07')
+            ->assertSet('photoCount', AddMemoryPhoto::MAX_PHOTOS)
+            ->assertSeeText('That\'s the most a memory can hold.', false)
+            ->set('upload', UploadedFile::fake()->image('one-more.jpg'))
+            ->assertHasErrors('upload')
+            ->assertDispatched('upload-handled', photoId: null);
+
+        expect(storedMemoryOf($this->david, '2026-07')->photos)->toHaveCount(AddMemoryPhoto::MAX_PHOTOS);
+    });
+
+    test('shares a memory that has photos and no text', function () {
+        /** @var TestCase $this */
+        editorFor($this->david, '2026-06')
+            ->set('upload', UploadedFile::fake()->image('june.jpg'))
+            ->call('share')
+            ->assertSet('justShared', true);
+
+        expect(storedMemoryOf($this->david, '2026-06'))
+            ->body->toBe('')
+            ->isShared()->toBeTrue();
+    });
+
+    test('shows a caption chip on photos without one, and the caption on photos with one', function () {
+        /** @var TestCase $this */
+        editorFor($this->david, '2026-09')
+            ->assertSeeText('2 of 10')
+            ->assertSeeText('Our street before anyone was up')
+            ->assertSeeText('✎ Caption');
+    });
+
+    test('captions a photo without bumping the memory\'s version', function () {
+        /** @var TestCase $this */
+        $photo = storedMemoryOf($this->david, '2026-09')->photos->last();
+
+        editorFor($this->david, '2026-09')
+            ->call('caption', $photo->id, 'The encore')
+            ->assertSet('lockVersion', storedMemoryOf($this->david, '2026-09')->lock_version)
+            ->assertDispatched('memory-saved')
+            ->set('body', 'Text still saves.')
+            ->assertSet('changedElsewhere', false);
+
+        expect($photo->fresh()->caption)->toBe('The encore');
+    });
+
+    test('moves a photo to first', function () {
+        /** @var TestCase $this */
+        [$first, $second] = storedMemoryOf($this->david, '2026-09')->photos->all();
+
+        editorFor($this->david, '2026-09')->call('movePhoto', $second->id, 0);
+
+        expect(storedMemoryOf($this->david, '2026-09')->photos->modelKeys())->toBe([$second->id, $first->id]);
+    });
+
+    test('removes a photo, tells the browser so it can offer to undo, and undoes', function () {
+        /** @var TestCase $this */
+        $photo = storedMemoryOf($this->david, '2026-09')->photos->first();
+
+        $editor = editorFor($this->david, '2026-09')
+            ->call('removePhoto', $photo->id)
+            ->assertDispatched('photo-removed', photoId: $photo->id)
+            ->assertSet('photoCount', 1);
+
+        expect($photo->fresh()->trashed())->toBeTrue();
+
+        $editor->call('restorePhoto', $photo->id)->assertSet('photoCount', 2);
+
+        expect(storedMemoryOf($this->david, '2026-09')->photos->first()->id)->toBe($photo->id);
+    });
+
+    test('tries processing a failed photo again', function () {
+        /** @var TestCase $this */
+        $photo = storedMemoryOf($this->katie, '2026-09')->photos->first();
+
+        editorFor($this->katie, '2026-09')
+            ->assertSeeText('This photo couldn\'t be processed.', false)
+            ->call('retryPhoto', $photo->id);
+
+        expect($photo->fresh()->isProcessing())->toBeTrue();
+    });
+
+    test('checks back only while a photo is processing', function () {
+        /** @var TestCase $this */
+        editorFor($this->david, '2026-09')->assertSeeHtml('wire:poll');
+        editorFor($this->david, '2026-07')->assertDontSeeHtml('wire:poll');
+    });
+
+    test('leaves the other person\'s photos alone', function () {
+        /** @var TestCase $this */
+        $davids = storedMemoryOf($this->david, '2026-09')->photos->first();
+
+        editorFor($this->katie, '2026-09')
+            ->call('caption', $davids->id, 'Not mine to caption')
+            ->call('removePhoto', $davids->id);
+
+        expect($davids->fresh())
+            ->caption->toBe('Our street before anyone was up')
+            ->trashed()->toBeFalse();
+    });
+});
+
 describe('what the browser can change', function () {
     test('refuses changes to locked state', function (string $property, mixed $value) {
         /** @var TestCase $this */
@@ -344,6 +499,7 @@ describe('what the browser can change', function () {
         'lock version' => ['lockVersion', 99],
         'conflict flag' => ['changedElsewhere', false],
         'shared screen' => ['justShared', true],
+        'photo count' => ['photoCount', 0],
     ])->throws(CannotUpdateLockedPropertyException::class);
 
     test('can\'t call the view helpers as actions', function (string $helper) {
@@ -354,5 +510,6 @@ describe('what the browser can change', function () {
         'standingLabel',
         'whenTheyCanReadLabel',
         'monthValue',
+        'photos',
     ])->throws(MethodNotFoundException::class);
 });

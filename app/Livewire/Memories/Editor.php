@@ -2,27 +2,52 @@
 
 namespace App\Livewire\Memories;
 
+use App\Memories\AddMemoryPhoto;
 use App\Memories\MemoryChangedElsewhere;
+use App\Memories\MemoryPhotos;
 use App\Memories\MemoryWriter;
 use App\Models\Memory;
 use App\Models\MemoryParticipant;
+use App\Models\MemoryPhoto;
 use App\Models\Month;
 use App\Support\CalendarMonth;
 use App\View\Memories\MonthForViewer;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 
 /**
  * The viewer's own memory for one month, on its own page. The text saves
- * as they type and is shared only through the Share sheet.
+ * as they type, photos save as each one lands, and the memory is shared only
+ * through the Share sheet.
  *
  * The editor remembers the `lock_version` it last saw. When another device
- * saved in the meantime, it stops saving and asks which version to keep.
+ * saved the text in the meantime, it stops saving and asks which version to
+ * keep. Photos and captions stay out of it: the last change saved wins.
  */
 class Editor extends Component
 {
+    use WithFileUploads;
+
+    /**
+     * The largest photo the browser may upload, in kilobytes.
+     */
+    public const int MAX_PHOTO_KILOBYTES = 50 * 1024;
+
+    /**
+     * The kinds of photo the editor takes: what phones and cameras save, and
+     * what libvips can read.
+     *
+     * @var list<string>
+     */
+    public const array PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'];
+
     /**
      * The month as `Y-m`.
      */
@@ -49,6 +74,19 @@ class Editor extends Component
      */
     #[Locked]
     public bool $justShared = false;
+
+    /**
+     * The photo the browser is uploading, one at a time. It is added to the
+     * memory as soon as it lands.
+     */
+    public ?TemporaryUploadedFile $upload = null;
+
+    /**
+     * How many photos the memory has, so the browser knows how many more
+     * fit before it uploads them.
+     */
+    #[Locked]
+    public int $photoCount = 0;
 
     public function boot(): void
     {
@@ -110,6 +148,90 @@ class Editor extends Component
     public function keepEditing(): void
     {
         $this->justShared = false;
+    }
+
+    /**
+     * Add the photo that just landed to the end of the memory, starting the
+     * memory if this is the first thing in it. The browser hears
+     * `upload-handled` either way, with the new photo's id when it was added,
+     * so it can send the next one.
+     */
+    public function updatedUpload(): void
+    {
+        $upload = $this->upload;
+        $this->upload = null;
+        $photoId = null;
+
+        try {
+            validator(['upload' => $upload], ['upload' => [
+                'required',
+                'file',
+                'mimetypes:'.implode(',', self::PHOTO_MIME_TYPES),
+                'max:'.self::MAX_PHOTO_KILOBYTES,
+            ]], ['upload.mimetypes' => "That file isn't a photo the editor can take."])->validate();
+
+            $this->authorizeWriting();
+            $memory = $this->writer()->findOrStartForPhotos();
+
+            if ($memory->wasRecentlyCreated && $this->lockVersion === null) {
+                $this->lockVersion = $memory->lock_version;
+            }
+
+            $photoId = (new AddMemoryPhoto)->handle(
+                $memory,
+                FileUploadConfiguration::path($upload->getFilename(), false),
+            )->id;
+
+            $this->resetErrorBag('upload');
+            $this->photoSaved();
+        } catch (ValidationException $exception) {
+            $upload?->delete();
+
+            throw ValidationException::withMessages(['upload' => $exception->validator->errors()->first()]);
+        } finally {
+            $this->dispatch('upload-handled', photoId: $photoId);
+        }
+    }
+
+    public function caption(int $photoId, string $caption): void
+    {
+        $this->changePhotos(fn (MemoryPhotos $photos) => $photos->caption($photoId, $caption));
+    }
+
+    public function movePhoto(int $photoId, int $position): void
+    {
+        $this->changePhotos(fn (MemoryPhotos $photos) => $photos->move($photoId, $position));
+    }
+
+    /**
+     * Remove a photo, and tell the browser with `photo-removed` so it can
+     * offer to undo.
+     */
+    public function removePhoto(int $photoId): void
+    {
+        $this->changePhotos(fn (MemoryPhotos $photos) => $photos->remove($photoId));
+
+        $this->dispatch('photo-removed', photoId: $photoId);
+    }
+
+    public function restorePhoto(int $photoId): void
+    {
+        $this->changePhotos(fn (MemoryPhotos $photos) => $photos->restore($photoId));
+    }
+
+    public function retryPhoto(int $photoId): void
+    {
+        $this->changePhotos(fn (MemoryPhotos $photos) => $photos->retry($photoId));
+    }
+
+    /**
+     * The memory's photos in order, removed ones left out.
+     *
+     * @return Collection<int, MemoryPhoto>
+     */
+    protected function photos(): Collection
+    {
+        return $this->monthForViewer->viewerMemory?->photos ?? new Collection;
     }
 
     #[Computed]
@@ -185,6 +307,8 @@ class Editor extends Component
 
     public function render(): View
     {
+        $this->photoCount = $this->photos()->count();
+
         return view('livewire.memories.editor');
     }
 
@@ -233,7 +357,7 @@ class Editor extends Component
         $this->authorizeWriting();
 
         try {
-            $memory = $write(new MemoryWriter(auth()->user(), $this->calendarMonth()));
+            $memory = $write($this->writer());
         } catch (MemoryChangedElsewhere) {
             $this->changedElsewhere = true;
 
@@ -251,5 +375,36 @@ class Editor extends Component
         }
 
         return $memory;
+    }
+
+    /**
+     * Run a change to the viewer's photos. There is nothing to change before
+     * the memory exists. A change that saved flashes the same check as text.
+     *
+     * @param  callable(MemoryPhotos): void  $change
+     */
+    private function changePhotos(callable $change): void
+    {
+        $this->authorizeWriting();
+        $memory = $this->monthForViewer->viewerMemory;
+
+        if ($memory === null) {
+            return;
+        }
+
+        $this->resetErrorBag(['photo', 'caption']);
+        $change(new MemoryPhotos($memory));
+        $this->photoSaved();
+    }
+
+    private function photoSaved(): void
+    {
+        unset($this->monthForViewer);
+        $this->dispatch('memory-saved');
+    }
+
+    private function writer(): MemoryWriter
+    {
+        return new MemoryWriter(auth()->user(), $this->calendarMonth());
     }
 }
