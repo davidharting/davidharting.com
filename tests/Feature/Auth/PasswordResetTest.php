@@ -128,4 +128,30 @@ class PasswordResetTest extends TestCase
         $this->assertFalse($other->fresh()->hasVerifiedEmail());
         $this->assertFalse($recipient->fresh()->hasVerifiedEmail());
     }
+
+    public function test_reset_password_screen_shows_the_email_without_letting_it_be_edited(): void
+    {
+        $response = $this->get('/reset-password/a-token?email=katie@example.test');
+
+        $response->assertOk();
+        $response->assertSeeText('Choose a new password for katie@example.test.');
+        $response->assertSee('<input type="hidden" name="email" value="katie@example.test" />', escape: false);
+        $response->assertDontSee('type="text" class="input"', escape: false);
+    }
+
+    public function test_reset_password_screen_shows_why_a_reset_failed(): void
+    {
+        $user = User::factory()->create();
+
+        $this->from('/reset-password/not-a-real-token?email='.urlencode($user->email))
+            ->followingRedirects()
+            ->post('/reset-password', [
+                'token' => 'not-a-real-token',
+                'email' => $user->email,
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ])
+            ->assertSeeText('This password reset token is invalid.')
+            ->assertSeeText('Choose a new password for '.$user->email.'.');
+    }
 }
