@@ -84,6 +84,16 @@ install_postgres() {
 	until pg_isready -q -h 127.0.0.1; do sleep 0.2; done
 }
 
+# vipsthumbnail processes memory photos; exiftool lets tests inspect the
+# result. Debian 12's libheif decodes HEIC without a separate plugin package.
+install_image_tools() {
+	if ! command -v vipsthumbnail >/dev/null 2>&1 || ! command -v exiftool >/dev/null 2>&1; then
+		sudo apt-get update -qq
+		sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends libvips-tools libimage-exiftool-perl
+	fi
+	vipsthumbnail --vips-version
+}
+
 # Roles and databases from docs/development-setup.md: `root` matches
 # .env.example for the dev database; `david` matches phpunit.xml for tests.
 # Both are superusers so parallel tests can create laravel_test_test_N.
@@ -120,6 +130,7 @@ prepare_database() {
 
 step "PHP and Composer" install_php
 step "PostgreSQL" install_postgres
+step "Image tools" install_image_tools
 step "Databases" create_databases
 # package:discover runs during composer install and boots the app.
 [ -f .env ] || cp -- .env.example .env

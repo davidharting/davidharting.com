@@ -32,6 +32,7 @@ url = "https://download.herdphp.com/herd-lite/composer"
 description = "One-time/occasional dev bootstrap: install tools & dependencies (not per-startup)"
 run = [
     "mise install",
+    "brew bundle --no-upgrade",
     "test -f .env || (cp .env.example .env && php artisan key:generate)",
     "composer install",
     "npm install",
