@@ -7,7 +7,6 @@ use App\Memories\MemoryWriter;
 use App\Models\Memory;
 use App\Models\MemoryParticipant;
 use App\Models\Month;
-use App\Queries\ListOpenMonthsQuery;
 use App\Support\CalendarMonth;
 use App\View\Memories\MonthForViewer;
 use Illuminate\View\View;
@@ -53,13 +52,12 @@ class Editor extends Component
 
     public function boot(): void
     {
-        $this->authorize('viewMonth', Memory::class);
+        $this->authorize('viewAny', Month::class);
     }
 
     public function mount(string $month): void
     {
         $this->month = $month;
-        abort_unless((new ListOpenMonthsQuery)->contains($this->monthValue()), 404);
 
         $this->load();
         $this->authorizeWriting();
@@ -120,7 +118,7 @@ class Editor extends Component
         $viewer = auth()->user();
 
         return new MonthForViewer(
-            Month::of($this->monthValue()),
+            Month::of($this->calendarMonth()),
             $viewer,
             MemoryParticipant::otherThan($viewer),
         );
@@ -147,11 +145,11 @@ class Editor extends Component
 
             return $shared.($revealed
                 ? "{$other} sees them."
-                : "{$other} sees them once {$this->monthValue()->name()} is revealed.");
+                : "{$other} sees them once {$this->calendarMonth()->name()} is revealed.");
         }
 
         if ($revealed) {
-            return "{$this->monthValue()->name()} has revealed, so {$other} can read yours as soon as you share it.";
+            return "{$this->calendarMonth()->name()} has revealed, so {$other} can read yours as soon as you share it.";
         }
 
         if ($otherMemory === null) {
@@ -172,7 +170,7 @@ class Editor extends Component
     {
         $monthForViewer = $this->monthForViewer;
         $other = $monthForViewer->other->displayName();
-        $name = $this->monthValue()->name();
+        $name = $this->calendarMonth()->name();
 
         if ($monthForViewer->month->hasRevealed()) {
             return "{$name} has already revealed, so {$other} can read it right away.";
@@ -190,17 +188,18 @@ class Editor extends Component
         return view('livewire.memories.editor');
     }
 
-    protected function monthValue(): CalendarMonth
+    protected function calendarMonth(): CalendarMonth
     {
         return CalendarMonth::parseYearMonth($this->month);
     }
 
     /**
-     * Writing means updating the viewer's memory, or creating it if there
-     * isn't one yet.
+     * Writing means the viewer may write in the month, and may update their
+     * memory, or create it if there isn't one yet.
      */
     private function authorizeWriting(): void
     {
+        $this->authorize('write', $this->monthForViewer->month);
         $memory = $this->monthForViewer->viewerMemory;
 
         if ($memory === null) {
@@ -234,7 +233,7 @@ class Editor extends Component
         $this->authorizeWriting();
 
         try {
-            $memory = $write(new MemoryWriter(auth()->user(), $this->monthValue()));
+            $memory = $write(new MemoryWriter(auth()->user(), $this->calendarMonth()));
         } catch (MemoryChangedElsewhere) {
             $this->changedElsewhere = true;
 

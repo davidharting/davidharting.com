@@ -24,11 +24,12 @@ class MemoryParticipant extends Model
 
     /**
      * Monthly memories is live only with exactly two participants. With fewer
-     * or more, nobody can reach the feature.
+     * or more, nobody can reach the feature. Counted once per request, since
+     * every memory's policy check asks.
      */
     public static function featureIsEnabled(): bool
     {
-        return self::query()->count() === 2;
+        return once(fn () => self::query()->count() === 2);
     }
 
     /**

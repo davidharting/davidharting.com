@@ -202,6 +202,22 @@ describe('of()', function () {
     });
 });
 
+describe('resolveRouteBinding()', function () {
+    test('finds the month from its Y-m route key', function () {
+        /** @var TestCase $this */
+        $month = (new Month)->resolveRouteBinding('2026-09');
+
+        expect($month->id)->toBe('2026-09-01')
+            ->and($month->getRouteKey())->toBe('2026-09');
+    });
+
+    test('is null for a malformed month or one outside the table', function () {
+        /** @var TestCase $this */
+        expect((new Month)->resolveRouteBinding('2026-13'))->toBeNull()
+            ->and((new Month)->resolveRouteBinding('2010-01'))->toBeNull();
+    });
+});
+
 describe('latestOpen()', function () {
     test('is the month before the current one in Eastern time', function () {
         /** @var TestCase $this */

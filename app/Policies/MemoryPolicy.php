@@ -3,19 +3,35 @@
 namespace App\Policies;
 
 use App\Models\Memory;
-use App\Models\MemoryParticipant;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * Who may read and write one memory. Whether the month itself may be seen
+ * or written in is the MonthPolicy's call.
+ */
 class MemoryPolicy
 {
+    public function __construct(private MonthPolicy $months) {}
+
     /**
-     * Only the two participants may see monthly memories, and only while the
-     * feature is enabled. Everyone else, guests included, gets a 404.
+     * Nobody may read or write a memory unless they may see monthly memories
+     * at all. Guests and non-participants get the MonthPolicy's 404.
      */
-    public function viewAny(?User $user): Response
+    public function before(?User $user): ?Response
     {
-        if ($user?->memoryParticipant !== null && MemoryParticipant::featureIsEnabled()) {
+        $viewAny = $this->months->viewAny($user);
+
+        return $viewAny->denied() ? $viewAny : null;
+    }
+
+    /**
+     * The author may always read their memory. The other participant may
+     * once the month has revealed it.
+     */
+    public function view(User $user, Memory $memory): Response
+    {
+        if ($user->id === $memory->user_id || $memory->month->isRevealed($memory)) {
             return Response::allow();
         }
 
@@ -23,33 +39,23 @@ class MemoryPolicy
     }
 
     /**
-     * Who may see one month's page. For now that is whoever may see the
-     * list; whether the month exists is the controller's call.
+     * Who may start a memory of their own. For now that is any participant;
+     * whether they may write in the month is the MonthPolicy's call.
      */
-    public function viewMonth(?User $user): Response
+    public function create(User $user): Response
     {
-        return $this->viewAny($user);
+        return Response::allow();
     }
 
     /**
-     * Who may start a memory of their own. For now that is whoever may see
-     * the list; whether the month is open is the caller's call.
+     * Only its author may edit a memory.
      */
-    public function create(?User $user): Response
+    public function update(User $user, Memory $memory): Response
     {
-        return $this->viewAny($user);
-    }
-
-    /**
-     * Only its author may edit a memory, and only while they may see
-     * memories at all.
-     */
-    public function update(?User $user, Memory $memory): Response
-    {
-        if ($user?->id !== $memory->user_id) {
+        if ($user->id !== $memory->user_id) {
             return Response::denyAsNotFound();
         }
 
-        return $this->viewAny($user);
+        return Response::allow();
     }
 }

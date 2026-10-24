@@ -7,6 +7,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use InvalidArgumentException;
 
 /**
  * One month of memories: a calendar month and the 0, 1 or 2 memories
@@ -120,5 +121,28 @@ class Month extends Model
     public function memoryOf(User $user): ?Memory
     {
         return $this->memories->firstWhere('user_id', $user->id);
+    }
+
+    /**
+     * Months appear in URLs as `Y-m`, for example "2026-09".
+     */
+    public function getRouteKey(): string
+    {
+        return $this->calendarMonth->toYearMonth();
+    }
+
+    /**
+     * @param  mixed  $value  A `Y-m` string from the URL.
+     * @param  ?string  $field
+     */
+    public function resolveRouteBinding($value, $field = null): ?self
+    {
+        try {
+            $calendarMonth = CalendarMonth::parseYearMonth((string) $value);
+        } catch (InvalidArgumentException) {
+            return null;
+        }
+
+        return self::query()->find($calendarMonth->toDateString());
     }
 }

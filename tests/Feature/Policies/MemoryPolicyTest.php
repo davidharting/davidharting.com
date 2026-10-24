@@ -3,61 +3,75 @@
 use App\Models\Memory;
 use App\Models\MemoryParticipant;
 use App\Models\User;
+use App\Support\CalendarMonth;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;
 
 /**
- * Makes David and Katie the two participants, which enables the feature.
+ * The clock sits mid-October 2026: September has opened but not revealed,
+ * and August's reveal deadline (Oct 1) has passed. David and Katie are the
+ * two participants, which enables the feature.
  */
-function memoryPolicyTestParticipants(TestCase $test): void
-{
-    [$test->david, $test->katie] = User::factory()->count(2)->create();
-    MemoryParticipant::create(['user_id' => $test->david->id]);
-    MemoryParticipant::create(['user_id' => $test->katie->id]);
-}
-
-describe('viewAny()', function () {
-    test('allows a participant while there are exactly two', function () {
-        /** @var TestCase $this */
-        memoryPolicyTestParticipants($this);
-
-        expect(Gate::forUser($this->david)->allows('viewAny', Memory::class))->toBeTrue();
-    });
-
-    test('denies guests and non-participants, even admins, with a 404', function () {
-        /** @var TestCase $this */
-        memoryPolicyTestParticipants($this);
-
-        $guest = Gate::inspect('viewAny', Memory::class);
-        $adminNonParticipant = Gate::forUser(User::factory()->create(['is_admin' => true]))->inspect('viewAny', Memory::class);
-
-        expect($guest->status())->toBe(404)
-            ->and($adminNonParticipant->status())->toBe(404);
-    });
-
-    test('is not found for a participant while the feature is not enabled', function () {
-        /** @var TestCase $this */
-        $david = User::factory()->create();
-        MemoryParticipant::create(['user_id' => $david->id]);
-
-        expect(Gate::forUser($david)->inspect('viewAny', Memory::class)->status())->toBe(404);
-    });
+beforeEach(function () {
+    /** @var TestCase $this */
+    $this->travelTo('2026-10-18T12:00:00Z');
+    $this->september = CalendarMonth::of(2026, 9);
+    $this->august = CalendarMonth::of(2026, 8);
+    [$this->david, $this->katie] = User::factory()->count(2)->create();
+    MemoryParticipant::create(['user_id' => $this->david->id]);
+    MemoryParticipant::create(['user_id' => $this->katie->id]);
 });
 
-describe('viewMonth()', function () {
-    test('allows participants and denies guests, like viewAny', function () {
+describe('view()', function () {
+    test('allows the author to read their own draft', function () {
         /** @var TestCase $this */
-        memoryPolicyTestParticipants($this);
+        $draft = Memory::factory()->for($this->david)->forMonth($this->september)->create();
 
-        expect(Gate::forUser($this->david)->allows('viewMonth', Memory::class))->toBeTrue()
-            ->and(Gate::inspect('viewMonth', Memory::class)->status())->toBe(404);
+        expect(Gate::forUser($this->david)->allows('view', $draft))->toBeTrue();
+    });
+
+    test('is not found for the other participant before the month reveals', function () {
+        /** @var TestCase $this */
+        $shared = Memory::factory()->for($this->david)->forMonth($this->september)->shared()->create();
+
+        expect(Gate::forUser($this->katie)->inspect('view', $shared)->status())->toBe(404);
+    });
+
+    test('allows the other participant once the month has revealed', function () {
+        /** @var TestCase $this */
+        $shared = Memory::factory()->for($this->david)->forMonth($this->august)->shared(CarbonImmutable::parse('2026-09-05T12:00:00Z'))->create();
+
+        expect(Gate::forUser($this->katie)->allows('view', $shared))->toBeTrue();
+    });
+
+    test('is not found for the other participant on a draft, even after the reveal', function () {
+        /** @var TestCase $this */
+        $draft = Memory::factory()->for($this->david)->forMonth($this->august)->create();
+
+        expect(Gate::forUser($this->katie)->inspect('view', $draft)->status())->toBe(404);
+    });
+
+    test('allows the other participant once both have shared, before the deadline', function () {
+        /** @var TestCase $this */
+        $davids = Memory::factory()->for($this->david)->forMonth($this->september)->shared()->create();
+        Memory::factory()->for($this->katie)->forMonth($this->september)->shared()->create();
+
+        expect(Gate::forUser($this->katie)->allows('view', $davids))->toBeTrue();
+    });
+
+    test('is not found for a guest or a non-participant, even once revealed', function () {
+        /** @var TestCase $this */
+        $shared = Memory::factory()->for($this->david)->forMonth($this->august)->shared(CarbonImmutable::parse('2026-09-05T12:00:00Z'))->create();
+
+        expect(Gate::inspect('view', $shared)->status())->toBe(404)
+            ->and(Gate::forUser(User::factory()->create())->inspect('view', $shared)->status())->toBe(404);
     });
 });
 
 describe('create()', function () {
     test('allows a participant and is not found for a guest or a non-participant', function () {
         /** @var TestCase $this */
-        memoryPolicyTestParticipants($this);
         $nonParticipant = User::factory()->create();
 
         expect(Gate::forUser($this->david)->allows('create', Memory::class))->toBeTrue()
@@ -69,7 +83,6 @@ describe('create()', function () {
 describe('update()', function () {
     beforeEach(function () {
         /** @var TestCase $this */
-        memoryPolicyTestParticipants($this);
         $this->davidsMemory = Memory::factory()->for($this->david)->create();
     });
 
