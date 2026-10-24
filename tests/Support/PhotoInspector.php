@@ -22,7 +22,7 @@ class PhotoInspector
     }
 
     /**
-     * @return array{width: int, height: int, upright: bool, top: array<int, int>, bottom: array<int, int>, exif_tags: int, has_gps: bool, icc: ?string, mime: string}
+     * @return array{width: int, height: int, top: array<int, int>, bottom: array<int, int>, exif_tags: int, has_gps: bool, mime: string}
      */
     public static function inspect(string $path): array
     {
@@ -35,12 +35,10 @@ class PhotoInspector
         return [
             'width' => $width,
             'height' => $height,
-            'upright' => $height > $width,
             'top' => self::pixel($path, intdiv($width, 2), intdiv($height, 8)),
             'bottom' => self::pixel($path, intdiv($width, 2), $height - intdiv($height, 8)),
             'exif_tags' => $exifTags->count(),
             'has_gps' => $exifTags->contains(fn (string $key): bool => str_starts_with($key, 'GPS:')),
-            'icc' => $exif['ICC-header:ProfileDescription'] ?? $exif['ICC_Profile:ProfileDescription'] ?? null,
             'mime' => $exif['File:MIMEType'] ?? 'unknown',
         ];
     }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\ProcessMemoryPhoto;
+use App\Memories\PhotoVariant;
 use App\Models\MemoryPhoto;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\PhotoInspector;
@@ -21,33 +22,42 @@ function photoWithOriginal(string $fixture): MemoryPhoto
     return $photo;
 }
 
-test('stores an upright, sRGB web variant and thumbnail without metadata from an iPhone :dataset', function (string $fixture) {
+/**
+ * Expect a variant to be a portrait JPEG of the given size, recorded as
+ * stored, with no metadata and its colours converted to sRGB.
+ */
+function expectUprightSrgbJpeg(PhotoVariant $variant, int $width, int $height): void
+{
+    $disk = Storage::disk('private');
+    $copy = PhotoInspector::inspect($disk->path($variant->path));
+
+    expect($variant)->toMatchObject(['mimeType' => 'image/jpeg', 'width' => $width, 'height' => $height, 'bytes' => $disk->size($variant->path)])
+        ->and($copy)->toMatchArray(['mime' => 'image/jpeg', 'width' => $width, 'height' => $height, 'exif_tags' => 0])
+        ->and(PhotoInspector::near($copy['top'], [200, 100, 50]))->toBeTrue('orange is on top, in sRGB')
+        ->and(PhotoInspector::near($copy['bottom'], [40, 90, 210]))->toBeTrue('blue is at the bottom, in sRGB');
+}
+
+test('makes an upright, sRGB, metadata-free web variant and thumbnail from an iPhone :dataset', function (string $fixture) {
     /** @var TestCase $this */
     $photo = photoWithOriginal($fixture);
 
     ProcessMemoryPhoto::dispatch($photo);
 
     $photo->refresh();
-    expect($photo->isReady())->toBeTrue()
-        ->and($photo->web()->path)->toBe('memories/photos/01JTESTPHOTO/web.jpg')
+    expect($photo->web()->path)->toBe('memories/photos/01JTESTPHOTO/web.jpg')
         ->and($photo->thumbnail()->path)->toBe('memories/photos/01JTESTPHOTO/thumbnail.jpg');
-
-    $disk = Storage::disk('private');
-    foreach (['web' => [$photo->web(), 1536, 2048], 'thumbnail' => [$photo->thumbnail(), 384, 512]] as $name => [$variant, $width, $height]) {
-        $copy = PhotoInspector::inspect($disk->path($variant->path));
-
-        expect([$variant->width, $variant->height])->toBe([$width, $height], "{$name} size is recorded")
-            ->and($variant->mimeType)->toBe('image/jpeg')
-            ->and($variant->bytes)->toBe($disk->size($variant->path), "{$name} bytes are recorded")
-            ->and([$copy['width'], $copy['height']])->toBe([$width, $height], "{$name} is upright at that size")
-            ->and($copy['mime'])->toBe('image/jpeg')
-            ->and($copy['exif_tags'])->toBe(0, "{$name} has no EXIF or GPS")
-            ->and(PhotoInspector::near($copy['top'], [200, 100, 50]))->toBeTrue("{$name} has orange converted to sRGB on top")
-            ->and(PhotoInspector::near($copy['bottom'], [40, 90, 210]))->toBeTrue("{$name} has blue converted to sRGB at the bottom");
-    }
-
-    expect(PhotoInspector::inspect($disk->path($photo->original_path))['has_gps'])->toBeTrue('the original is kept as uploaded');
+    expectUprightSrgbJpeg($photo->web(), 1536, 2048);
+    expectUprightSrgbJpeg($photo->thumbnail(), 384, 512);
 })->with(['iphone.jpg', 'iphone.heic']);
+
+test('keeps the original as uploaded', function () {
+    /** @var TestCase $this */
+    $photo = photoWithOriginal('iphone.jpg');
+
+    ProcessMemoryPhoto::dispatch($photo);
+
+    expect(PhotoInspector::inspect(Storage::disk('private')->path($photo->original_path))['has_gps'])->toBeTrue();
+});
 
 test('fails the photo on the first try when libvips cannot read the original', function () {
     /** @var TestCase $this */
@@ -86,6 +96,6 @@ test('leaves a ready photo alone', function () {
 
     ProcessMemoryPhoto::dispatch($photo);
 
-    expect($photo->refresh()->web()->path)->toEndWith('/web.jpg')
+    expect($photo->refresh()->updated_at)->toEqual($photo->updated_at)
         ->and(Storage::disk('private')->allFiles())->toBe([]);
 });

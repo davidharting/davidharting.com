@@ -11,20 +11,26 @@ use Tests\Support\PhotoInspector;
 use Tests\TestCase;
 
 beforeEach(function () {
+    /** @var TestCase $this */
     Storage::fake('private');
     $this->memory = Memory::factory()->create();
-    $this->upload = function (string $fixture = 'iphone.jpg'): string {
-        $path = 'livewire-tmp/'.uniqid().'.'.pathinfo($fixture, PATHINFO_EXTENSION);
-        Storage::disk('private')->put($path, file_get_contents(PhotoInspector::fixture($fixture)));
-
-        return $path;
-    };
 });
+
+/**
+ * Put a photo fixture where Livewire leaves temporary uploads, and return its path.
+ */
+function uploadFixture(string $fixture = 'iphone.jpg'): string
+{
+    $path = 'livewire-tmp/'.uniqid().'.'.pathinfo($fixture, PATHINFO_EXTENSION);
+    Storage::disk('private')->put($path, file_get_contents(PhotoInspector::fixture($fixture)));
+
+    return $path;
+}
 
 test('moves the upload into a directory of its own as the original', function (string $fixture, string $mimeType, string $extension) {
     /** @var TestCase $this */
     Queue::fake();
-    $upload = ($this->upload)($fixture);
+    $upload = uploadFixture($fixture);
 
     $photo = (new AddMemoryPhoto)->handle($this->memory, $upload);
 
@@ -43,14 +49,14 @@ test('queues processing for the photo', function () {
     /** @var TestCase $this */
     Queue::fake();
 
-    $photo = (new AddMemoryPhoto)->handle($this->memory, ($this->upload)());
+    $photo = (new AddMemoryPhoto)->handle($this->memory, uploadFixture());
 
     Queue::assertPushed(ProcessMemoryPhoto::class, fn (ProcessMemoryPhoto $job): bool => $job->photo->is($photo));
 });
 
 test('the photo is ready once its processing has run', function () {
     /** @var TestCase $this */
-    $photo = (new AddMemoryPhoto)->handle($this->memory, ($this->upload)());
+    $photo = (new AddMemoryPhoto)->handle($this->memory, uploadFixture());
 
     expect($photo->refresh()->isReady())->toBeTrue();
 });
@@ -62,7 +68,7 @@ test('adds the photo after the memory\'s last one', function () {
     MemoryPhoto::factory()->for($this->memory)->create(['position' => 3]);
     MemoryPhoto::factory()->create(['position' => 7]);
 
-    $photo = (new AddMemoryPhoto)->handle($this->memory, ($this->upload)());
+    $photo = (new AddMemoryPhoto)->handle($this->memory, uploadFixture());
 
     expect($photo->position)->toBe(4);
 });
@@ -71,7 +77,7 @@ test('refuses an eleventh photo and leaves the upload where it was', function ()
     /** @var TestCase $this */
     Queue::fake();
     MemoryPhoto::factory()->for($this->memory)->count(10)->sequence(fn ($sequence) => ['position' => $sequence->index])->create();
-    $upload = ($this->upload)();
+    $upload = uploadFixture();
 
     expect(fn () => (new AddMemoryPhoto)->handle($this->memory, $upload))
         ->toThrow(ValidationException::class, 'A memory can have up to 10 photos.');
@@ -86,8 +92,17 @@ test('does not count removed photos toward the limit', function () {
     MemoryPhoto::factory()->for($this->memory)->count(10)->sequence(fn ($sequence) => ['position' => $sequence->index])->create();
     $this->memory->photos()->first()->delete();
 
-    $photo = (new AddMemoryPhoto)->handle($this->memory, ($this->upload)());
+    $photo = (new AddMemoryPhoto)->handle($this->memory, uploadFixture());
 
     expect($photo->position)->toBe(10)
         ->and($this->memory->photos()->count())->toBe(10);
+});
+
+test('refuses an upload that is not on the private disk', function () {
+    /** @var TestCase $this */
+    Queue::fake();
+
+    expect(fn () => (new AddMemoryPhoto)->handle($this->memory, 'livewire-tmp/missing.jpg'))
+        ->toThrow(RuntimeException::class, 'There is no upload at livewire-tmp/missing.jpg.');
+    expect($this->memory->photos()->count())->toBe(0);
 });
