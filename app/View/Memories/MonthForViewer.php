@@ -2,11 +2,10 @@
 
 namespace App\View\Memories;
 
-use App\Memories\Reveal;
 use App\Models\Memory;
+use App\Models\Month;
 use App\Models\User;
 use App\Support\CalendarMonth;
-use Illuminate\Support\Collection;
 
 /**
  * What one participant sees of a month: their own memory, the other
@@ -15,30 +14,17 @@ use Illuminate\Support\Collection;
  */
 final readonly class MonthForViewer
 {
-    public Reveal $reveal;
+    public ?Memory $viewerMemory;
+
+    public ?Memory $otherMemory;
 
     public function __construct(
-        public CalendarMonth $month,
+        public Month $month,
         public User $viewer,
         public User $other,
-        public ?Memory $viewerMemory,
-        public ?Memory $otherMemory,
     ) {
-        $this->reveal = new Reveal($month, collect([$viewerMemory, $otherMemory])->filter()->values());
-    }
-
-    /**
-     * @param  Collection<int, Memory>  $memories  Every memory written for the month.
-     */
-    public static function fromMemories(CalendarMonth $month, User $viewer, User $other, Collection $memories): self
-    {
-        return new self(
-            $month,
-            $viewer,
-            $other,
-            $memories->firstWhere('user_id', $viewer->id),
-            $memories->firstWhere('user_id', $other->id),
-        );
+        $this->viewerMemory = $month->memoryOf($viewer);
+        $this->otherMemory = $month->memoryOf($other);
     }
 
     /**
@@ -46,7 +32,11 @@ final readonly class MonthForViewer
      */
     public function revealedOtherMemory(): ?Memory
     {
-        return $this->reveal->revealedMemoryOf($this->other);
+        if ($this->otherMemory === null) {
+            return null;
+        }
+
+        return $this->month->isRevealed($this->otherMemory) ? $this->otherMemory : null;
     }
 
     /**
@@ -75,7 +65,7 @@ final readonly class MonthForViewer
         $name = $this->other->displayName();
         $memory = $this->otherMemory;
 
-        if ($this->reveal->hasHappened()) {
+        if ($this->month->hasRevealed()) {
             return $memory?->isShared() ? 'Shared '.CalendarMonth::dayLabel($memory->shared_at) : null;
         }
 
@@ -95,7 +85,7 @@ final readonly class MonthForViewer
      */
     public function revealStatusLabel(): string
     {
-        $revealedAt = $this->reveal->revealedAt();
+        $revealedAt = $this->month->revealedAt();
 
         if ($revealedAt !== null) {
             return 'Revealed '.CalendarMonth::dayLabel($revealedAt).'.';

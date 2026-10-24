@@ -7,10 +7,10 @@ use Tests\TestCase;
 describe('startedDaysAfterOpening()', function () {
     test('starts a memory that many days after its month opened', function () {
         /** @var TestCase $this */
-        $month = CalendarMonth::of(2026, 9);
-        $memory = Memory::factory()->forMonth($month)->startedDaysAfterOpening(2)->create();
+        $memory = Memory::factory()->forMonth(CalendarMonth::of(2026, 9))->startedDaysAfterOpening(2)->create();
 
-        expect($memory->created_at->equalTo($month->opensAt()->addDays(2)))->toBeTrue();
+        // September opens at midnight Eastern on Oct 1.
+        expect($memory->created_at->toIso8601String())->toBe('2026-10-03T04:00:00+00:00');
     });
 });
 

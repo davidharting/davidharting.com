@@ -1,6 +1,6 @@
 @php
     $monthForViewer = $this->monthForViewer;
-    $month = $monthForViewer->month;
+    $month = $monthForViewer->month->calendarMonth;
     $otherName = $monthForViewer->other->displayName();
 @endphp
 
@@ -188,7 +188,7 @@
 
     @if ($justShared)
         <div class="bg-base-100 fixed inset-0 z-40 flex flex-col items-center justify-center px-8 text-center">
-            @if ($monthForViewer->reveal->hasHappened())
+            @if ($monthForViewer->month->hasRevealed())
                 <p class="text-4xl">{{ $month->name() }} is revealed.</p>
                 <div class="mt-8 flex flex-col gap-2 font-sans">
                     @if ($monthForViewer->revealedOtherMemory())

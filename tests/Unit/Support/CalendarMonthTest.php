@@ -89,33 +89,32 @@ describe('previous() and next()', function () {
     });
 });
 
-describe('opensAt()', function () {
-    test('is midnight Eastern on the 1st of the next month, as a UTC instant', function () {
-        expect(CalendarMonth::of(2026, 9)->opensAt()->toIso8601String())->toBe('2026-10-01T04:00:00+00:00');
-    });
-});
-
-describe('revealDeadline()', function () {
-    test('is the end of the following month in Eastern time, as a UTC instant', function () {
-        expect(CalendarMonth::of(2026, 9)->revealDeadline()->toIso8601String())->toBe('2026-11-01T04:00:00+00:00')
-            ->and(CalendarMonth::of(2026, 10)->revealDeadline()->toIso8601String())->toBe('2026-12-01T05:00:00+00:00');
-    });
-});
-
-describe('hasOpened()', function () {
-    test('opens at midnight Eastern, not midnight UTC', function () {
+describe('startsAt() and endsAt()', function () {
+    test('are midnight Eastern on the 1st of the month and of the next, as UTC instants', function () {
         $september = CalendarMonth::of(2026, 9);
 
-        expect($september->hasOpened(CarbonImmutable::parse('2026-10-01T03:59:59Z')))->toBeFalse()
-            ->and($september->hasOpened(CarbonImmutable::parse('2026-10-01T04:00:00Z')))->toBeTrue();
+        expect($september->startsAt()->toIso8601String())->toBe('2026-09-01T04:00:00+00:00')
+            ->and($september->endsAt()->toIso8601String())->toBe('2026-10-01T04:00:00+00:00');
+    });
+
+    test('follow daylight saving time', function () {
+        expect(CalendarMonth::of(2026, 10)->endsAt()->toIso8601String())->toBe('2026-11-01T04:00:00+00:00')
+            ->and(CalendarMonth::of(2026, 11)->endsAt()->toIso8601String())->toBe('2026-12-01T05:00:00+00:00');
     });
 });
 
-describe('current() and latestOpen()', function () {
-    test('read the month in Eastern time', function () {
+describe('isAfter()', function () {
+    test('compares months across years', function () {
+        expect(CalendarMonth::of(2027, 1)->isAfter(CalendarMonth::of(2026, 12)))->toBeTrue()
+            ->and(CalendarMonth::of(2026, 12)->isAfter(CalendarMonth::of(2027, 1)))->toBeFalse()
+            ->and(CalendarMonth::of(2026, 9)->isAfter(CalendarMonth::of(2026, 9)))->toBeFalse();
+    });
+});
+
+describe('current()', function () {
+    test('reads the month in Eastern time', function () {
         CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-10-01T02:00:00Z'));
 
-        expect(CalendarMonth::current()->equals(CalendarMonth::of(2026, 9)))->toBeTrue()
-            ->and(CalendarMonth::latestOpen()->equals(CalendarMonth::of(2026, 8)))->toBeTrue();
+        expect(CalendarMonth::current()->equals(CalendarMonth::of(2026, 9)))->toBeTrue();
     });
 });

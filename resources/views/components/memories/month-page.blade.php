@@ -1,7 +1,7 @@
 {{-- No name heading; the "other name | Yours" links say whose page this is. --}}
 @php
-    $month = $monthForViewer->month;
-    $reveal = $monthForViewer->reveal;
+    $month = $monthForViewer->month->calendarMonth;
+    $revealed = $monthForViewer->month->hasRevealed();
     $otherName = $monthForViewer->other->displayName();
 @endphp
 
@@ -29,7 +29,7 @@
         >Yours</a>
     </nav>
 
-    @if ($reveal->hasHappened())
+    @if ($revealed)
         <p class="mt-4 font-sans text-sm opacity-60">{{ $monthForViewer->revealStatusLabel() }}</p>
     @endif
 
@@ -54,7 +54,7 @@
             <x-memories.body :memory="$shownMemory()" class="mt-5 text-lg leading-relaxed" />
         @elseif ($showingYours)
             <p class="mt-5 text-lg italic opacity-70">You haven't written about this month yet.</p>
-        @elseif (! $reveal->hasHappened())
+        @elseif (! $revealed)
             <p class="mt-5 text-lg italic opacity-80">{{ $monthForViewer->revealStatusLabel() }}</p>
             @if (! $monthForViewer->viewerMemory?->isShared())
                 <div class="mt-6">

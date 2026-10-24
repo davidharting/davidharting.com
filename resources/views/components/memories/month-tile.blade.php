@@ -1,14 +1,14 @@
 @php
-    $month = $monthForViewer->month;
-    $reveal = $monthForViewer->reveal;
+    $month = $monthForViewer->month->calendarMonth;
+    $revealed = $monthForViewer->month->hasRevealed();
 @endphp
 
 <a
     href="{{ route("memories.show", $month->toYearMonth()) }}"
     @class([
         'card block transition-shadow hover:shadow-md',
-        'bg-base-200' => $reveal->hasHappened(),
-        'bg-accent/20' => ! $reveal->hasHappened(),
+        'bg-base-200' => $revealed,
+        'bg-accent/20' => ! $revealed,
     ])
 >
     <div class="card-body gap-3 p-4">
@@ -26,7 +26,7 @@
             </div>
         </div>
 
-        @if (! $reveal->hasHappened())
+        @if (! $revealed)
             <p class="font-sans text-sm">
                 {{ $monthForViewer->otherStatusLabel() }} · Yours: {{ $monthForViewer->viewerStatusLabel() }}
             </p>

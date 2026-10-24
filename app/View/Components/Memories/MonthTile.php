@@ -26,8 +26,9 @@ class MonthTile extends Component
      */
     public function snippet(): ?string
     {
+        $viewerMemory = $this->monthForViewer->viewerMemory;
         $memory = $this->monthForViewer->revealedOtherMemory()
-            ?? $this->monthForViewer->reveal->revealedMemoryOf($this->monthForViewer->viewer);
+            ?? ($viewerMemory !== null && $this->monthForViewer->month->isRevealed($viewerMemory) ? $viewerMemory : null);
 
         if ($memory === null) {
             return null;

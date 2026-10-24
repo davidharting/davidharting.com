@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Memory;
 use App\Models\MemoryParticipant;
+use App\Models\Month;
 use App\Queries\ListOpenMonthsQuery;
 use App\Support\CalendarMonth;
 use App\View\Memories\MonthForViewer;
@@ -22,20 +22,10 @@ class MemoriesController extends Controller
     {
         $viewer = $request->user();
         $other = MemoryParticipant::otherThan($viewer);
-        $months = (new ListOpenMonthsQuery)->execute();
-
-        $memoriesByMonth = Memory::query()
-            ->whereBetween('month', [$months->last()->toDateString(), $months->first()->toDateString()])
-            ->get()
-            ->groupBy(fn (Memory $memory) => $memory->month->toDateString());
 
         return view('memories.index', [
-            'monthsForViewer' => $months->map(fn (CalendarMonth $month) => MonthForViewer::fromMemories(
-                $month,
-                $viewer,
-                $other,
-                $memoriesByMonth->get($month->toDateString(), collect()),
-            )),
+            'monthsForViewer' => (new ListOpenMonthsQuery)->execute()
+                ->map(fn (Month $month) => new MonthForViewer($month, $viewer, $other)),
         ]);
     }
 
@@ -59,12 +49,7 @@ class MemoriesController extends Controller
         $viewer = $request->user();
 
         return view('memories.show', [
-            'monthForViewer' => MonthForViewer::fromMemories(
-                $month,
-                $viewer,
-                MemoryParticipant::otherThan($viewer),
-                Memory::query()->where('month', $month->toDateString())->get(),
-            ),
+            'monthForViewer' => new MonthForViewer(Month::of($month), $viewer, MemoryParticipant::otherThan($viewer)),
             'showingYours' => $request->query('who') === 'yours',
             'previous' => $openMonths->contains($month->previous()) ? $month->previous() : null,
             'next' => $openMonths->contains($month->next()) ? $month->next() : null,

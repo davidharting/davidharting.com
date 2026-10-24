@@ -41,7 +41,7 @@ function editorFor(User $viewer, string $month): Testable
 
 function storedMemoryOf(User $user, string $month): ?Memory
 {
-    return Memory::query()->where('user_id', $user->id)->where('month', "{$month}-01")->first();
+    return Memory::query()->where('user_id', $user->id)->where('month_id', "{$month}-01")->first();
 }
 
 /**
