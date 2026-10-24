@@ -104,4 +104,28 @@ class PasswordResetTest extends TestCase
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
     }
+
+    public function test_a_token_sent_to_one_address_cannot_verify_another(): void
+    {
+        Notification::fake();
+
+        $recipient = User::factory()->unverified()->create();
+        $other = User::factory()->unverified()->create();
+
+        $this->post('/forgot-password', ['email' => $recipient->email]);
+
+        Notification::assertSentTo($recipient, ResetPassword::class, function ($notification) use ($other) {
+            $this->post('/reset-password', [
+                'token' => $notification->token,
+                'email' => $other->email,
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ])->assertSessionHasErrors('email');
+
+            return true;
+        });
+
+        $this->assertFalse($other->fresh()->hasVerifiedEmail());
+        $this->assertFalse($recipient->fresh()->hasVerifiedEmail());
+    }
 }
