@@ -63,6 +63,9 @@ Route::get('/media/log', function () {
 });
 Route::get('/media/{media}', [MediaController::class, 'show'])->name('media.show')->can('view', 'media')->whereNumber('media');
 
+Route::redirect('/skills', 'https://github.com/davidharting/skills');
+Route::redirect('/dotfiles', 'https://github.com/davidharting/dotfiles');
+
 Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')->withHead(title: 'Profile');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
