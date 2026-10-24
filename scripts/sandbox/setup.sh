@@ -50,6 +50,8 @@ rm -rf "$BUNDLE_DIR"
 
 COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --no-progress
 npm ci --no-audit --no-fund
+# Feature tests render layouts that read the Vite manifest.
+npm run build
 
 echo "Configuring the app"
 [ -f .env ] || cp .env.example .env
