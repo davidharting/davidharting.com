@@ -52,7 +52,13 @@ final class AddMemoryPhoto
         $photo = DB::transaction(function () use ($memory, $mimeType, $bytes, $extension): MemoryPhoto {
             Memory::query()->whereKey($memory->id)->lockForUpdate()->sole();
 
-            if (MemoryPhoto::query()->where('memory_id', $memory->id)->count() >= self::MAX_PHOTOS) {
+            $photos = MemoryPhoto::query()
+                ->where('memory_id', $memory->id)
+                ->selectRaw('count(*) as count, max(position) as last_position')
+                ->toBase()
+                ->sole();
+
+            if ($photos->count >= self::MAX_PHOTOS) {
                 throw ValidationException::withMessages([
                     'photo' => 'A memory can have up to '.self::MAX_PHOTOS.' photos.',
                 ]);
@@ -60,7 +66,7 @@ final class AddMemoryPhoto
 
             return MemoryPhoto::query()->create([
                 'memory_id' => $memory->id,
-                'position' => (MemoryPhoto::query()->where('memory_id', $memory->id)->max('position') ?? -1) + 1,
+                'position' => ($photos->last_position ?? -1) + 1,
                 'original_path' => "memories/photos/{$memory->id}/".Str::ulid()->toBase32()."/original.{$extension}",
                 'original_mime_type' => $mimeType,
                 'original_bytes' => $bytes,
