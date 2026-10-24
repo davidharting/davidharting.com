@@ -101,6 +101,15 @@ final class CalendarMonth implements Stringable
     }
 
     /**
+     * The moment it is the given hour, Eastern time, on a day of the month,
+     * for example 9am on the 15th.
+     */
+    public function at(int $day, int $hour): CarbonImmutable
+    {
+        return $this->firstDay()->setDay($day)->setTime($hour, 0)->utc();
+    }
+
+    /**
      * For example "September 2026".
      */
     public function label(): string

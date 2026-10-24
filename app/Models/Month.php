@@ -75,6 +75,24 @@ class Month extends Model
     }
 
     /**
+     * When the reminder that the month is open is due: 9am Eastern on the day
+     * it opens.
+     */
+    public function reminderDueAt(): CarbonImmutable
+    {
+        return $this->calendarMonth->next()->at(day: 1, hour: 9);
+    }
+
+    /**
+     * When the nudge to whoever hasn't shared is due: 9am Eastern on the 15th
+     * of the month after.
+     */
+    public function nudgeDueAt(): CarbonImmutable
+    {
+        return $this->calendarMonth->next()->at(day: 15, hour: 9);
+    }
+
+    /**
      * When the month revealed, or null while it hasn't. A month reveals when
      * both have shared, or at its deadline, whichever comes first. The reveal
      * is derived from the memories and never stored.
