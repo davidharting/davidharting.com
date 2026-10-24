@@ -68,4 +68,90 @@ class PasswordResetTest extends TestCase
             return true;
         });
     }
+
+    public function test_resetting_the_password_verifies_an_unverified_email(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->unverified()->create();
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+            $this->post('/reset-password', [
+                'token' => $notification->token,
+                'email' => $user->email,
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ])->assertSessionHasNoErrors();
+
+            return true;
+        });
+
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_a_failed_reset_does_not_verify_the_email(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $this->post('/reset-password', [
+            'token' => 'not-a-real-token',
+            'email' => $user->email,
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertSessionHasErrors('email');
+
+        $this->assertFalse($user->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_a_token_sent_to_one_address_cannot_verify_another(): void
+    {
+        Notification::fake();
+
+        $recipient = User::factory()->unverified()->create();
+        $other = User::factory()->unverified()->create();
+
+        $this->post('/forgot-password', ['email' => $recipient->email]);
+
+        Notification::assertSentTo($recipient, ResetPassword::class, function ($notification) use ($other) {
+            $this->post('/reset-password', [
+                'token' => $notification->token,
+                'email' => $other->email,
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ])->assertSessionHasErrors('email');
+
+            return true;
+        });
+
+        $this->assertFalse($other->fresh()->hasVerifiedEmail());
+        $this->assertFalse($recipient->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_reset_password_screen_shows_the_email_without_letting_it_be_edited(): void
+    {
+        $response = $this->get('/reset-password/a-token?email=katie@example.test');
+
+        $response->assertOk();
+        $response->assertSeeText('Choose a new password for katie@example.test.');
+        $response->assertSee('type="hidden" name="email" value="katie@example.test"', escape: false);
+        $response->assertDontSee('<label for="email"', escape: false);
+    }
+
+    public function test_reset_password_screen_shows_why_a_reset_failed(): void
+    {
+        $user = User::factory()->create();
+
+        $this->from('/reset-password/not-a-real-token?email='.urlencode($user->email))
+            ->followingRedirects()
+            ->post('/reset-password', [
+                'token' => 'not-a-real-token',
+                'email' => $user->email,
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ])
+            ->assertSeeText('This password reset token is invalid.')
+            ->assertSeeText('Choose a new password for '.$user->email.'.');
+    }
 }
