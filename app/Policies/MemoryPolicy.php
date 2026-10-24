@@ -3,19 +3,30 @@
 namespace App\Policies;
 
 use App\Models\Memory;
-use App\Models\MemoryParticipant;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
+/**
+ * Who may read and write one memory. Whether the month itself may be seen
+ * or written in is the MonthPolicy's call.
+ */
 class MemoryPolicy
 {
+    public function __construct(private MonthPolicy $months) {}
+
     /**
-     * Only the two participants may see monthly memories, and only while the
-     * feature is enabled. Everyone else, guests included, gets a 404.
+     * The author may always read their memory. The other participant may
+     * once the month has revealed it.
      */
-    public function viewAny(?User $user): Response
+    public function view(?User $user, Memory $memory): Response
     {
-        if ($user?->memoryParticipant !== null && MemoryParticipant::featureIsEnabled()) {
+        $viewAny = $this->months->viewAny($user);
+
+        if ($viewAny->denied() || $user->id === $memory->user_id) {
+            return $viewAny;
+        }
+
+        if ($memory->month->isRevealed($memory)) {
             return Response::allow();
         }
 
@@ -23,21 +34,12 @@ class MemoryPolicy
     }
 
     /**
-     * Who may see one month's page. For now that is whoever may see the
-     * list; whether the month exists is the controller's call.
-     */
-    public function viewMonth(?User $user): Response
-    {
-        return $this->viewAny($user);
-    }
-
-    /**
-     * Who may start a memory of their own. For now that is whoever may see
-     * the list; whether the month is open is the caller's call.
+     * Who may start a memory of their own. For now that is any participant;
+     * whether they may write in the month is the MonthPolicy's call.
      */
     public function create(?User $user): Response
     {
-        return $this->viewAny($user);
+        return $this->months->viewAny($user);
     }
 
     /**
@@ -50,6 +52,6 @@ class MemoryPolicy
             return Response::denyAsNotFound();
         }
 
-        return $this->viewAny($user);
+        return $this->months->viewAny($user);
     }
 }

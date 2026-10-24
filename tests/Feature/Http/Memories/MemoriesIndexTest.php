@@ -4,6 +4,7 @@ use App\Models\Memory;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Database\Seeders\MemorySeeder;
+use Illuminate\Support\Facades\DB;
 use Tests\Support\RenderedHead;
 use Tests\TestCase;
 
@@ -93,4 +94,18 @@ test('truncates a long first line with an ellipsis', function () {
     $this->get('/memories')
         ->assertSeeText(str_repeat('word ', 31).'word...')
         ->assertDontSeeText(str_repeat('word ', 33));
+});
+
+test('runs each query once, however many months there are', function () {
+    /** @var TestCase $this */
+    DB::enableQueryLog();
+
+    $this->get('/memories')->assertSuccessful();
+
+    $repeated = collect(DB::getQueryLog())
+        ->pluck('query')
+        ->reject(fn (string $query) => str_contains($query, '"sessions"'))
+        ->duplicates();
+
+    expect($repeated->all())->toBe([]);
 });

@@ -32,7 +32,7 @@
                             <x-nav-link :href="route('login')"> Login </x-nav-link>
                         @endguest
 
-                        @can('viewAny', App\Models\Memory::class)
+                        @can('viewAny', App\Models\Month::class)
                             <x-nav-link :href="route('memories.index')"> Memories </x-nav-link>
                         @endcan
 

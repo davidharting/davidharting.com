@@ -6,6 +6,7 @@ use App\Models\Memory;
 use App\Models\Month;
 use App\Models\User;
 use App\Support\CalendarMonth;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * What one participant sees of a month: their own memory, the other
@@ -36,7 +37,7 @@ final readonly class MonthForViewer
             return null;
         }
 
-        return $this->month->isRevealed($this->otherMemory) ? $this->otherMemory : null;
+        return Gate::forUser($this->viewer)->allows('view', $this->otherMemory) ? $this->otherMemory : null;
     }
 
     /**

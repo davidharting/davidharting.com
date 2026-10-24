@@ -1,0 +1,85 @@
+<?php
+
+use App\Models\Memory;
+use App\Models\MemoryParticipant;
+use App\Models\Month;
+use App\Models\User;
+use App\Support\CalendarMonth;
+use Illuminate\Support\Facades\Gate;
+use Tests\TestCase;
+
+/**
+ * The clock sits mid-October 2026, so September is the latest open month.
+ * David and Katie are the two participants, which enables the feature.
+ */
+beforeEach(function () {
+    /** @var TestCase $this */
+    $this->travelTo('2026-10-18T12:00:00Z');
+    [$this->david, $this->katie] = User::factory()->count(2)->create();
+    MemoryParticipant::create(['user_id' => $this->david->id]);
+    MemoryParticipant::create(['user_id' => $this->katie->id]);
+});
+
+describe('viewAny()', function () {
+    test('allows a participant while there are exactly two', function () {
+        /** @var TestCase $this */
+        expect(Gate::forUser($this->david)->allows('viewAny', Month::class))->toBeTrue();
+    });
+
+    test('denies guests and non-participants, even admins, with a 404', function () {
+        /** @var TestCase $this */
+        $guest = Gate::inspect('viewAny', Month::class);
+        $adminNonParticipant = Gate::forUser(User::factory()->create(['is_admin' => true]))->inspect('viewAny', Month::class);
+
+        expect($guest->status())->toBe(404)
+            ->and($adminNonParticipant->status())->toBe(404);
+    });
+
+    test('is not found for a participant while the feature is not enabled', function () {
+        /** @var TestCase $this */
+        MemoryParticipant::query()->where('user_id', $this->katie->id)->delete();
+
+        expect(Gate::forUser($this->david)->inspect('viewAny', Month::class)->status())->toBe(404);
+    });
+});
+
+describe('view()', function () {
+    test('allows a participant into any month from launch to the latest open one', function () {
+        /** @var TestCase $this */
+        Memory::factory()->forMonth(CalendarMonth::of(2026, 6))->create();
+
+        expect(Gate::forUser($this->david)->allows('view', Month::of(CalendarMonth::of(2026, 6))))->toBeTrue()
+            ->and(Gate::forUser($this->david)->allows('view', Month::of(CalendarMonth::of(2026, 7))))->toBeTrue()
+            ->and(Gate::forUser($this->david)->allows('view', Month::of(CalendarMonth::of(2026, 9))))->toBeTrue();
+    });
+
+    test('is not found for the month in progress or a month before launch', function () {
+        /** @var TestCase $this */
+        Memory::factory()->forMonth(CalendarMonth::of(2026, 6))->create();
+
+        expect(Gate::forUser($this->david)->inspect('view', Month::of(CalendarMonth::of(2026, 10)))->status())->toBe(404)
+            ->and(Gate::forUser($this->david)->inspect('view', Month::of(CalendarMonth::of(2026, 5)))->status())->toBe(404);
+    });
+
+    test('is not found for a guest, even in an open month', function () {
+        /** @var TestCase $this */
+        expect(Gate::inspect('view', Month::of(CalendarMonth::of(2026, 9)))->status())->toBe(404);
+    });
+});
+
+describe('write()', function () {
+    test('allows a participant in an open month', function () {
+        /** @var TestCase $this */
+        expect(Gate::forUser($this->david)->allows('write', Month::of(CalendarMonth::of(2026, 9))))->toBeTrue();
+    });
+
+    test('is not found for the month in progress', function () {
+        /** @var TestCase $this */
+        expect(Gate::forUser($this->david)->inspect('write', Month::of(CalendarMonth::of(2026, 10)))->status())->toBe(404);
+    });
+
+    test('is not found for a guest, even in an open month', function () {
+        /** @var TestCase $this */
+        expect(Gate::inspect('write', Month::of(CalendarMonth::of(2026, 9)))->status())->toBe(404);
+    });
+});
