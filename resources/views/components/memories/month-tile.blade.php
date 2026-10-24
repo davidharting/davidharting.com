@@ -34,18 +34,21 @@
                         $thumbnail = $photo->thumbnail();
                     @endphp
 
-                    <img
-                        src="{{ route("memories.photos.show", [$photo, "thumbnail"]) }}"
-                        width="{{ $thumbnail->width }}"
-                        height="{{ $thumbnail->height }}"
-                        alt="{{ $photo->caption ?? "A photo by {$authorNameOf($photo)}" }}"
-                        loading="lazy"
-                        @class([
-                            'rounded-box bg-base-300 w-full object-cover',
-                            'aspect-square' => $leadingPhotos->count() > 1,
-                            'aspect-video' => $leadingPhotos->count() === 1,
-                        ])
-                    />
+                    <div @class([
+                        'skeleton rounded-box overflow-hidden',
+                        'aspect-square' => $leadingPhotos->count() > 1,
+                        'aspect-video' => $leadingPhotos->count() === 1,
+                    ])>
+                        <img
+                            src="{{ route("memories.photos.show", [$photo, "thumbnail"]) }}"
+                            width="{{ $thumbnail->width }}"
+                            height="{{ $thumbnail->height }}"
+                            alt="{{ $photo->caption ?? "A photo by {$authorNameOf($photo)}" }}"
+                            loading="lazy"
+                            onload="this.parentElement.classList.remove('skeleton')"
+                            class="h-full w-full object-cover"
+                        />
+                    </div>
                 @endforeach
             </div>
         @endif
