@@ -1,6 +1,7 @@
 @php
     $month = $monthForViewer->month->calendarMonth;
     $revealed = $monthForViewer->month->hasRevealed();
+    $leadingPhotos = $thumbnails();
 @endphp
 
 <a
@@ -25,6 +26,31 @@
                 />
             </div>
         </div>
+
+        @if ($leadingPhotos->isNotEmpty())
+            <div @class(['grid gap-2', 'grid-cols-2' => $leadingPhotos->count() > 1])>
+                @foreach ($leadingPhotos as $photo)
+                    @php
+                        $thumbnail = $photo->thumbnail();
+                    @endphp
+
+                    <div @class([
+                        'skeleton rounded-box overflow-hidden',
+                        'aspect-square' => $leadingPhotos->count() > 1,
+                        'aspect-video' => $leadingPhotos->count() === 1,
+                    ])>
+                        <img
+                            src="{{ route("memories.photos.show", [$photo, "thumbnail"]) }}"
+                            width="{{ $thumbnail->width }}"
+                            height="{{ $thumbnail->height }}"
+                            alt="{{ $photo->caption ?? "A photo by {$authorNameOf($photo)}" }}"
+                            loading="lazy"
+                            class="h-full w-full object-cover text-transparent"
+                        />
+                    </div>
+                @endforeach
+            </div>
+        @endif
 
         @if (! $revealed)
             <p class="font-sans text-sm">

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Memory;
+use App\Models\MemoryPhoto;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Database\Seeders\MemorySeeder;
@@ -168,5 +169,75 @@ describe('ways into the editor', function () {
         // May revealed at its deadline with David's draft never shared.
         $this->actingAs($this->david)->get('/memories/2026-05')
             ->assertDontSee(route('memories.write', '2026-05'));
+    });
+});
+
+describe('photos', function () {
+    test('shows their photos with captions in order after the reveal', function () {
+        /** @var TestCase $this */
+        // July: David's memory holds the full ten photos.
+        $counters = MemoryPhoto::firstWhere('caption', 'Counters!');
+        $gate = MemoryPhoto::firstWhere('caption', 'The gate, still broken');
+
+        $this->actingAs($this->katie)->get('/memories/2026-07')
+            ->assertSeeInOrder([route('memories.photos.show', [$counters, 'web']), route('memories.photos.show', [$gate, 'web'])])
+            ->assertSeeTextInOrder(['Counters!', 'Hometown, unchanged', 'The gate, still broken']);
+    });
+
+    test('uses the caption as alt text, or who took the photo when there is none', function () {
+        /** @var TestCase $this */
+        // July: two of David's ten photos have no caption.
+        $this->actingAs($this->katie)->get('/memories/2026-07')
+            ->assertSee('alt="A photo by David"', false)
+            ->assertSee('alt="Counters!"', false);
+    });
+
+    test('never shows a removed photo', function () {
+        /** @var TestCase $this */
+        $removed = MemoryPhoto::onlyTrashed()->firstWhere('caption', 'Taken off again');
+
+        $this->actingAs($this->katie)->get('/memories/2026-07')
+            ->assertDontSeeText('Taken off again')
+            ->assertDontSee(route('memories.photos.show', [$removed, 'web']));
+
+        $this->actingAs($this->david)->get('/memories/2026-07?who=yours')
+            ->assertDontSeeText('Taken off again');
+    });
+
+    test('hides their photos before the reveal', function () {
+        /** @var TestCase $this */
+        // September: David shared, Katie hasn't.
+        $street = MemoryPhoto::firstWhere('caption', 'Our street before anyone was up');
+
+        $this->actingAs($this->katie)->get('/memories/2026-09')
+            ->assertDontSeeText('Our street before anyone was up')
+            ->assertDontSee(route('memories.photos.show', [$street, 'web']));
+    });
+
+    test('shows the author a placeholder for a photo still processing', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->david)->get('/memories/2026-09?who=yours')
+            ->assertSeeTextInOrder(['Our street before anyone was up', 'This photo is still processing.']);
+    });
+
+    test('shows the author a placeholder for a photo that failed', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->katie)->get('/memories/2026-09?who=yours')
+            ->assertSeeTextInOrder(['This photo couldn\'t be processed.', 'The pumpkin patch']);
+    });
+
+    test('never shows the other person a photo that isn\'t ready', function () {
+        /** @var TestCase $this */
+        // August has revealed; Katie's memory gets one photo still processing and one failed.
+        $katies = $this->katie->memories()->where('month_id', '2026-08-01')->sole();
+        MemoryPhoto::factory()->for($katies)->captioned('Still on its way')->create(['position' => 5]);
+        MemoryPhoto::factory()->for($katies)->captioned('Never made it')->failed()->create(['position' => 6]);
+
+        $this->actingAs($this->david)->get('/memories/2026-08')
+            ->assertSeeText('Every night from the porch')
+            ->assertDontSeeText('Still on its way')
+            ->assertDontSeeText('Never made it')
+            ->assertDontSeeText('This photo is still processing.')
+            ->assertDontSeeText("This photo couldn't be processed.");
     });
 });

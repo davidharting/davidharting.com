@@ -88,10 +88,16 @@ return [
     'disks' => [
         // Illuminate\Foundation\Bootstrap\LoadConfiguration always merges the framework's own
         // bundled config/filesystems.php 'disks' as a base underneath ours (it's one of the
-        // hardcoded "mergeableOptions"), so a 'local' disk (driver local, serve => true, no
-        // url, root storage/app/private) exists here even though we never define one. It's
-        // harmless as long as nothing else shares its default /storage URI or its root
-        // (see the url on $localPrivateDisk above) — nothing in this app uses it directly.
+        // hardcoded "mergeableOptions"), so a 'local' disk (root storage/app/private) exists
+        // here even though we never define one. Nothing in this app uses it directly. Left
+        // to serve its files, its catch-all /storage/{path} route would be registered first
+        // and swallow every /storage/private/... temporary URL, so it doesn't serve.
+        'local' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'serve' => false,
+            'throw' => false,
+        ],
         'private' => $privateDisk,
         'public' => $publicDisk,
     ],
