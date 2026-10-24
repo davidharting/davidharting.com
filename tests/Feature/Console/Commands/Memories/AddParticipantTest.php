@@ -15,26 +15,6 @@ test('makes an existing user a participant', function () {
     expect($katie->fresh()->memoryParticipant)->not->toBeNull();
 });
 
-test('sets the display name when one is given', function () {
-    /** @var TestCase $this */
-    $katie = User::factory()->create(['email' => 'katie@example.test', 'name' => 'Katie Harting']);
-
-    $this->artisan('memories:add-participant', ['email' => 'katie@example.test', '--display-name' => 'Katie'])
-        ->assertSuccessful();
-
-    expect($katie->fresh()->displayName())->toBe('Katie');
-});
-
-test('leaves the display name alone when none is given', function () {
-    /** @var TestCase $this */
-    $katie = User::factory()->create(['email' => 'katie@example.test', 'display_name' => 'Katie']);
-
-    $this->artisan('memories:add-participant', ['email' => 'katie@example.test'])
-        ->assertSuccessful();
-
-    expect($katie->fresh()->display_name)->toBe('Katie');
-});
-
 test('refuses an email that belongs to no user', function () {
     /** @var TestCase $this */
     $this->artisan('memories:add-participant', ['email' => 'nobody@example.test'])
@@ -57,28 +37,16 @@ describe('running it again for a participant', function () {
         expect(MemoryParticipant::count())->toBe(1);
     });
 
-    test('updates the display name when one is given', function () {
+    test('is not mistaken for a third participant when two already exist', function () {
         /** @var TestCase $this */
-        $katie = User::factory()->create(['email' => 'katie@example.test', 'display_name' => 'Kate']);
-        MemoryParticipant::factory()->for($katie)->create();
+        MemoryParticipant::factory()->for(User::factory()->state(['email' => 'david@example.test']))->create();
+        MemoryParticipant::factory()->for(User::factory()->state(['email' => 'katie@example.test']))->create();
 
-        $this->artisan('memories:add-participant', ['email' => 'katie@example.test', '--display-name' => 'Katie'])
+        $this->artisan('memories:add-participant', ['email' => 'katie@example.test'])
+            ->expectsOutputToContain('katie@example.test is already a memory participant.')
             ->assertSuccessful();
 
-        expect($katie->fresh()->display_name)->toBe('Katie');
-    });
-
-    test('still works when two participants already exist', function () {
-        /** @var TestCase $this */
-        $david = User::factory()->create(['email' => 'david@example.test']);
-        $katie = User::factory()->create(['email' => 'katie@example.test']);
-        MemoryParticipant::factory()->for($david)->create();
-        MemoryParticipant::factory()->for($katie)->create();
-
-        $this->artisan('memories:add-participant', ['email' => 'katie@example.test', '--display-name' => 'Katie'])
-            ->assertSuccessful();
-
-        expect($katie->fresh()->display_name)->toBe('Katie');
+        expect(MemoryParticipant::count())->toBe(2);
     });
 });
 
@@ -87,17 +55,16 @@ describe('a third participant', function () {
         /** @var TestCase $this */
         MemoryParticipant::factory()->for(User::factory()->state(['email' => 'david@example.test']))->create();
         MemoryParticipant::factory()->for(User::factory()->state(['email' => 'katie@example.test']))->create();
-        $frodo = User::factory()->create(['email' => 'frodo@example.test', 'display_name' => null]);
+        $frodo = User::factory()->create(['email' => 'frodo@example.test']);
 
-        $this->artisan('memories:add-participant', ['email' => 'frodo@example.test', '--display-name' => 'Frodo'])
+        $this->artisan('memories:add-participant', ['email' => 'frodo@example.test'])
             ->expectsOutputToContain('Monthly memories already has two participants')
             ->expectsOutputToContain('david@example.test')
             ->expectsOutputToContain('katie@example.test')
             ->assertFailed();
 
         expect(MemoryParticipant::count())->toBe(2)
-            ->and($frodo->fresh()->memoryParticipant)->toBeNull()
-            ->and($frodo->fresh()->display_name)->toBeNull();
+            ->and($frodo->fresh()->memoryParticipant)->toBeNull();
     });
 });
 

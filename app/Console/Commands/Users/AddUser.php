@@ -27,6 +27,7 @@ class AddUser extends Command
     protected $signature = 'users:add
             {email : Their email address, where the welcome email goes}
             {name : Their full name}
+            {--display-name= : A shorter name to show for them, e.g. Katie. Falls back to their full name}
     ';
 
     /**
@@ -62,6 +63,7 @@ class AddUser extends Command
 
         $user = User::create([
             'name' => (string) $this->argument('name'),
+            'display_name' => $this->option('display-name') ?: null,
             'email' => $email,
             'password' => Str::password(64),
         ]);

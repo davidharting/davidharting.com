@@ -20,6 +20,29 @@ test('creates an unverified, non-admin account', function () {
         ->and($katie->hasVerifiedEmail())->toBeFalse();
 });
 
+test('sets a display name when one is given', function () {
+    /** @var TestCase $this */
+    Notification::fake();
+
+    $this->artisan('users:add', ['email' => 'katie@example.test', 'name' => 'Katie Harting', '--display-name' => 'Katie'])
+        ->assertSuccessful();
+
+    expect(User::where('email', 'katie@example.test')->sole()->displayName())->toBe('Katie');
+});
+
+test('falls back to their full name without a display name', function () {
+    /** @var TestCase $this */
+    Notification::fake();
+
+    $this->artisan('users:add', ['email' => 'katie@example.test', 'name' => 'Katie Harting'])
+        ->assertSuccessful();
+
+    $katie = User::where('email', 'katie@example.test')->sole();
+
+    expect($katie->display_name)->toBeNull()
+        ->and($katie->displayName())->toBe('Katie Harting');
+});
+
 test('emails them a welcome with a link to choose a password, and nothing else', function () {
     /** @var TestCase $this */
     Notification::fake();
