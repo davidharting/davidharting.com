@@ -155,7 +155,7 @@ describe('isRevealed()', function () {
             ->and($month->isRevealed($late))->toBeTrue();
     });
 
-    test('is false for a draft even after the reveal', function () {
+    test('is false for a draft even after the reveal deadline has passed', function () {
         /** @var TestCase $this */
         $august = CalendarMonth::of(2026, 8);
         $draft = monthTestMemory($this->katie, $august);

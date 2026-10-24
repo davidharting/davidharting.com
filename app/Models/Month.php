@@ -42,8 +42,7 @@ class Month extends Model
     }
 
     /**
-     * Every memory written for the month. Each one knows this month, so a
-     * memory's policy can read the reveal without querying again.
+     * Every memory written for the month.
      */
     public function memories(): HasMany
     {
@@ -105,7 +104,10 @@ class Month extends Model
     /**
      * Whether the memory is readable by someone other than its author: it is
      * shared, and the month has revealed. A memory shared after the reveal is
-     * readable as soon as it is shared. A draft is only ever its author's.
+     * readable as soon as it is shared.
+     *
+     * The reveal deadline never publishes a draft. A memory still unshared
+     * when the deadline passes stays its author's alone.
      */
     public function isRevealed(Memory $memory): bool
     {
