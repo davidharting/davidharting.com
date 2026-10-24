@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\MemoryPhoto;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Who may see a memory's photos. A photo has no rule of its own: it goes
@@ -12,10 +13,12 @@ use Illuminate\Auth\Access\Response;
  */
 class MemoryPhotoPolicy
 {
-    public function __construct(private MemoryPolicy $memories) {}
-
+    /**
+     * Asks the gate rather than MemoryPolicy::view directly, so the memory
+     * policy's before() check applies too.
+     */
     public function view(?User $user, MemoryPhoto $photo): Response
     {
-        return $this->memories->view($user, $photo->memory);
+        return Gate::forUser($user)->inspect('view', $photo->memory);
     }
 }
