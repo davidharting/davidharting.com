@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use App\Support\CalendarMonth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * One person's entry for one past month. The row exists from the first save
+ * One person's entry for one past month, belonging to that month's row in
+ * `months`. The row exists from the first save
  * with content, so `created_at` is when it was started. A null `shared_at`
  * makes it a draft. Its reveal is derived from both memories of the month,
  * never stored. Every write bumps `lock_version`, so an editor open on another
@@ -21,7 +21,7 @@ class Memory extends Model
 
     protected $fillable = [
         'user_id',
-        'month',
+        'month_id',
         'body',
         'shared_at',
     ];
@@ -29,7 +29,6 @@ class Memory extends Model
     protected function casts(): array
     {
         return [
-            'month' => CalendarMonth::class,
             'shared_at' => 'datetime',
             'lock_version' => 'integer',
         ];
@@ -38,6 +37,11 @@ class Memory extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function month(): BelongsTo
+    {
+        return $this->belongsTo(Month::class);
     }
 
     public function reactions(): HasMany

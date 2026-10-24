@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Memory;
+use App\Models\Month;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
@@ -22,7 +23,7 @@ class MemoryFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'month' => CalendarMonth::latestOpen(),
+            'month_id' => Month::latestOpen()->toDateString(),
             'body' => implode("\n\n", $this->faker->paragraphs(random_int(1, 4))),
             'created_at' => fn (array $attributes) => $this->monthOf($attributes)->opensAt()->addDay(),
             'shared_at' => null,
@@ -32,7 +33,7 @@ class MemoryFactory extends Factory
 
     public function forMonth(CalendarMonth $month): static
     {
-        return $this->state(['month' => $month]);
+        return $this->state(['month_id' => $month->toDateString()]);
     }
 
     /**
@@ -56,12 +57,12 @@ class MemoryFactory extends Factory
     }
 
     /**
+     * The memory's month, for its clock rules.
+     *
      * @param  array<string, mixed>  $attributes
      */
-    private function monthOf(array $attributes): CalendarMonth
+    private function monthOf(array $attributes): Month
     {
-        $month = $attributes['month'];
-
-        return $month instanceof CalendarMonth ? $month : CalendarMonth::parse((string) $month);
+        return Month::query()->findOrFail($attributes['month_id']);
     }
 }

@@ -102,7 +102,7 @@ final readonly class MemoryWriter
     {
         return Memory::query()
             ->where('user_id', $this->author->id)
-            ->where('month', $this->month->toDateString())
+            ->where('month_id', $this->month->toDateString())
             ->first();
     }
 
@@ -115,7 +115,7 @@ final readonly class MemoryWriter
         try {
             return Memory::query()->create([
                 'user_id' => $this->author->id,
-                'month' => $this->month,
+                'month_id' => $this->month->toDateString(),
                 'body' => $body,
             ])->refresh();
         } catch (UniqueConstraintViolationException) {

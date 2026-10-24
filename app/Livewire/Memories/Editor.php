@@ -6,6 +6,7 @@ use App\Memories\MemoryChangedElsewhere;
 use App\Memories\MemoryWriter;
 use App\Models\Memory;
 use App\Models\MemoryParticipant;
+use App\Models\Month;
 use App\Queries\ListOpenMonthsQuery;
 use App\Support\CalendarMonth;
 use App\View\Memories\MonthForViewer;
@@ -117,13 +118,11 @@ class Editor extends Component
     public function monthForViewer(): MonthForViewer
     {
         $viewer = auth()->user();
-        $month = $this->monthValue();
 
-        return MonthForViewer::fromMemories(
-            $month,
+        return new MonthForViewer(
+            Month::of($this->monthValue()),
             $viewer,
             MemoryParticipant::otherThan($viewer),
-            Memory::query()->where('month', $month->toDateString())->get(),
         );
     }
 
@@ -141,7 +140,7 @@ class Editor extends Component
         $monthForViewer = $this->monthForViewer;
         $other = $monthForViewer->other->displayName();
         $otherMemory = $monthForViewer->otherMemory;
-        $revealed = $monthForViewer->reveal->hasHappened();
+        $revealed = $monthForViewer->month->hasRevealed();
 
         if ($this->isShared()) {
             $shared = 'Shared '.CalendarMonth::dayLabel($monthForViewer->viewerMemory->shared_at).'. Edits still save as you type, and ';
@@ -175,7 +174,7 @@ class Editor extends Component
         $other = $monthForViewer->other->displayName();
         $name = $this->monthValue()->name();
 
-        if ($monthForViewer->reveal->hasHappened()) {
+        if ($monthForViewer->month->hasRevealed()) {
             return "{$name} has already revealed, so {$other} can read it right away.";
         }
 
@@ -183,7 +182,7 @@ class Editor extends Component
             return "{$other} has shared, so {$name} reveals as soon as you do.";
         }
 
-        return "{$other} can read it once you've both shared, or on ".CalendarMonth::dayLabel($this->monthValue()->revealDeadline()).'.';
+        return "{$other} can read it once you've both shared, or on ".CalendarMonth::dayLabel($monthForViewer->month->revealDeadline()).'.';
     }
 
     public function render(): View

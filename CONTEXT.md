@@ -43,7 +43,7 @@ One of the two people who write and read memories: David and Katie. A role in th
 _Avoid_: Member, user
 
 **Month**:
-A calendar month that memories are written about, from the launch month onward. It opens for drafting once it is over, on the 1st of the next month in Eastern time, and every month since launch exists whether or not anyone has written about it.
+One month of memories: a calendar month from the launch month onward, together with the zero, one or two memories written about it and their reveal. It opens for drafting once the calendar month is over, on the 1st of the next month in Eastern time, and every month since launch exists whether or not anyone has written about it.
 _Avoid_: Period, cycle, issue
 
 **Memory**:

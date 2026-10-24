@@ -3,9 +3,9 @@
 namespace App\Queries;
 
 use App\Models\Memory;
+use App\Models\Month;
 use App\Support\CalendarMonth;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * The months memories can be written about: from the launch month to the
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  * memory for, or the latest open month before anyone has written one.
  *
  * Open here has two bounds. A month must have opened, which is the clock
- * rule on CalendarMonth, and it must not be before the launch month, which takes
+ * rule on Month, and it must not be before the launch month, which takes
  * the database.
  *
  * This query performs no authorization. The caller is expected to have
@@ -22,37 +22,33 @@ use Illuminate\Support\Facades\DB;
 class ListOpenMonthsQuery
 {
     /**
-     * Every open month, newest first, including months nobody wrote about.
+     * Every open month with its memories, newest first, including months
+     * nobody wrote about.
      *
-     * @return Collection<int, CalendarMonth>
+     * @return Collection<int, Month>
      */
     public function execute(): Collection
     {
-        $latest = CalendarMonth::latestOpen()->toDateString();
-
-        $rows = DB::select(<<<'SQL'
-            select to_char(month, 'YYYY-MM-DD') as month
-            from generate_series(
-                coalesce((select min(month) from memories), ?::date),
-                ?::date,
-                interval '1 month'
-            ) as month
-            order by month desc
-            SQL, [$latest, $latest]);
-
-        return collect($rows)->map(fn (object $row) => CalendarMonth::parse($row->month));
+        return Month::query()
+            ->whereBetween('id', [$this->launchMonth()->toDateString(), Month::latestOpen()->toDateString()])
+            ->with('memories')
+            ->orderByDesc('id')
+            ->get();
     }
 
     /**
      * Whether the month is one of the open months, without listing them all.
      */
-    public function contains(CalendarMonth $month): bool
+    public function contains(CalendarMonth $calendarMonth): bool
     {
-        if (! $month->hasOpened()) {
-            return false;
-        }
+        return ! $calendarMonth->isAfter(Month::latestOpen())
+            && ! $this->launchMonth()->isAfter($calendarMonth);
+    }
 
-        return $month->equals(CalendarMonth::latestOpen())
-            || Memory::query()->where('month', '<=', $month->toDateString())->exists();
+    private function launchMonth(): CalendarMonth
+    {
+        $earliest = Memory::query()->min('month_id');
+
+        return $earliest === null ? Month::latestOpen() : CalendarMonth::parse($earliest);
     }
 }

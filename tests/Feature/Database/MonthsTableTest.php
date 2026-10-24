@@ -24,16 +24,16 @@ test('refuses a memory for a month outside the table', function () {
     /** @var TestCase $this */
     DB::table('memories')->insert([
         'user_id' => User::factory()->create()->id,
-        'month' => '2097-01-01',
+        'month_id' => '2097-01-01',
         'body' => 'Too far ahead',
         'created_at' => now(),
         'updated_at' => now(),
     ]);
-})->throws(QueryException::class, 'memories_month_foreign');
+})->throws(QueryException::class, 'memories_month_id_foreign');
 
 test('can\'t lose a month that has memories', function () {
     /** @var TestCase $this */
     $memory = Memory::factory()->create();
 
-    DB::table('months')->where('id', $memory->month->toDateString())->delete();
-})->throws(QueryException::class, 'memories_month_foreign');
+    DB::table('months')->where('id', $memory->month_id)->delete();
+})->throws(QueryException::class, 'memories_month_id_foreign');

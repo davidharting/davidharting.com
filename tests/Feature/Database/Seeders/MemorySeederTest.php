@@ -4,6 +4,7 @@ use App\Models\Memory;
 use App\Models\MemoryParticipant;
 use App\Models\MemoryPhoto;
 use App\Models\MemoryReaction;
+use App\Models\Month;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
@@ -23,13 +24,13 @@ function seedMemories(string $now): array
     return [
         'david' => User::where('email', 'david@example.com')->sole(),
         'katie' => User::where('email', 'katie@example.com')->sole(),
-        'latest' => CalendarMonth::latestOpen(),
+        'latest' => Month::latestOpen(),
     ];
 }
 
 function memoryOf(User $user, CalendarMonth $month): ?Memory
 {
-    return Memory::where('user_id', $user->id)->where('month', $month->toDateString())->first();
+    return Memory::where('user_id', $user->id)->where('month_id', $month->toDateString())->first();
 }
 
 afterEach(function () {
@@ -57,11 +58,12 @@ test('seeds each state the design sessions need', function () {
 
     // A late share: David shared after the month's fallback reveal.
     $lateMonth = $latest->previous(1);
-    expect(memoryOf($david, $lateMonth)->shared_at->greaterThan($lateMonth->revealDeadline()))->toBeTrue()
-        ->and(memoryOf($katie, $lateMonth)->shared_at->lessThan($lateMonth->revealDeadline()))->toBeTrue();
+    $deadline = Month::of($lateMonth)->revealDeadline();
+    expect(memoryOf($david, $lateMonth)->shared_at->greaterThan($deadline))->toBeTrue()
+        ->and(memoryOf($katie, $lateMonth)->shared_at->lessThan($deadline))->toBeTrue();
 
     // An empty month.
-    expect(Memory::where('month', $latest->previous(3)->toDateString())->exists())->toBeFalse();
+    expect(Memory::where('month_id', $latest->previous(3)->toDateString())->exists())->toBeFalse();
 
     // Revealed at the deadline with a draft left behind.
     expect(memoryOf($katie, $latest->previous(4))->isShared())->toBeTrue()

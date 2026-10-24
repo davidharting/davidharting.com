@@ -4,21 +4,15 @@ namespace App\Support;
 
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
-use Illuminate\Contracts\Database\Eloquent\Castable;
-use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
-use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 use Stringable;
 
 /**
- * A calendar month that memories are written about, stored as its first day.
- *
- * The clock rules live here and only here: a month opens on the 1st of the
- * next month and its reveal deadline is the end of the month after that,
- * both at midnight Eastern. Those moments are returned as UTC instants, so
- * Eastern time never leaks past this class.
+ * A calendar month, identified by its first day. Months are read on the Eastern
+ * clock: a month starts at midnight Eastern on its 1st. Those moments are
+ * returned as UTC instants, so Eastern time never leaks past this class.
  */
-final class CalendarMonth implements Castable, Stringable
+final class CalendarMonth implements Stringable
 {
     public const TIMEZONE = 'America/New_York';
 
@@ -73,19 +67,11 @@ final class CalendarMonth implements Castable, Stringable
     }
 
     /**
-     * The month it is right now in Eastern time. It is not open yet.
+     * The month it is right now in Eastern time.
      */
     public static function current(): self
     {
         return self::containing(CarbonImmutable::now(self::TIMEZONE));
-    }
-
-    /**
-     * The most recent month that has opened for drafting.
-     */
-    public static function latestOpen(): self
-    {
-        return self::current()->previous();
     }
 
     public function previous(int $months = 1): self
@@ -99,28 +85,19 @@ final class CalendarMonth implements Castable, Stringable
     }
 
     /**
-     * When this month opens for drafting and sharing: the moment it is over.
+     * The moment the month begins: midnight Eastern on its 1st.
      */
-    public function opensAt(): CarbonImmutable
+    public function startsAt(): CarbonImmutable
     {
-        return $this->firstDay()->addMonthNoOverflow()->utc();
+        return $this->firstDay()->utc();
     }
 
     /**
-     * The fallback reveal: the end of the following month, whether or not both have shared.
+     * The moment the month is over: midnight Eastern on the 1st of the next.
      */
-    public function revealDeadline(): CarbonImmutable
+    public function endsAt(): CarbonImmutable
     {
-        return $this->firstDay()->addMonthsNoOverflow(2)->utc();
-    }
-
-    /**
-     * Whether the month has opened for drafting and sharing. Once open, a
-     * month stays open.
-     */
-    public function hasOpened(?DateTimeInterface $at = null): bool
-    {
-        return $this->opensAt()->lessThanOrEqualTo($at ?? CarbonImmutable::now());
+        return $this->next()->startsAt();
     }
 
     /**
@@ -169,6 +146,11 @@ final class CalendarMonth implements Castable, Stringable
         return $this->year === $other->year && $this->month === $other->month;
     }
 
+    public function isAfter(self $other): bool
+    {
+        return $this->toDateString() > $other->toDateString();
+    }
+
     public function __toString(): string
     {
         return $this->toDateString();
@@ -180,41 +162,5 @@ final class CalendarMonth implements Castable, Stringable
     private function firstDay(): CarbonImmutable
     {
         return CarbonImmutable::create($this->year, $this->month, 1, 0, 0, 0, self::TIMEZONE);
-    }
-
-    /**
-     * Lets a model list CalendarMonth::class in its casts(), so reading the column
-     * gives a CalendarMonth and writing a CalendarMonth (or a date) stores its first day.
-     * Laravel calls this when it builds the cast; see "Castables" in the
-     * Eloquent mutators docs.
-     *
-     * @param  array<int, mixed>  $arguments
-     * @return CastsAttributes<self, self|string>
-     */
-    public static function castUsing(array $arguments): CastsAttributes
-    {
-        return new class implements CastsAttributes
-        {
-            /**
-             * @param  array<string, mixed>  $attributes
-             */
-            public function get(Model $model, string $key, mixed $value, array $attributes): ?CalendarMonth
-            {
-                return $value === null ? null : CalendarMonth::parse(substr((string) $value, 0, 10));
-            }
-
-            /**
-             * @param  array<string, mixed>  $attributes
-             */
-            public function set(Model $model, string $key, mixed $value, array $attributes): ?string
-            {
-                return match (true) {
-                    $value === null => null,
-                    $value instanceof CalendarMonth => $value->toDateString(),
-                    $value instanceof DateTimeInterface => CalendarMonth::containing($value)->toDateString(),
-                    default => CalendarMonth::parse((string) $value)->toDateString(),
-                };
-            }
-        };
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Memory;
 use App\Models\MemoryParticipant;
 use App\Models\MemoryPhoto;
 use App\Models\MemoryReaction;
+use App\Models\Month;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
@@ -43,7 +44,7 @@ class MemorySeeder extends Seeder
         $david = $this->participant('David Harting', 'David', 'david@example.com', isAdmin: true);
         $katie = $this->participant('Katie Harting', 'Katie', 'katie@example.com', isAdmin: false);
 
-        $latest = CalendarMonth::latestOpen();
+        $latest = Month::latestOpen();
 
         // 0 back: open and not yet revealed.
         $month = $latest;
@@ -56,7 +57,7 @@ class MemorySeeder extends Seeder
         // 1 back: a late share after the fallback reveal.
         $month = $latest->previous(1);
         $katies = $this->memory($katie, $month, self::BODIES['beach_week'], startedAfter: 4, sharedAfter: 9);
-        $davids = $this->memory($david, $month, self::BODIES['late_and_sorry'], startedAfter: 20, sharedAt: $month->revealDeadline()->addDays(3)->setTime(22, 10));
+        $davids = $this->memory($david, $month, self::BODIES['late_and_sorry'], startedAfter: 20, sharedAt: Month::of($month)->revealDeadline()->addDays(3)->setTime(22, 10));
         $this->photo($katies, 'sunset-beach', 'Every night from the porch');
         $this->photo($katies, 'mountains');
         $this->photo($davids, 'night-concert', 'Didn’t know half the songs');
@@ -127,7 +128,7 @@ class MemorySeeder extends Seeder
         ?int $sharedAfter = null,
         ?CarbonImmutable $sharedAt = null,
     ): Memory {
-        $createdAt = $this->notAfterNow($month->opensAt()->addDays($startedAfter)->setTime(20, 15));
+        $createdAt = $this->notAfterNow(Month::of($month)->opensAt()->addDays($startedAfter)->setTime(20, 15));
 
         if ($sharedAfter !== null) {
             $sharedAt = $createdAt->addDays($sharedAfter)->setTime(21, 40);
