@@ -26,10 +26,12 @@ final class AddMemoryPhoto
     public const int MAX_PHOTOS = 10;
 
     /**
-     * Move an upload that is already on the private disk into a directory of
-     * its own, record it as the memory's last photo, and queue processing.
+     * Record an upload that is already on the private disk as the memory's
+     * last photo, move it into a directory of its own, and queue processing.
      * The memory is locked while it is counted, so two uploads at once can't
-     * both take the tenth place.
+     * both take the tenth place. The move happens after that transaction, so
+     * the lock isn't held while talking to the disk; if the move fails, the
+     * photo is removed again.
      *
      * @param  string  $uploadedPath  Where the upload is on the private disk, such as Livewire's temporary upload directory.
      *
@@ -47,31 +49,29 @@ final class AddMemoryPhoto
         $bytes = $disk->size($uploadedPath);
         $extension = MimeTypes::getDefault()->getExtensions($mimeType)[0] ?? 'bin';
 
-        $photo = DB::transaction(function () use ($disk, $memory, $uploadedPath, $mimeType, $bytes, $extension): MemoryPhoto {
+        $photo = DB::transaction(function () use ($memory, $mimeType, $bytes, $extension): MemoryPhoto {
             Memory::query()->whereKey($memory->id)->lockForUpdate()->sole();
 
-            $photos = MemoryPhoto::query()->where('memory_id', $memory->id);
-
-            if ($photos->clone()->count() >= self::MAX_PHOTOS) {
+            if (MemoryPhoto::query()->where('memory_id', $memory->id)->count() >= self::MAX_PHOTOS) {
                 throw ValidationException::withMessages([
                     'photo' => 'A memory can have up to '.self::MAX_PHOTOS.' photos.',
                 ]);
             }
 
-            $originalPath = 'memories/photos/'.Str::ulid()->toBase32()."/original.{$extension}";
-
-            if (! $disk->move($uploadedPath, $originalPath)) {
-                throw new RuntimeException("Couldn't move {$uploadedPath} to {$originalPath}.");
-            }
-
             return MemoryPhoto::query()->create([
                 'memory_id' => $memory->id,
-                'position' => ($photos->clone()->max('position') ?? -1) + 1,
-                'original_path' => $originalPath,
+                'position' => (MemoryPhoto::query()->where('memory_id', $memory->id)->max('position') ?? -1) + 1,
+                'original_path' => "memories/photos/{$memory->id}/".Str::ulid()->toBase32()."/original.{$extension}",
                 'original_mime_type' => $mimeType,
                 'original_bytes' => $bytes,
             ]);
         });
+
+        if (! $disk->move($uploadedPath, $photo->original_path)) {
+            $photo->forceDelete();
+
+            throw new RuntimeException("Couldn't move {$uploadedPath} to {$photo->original_path}.");
+        }
 
         ProcessMemoryPhoto::dispatch($photo);
 

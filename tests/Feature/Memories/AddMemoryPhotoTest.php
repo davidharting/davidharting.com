@@ -34,7 +34,7 @@ test('moves the upload into a directory of its own as the original', function (s
 
     $photo = (new AddMemoryPhoto)->handle($this->memory, $upload);
 
-    expect($photo->original_path)->toMatch("#^memories/photos/[0-9A-Z]{26}/original\.{$extension}$#")
+    expect($photo->original_path)->toMatch("#^memories/photos/{$this->memory->id}/[0-9A-Z]{26}/original\.{$extension}$#")
         ->and($photo->original_mime_type)->toBe($mimeType)
         ->and($photo->original_bytes)->toBe(filesize(PhotoInspector::fixture($fixture)))
         ->and($photo->isProcessing())->toBeTrue();
