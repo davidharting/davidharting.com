@@ -54,7 +54,11 @@
             <x-memories.body :memory="$shownMemory()" class="mt-5 text-lg leading-relaxed" />
 
             @foreach ($photos() as $photo)
-                <x-memories.photo :photo="$photo" class="mt-8" />
+                <x-memories.photo
+                    :photo="$photo"
+                    :author-name="$showingYours ? $monthForViewer->viewer->displayName() : $otherName"
+                    class="mt-8"
+                />
             @endforeach
         @elseif ($showingYours)
             <p class="mt-5 text-lg italic opacity-70">You haven't written about this month yet.</p>

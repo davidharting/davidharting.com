@@ -184,6 +184,14 @@ describe('photos', function () {
             ->assertSeeTextInOrder(['Counters!', 'Hometown, unchanged', 'The gate, still broken']);
     });
 
+    test('describes a photo without a caption by who took it', function () {
+        /** @var TestCase $this */
+        // July: two of David's ten photos have no caption.
+        $this->actingAs($this->katie)->get('/memories/2026-07')
+            ->assertSee('alt="A photo by David"', false)
+            ->assertSee('alt="Counters!"', false);
+    });
+
     test('never shows a removed photo', function () {
         /** @var TestCase $this */
         $removed = MemoryPhoto::onlyTrashed()->firstWhere('caption', 'Taken off again');

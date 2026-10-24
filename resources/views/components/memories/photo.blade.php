@@ -1,14 +1,19 @@
 @props([
     'photo',
+    'authorName',
 ])
 
+@php
+    $web = $photo->web();
+@endphp
+
 <figure {{ $attributes }}>
-    @if ($photo->isReady())
+    @if ($web !== null)
         <img
             src="{{ route("memories.photos.show", [$photo, "web"]) }}"
-            width="{{ $photo->web()->width }}"
-            height="{{ $photo->web()->height }}"
-            alt="{{ $photo->caption ?? "Photo" }}"
+            width="{{ $web->width }}"
+            height="{{ $web->height }}"
+            alt="{{ $photo->caption ?? "A photo by {$authorName}" }}"
             loading="lazy"
             class="rounded-box bg-base-300 h-auto w-full"
         />

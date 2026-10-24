@@ -60,6 +60,18 @@ class MonthTile extends Component
     }
 
     /**
+     * The display name of whoever wrote the memory the photo belongs to.
+     */
+    public function authorNameOf(MemoryPhoto $photo): string
+    {
+        $author = $photo->memory_id === $this->monthForViewer->viewerMemory?->id
+            ? $this->monthForViewer->viewer
+            : $this->monthForViewer->other;
+
+        return $author->displayName();
+    }
+
+    /**
      * The other person's revealed memory, then the viewer's own once the
      * month has revealed it.
      *

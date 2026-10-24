@@ -78,7 +78,7 @@ Route::withHead(robots: 'noindex, nofollow')->group(function () {
     Route::get('/memories', [MemoriesController::class, 'index'])->name('memories.index')->withHead(title: 'Memories')->can('viewAny', Month::class);
     Route::get('/memories/{month}', [MemoriesController::class, 'show'])->name('memories.show')->where('month', '\d{4}-\d{2}')->can('view', 'month');
     Route::get('/memories/{month}/write', MemoryEditorController::class)->name('memories.write')->where('month', '\d{4}-\d{2}')->can('write', 'month');
-    Route::get('/memories/photos/{photo}/{variant}', MemoryPhotoController::class)->name('memories.photos.show')->whereNumber('photo')->whereIn('variant', ['web', 'thumbnail'])->can('view', 'photo');
+    Route::get('/memories/photos/{photo}/{variant}', [MemoryPhotoController::class, 'show'])->name('memories.photos.show')->whereNumber('photo')->whereIn('variant', ['web', 'thumbnail'])->can('view', 'photo');
 });
 
 require __DIR__.'/auth.php';

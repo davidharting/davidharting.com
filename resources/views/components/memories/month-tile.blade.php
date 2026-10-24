@@ -30,11 +30,15 @@
         @if ($leadingPhotos->isNotEmpty())
             <div @class(['grid gap-2', 'grid-cols-2' => $leadingPhotos->count() > 1])>
                 @foreach ($leadingPhotos as $photo)
+                    @php
+                        $thumbnail = $photo->thumbnail();
+                    @endphp
+
                     <img
                         src="{{ route("memories.photos.show", [$photo, "thumbnail"]) }}"
-                        width="{{ $photo->thumbnail()->width }}"
-                        height="{{ $photo->thumbnail()->height }}"
-                        alt="{{ $photo->caption ?? "Photo" }}"
+                        width="{{ $thumbnail->width }}"
+                        height="{{ $thumbnail->height }}"
+                        alt="{{ $photo->caption ?? "A photo by {$authorNameOf($photo)}" }}"
                         loading="lazy"
                         @class([
                             'rounded-box bg-base-300 w-full object-cover',

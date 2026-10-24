@@ -103,7 +103,7 @@ describe('thumbnails', function () {
             ->assertDontSee(route('memories.photos.show', [$street, 'thumbnail']));
     });
 
-    test('never show a photo from a draft the reveal left out', function () {
+    test("never show a photo from the other's draft, even after the reveal", function () {
         /** @var TestCase $this */
         // May: David's draft was never shared, so Katie sees only her own photo.
         $hallway = MemoryPhoto::firstWhere('caption', 'The hallway, finally');

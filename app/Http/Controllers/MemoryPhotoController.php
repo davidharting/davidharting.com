@@ -29,7 +29,7 @@ class MemoryPhotoController extends Controller
     /**
      * @param  'web'|'thumbnail'  $variant
      */
-    public function __invoke(MemoryPhoto $photo, string $variant): RedirectResponse
+    public function show(MemoryPhoto $photo, string $variant): RedirectResponse
     {
         $photoVariant = $variant === 'web' ? $photo->web() : $photo->thumbnail();
 

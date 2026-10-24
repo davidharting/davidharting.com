@@ -8,14 +8,14 @@ use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Who may see a memory's photos. A photo has no rule of its own: it goes
- * wherever its memory goes.
+ * Access rules for a memory's photos.
  */
 class MemoryPhotoPolicy
 {
     /**
-     * Asks the gate rather than MemoryPolicy::view directly, so the memory
-     * policy's before() check applies too.
+     * A photo has no rule of its own: whoever may view its memory may view
+     * it. This asks the gate rather than calling MemoryPolicy::view, so the
+     * memory policy's before() check applies too.
      */
     public function view(?User $user, MemoryPhoto $photo): Response
     {
