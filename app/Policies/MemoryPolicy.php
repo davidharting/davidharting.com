@@ -15,18 +15,23 @@ class MemoryPolicy
     public function __construct(private MonthPolicy $months) {}
 
     /**
-     * The author may always read their memory. The other participant may
-     * once the month has revealed it.
+     * Nobody may read or write a memory unless they may see monthly memories
+     * at all. Guests and non-participants get the MonthPolicy's 404.
      */
-    public function view(?User $user, Memory $memory): Response
+    public function before(?User $user): ?Response
     {
         $viewAny = $this->months->viewAny($user);
 
-        if ($viewAny->denied() || $user->id === $memory->user_id) {
-            return $viewAny;
-        }
+        return $viewAny->denied() ? $viewAny : null;
+    }
 
-        if ($memory->month->isRevealed($memory)) {
+    /**
+     * The author may always read their memory. The other participant may
+     * once the month has revealed it.
+     */
+    public function view(User $user, Memory $memory): Response
+    {
+        if ($user->id === $memory->user_id || $memory->month->isRevealed($memory)) {
             return Response::allow();
         }
 
@@ -37,21 +42,20 @@ class MemoryPolicy
      * Who may start a memory of their own. For now that is any participant;
      * whether they may write in the month is the MonthPolicy's call.
      */
-    public function create(?User $user): Response
+    public function create(User $user): Response
     {
-        return $this->months->viewAny($user);
+        return Response::allow();
     }
 
     /**
-     * Only its author may edit a memory, and only while they may see
-     * memories at all.
+     * Only its author may edit a memory.
      */
-    public function update(?User $user, Memory $memory): Response
+    public function update(User $user, Memory $memory): Response
     {
-        if ($user?->id !== $memory->user_id) {
+        if ($user->id !== $memory->user_id) {
             return Response::denyAsNotFound();
         }
 
-        return $this->months->viewAny($user);
+        return Response::allow();
     }
 }
