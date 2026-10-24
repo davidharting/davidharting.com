@@ -50,6 +50,15 @@ class Editor extends Component
     #[Locked]
     public bool $justShared = false;
 
+    /**
+     * PROTOTYPE (#299): which photo variant to show, and the starting photos.
+     */
+    #[Locked]
+    public string $prototypeVariant = 'A';
+
+    #[Locked]
+    public string $prototypePhotos = 'mixed';
+
     public function boot(): void
     {
         $this->authorize('viewAny', Month::class);
@@ -58,6 +67,8 @@ class Editor extends Component
     public function mount(string $month): void
     {
         $this->month = $month;
+        $this->prototypeVariant = in_array(strtoupper((string) request('variant')), ['A', 'B', 'C', 'D']) ? strtoupper((string) request('variant')) : 'A';
+        $this->prototypePhotos = (string) request('photos', 'mixed');
 
         $this->load();
         $this->authorizeWriting();

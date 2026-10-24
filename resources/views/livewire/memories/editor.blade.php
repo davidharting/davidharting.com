@@ -120,6 +120,8 @@
         @endunless
     </div>
 
+    @include('livewire.memories.photos-prototype.shared', ['where' => 'above'])
+
     <textarea
         wire:model="body"
         x-ref="text"
@@ -132,6 +134,8 @@
         placeholder="What do you want to remember about {{ $month->name() }}?"
         aria-label="Your memory for {{ $month->label() }}"
     ></textarea>
+    @include('livewire.memories.photos-prototype.shared', ['where' => 'below'])
+
     <footer class="flex gap-2 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] font-sans">
         <a
             @class(['btn btn-outline', 'w-1/3' => ! $this->isShared(), 'grow' => $this->isShared()])
@@ -156,6 +160,8 @@
             </button>
         @endunless
     </footer>
+
+    @include('livewire.memories.photos-prototype.switcher')
 
     @unless ($this->isShared())
         {{-- The Share sheet --}}
