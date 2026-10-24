@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Memory;
 use App\Models\MemoryParticipant;
 use App\Queries\ListOpenMonthsQuery;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use App\View\Memories\MonthForViewer;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -30,7 +30,7 @@ class MemoriesController extends Controller
             ->groupBy(fn (Memory $memory) => $memory->month->toDateString());
 
         return view('memories.index', [
-            'monthsForViewer' => $months->map(fn (Month $month) => MonthForViewer::fromMemories(
+            'monthsForViewer' => $months->map(fn (CalendarMonth $month) => MonthForViewer::fromMemories(
                 $month,
                 $viewer,
                 $other,
@@ -46,7 +46,7 @@ class MemoriesController extends Controller
     public function show(Request $request, string $month): View
     {
         try {
-            $month = Month::parseYearMonth($month);
+            $month = CalendarMonth::parseYearMonth($month);
         } catch (InvalidArgumentException) {
             abort(404);
         }

@@ -3,7 +3,7 @@
 use App\Memories\Reveal;
 use App\Models\Memory;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
 use Tests\TestCase;
 
@@ -15,7 +15,7 @@ use Tests\TestCase;
 beforeEach(function () {
     /** @var TestCase $this */
     $this->travelTo('2026-10-18T12:00:00Z');
-    $this->september = Month::of(2026, 9);
+    $this->september = CalendarMonth::of(2026, 9);
     $this->david = User::factory()->create();
     $this->katie = User::factory()->create();
 });
@@ -23,7 +23,7 @@ beforeEach(function () {
 /**
  * A null sharedAt makes the memory a draft.
  */
-function revealTestMemory(User $user, Month $month, ?string $sharedAt = null): Memory
+function revealTestMemory(User $user, CalendarMonth $month, ?string $sharedAt = null): Memory
 {
     $factory = Memory::factory()->for($user)->forMonth($month);
 
@@ -63,7 +63,7 @@ describe('revealedAt()', function () {
 
     test('is the deadline once it passes with one memory unshared', function () {
         /** @var TestCase $this */
-        $august = Month::of(2026, 8);
+        $august = CalendarMonth::of(2026, 8);
         $reveal = new Reveal($august, collect([
             revealTestMemory($this->david, $august, '2026-09-05T12:00:00Z'),
             revealTestMemory($this->katie, $august),
@@ -74,7 +74,7 @@ describe('revealedAt()', function () {
 
     test('is the deadline when the second share came after it', function () {
         /** @var TestCase $this */
-        $august = Month::of(2026, 8);
+        $august = CalendarMonth::of(2026, 8);
         $reveal = new Reveal($august, collect([
             revealTestMemory($this->david, $august, '2026-09-05T12:00:00Z'),
             revealTestMemory($this->katie, $august, '2026-10-04T12:00:00Z'),
@@ -85,7 +85,7 @@ describe('revealedAt()', function () {
 
     test('is the deadline for a month nobody wrote about', function () {
         /** @var TestCase $this */
-        $june = Month::of(2026, 6);
+        $june = CalendarMonth::of(2026, 6);
 
         expect((new Reveal($june, collect()))->revealedAt()->equalTo($june->revealDeadline()))->toBeTrue();
     });
@@ -117,7 +117,7 @@ describe('hasHappened()', function () {
 
     test('is true after the reveal', function () {
         /** @var TestCase $this */
-        $august = Month::of(2026, 8);
+        $august = CalendarMonth::of(2026, 8);
         $reveal = new Reveal($august, collect([
             revealTestMemory($this->david, $august, '2026-09-05T12:00:00Z'),
         ]));
@@ -137,7 +137,7 @@ describe('hasRevealed()', function () {
 
     test('is true for on-time and late shares alike once revealed', function () {
         /** @var TestCase $this */
-        $august = Month::of(2026, 8);
+        $august = CalendarMonth::of(2026, 8);
         $onTime = revealTestMemory($this->david, $august, '2026-09-05T12:00:00Z');
         $late = revealTestMemory($this->katie, $august, '2026-10-04T12:00:00Z');
         $reveal = new Reveal($august, collect([$onTime, $late]));
@@ -148,7 +148,7 @@ describe('hasRevealed()', function () {
 
     test('is false for a draft even after the reveal', function () {
         /** @var TestCase $this */
-        $august = Month::of(2026, 8);
+        $august = CalendarMonth::of(2026, 8);
         $draft = revealTestMemory($this->katie, $august);
         $reveal = new Reveal($august, collect([
             revealTestMemory($this->david, $august, '2026-09-05T12:00:00Z'),
@@ -163,7 +163,7 @@ describe('hasRevealed()', function () {
 describe('revealedMemoryOf()', function () {
     test('is the user\'s memory once revealed', function () {
         /** @var TestCase $this */
-        $august = Month::of(2026, 8);
+        $august = CalendarMonth::of(2026, 8);
         $katies = revealTestMemory($this->katie, $august, '2026-09-05T12:00:00Z');
         $reveal = new Reveal($august, collect([$katies]));
 
@@ -181,7 +181,7 @@ describe('revealedMemoryOf()', function () {
 
     test('is null for a draft', function () {
         /** @var TestCase $this */
-        $august = Month::of(2026, 8);
+        $august = CalendarMonth::of(2026, 8);
         $reveal = new Reveal($august, collect([revealTestMemory($this->katie, $august)]));
 
         expect($reveal->revealedMemoryOf($this->katie))->toBeNull();
@@ -189,7 +189,7 @@ describe('revealedMemoryOf()', function () {
 
     test('is null for a user with no memory', function () {
         /** @var TestCase $this */
-        $august = Month::of(2026, 8);
+        $august = CalendarMonth::of(2026, 8);
         $reveal = new Reveal($august, collect([revealTestMemory($this->katie, $august, '2026-09-05T12:00:00Z')]));
 
         expect($reveal->revealedMemoryOf($this->david))->toBeNull();

@@ -2,7 +2,7 @@
 
 use App\Models\Memory;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Database\Seeders\MemorySeeder;
 use Tests\Support\RenderedHead;
 use Tests\TestCase;
@@ -85,7 +85,7 @@ test('links each month to its page', function () {
 
 test('truncates a long first line with an ellipsis', function () {
     /** @var TestCase $this */
-    Memory::factory()->for(User::firstWhere('email', 'katie@example.com'))->forMonth(Month::of(2026, 6))->shared()->create([
+    Memory::factory()->for(User::firstWhere('email', 'katie@example.com'))->forMonth(CalendarMonth::of(2026, 6))->shared()->create([
         'body' => str_repeat('word ', 100),
     ]);
 

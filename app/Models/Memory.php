@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,7 +29,7 @@ class Memory extends Model
     protected function casts(): array
     {
         return [
-            'month' => Month::class,
+            'month' => CalendarMonth::class,
             'shared_at' => 'datetime',
             'lock_version' => 'integer',
         ];

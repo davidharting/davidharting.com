@@ -7,7 +7,7 @@ use App\Memories\MemoryWriter;
 use App\Models\Memory;
 use App\Models\MemoryParticipant;
 use App\Queries\ListOpenMonthsQuery;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use App\View\Memories\MonthForViewer;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
@@ -144,7 +144,7 @@ class Editor extends Component
         $revealed = $monthForViewer->reveal->hasHappened();
 
         if ($this->isShared()) {
-            $shared = 'Shared '.Month::dayLabel($monthForViewer->viewerMemory->shared_at).'. Edits still save as you type, and ';
+            $shared = 'Shared '.CalendarMonth::dayLabel($monthForViewer->viewerMemory->shared_at).'. Edits still save as you type, and ';
 
             return $shared.($revealed
                 ? "{$other} sees them."
@@ -160,7 +160,7 @@ class Editor extends Component
         }
 
         if ($otherMemory->isDraft()) {
-            return "{$other} started on ".Month::dayLabel($otherMemory->created_at)." and hasn't shared yet.";
+            return "{$other} started on ".CalendarMonth::dayLabel($otherMemory->created_at)." and hasn't shared yet.";
         }
 
         return "{$other} has shared. Share yours to reveal both.";
@@ -183,7 +183,7 @@ class Editor extends Component
             return "{$other} has shared, so {$name} reveals as soon as you do.";
         }
 
-        return "{$other} can read it once you've both shared, or on ".Month::dayLabel($this->monthValue()->revealDeadline()).'.';
+        return "{$other} can read it once you've both shared, or on ".CalendarMonth::dayLabel($this->monthValue()->revealDeadline()).'.';
     }
 
     public function render(): View
@@ -191,9 +191,9 @@ class Editor extends Component
         return view('livewire.memories.editor');
     }
 
-    protected function monthValue(): Month
+    protected function monthValue(): CalendarMonth
     {
-        return Month::parseYearMonth($this->month);
+        return CalendarMonth::parseYearMonth($this->month);
     }
 
     /**

@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Memory;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -22,7 +22,7 @@ class MemoryFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'month' => Month::latestOpen(),
+            'month' => CalendarMonth::latestOpen(),
             'body' => implode("\n\n", $this->faker->paragraphs(random_int(1, 4))),
             'created_at' => fn (array $attributes) => $this->monthOf($attributes)->opensAt()->addDay(),
             'shared_at' => null,
@@ -30,7 +30,7 @@ class MemoryFactory extends Factory
         ];
     }
 
-    public function forMonth(Month $month): static
+    public function forMonth(CalendarMonth $month): static
     {
         return $this->state(['month' => $month]);
     }
@@ -58,10 +58,10 @@ class MemoryFactory extends Factory
     /**
      * @param  array<string, mixed>  $attributes
      */
-    private function monthOf(array $attributes): Month
+    private function monthOf(array $attributes): CalendarMonth
     {
         $month = $attributes['month'];
 
-        return $month instanceof Month ? $month : Month::parse((string) $month);
+        return $month instanceof CalendarMonth ? $month : CalendarMonth::parse((string) $month);
     }
 }

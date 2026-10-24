@@ -4,7 +4,7 @@ namespace App\Memories;
 
 use App\Models\Memory;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
@@ -22,7 +22,7 @@ final readonly class Reveal
      * @param  Collection<int, Memory>  $memories  Every memory written for the month.
      */
     public function __construct(
-        public Month $month,
+        public CalendarMonth $month,
         public Collection $memories,
     ) {}
 

@@ -3,7 +3,7 @@
 namespace App\Queries;
 
 use App\Models\Memory;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  * memory for, or the latest open month before anyone has written one.
  *
  * Open here has two bounds. A month must have opened, which is the clock
- * rule on Month, and it must not be before the launch month, which takes
+ * rule on CalendarMonth, and it must not be before the launch month, which takes
  * the database.
  *
  * This query performs no authorization. The caller is expected to have
@@ -24,11 +24,11 @@ class ListOpenMonthsQuery
     /**
      * Every open month, newest first, including months nobody wrote about.
      *
-     * @return Collection<int, Month>
+     * @return Collection<int, CalendarMonth>
      */
     public function execute(): Collection
     {
-        $latest = Month::latestOpen()->toDateString();
+        $latest = CalendarMonth::latestOpen()->toDateString();
 
         $rows = DB::select(<<<'SQL'
             select to_char(month, 'YYYY-MM-DD') as month
@@ -40,19 +40,19 @@ class ListOpenMonthsQuery
             order by month desc
             SQL, [$latest, $latest]);
 
-        return collect($rows)->map(fn (object $row) => Month::parse($row->month));
+        return collect($rows)->map(fn (object $row) => CalendarMonth::parse($row->month));
     }
 
     /**
      * Whether the month is one of the open months, without listing them all.
      */
-    public function contains(Month $month): bool
+    public function contains(CalendarMonth $month): bool
     {
         if (! $month->hasOpened()) {
             return false;
         }
 
-        return $month->equals(Month::latestOpen())
+        return $month->equals(CalendarMonth::latestOpen())
             || Memory::query()->where('month', '<=', $month->toDateString())->exists();
     }
 }

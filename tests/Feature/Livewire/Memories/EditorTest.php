@@ -4,7 +4,7 @@ use App\Livewire\Memories\Editor;
 use App\Memories\MemoryWriter;
 use App\Models\Memory;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Database\Seeders\MemorySeeder;
 use Livewire\Exceptions\MethodNotFoundException;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
@@ -49,7 +49,7 @@ function storedMemoryOf(User $user, string $month): ?Memory
  */
 function saveOnAnotherDevice(User $author, string $month, string $body): void
 {
-    $writer = new MemoryWriter($author, Month::parseYearMonth($month));
+    $writer = new MemoryWriter($author, CalendarMonth::parseYearMonth($month));
     $writer->save($body, storedMemoryOf($author, $month)?->lock_version);
 }
 

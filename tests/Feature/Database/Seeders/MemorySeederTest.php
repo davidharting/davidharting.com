@@ -5,14 +5,14 @@ use App\Models\MemoryParticipant;
 use App\Models\MemoryPhoto;
 use App\Models\MemoryReaction;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
 use Database\Seeders\MemorySeeder;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
- * @return array{david: User, katie: User, latest: Month}
+ * @return array{david: User, katie: User, latest: CalendarMonth}
  */
 function seedMemories(string $now): array
 {
@@ -23,11 +23,11 @@ function seedMemories(string $now): array
     return [
         'david' => User::where('email', 'david@example.com')->sole(),
         'katie' => User::where('email', 'katie@example.com')->sole(),
-        'latest' => Month::latestOpen(),
+        'latest' => CalendarMonth::latestOpen(),
     ];
 }
 
-function memoryOf(User $user, Month $month): ?Memory
+function memoryOf(User $user, CalendarMonth $month): ?Memory
 {
     return Memory::where('user_id', $user->id)->where('month', $month->toDateString())->first();
 }

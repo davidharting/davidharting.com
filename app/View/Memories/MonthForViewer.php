@@ -5,7 +5,7 @@ namespace App\View\Memories;
 use App\Memories\Reveal;
 use App\Models\Memory;
 use App\Models\User;
-use App\Support\Month;
+use App\Support\CalendarMonth;
 use Illuminate\Support\Collection;
 
 /**
@@ -18,7 +18,7 @@ final readonly class MonthForViewer
     public Reveal $reveal;
 
     public function __construct(
-        public Month $month,
+        public CalendarMonth $month,
         public User $viewer,
         public User $other,
         public ?Memory $viewerMemory,
@@ -30,7 +30,7 @@ final readonly class MonthForViewer
     /**
      * @param  Collection<int, Memory>  $memories  Every memory written for the month.
      */
-    public static function fromMemories(Month $month, User $viewer, User $other, Collection $memories): self
+    public static function fromMemories(CalendarMonth $month, User $viewer, User $other, Collection $memories): self
     {
         return new self(
             $month,
@@ -59,10 +59,10 @@ final readonly class MonthForViewer
         }
 
         if ($this->viewerMemory->isDraft()) {
-            return 'Draft, started '.Month::dayLabel($this->viewerMemory->created_at);
+            return 'Draft, started '.CalendarMonth::dayLabel($this->viewerMemory->created_at);
         }
 
-        return 'Shared '.Month::dayLabel($this->viewerMemory->shared_at);
+        return 'Shared '.CalendarMonth::dayLabel($this->viewerMemory->shared_at);
     }
 
     /**
@@ -76,7 +76,7 @@ final readonly class MonthForViewer
         $memory = $this->otherMemory;
 
         if ($this->reveal->hasHappened()) {
-            return $memory?->isShared() ? 'Shared '.Month::dayLabel($memory->shared_at) : null;
+            return $memory?->isShared() ? 'Shared '.CalendarMonth::dayLabel($memory->shared_at) : null;
         }
 
         if ($memory === null) {
@@ -84,10 +84,10 @@ final readonly class MonthForViewer
         }
 
         if ($memory->isDraft()) {
-            return "{$name} started on ".Month::dayLabel($memory->created_at);
+            return "{$name} started on ".CalendarMonth::dayLabel($memory->created_at);
         }
 
-        return "{$name} shared on ".Month::dayLabel($memory->shared_at);
+        return "{$name} shared on ".CalendarMonth::dayLabel($memory->shared_at);
     }
 
     /**
@@ -98,10 +98,10 @@ final readonly class MonthForViewer
         $revealedAt = $this->reveal->revealedAt();
 
         if ($revealedAt !== null) {
-            return 'Revealed '.Month::dayLabel($revealedAt).'.';
+            return 'Revealed '.CalendarMonth::dayLabel($revealedAt).'.';
         }
 
-        $deadline = Month::dayLabel($this->month->revealDeadline());
+        $deadline = CalendarMonth::dayLabel($this->month->revealDeadline());
 
         if (! $this->viewerMemory?->isShared()) {
             return $this->otherMemory?->isShared()
