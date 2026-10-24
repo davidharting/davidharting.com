@@ -18,33 +18,50 @@ beforeEach(function () {
     [$this->david, $this->katie] = User::factory()->count(2)->create();
     MemoryParticipant::create(['user_id' => $this->david->id]);
     MemoryParticipant::create(['user_id' => $this->katie->id]);
-
-    $this->davidsSeptemberPhoto = function (): MemoryPhoto {
-        $memory = Memory::factory()->for($this->david)->forMonth(CalendarMonth::of(2026, 9))->shared()->create();
-
-        return MemoryPhoto::factory()->for($memory)->ready()->create();
-    };
-
-    $this->davidsAugustPhoto = function (): MemoryPhoto {
-        $memory = Memory::factory()->for($this->david)->forMonth(CalendarMonth::of(2026, 8))->shared(CarbonImmutable::parse('2026-09-05T12:00:00Z'))->create();
-
-        return MemoryPhoto::factory()->for($memory)->ready()->create();
-    };
 });
+
+/**
+ * A ready photo on David's shared September memory, which hasn't revealed.
+ */
+function photoBeforeTheReveal(User $david): MemoryPhoto
+{
+    $memory = Memory::factory()->for($david)->forMonth(CalendarMonth::of(2026, 9))->shared()->create();
+
+    return MemoryPhoto::factory()->for($memory)->ready()->create();
+}
+
+/**
+ * A ready photo on David's shared August memory, which has revealed.
+ */
+function photoAfterTheReveal(User $david): MemoryPhoto
+{
+    $memory = Memory::factory()->for($david)->forMonth(CalendarMonth::of(2026, 8))->shared(CarbonImmutable::parse('2026-09-05T12:00:00Z'))->create();
+
+    return MemoryPhoto::factory()->for($memory)->ready()->create();
+}
 
 test('redirects the author to a signed link to the web variant', function () {
     /** @var TestCase $this */
-    $photo = ($this->davidsSeptemberPhoto)();
+    $photo = photoBeforeTheReveal($this->david);
+
+    $this->actingAs($this->david)->get(route('memories.photos.show', [$photo, 'web']))
+        ->assertRedirectContains($photo->web_path)
+        ->assertRedirectContains('signature=');
+});
+
+test('lets the browser cache the redirect privately for less than the link lasts', function () {
+    /** @var TestCase $this */
+    $photo = photoBeforeTheReveal($this->david);
 
     $response = $this->actingAs($this->david)->get(route('memories.photos.show', [$photo, 'web']));
 
-    $response->assertRedirectContains($photo->web_path)->assertRedirectContains('signature=');
+    // The signed link lasts an hour; the redirect may be reused for 50 minutes.
     expect($response->headers->get('Cache-Control'))->toContain('private')->toContain('max-age=3000');
 });
 
-test('redirects to the thumbnail', function () {
+test('redirects to a signed link to the thumbnail variant', function () {
     /** @var TestCase $this */
-    $photo = ($this->davidsSeptemberPhoto)();
+    $photo = photoBeforeTheReveal($this->david);
 
     $this->actingAs($this->david)->get(route('memories.photos.show', [$photo, 'thumbnail']))
         ->assertRedirectContains($photo->thumbnail_path);
@@ -52,7 +69,7 @@ test('redirects to the thumbnail', function () {
 
 test('redirects the other participant once the month has revealed', function () {
     /** @var TestCase $this */
-    $photo = ($this->davidsAugustPhoto)();
+    $photo = photoAfterTheReveal($this->david);
 
     $this->actingAs($this->katie)->get(route('memories.photos.show', [$photo, 'web']))
         ->assertRedirectContains($photo->web_path);
@@ -60,28 +77,28 @@ test('redirects the other participant once the month has revealed', function () 
 
 test('is not found for the other participant before the month reveals', function () {
     /** @var TestCase $this */
-    $photo = ($this->davidsSeptemberPhoto)();
+    $photo = photoBeforeTheReveal($this->david);
 
     $this->actingAs($this->katie)->get(route('memories.photos.show', [$photo, 'web']))->assertNotFound();
 });
 
 test('is not found for someone who is not a participant', function () {
     /** @var TestCase $this */
-    $photo = ($this->davidsAugustPhoto)();
+    $photo = photoAfterTheReveal($this->david);
 
     $this->actingAs(User::factory()->create())->get(route('memories.photos.show', [$photo, 'web']))->assertNotFound();
 });
 
 test('is not found for a guest', function () {
     /** @var TestCase $this */
-    $photo = ($this->davidsAugustPhoto)();
+    $photo = photoAfterTheReveal($this->david);
 
     $this->get(route('memories.photos.show', [$photo, 'web']))->assertNotFound();
 });
 
 test('is not found once the photo is removed, even for its author', function () {
     /** @var TestCase $this */
-    $photo = ($this->davidsSeptemberPhoto)();
+    $photo = photoBeforeTheReveal($this->david);
     $photo->delete();
 
     $this->actingAs($this->david)->get(route('memories.photos.show', [$photo, 'web']))->assertNotFound();
@@ -97,7 +114,7 @@ test('is not found while the photo is still processing, even for its author', fu
 
 test('is not found for a variant that does not exist', function () {
     /** @var TestCase $this */
-    $photo = ($this->davidsSeptemberPhoto)();
+    $photo = photoBeforeTheReveal($this->david);
 
     $this->actingAs($this->david)->get("/memories/photos/{$photo->id}/original")->assertNotFound();
 });

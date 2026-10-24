@@ -184,7 +184,7 @@ describe('photos', function () {
             ->assertSeeTextInOrder(['Counters!', 'Hometown, unchanged', 'The gate, still broken']);
     });
 
-    test('describes a photo without a caption by who took it', function () {
+    test('uses the caption as alt text, or who took the photo when there is none', function () {
         /** @var TestCase $this */
         // July: two of David's ten photos have no caption.
         $this->actingAs($this->katie)->get('/memories/2026-07')
@@ -223,8 +223,7 @@ describe('photos', function () {
     test('shows the author a placeholder for a photo that failed', function () {
         /** @var TestCase $this */
         $this->actingAs($this->katie)->get('/memories/2026-09?who=yours')
-            ->assertSeeText('This photo couldn\'t be processed.')
-            ->assertSeeText('The pumpkin patch');
+            ->assertSeeTextInOrder(['This photo couldn\'t be processed.', 'The pumpkin patch']);
     });
 
     test('never shows the other person a photo that isn\'t ready', function () {
@@ -239,6 +238,6 @@ describe('photos', function () {
             ->assertDontSeeText('Still on its way')
             ->assertDontSeeText('Never made it')
             ->assertDontSeeText('This photo is still processing.')
-            ->assertDontSeeText('couldn');
+            ->assertDontSeeText("This photo couldn't be processed.");
     });
 });
