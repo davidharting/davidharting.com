@@ -135,8 +135,8 @@ class PasswordResetTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeText('Choose a new password for katie@example.test.');
-        $response->assertSee('<input type="hidden" name="email" value="katie@example.test" />', escape: false);
-        $response->assertDontSee('type="text" class="input"', escape: false);
+        $response->assertSee('type="hidden" name="email" value="katie@example.test"', escape: false);
+        $response->assertDontSee('<label for="email"', escape: false);
     }
 
     public function test_reset_password_screen_shows_why_a_reset_failed(): void

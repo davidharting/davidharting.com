@@ -26,11 +26,12 @@ test('links to the password reset page with their token', function () {
 
 test('says how long the link lasts and what to do if it lapses', function () {
     /** @var TestCase $this */
+    config(['auth.passwords.users.expire' => 90]);
     $user = User::factory()->create();
 
     $mail = (new Welcome('a-token'))->toMail($user);
 
     expect(implode(' ', $mail->outroLines))
-        ->toContain('expires in 60 minutes')
+        ->toContain('expires in 90 minutes')
         ->toContain('Forgot your password?');
 });

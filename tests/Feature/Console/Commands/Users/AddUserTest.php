@@ -43,7 +43,7 @@ test('falls back to their full name without a display name', function () {
         ->and($katie->displayName())->toBe('Katie Harting');
 });
 
-test('emails them a welcome with a link to choose a password, and nothing else', function () {
+test('emails them a welcome and nothing else', function () {
     /** @var TestCase $this */
     Notification::fake();
 
