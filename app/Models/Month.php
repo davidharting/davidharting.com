@@ -73,9 +73,9 @@ class Month extends Model
      */
     public function openedWithBothParticipants(): bool
     {
-        $secondJoinedAt = CarbonImmutable::parse(MemoryParticipant::query()->max('created_at'));
+        $secondJoinedAt = MemoryParticipant::secondJoinedAt();
 
-        return $this->opensAt()->greaterThanOrEqualTo($secondJoinedAt);
+        return $secondJoinedAt !== null && $this->opensAt()->greaterThanOrEqualTo($secondJoinedAt);
     }
 
     /**

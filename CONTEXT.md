@@ -75,7 +75,7 @@ The email that carries a month's memories to a participant once the month has re
 _Avoid_: Reveal notification
 
 **Late-share email**:
-A copy of a participant's own memory, sent when they share it after their reveal email went out without it, so their inbox still ends up holding the whole month.
+A copy of a participant's own memory, sent when they share it after their reveal email went out without it, so their inbox still ends up holding both memories.
 _Avoid_: Reminder
 
 **Reaction**:

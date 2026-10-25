@@ -255,7 +255,7 @@ describe('running it again', function () {
 });
 
 describe('the reveal', function () {
-    test('goes out the morning after the deadline to whoever has something to read', function () {
+    test('goes out once the deadline passes, to whoever has something to read', function () {
         /** @var TestCase $this */
         [$david, $katie] = participantsJoinedAt('2026-10-20T12:00:00Z');
         sharedMemoryFor($katie, CalendarMonth::of(2026, 10));
@@ -292,6 +292,7 @@ describe('its output', function () {
     })->with([
         'two' => [0, '2026-11-01T14:00:00Z', 'Queued 2 emails.'],
         'one' => [1, '2026-11-01T14:00:00Z', 'Queued 1 email.'],
-        'none' => [0, '2026-11-01T13:00:00Z', 'Queued 0 emails.'],
+        'none, before 9am' => [0, '2026-11-01T13:00:00Z', 'Queued 0 emails.'],
+        'reveals, once both have shared' => [2, '2026-11-15T14:00:00Z', 'Queued 2 emails.'],
     ]);
 });

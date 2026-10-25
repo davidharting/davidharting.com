@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +31,17 @@ class MemoryParticipant extends Model
     public static function featureIsEnabled(): bool
     {
         return once(fn () => self::query()->count() === 2);
+    }
+
+    /**
+     * When the second participant joined, or null with fewer than two.
+     * Memory emails are only for months that open after this.
+     */
+    public static function secondJoinedAt(): ?CarbonImmutable
+    {
+        $joinedAt = self::query()->orderBy('created_at')->skip(1)->value('created_at');
+
+        return $joinedAt === null ? null : CarbonImmutable::instance($joinedAt);
     }
 
     /**

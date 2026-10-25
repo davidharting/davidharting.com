@@ -7,24 +7,25 @@ use App\Models\MemoryParticipant;
 use App\Models\Month;
 use App\Models\User;
 use App\Support\CalendarMonth;
-use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
 /**
  * Decides which reveal and late-share emails are due, and claims them. Run
  * it as often as you like: each email is claimed only once.
  *
- * Between them the two emails leave each person's inbox holding every memory
- * of the month that was shared: the reveal brings the month's memories once
- * there is the other person's to read, and the late share brings their own
- * if they share it after that.
+ * The reveal brings a person the month's memories once there is the other
+ * person's to read, and the late share brings their own if they share it
+ * after that. So once both have shared, each inbox holds both memories. A
+ * person who shares when the other never does gets no copy of their own.
  */
 class RevealEmails
 {
     /**
      * Claim and queue every reveal and late-share email due for every month
      * that opened once both participants existed. A reveal email always
-     * catches up, however long ago its month revealed.
+     * catches up, however long ago its month revealed. The range starts a
+     * month early because the second participant may have joined on the
+     * last day of a month in UTC; claimDue() drops it if it opened before.
      *
      * @return Collection<int, MemoryEmail> The emails claimed by this run.
      */
@@ -34,13 +35,14 @@ class RevealEmails
             return new Collection;
         }
 
-        $secondJoinedAt = CarbonImmutable::parse(MemoryParticipant::query()->max('created_at'));
+        $secondJoinedAt = MemoryParticipant::secondJoinedAt();
 
         return Month::query()
             ->whereBetween('id', [
                 CalendarMonth::containing($secondJoinedAt)->previous()->toDateString(),
                 Month::latestOpen()->toDateString(),
             ])
+            ->with('memories')
             ->orderBy('id')
             ->get()
             ->flatMap(fn (Month $month): Collection => $this->claimDue($month))
@@ -77,6 +79,9 @@ class RevealEmails
             ->values();
     }
 
+    /**
+     * Due once the other person's memory is shared, in a revealed month.
+     */
     private function claimReveal(Month $month, User $recipient): ?MemoryEmail
     {
         $otherMemory = $month->memoryOf(MemoryParticipant::otherThan($recipient));
@@ -88,6 +93,10 @@ class RevealEmails
         return MemoryEmail::claim($recipient, $month, MemoryEmailKind::Reveal);
     }
 
+    /**
+     * Due when the recipient's own memory wasn't shared by the time their
+     * reveal email was claimed, so it went without it.
+     */
     private function claimLateShare(Month $month, User $recipient): ?MemoryEmail
     {
         $reveal = MemoryEmail::query()
@@ -97,7 +106,7 @@ class RevealEmails
             ->first();
         $memory = $month->memoryOf($recipient);
 
-        if ($reveal === null || ! $memory?->isShared() || $memory->shared_at->lessThanOrEqualTo($reveal->created_at)) {
+        if ($reveal === null || ! $memory?->isShared() || $memory->wasSharedBy($reveal->created_at)) {
             return null;
         }
 

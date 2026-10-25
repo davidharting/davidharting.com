@@ -28,11 +28,11 @@ function octoberMonth(): Month
     return Month::of(CalendarMonth::of(2026, 10));
 }
 
-function shareOctoberMemory(User $author, string $at): Memory
+function shareOctoberMemory(User $author, string $sharedAt): Memory
 {
     return Memory::factory()->for($author)->forMonth(CalendarMonth::of(2026, 10))->create([
         'created_at' => '2026-11-02T12:00:00Z',
-        'shared_at' => $at,
+        'shared_at' => $sharedAt,
     ]);
 }
 
@@ -129,6 +129,7 @@ describe('claimDue()', function () {
 
     test('claims nothing for a month that opened before both participants existed', function () {
         /** @var TestCase $this */
+        // Both joined on October 20, so September had already opened.
         $september = Month::of(CalendarMonth::of(2026, 9));
         Memory::factory()->for($this->katie)->forMonth($september->calendarMonth)->shared()->create();
         Memory::factory()->for($this->david)->forMonth($september->calendarMonth)->shared()->create();
@@ -136,6 +137,16 @@ describe('claimDue()', function () {
         app(RevealEmails::class)->claimDue($september);
 
         expect(MemoryEmail::count())->toBe(0);
+    });
+
+    test('sends each email it claims', function () {
+        /** @var TestCase $this */
+        shareOctoberMemory($this->katie, '2026-11-05T12:00:00Z');
+
+        claimOctoberAt('2026-12-01T14:00:00Z');
+
+        Notification::assertSentTo($this->david, Revealed::class);
+        Notification::assertCount(1);
     });
 });
 
@@ -160,14 +171,4 @@ describe('claimAllDue()', function () {
 
         expect(app(RevealEmails::class)->claimAllDue())->toBeEmpty();
     });
-});
-
-test('the claimed emails go out', function () {
-    /** @var TestCase $this */
-    shareOctoberMemory($this->katie, '2026-11-05T12:00:00Z');
-
-    claimOctoberAt('2026-12-01T14:00:00Z');
-
-    Notification::assertSentTo($this->david, Revealed::class);
-    Notification::assertCount(1);
 });
