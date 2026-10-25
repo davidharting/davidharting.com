@@ -443,11 +443,12 @@ describe('photos', function () {
         expect(storedMemoryOf($this->david, '2026-09')->photos->modelKeys())->toBe([$second->id, $first->id]);
     });
 
-    test('removes a photo, tells the browser so it can offer to undo, and undoes', function () {
+    test('asks before removing a photo, tells the browser so it can offer to undo, and undoes', function () {
         /** @var TestCase $this */
         $photo = storedMemoryOf($this->david, '2026-09')->photos->first();
 
         $editor = editorFor($this->david, '2026-09')
+            ->assertSeeHtml('wire:confirm="Remove this photo?"')
             ->call('removePhoto', $photo->id)
             ->assertDispatched('photo-removed', photoId: $photo->id)
             ->assertSet('photoCount', 1);

@@ -194,6 +194,7 @@
                                 type="button"
                                 class="btn btn-sm btn-ghost text-error ml-auto"
                                 wire:click="removePhoto({{ $photo->id }})"
+                                wire:confirm="Remove this photo?"
                             >
                                 Remove photo
                             </button>
