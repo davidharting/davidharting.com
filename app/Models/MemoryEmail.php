@@ -7,6 +7,7 @@ use App\Memories\MemoryEmailKind;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 /**
  * One email of a kind to one person about one month. The row is the claim on
@@ -46,22 +47,27 @@ class MemoryEmail extends Model
     /**
      * Claim the email and queue it to send. Returns null without queueing
      * anything when it was claimed before, even if that attempt failed.
+     *
+     * The claim and its queued job commit together, so a claim that can't be
+     * queued is undone and the email is still there to claim next time.
      */
     public static function claim(User $user, Month $month, MemoryEmailKind $kind): ?self
     {
-        $email = self::query()->createOrFirst([
-            'user_id' => $user->id,
-            'month_id' => $month->id,
-            'kind' => $kind,
-        ]);
+        return DB::transaction(function () use ($user, $month, $kind): ?self {
+            $email = self::query()->createOrFirst([
+                'user_id' => $user->id,
+                'month_id' => $month->id,
+                'kind' => $kind,
+            ]);
 
-        if (! $email->wasRecentlyCreated) {
-            return null;
-        }
+            if (! $email->wasRecentlyCreated) {
+                return null;
+            }
 
-        SendMemoryEmail::dispatch($email);
+            SendMemoryEmail::dispatch($email);
 
-        return $email;
+            return $email;
+        });
     }
 
     public function user(): BelongsTo

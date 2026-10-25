@@ -5,6 +5,7 @@ use App\Memories\MemoryEmailKind;
 use App\Models\MemoryEmail;
 use App\Models\Month;
 use App\Models\User;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
@@ -50,6 +51,17 @@ describe('claim()', function () {
         expect($again)->toBeNull()
             ->and(MemoryEmail::count())->toBe(1);
         Queue::assertNothingPushed();
+    });
+
+    test('leaves the email unclaimed when it cannot be queued', function () {
+        /** @var TestCase $this */
+        $user = User::factory()->create();
+        $month = Month::of(Month::latestOpen());
+        Bus::shouldReceive('dispatch')->andThrow(new RuntimeException('The queue is down.'));
+
+        expect(fn () => MemoryEmail::claim($user, $month, MemoryEmailKind::MonthOpened))
+            ->toThrow(RuntimeException::class, 'The queue is down.');
+        expect(MemoryEmail::count())->toBe(0);
     });
 
     test('claims the same email separately for each person', function () {
