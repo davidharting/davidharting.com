@@ -12,12 +12,12 @@
 Photos attached:
 
 @foreach ($copy->photos as $photo)
-- {{ $copy->filename($photo) }}{{ $photo->caption ? ': '.$photo->caption : '' }}
+- {{ $copy->photoLine($photo) }}
 @endforeach
 
 @endif
 @if ($copy->photosLeftOut > 0)
-{{ trans_choice(':count photo wasn\'t ready to attach. See it on the site.|:count photos weren\'t ready to attach. See them on the site.', $copy->photosLeftOut) }}
+{{ trans_choice(':count photo isn\'t attached. See it on the site.|:count photos aren\'t attached. See them on the site.', $copy->photosLeftOut) }}
 
 @endif
 @endforeach
