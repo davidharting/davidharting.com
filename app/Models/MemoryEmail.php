@@ -15,7 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * Its state is derived, never stored:
  *
- * - Sending: neither of the states below yet.
+ * - Sending: neither of the states below yet. Its job is queued or running,
+ *   or between tries.
  * - Sent: `sent_at` is set.
  * - Failed: sending ran out of tries, and `failure` says why. It waits for a
  *   manual retry of its failed job.
@@ -48,21 +49,15 @@ class MemoryEmail extends Model
      */
     public static function claim(User $user, Month $month, MemoryEmailKind $kind): ?self
     {
-        $now = now();
-
-        $inserted = self::query()->toBase()->insertOrIgnoreReturning([
+        $email = self::query()->createOrFirst([
             'user_id' => $user->id,
             'month_id' => $month->id,
-            'kind' => $kind->value,
-            'created_at' => $now,
-            'updated_at' => $now,
+            'kind' => $kind,
         ]);
 
-        if ($inserted->isEmpty()) {
+        if (! $email->wasRecentlyCreated) {
             return null;
         }
-
-        $email = self::query()->findOrFail($inserted->first()->id);
 
         SendMemoryEmail::dispatch($email);
 

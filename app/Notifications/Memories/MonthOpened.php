@@ -8,7 +8,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Tells a participant that a month is over and open for their memory.
+ * Tells a participant that a month is over and it's time to write their memory of it.
  */
 class MonthOpened extends Notification
 {
@@ -27,10 +27,9 @@ class MonthOpened extends Notification
         $name = $this->month->calendarMonth->name();
 
         return (new MailMessage)
-            ->subject("{$name} is open for memories")
+            ->subject("Time to write your {$name} memory")
             ->greeting("Hi {$notifiable->displayName()},")
-            ->line("{$name} is over, so you can write your memory of it now.")
-            ->line('It stays yours alone until you share it.')
+            ->line("{$name} is over, so it's time to write up your memory of it.")
             ->action("Write your {$name} memory", route('memories.write', $this->month));
     }
 }

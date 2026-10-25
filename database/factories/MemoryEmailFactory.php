@@ -6,6 +6,7 @@ use App\Memories\MemoryEmailKind;
 use App\Models\MemoryEmail;
 use App\Models\Month;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -27,9 +28,12 @@ class MemoryEmailFactory extends Factory
         ];
     }
 
-    public function sent(): static
+    /**
+     * Sent at the given time, or now.
+     */
+    public function sent(?CarbonImmutable $at = null): static
     {
-        return $this->state(['sent_at' => now()]);
+        return $this->state(['sent_at' => $at ?? now()]);
     }
 
     public function failed(): static

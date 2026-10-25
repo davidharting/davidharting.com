@@ -4,6 +4,7 @@ use App\Jobs\SendMemoryEmail;
 use App\Memories\MemoryEmailKind;
 use App\Models\MemoryEmail;
 use App\Notifications\Memories\MonthOpened;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -29,7 +30,7 @@ describe('handle()', function () {
     test('does nothing when the email has already gone out', function () {
         /** @var TestCase $this */
         Notification::fake();
-        $email = MemoryEmail::factory()->create(['sent_at' => '2026-11-01T13:00:00Z']);
+        $email = MemoryEmail::factory()->sent(CarbonImmutable::parse('2026-11-01T13:00:00Z'))->create();
 
         SendMemoryEmail::dispatch($email);
 
