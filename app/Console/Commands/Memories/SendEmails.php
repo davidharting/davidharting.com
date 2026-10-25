@@ -8,9 +8,8 @@ use Illuminate\Console\Command;
 /**
  * Queues every monthly memories email that is due and hasn't gone out yet.
  *
- * A Render cron runs it at 13:00 and 14:00 UTC, so one of the two runs falls
- * at or just after 9am Eastern whether or not daylight saving is on. Running
- * it more often, or twice by accident, never sends an email twice.
+ * Safe to rerun at any time, and to run twice at once: each email is claimed
+ * only once, so no run ever sends one twice.
  */
 class SendEmails extends Command
 {

@@ -101,8 +101,9 @@ final class CalendarMonth implements Stringable
     }
 
     /**
-     * The moment it is the given hour, Eastern time, on a day of the month,
-     * for example 9am on the 15th.
+     * The moment the Eastern clock reads the given hour on a day of the month,
+     * for example 9am on the 15th. Like every moment here, it comes back as a
+     * UTC instant.
      */
     public function at(int $day, int $hour): CarbonImmutable
     {
