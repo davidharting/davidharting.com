@@ -157,8 +157,14 @@
                     .catch(() => (leaving = false));
             "
         >
-            <span x-show="leaving" class="loading loading-spinner loading-sm" style="display: none"></span>
-            Done
+            <span class="relative">
+                <span
+                    x-show="leaving"
+                    class="loading loading-spinner loading-sm absolute top-1/2 right-full mr-2 -translate-y-1/2"
+                    style="display: none"
+                ></span>
+                Done
+            </span>
         </a>
         @unless ($this->isShared())
             <button
