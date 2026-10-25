@@ -51,14 +51,16 @@ class MonthPage extends Component
 
     /**
      * The quiet line above the memory, or null when there is nothing to say.
+     * It shows the viewer's own draft, and how far the other person has got
+     * before the reveal; never when anything was shared or revealed.
      */
     public function statusLabel(): ?string
     {
         if ($this->showingYours) {
-            return $this->monthForViewer->viewerMemory === null ? null : $this->monthForViewer->viewerStatusLabel();
+            return $this->monthForViewer->viewerMemory?->isDraft() ? $this->monthForViewer->viewerStatusLabel() : null;
         }
 
-        return $this->monthForViewer->otherStatusLabel();
+        return $this->monthForViewer->month->hasRevealed() ? null : $this->monthForViewer->otherStatusLabel();
     }
 
     public function render(): View
