@@ -28,10 +28,10 @@ class LateShare extends Notification
     {
         $label = $this->month->calendarMonth->label();
         $otherName = MemoryParticipant::otherThan($notifiable)->displayName();
-        $memory = $this->month->memories()->with(['user', 'photos'])->where('user_id', $notifiable->id)->firstOrFail();
-        $copy = MemoryCopy::of($memory, $notifiable);
+        $memory = $this->month->memories()->with(['user', 'photos'])->whereBelongsTo($notifiable)->firstOrFail();
+        $copy = MemoryCopy::of($memory, $notifiable, Revealed::ATTACHMENT_BUDGET);
 
-        $mail = (new MailMessage)
+        return (new MailMessage)
             ->subject("Your {$label} memory, to keep")
             ->markdown('mail.memories.copies', [
                 'greeting' => "Hi {$notifiable->displayName()},",
@@ -39,12 +39,7 @@ class LateShare extends Notification
                 'copies' => collect([$copy]),
                 'actionText' => 'See it on the site',
                 'actionUrl' => route('memories.show', [$this->month, 'who' => 'yours']),
-            ]);
-
-        foreach ($copy->attachments() as $attachment) {
-            $mail->attach($attachment);
-        }
-
-        return $mail;
+            ])
+            ->attachMany($copy->attachments());
     }
 }
