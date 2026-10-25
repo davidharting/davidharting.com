@@ -11,6 +11,8 @@ use App\Models\MemoryPhoto;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
@@ -195,14 +197,24 @@ describe('share()', function () {
             ->toBe(collect([$this->author->id, $other->id])->sort()->values()->all());
     });
 
-    test('claims the reveal emails only once the share commits', function () {
+    test('queues the job that claims the reveal emails', function () {
         /** @var TestCase $this */
         Queue::fake();
 
         $this->writer->share('Short and sweet', null);
 
-        Queue::assertPushed(ClaimRevealEmails::class, fn (ClaimRevealEmails $job): bool => $job->month->calendarMonth->equals($this->month)
-            && $job->afterCommit === true);
+        Queue::assertPushed(ClaimRevealEmails::class, fn (ClaimRevealEmails $job): bool => $job->month->calendarMonth->equals($this->month));
+    });
+
+    test('still shares, and logs the error, when the job can\'t be queued', function () {
+        /** @var TestCase $this */
+        Exceptions::fake();
+        Bus::shouldReceive('dispatch')->andThrow(new RuntimeException('The queue is down.'));
+
+        $shared = $this->writer->share('Short and sweet', null);
+
+        expect($shared->isShared())->toBeTrue();
+        Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'The queue is down.');
     });
 
     test('queues no reveal emails when sharing an already shared memory again', function () {
