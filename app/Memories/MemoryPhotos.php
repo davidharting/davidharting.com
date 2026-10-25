@@ -67,16 +67,17 @@ final readonly class MemoryPhotos
     }
 
     /**
-     * Remove a photo by soft-deleting it, so it can be restored.
+     * Remove a photo by soft-deleting it, so it can be restored. Returns
+     * whether there was a photo to remove.
      *
      * @throws ValidationException when it is the last thing in a shared memory.
      */
-    public function remove(int $photoId): void
+    public function remove(int $photoId): bool
     {
         $photo = $this->find($photoId);
 
         if ($photo === null) {
-            return;
+            return false;
         }
 
         $this->memory->refresh();
@@ -88,6 +89,8 @@ final readonly class MemoryPhotos
         }
 
         $photo->delete();
+
+        return true;
     }
 
     /**

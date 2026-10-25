@@ -7,7 +7,7 @@
     x-data="memoryPhotos({{ $max }})"
     x-on:upload-handled.window="handled($event.detail.photoId)"
     x-on:photo-removed.window="removed($event.detail.photoId)"
-    x-on:beforeunload.window="if (uploads.length > 0) $event.preventDefault();"
+    x-on:beforeunload.window="if (uploads.length > 0 && ! $store.memoryUploads.abandoned) $event.preventDefault();"
     x-on:keydown.escape.window="sheet = null"
     class="px-4 pt-2 pb-4 font-sans"
 >
@@ -92,8 +92,10 @@
                         x-show="upload.failed"
                         x-on:click="retry(upload)"
                     >
-                        <span class="badge badge-error badge-sm">Didn't upload</span>
-                        <span class="sr-only">Try again</span>
+                        <span class="text-center text-xs">
+                            <span class="badge badge-error badge-sm">Didn't upload</span>
+                            <span class="mt-1 block">Tap to retry</span>
+                        </span>
                     </button>
                     <button
                         type="button"
@@ -119,7 +121,7 @@
             </span>
             <input
                 type="file"
-                accept="{{ implode(",", \App\Livewire\Memories\Editor::PHOTO_MIME_TYPES) }}"
+                accept="{{ implode(",", [...\App\Livewire\Memories\Editor::PHOTO_MIME_TYPES, ".heic", ".heif"]) }}"
                 multiple
                 class="hidden"
                 x-on:change="pick($event)"
@@ -160,7 +162,7 @@
                             style="display: none"
                         />
                     @endif
-                    <div class="space-y-3 p-4">
+                    <div class="space-y-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
                         @if ($photo->isFailed())
                             <div class="alert alert-error alert-soft text-sm">
                                 <span>This photo couldn't be processed.</span>
@@ -178,8 +180,9 @@
                             maxlength="{{ \App\Memories\MemoryPhotos::MAX_CAPTION_LENGTH }}"
                             placeholder="Add a caption (optional)"
                             aria-label="Caption for photo {{ $loop->iteration }}"
-                            x-on:input.debounce.1000ms="$wire.caption({{ $photo->id }}, $el.value)"
-                            x-on:blur="$wire.caption({{ $photo->id }}, $el.value)"
+                            x-data="{ saved: @js($photo->caption ?? '') }"
+                            x-on:input.debounce.1000ms="if ($el.value !== saved) $wire.caption({{ $photo->id }}, (saved = $el.value))"
+                            x-on:blur="if ($el.value !== saved) $wire.caption({{ $photo->id }}, (saved = $el.value))"
                         >{{ $photo->caption }}</textarea>
                         <div class="flex gap-2">
                             @unless ($loop->first)

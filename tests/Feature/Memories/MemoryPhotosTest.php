@@ -135,9 +135,8 @@ describe('remove()', function () {
         /** @var TestCase $this */
         [$first, $second] = photosOn($this->memory, 2);
 
-        $this->photos->remove($first->id);
-
-        expect(photoOrder($this->memory))->toBe([$second->id])
+        expect($this->photos->remove($first->id))->toBeTrue()
+            ->and(photoOrder($this->memory))->toBe([$second->id])
             ->and($first->fresh()->trashed())->toBeTrue();
     });
 
@@ -160,6 +159,14 @@ describe('remove()', function () {
         (new MemoryPhotos($shared))->remove($photo->id);
 
         expect($photo->fresh()->trashed())->toBeTrue();
+    });
+
+    test('says so when there was no photo to remove', function () {
+        /** @var TestCase $this */
+        $someoneElses = MemoryPhoto::factory()->create();
+
+        expect($this->photos->remove($someoneElses->id))->toBeFalse()
+            ->and($someoneElses->fresh()->trashed())->toBeFalse();
     });
 });
 

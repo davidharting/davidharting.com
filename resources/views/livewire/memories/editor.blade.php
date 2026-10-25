@@ -36,6 +36,21 @@
             this.justSaved = false;
             this.savedFading = false;
         },
+        leave(href) {
+            if (this.leaving) return;
+            if (this.$store.memoryUploads.pending > 0) {
+                if (! confirm('Your photos are still uploading. Leave anyway?')) return;
+                this.$store.memoryUploads.abandoned = true;
+            }
+            this.leaving = true;
+            this.$wire
+                .$commit()
+                .then(() => {
+                    if (this.$wire.changedElsewhere) this.leaving = false;
+                    else window.location = href;
+                })
+                .catch(() => (this.leaving = false));
+        },
     }"
     x-init="
         $nextTick(() => growText());
@@ -47,12 +62,17 @@
     x-on:memory-saved="flashSaved()"
     x-on:online.window="$wire.$commit()"
     x-on:beforeunload.window="if ($wire.$dirty('body') || $wire.changedElsewhere) $event.preventDefault();"
+    x-on:pageshow.window="
+        leaving = false;
+        $store.memoryUploads.abandoned = false;
+    "
     class="flex min-h-dvh flex-col"
 >
     <header class="border-base-300 border-b px-4 py-3 font-sans text-sm">
         <a
             class="link link-hover"
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
+            x-on:click.prevent="leave($el.href)"
         >← {{ $month->name() }}</a>
     </header>
 
@@ -142,20 +162,7 @@
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
             x-bind:class="leaving && 'btn-disabled'"
             x-bind:aria-disabled="leaving"
-            x-on:pageshow.window="leaving = false"
-            x-on:click.prevent="
-                if (leaving) return;
-                if ($store.memoryUploads.pending > 0 && !confirm('Your photos are still uploading. Leave anyway?'))
-                    return;
-                leaving = true;
-                $wire
-                    .$commit()
-                    .then(() => {
-                        if ($wire.changedElsewhere) leaving = false;
-                        else window.location = $el.href;
-                    })
-                    .catch(() => (leaving = false));
-            "
+            x-on:click.prevent="leave($el.href)"
         >
             <span class="relative">
                 <span

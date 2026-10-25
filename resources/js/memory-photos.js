@@ -5,9 +5,14 @@
  *
  * Picked files are copied into memory before uploading, because iPhone
  * Safari otherwise sends 0 bytes for photos picked from the library.
+ *
+ * Livewire tells nobody when one of its upload requests is lost, so an
+ * upload that goes quiet for too long is given up on and offered again.
  */
+const QUIET_UPLOAD_MILLISECONDS = 45000;
+
 document.addEventListener("alpine:init", () => {
-    window.Alpine.store("memoryUploads", { pending: 0 });
+    window.Alpine.store("memoryUploads", { pending: 0, abandoned: false });
 
     window.Alpine.data("memoryPhotos", (max) => ({
         max,
@@ -19,10 +24,13 @@ document.addEventListener("alpine:init", () => {
         notice: null,
         removedPhotoId: null,
         noticeTimer: null,
+        watchdog: null,
 
         init() {
             this.$watch("uploads", () => {
-                this.$store.memoryUploads.pending = this.uploads.length;
+                this.$store.memoryUploads.pending = this.uploads.filter(
+                    (upload) => !upload.failed,
+                ).length;
             });
         },
 
@@ -49,9 +57,19 @@ document.addEventListener("alpine:init", () => {
             }
 
             for (const file of files.slice(0, room)) {
-                const copy = new File([await file.arrayBuffer()], file.name, {
-                    type: file.type,
-                });
+                let copy;
+
+                try {
+                    copy = new File([await file.arrayBuffer()], file.name, {
+                        type: file.type,
+                    });
+                } catch {
+                    this.say(
+                        `${file.name} couldn't be read, so it was skipped.`,
+                    );
+                    continue;
+                }
+
                 this.uploads.push({
                     key: this.nextKey++,
                     file: copy,
@@ -59,9 +77,8 @@ document.addEventListener("alpine:init", () => {
                     progress: 0,
                     failed: false,
                 });
+                this.sendNext();
             }
-
-            this.sendNext();
         },
 
         sendNext() {
@@ -71,17 +88,38 @@ document.addEventListener("alpine:init", () => {
             if (!upload) return;
 
             this.current = upload;
+            this.watch(upload);
             this.$wire.upload(
                 "upload",
                 upload.file,
                 () => {},
-                () => {
-                    upload.failed = true;
-                    this.current = null;
-                    this.sendNext();
+                () => this.fail(upload),
+                (event) => {
+                    upload.progress = event.detail.progress;
+                    this.watch(upload);
                 },
-                (event) => (upload.progress = event.detail.progress),
+                () => {},
             );
+        },
+
+        /**
+         * Give up on the upload if nothing more is heard of it for a while.
+         */
+        watch(upload) {
+            clearTimeout(this.watchdog);
+            this.watchdog = setTimeout(() => {
+                this.$wire.cancelUpload("upload");
+                this.fail(upload);
+            }, QUIET_UPLOAD_MILLISECONDS);
+        },
+
+        fail(upload) {
+            if (this.current !== upload) return;
+
+            clearTimeout(this.watchdog);
+            upload.failed = true;
+            this.current = null;
+            this.sendNext();
         },
 
         /**
@@ -91,8 +129,12 @@ document.addEventListener("alpine:init", () => {
             const upload = this.current;
             if (!upload) return;
 
+            clearTimeout(this.watchdog);
+
             if (photoId) {
                 this.previews[photoId] = upload.preview;
+            } else {
+                URL.revokeObjectURL(upload.preview);
             }
 
             this.uploads = this.uploads.filter((other) => other !== upload);
@@ -107,6 +149,7 @@ document.addEventListener("alpine:init", () => {
         },
 
         dismiss(upload) {
+            URL.revokeObjectURL(upload.preview);
             this.uploads = this.uploads.filter((other) => other !== upload);
         },
 

@@ -12,6 +12,7 @@ use App\Models\MemoryPhoto;
 use App\Models\Month;
 use App\Support\CalendarMonth;
 use App\View\Memories\MonthForViewer;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -21,6 +22,7 @@ use Livewire\Component;
 use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
+use Throwable;
 
 /**
  * The viewer's own memory for one month, on its own page. The text saves
@@ -154,7 +156,9 @@ class Editor extends Component
      * Add the photo that just landed to the end of the memory, starting the
      * memory if this is the first thing in it. The browser hears
      * `upload-handled` either way, with the new photo's id when it was added,
-     * so it can send the next one.
+     * so it can send the next one. Anything that goes wrong becomes an error
+     * on `upload`, because an exception here would lose that event and leave
+     * the browser waiting.
      */
     public function updatedUpload(): void
     {
@@ -185,12 +189,15 @@ class Editor extends Component
             $this->resetErrorBag('upload');
             $this->photoSaved();
         } catch (ValidationException $exception) {
-            $upload?->delete();
-
-            throw ValidationException::withMessages(['upload' => $exception->validator->errors()->first()]);
-        } finally {
-            $this->dispatch('upload-handled', photoId: $photoId);
+            $this->refuseUpload($upload, $exception->validator->errors()->first());
+        } catch (AuthorizationException) {
+            $this->refuseUpload($upload, "You can't add photos to this memory.");
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->refuseUpload($upload, "That photo didn't save. Try adding it again.");
         }
+
+        $this->dispatch('upload-handled', photoId: $photoId);
     }
 
     public function caption(int $photoId, string $caption): void
@@ -209,9 +216,11 @@ class Editor extends Component
      */
     public function removePhoto(int $photoId): void
     {
-        $this->changePhotos(fn (MemoryPhotos $photos) => $photos->remove($photoId));
+        $removed = $this->changePhotos(fn (MemoryPhotos $photos) => $photos->remove($photoId));
 
-        $this->dispatch('photo-removed', photoId: $photoId);
+        if ($removed === true) {
+            $this->dispatch('photo-removed', photoId: $photoId);
+        }
     }
 
     public function restorePhoto(int $photoId): void
@@ -381,20 +390,34 @@ class Editor extends Component
      * Run a change to the viewer's photos. There is nothing to change before
      * the memory exists. A change that saved flashes the same check as text.
      *
-     * @param  callable(MemoryPhotos): void  $change
+     * @template TResult
+     *
+     * @param  callable(MemoryPhotos): TResult  $change
+     * @return TResult|null
      */
-    private function changePhotos(callable $change): void
+    private function changePhotos(callable $change): mixed
     {
         $this->authorizeWriting();
         $memory = $this->monthForViewer->viewerMemory;
 
         if ($memory === null) {
-            return;
+            return null;
         }
 
         $this->resetErrorBag(['photo', 'caption']);
-        $change(new MemoryPhotos($memory));
+        $result = $change(new MemoryPhotos($memory));
         $this->photoSaved();
+
+        return $result;
+    }
+
+    /**
+     * Turn down the upload in flight, and clean up its temporary file.
+     */
+    private function refuseUpload(?TemporaryUploadedFile $upload, string $message): void
+    {
+        rescue(fn () => $upload?->delete());
+        $this->addError('upload', $message);
     }
 
     private function photoSaved(): void

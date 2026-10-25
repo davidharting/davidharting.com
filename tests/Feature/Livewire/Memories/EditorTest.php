@@ -4,10 +4,12 @@ use App\Livewire\Memories\Editor;
 use App\Memories\AddMemoryPhoto;
 use App\Memories\MemoryWriter;
 use App\Models\Memory;
+use App\Models\MemoryPhoto;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Database\Seeders\MemorySeeder;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Exceptions\MethodNotFoundException;
@@ -400,6 +402,21 @@ describe('photos', function () {
         expect(storedMemoryOf($this->david, '2026-07')->photos)->toHaveCount(AddMemoryPhoto::MAX_PHOTOS);
     });
 
+    test('reports a photo that fails to save, and still lets the browser send the next', function () {
+        /** @var TestCase $this */
+        Exceptions::fake();
+        MemoryPhoto::creating(fn () => throw new RuntimeException('The database went away'));
+
+        editorFor($this->katie, '2026-09')
+            ->set('upload', UploadedFile::fake()->image('porch.jpg'))
+            ->assertHasErrors('upload')
+            ->assertSeeText('That photo didn\'t save. Try adding it again.')
+            ->assertDispatched('upload-handled', photoId: null);
+
+        Exceptions::assertReported(RuntimeException::class);
+        expect(storedMemoryOf($this->katie, '2026-09')->photos)->toHaveCount(1);
+    });
+
     test('shares a memory that has photos and no text', function () {
         /** @var TestCase $this */
         editorFor($this->david, '2026-06')
@@ -460,6 +477,21 @@ describe('photos', function () {
         expect(storedMemoryOf($this->david, '2026-09')->photos->first()->id)->toBe($photo->id);
     });
 
+    test('won\'t remove the last photo of a shared memory with no text', function () {
+        /** @var TestCase $this */
+        $memory = storedMemoryOf($this->david, '2026-09');
+        $memory->update(['body' => '']);
+        [$kept, $other] = $memory->photos->all();
+        $other->forceDelete();
+
+        editorFor($this->david, '2026-09')
+            ->call('removePhoto', $kept->id)
+            ->assertHasErrors('photo')
+            ->assertNotDispatched('photo-removed');
+
+        expect($kept->fresh()->trashed())->toBeFalse();
+    });
+
     test('tries processing a failed photo again', function () {
         /** @var TestCase $this */
         $photo = storedMemoryOf($this->katie, '2026-09')->photos->first();
@@ -483,7 +515,8 @@ describe('photos', function () {
 
         editorFor($this->katie, '2026-09')
             ->call('caption', $davids->id, 'Not mine to caption')
-            ->call('removePhoto', $davids->id);
+            ->call('removePhoto', $davids->id)
+            ->assertNotDispatched('photo-removed');
 
         expect($davids->fresh())
             ->caption->toBe('Our street before anyone was up')
