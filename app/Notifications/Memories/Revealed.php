@@ -26,13 +26,13 @@ class Revealed extends Notification
 
     public function toMail(User $notifiable): MailMessage
     {
-        $name = $this->month->calendarMonth->name();
+        $month = $this->month->calendarMonth->name();
         $otherName = MemoryParticipant::otherThan($notifiable)->displayName();
 
         return (new MailMessage)
-            ->subject("{$otherName}'s {$name} memory is ready to read")
+            ->subject("{$otherName}'s {$month} memory is ready to read")
             ->greeting("Hi {$notifiable->displayName()},")
-            ->line("{$otherName}'s {$name} memory is ready to read.")
+            ->line("{$otherName}'s {$month} memory is ready to read.")
             ->action("Read {$otherName}'s memory", route('memories.show', $this->month));
     }
 }
