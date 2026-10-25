@@ -2,6 +2,7 @@
 
 namespace App\Memories;
 
+use App\Jobs\ClaimRevealEmails;
 use App\Models\Memory;
 use App\Models\User;
 use App\Support\CalendarMonth;
@@ -78,7 +79,8 @@ final readonly class MemoryWriter
     /**
      * Save the body and share the memory. Sharing an already shared memory
      * just saves it; it keeps its first `shared_at`. A memory with photos can
-     * be shared without text.
+     * be shared without text. Once the share commits, the reveal and
+     * late-share emails it makes due are claimed in the background.
      *
      * @param  ?int  $expectedVersion  The `lock_version` the writer last saw, or null if it saw no memory.
      *
@@ -96,6 +98,7 @@ final readonly class MemoryWriter
 
             if ($memory->isDraft()) {
                 $this->update($memory, $memory->lock_version, ['shared_at' => now()]);
+                ClaimRevealEmails::dispatch($memory->month)->afterCommit();
             }
 
             return $memory->refresh();

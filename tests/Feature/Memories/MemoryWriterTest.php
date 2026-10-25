@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\ClaimRevealEmails;
 use App\Memories\MemoryChangedElsewhere;
 use App\Memories\MemoryWriter;
 use App\Models\Memory;
@@ -7,6 +8,7 @@ use App\Models\MemoryPhoto;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -174,6 +176,25 @@ describe('share()', function () {
 
         expect($shared->shared_at->toIso8601String())->toBe('2026-10-05T21:40:00+00:00')
             ->and($shared->body)->toBe('Edited after sharing');
+    });
+
+    test('queues claiming the reveal emails the share makes due, once it commits', function () {
+        /** @var TestCase $this */
+        Queue::fake();
+
+        $this->writer->share('Short and sweet', null);
+
+        Queue::assertPushed(ClaimRevealEmails::class, fn (ClaimRevealEmails $job): bool => $job->month->id === '2026-09-01' && $job->afterCommit === true);
+    });
+
+    test('queues no reveal emails when sharing an already shared memory again', function () {
+        /** @var TestCase $this */
+        Queue::fake();
+        $this->authorsMemoryFactory->shared()->create();
+
+        $this->writer->share('Edited after sharing', 0);
+
+        Queue::assertNotPushed(ClaimRevealEmails::class);
     });
 
     test('refuses to share nothing', function (bool $hasDraft) {

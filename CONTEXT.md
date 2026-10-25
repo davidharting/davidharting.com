@@ -70,6 +70,14 @@ _Avoid_: Notification, alert
 The email on the 15th to a participant who hasn't shared yet (a draft counts as not shared), saying where the other person stands.
 _Avoid_: Reminder, chase
 
+**Reveal email**:
+The email that carries a month's memories to a participant once the month has revealed and the other person's memory is there to read: every memory shared by then, text inline and photos attached. At the reveal deadline it goes only to someone with something to read. It is a backup record of the month, so later edits never resend it.
+_Avoid_: Reveal notification
+
+**Late-share email**:
+A copy of a participant's own memory, sent when they share it after their reveal email went out without it, so their inbox still ends up holding the whole month.
+_Avoid_: Reminder
+
 **Reaction**:
 An emoji one person leaves on the other's revealed memory. Any emoji, up to five per person per memory.
 _Avoid_: Like, heart, vote

@@ -33,7 +33,7 @@ class MemoryReminders
 
         $month = Month::of(Month::latestOpen());
 
-        if (! $this->openedWithTwoParticipants($month)) {
+        if (! $month->openedWithBothParticipants()) {
             return new Collection;
         }
 
@@ -51,17 +51,6 @@ class MemoryReminders
             ->map(fn (User $user): ?MemoryEmail => MemoryEmail::claim($user, $month, $kind))
             ->filter()
             ->values();
-    }
-
-    /**
-     * Emails are only for months that open once both participants exist, so
-     * adding the second never sends reminders about older months.
-     */
-    private function openedWithTwoParticipants(Month $month): bool
-    {
-        $secondJoinedAt = CarbonImmutable::parse(MemoryParticipant::query()->max('created_at'));
-
-        return $month->opensAt()->greaterThanOrEqualTo($secondJoinedAt);
     }
 
     private function kindDue(Month $month): ?MemoryEmailKind
