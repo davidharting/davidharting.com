@@ -106,18 +106,19 @@ describe('update()', function () {
 });
 
 describe('react()', function () {
+    beforeEach(function () {
+        /** @var TestCase $this */
+        $this->davidsRevealed = Memory::factory()->for($this->david)->forMonth($this->august)->shared(CarbonImmutable::parse('2026-09-05T12:00:00Z'))->create();
+    });
+
     test('allows the other participant once the month has revealed', function () {
         /** @var TestCase $this */
-        $shared = Memory::factory()->for($this->david)->forMonth($this->august)->shared(CarbonImmutable::parse('2026-09-05T12:00:00Z'))->create();
-
-        expect(Gate::forUser($this->katie)->allows('react', $shared))->toBeTrue();
+        expect(Gate::forUser($this->katie)->allows('react', $this->davidsRevealed))->toBeTrue();
     });
 
     test('is not found for the author, even once revealed', function () {
         /** @var TestCase $this */
-        $shared = Memory::factory()->for($this->david)->forMonth($this->august)->shared(CarbonImmutable::parse('2026-09-05T12:00:00Z'))->create();
-
-        expect(Gate::forUser($this->david)->inspect('react', $shared)->status())->toBe(404);
+        expect(Gate::forUser($this->david)->inspect('react', $this->davidsRevealed)->status())->toBe(404);
     });
 
     test('is not found for the other participant before the month reveals', function () {
@@ -127,11 +128,13 @@ describe('react()', function () {
         expect(Gate::forUser($this->katie)->inspect('react', $shared)->status())->toBe(404);
     });
 
-    test('is not found for a guest or a non-participant, even once revealed', function () {
+    test('is not found for a guest', function () {
         /** @var TestCase $this */
-        $shared = Memory::factory()->for($this->david)->forMonth($this->august)->shared(CarbonImmutable::parse('2026-09-05T12:00:00Z'))->create();
+        expect(Gate::inspect('react', $this->davidsRevealed)->status())->toBe(404);
+    });
 
-        expect(Gate::inspect('react', $shared)->status())->toBe(404)
-            ->and(Gate::forUser(User::factory()->create())->inspect('react', $shared)->status())->toBe(404);
+    test('is not found for a non-participant', function () {
+        /** @var TestCase $this */
+        expect(Gate::forUser(User::factory()->create())->inspect('react', $this->davidsRevealed)->status())->toBe(404);
     });
 });
