@@ -2,9 +2,11 @@
 
 namespace App\Memories;
 
-use App\Models\Month;
+use App\Models\MemoryEmail;
+use App\Notifications\Memories\LateShare;
 use App\Notifications\Memories\MonthOpened;
 use App\Notifications\Memories\Nudge;
+use App\Notifications\Memories\Revealed;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -23,11 +25,25 @@ enum MemoryEmailKind: string
      */
     case Nudge = 'nudge';
 
-    public function notification(Month $month): Notification
+    /**
+     * Once the month has revealed and the other person's memory can be read:
+     * every memory shared by the time it was claimed.
+     */
+    case Reveal = 'reveal';
+
+    /**
+     * To someone who shares their memory after their reveal email was
+     * claimed: a copy of their own memory, so their inbox holds the month.
+     */
+    case LateShare = 'late_share';
+
+    public function notification(MemoryEmail $email): Notification
     {
         return match ($this) {
-            self::MonthOpened => new MonthOpened($month),
-            self::Nudge => new Nudge($month),
+            self::MonthOpened => new MonthOpened($email->month),
+            self::Nudge => new Nudge($email->month),
+            self::Reveal => new Revealed($email->month, $email->created_at),
+            self::LateShare => new LateShare($email->month),
         };
     }
 }
