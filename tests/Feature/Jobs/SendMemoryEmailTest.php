@@ -4,6 +4,7 @@ use App\Jobs\SendMemoryEmail;
 use App\Memories\MemoryEmailKind;
 use App\Models\MemoryEmail;
 use App\Notifications\Memories\MonthOpened;
+use App\Notifications\Memories\Nudge;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -25,6 +26,7 @@ describe('handle()', function () {
         expect($email->fresh()->sent_at)->toEqual(now());
     })->with([
         'month open' => [MemoryEmailKind::MonthOpened, MonthOpened::class],
+        'nudge' => [MemoryEmailKind::Nudge, Nudge::class],
     ]);
 
     test('does nothing when the email has already gone out', function () {

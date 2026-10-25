@@ -74,4 +74,17 @@ describe('claim()', function () {
         expect($other)->not->toBeNull();
         Queue::assertPushed(SendMemoryEmail::class, 2);
     });
+
+    test('claims each kind separately', function () {
+        /** @var TestCase $this */
+        $user = User::factory()->create();
+        $month = Month::of(Month::latestOpen());
+        MemoryEmail::claim($user, $month, MemoryEmailKind::MonthOpened);
+
+        $nudge = MemoryEmail::claim($user, $month, MemoryEmailKind::Nudge);
+
+        expect($nudge)->not->toBeNull()
+            ->and(MemoryEmail::count())->toBe(2);
+        Queue::assertPushed(SendMemoryEmail::class, 2);
+    });
 });
