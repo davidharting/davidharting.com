@@ -106,6 +106,12 @@ final class CalendarMonth implements Stringable
      */
     public function at(int $day, int $hour): CarbonImmutable
     {
+        $daysInMonth = $this->firstDay()->daysInMonth;
+
+        if ($day < 1 || $day > $daysInMonth) {
+            throw new InvalidArgumentException("Day must be between 1 and {$daysInMonth}, got {$day}.");
+        }
+
         return $this->firstDay()->setDay($day)->setTime($hour, 0)->utc();
     }
 

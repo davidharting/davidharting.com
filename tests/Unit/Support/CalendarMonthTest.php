@@ -103,6 +103,17 @@ describe('startsAt() and endsAt()', function () {
     });
 });
 
+describe('at()', function () {
+    test('is the given hour Eastern on the given day, as a UTC instant that follows daylight saving', function () {
+        expect(CalendarMonth::of(2026, 11)->at(day: 1, hour: 9)->toIso8601String())->toBe('2026-11-01T14:00:00+00:00')
+            ->and(CalendarMonth::of(2027, 3)->at(day: 15, hour: 9)->toIso8601String())->toBe('2027-03-15T13:00:00+00:00');
+    });
+
+    test('refuses a day the month does not have', function () {
+        CalendarMonth::of(2026, 11)->at(day: 31, hour: 9);
+    })->throws(InvalidArgumentException::class);
+});
+
 describe('isAfter()', function () {
     test('compares months across years', function () {
         expect(CalendarMonth::of(2027, 1)->isAfter(CalendarMonth::of(2026, 12)))->toBeTrue()

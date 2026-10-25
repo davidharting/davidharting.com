@@ -235,6 +235,20 @@ describe('opensAt()', function () {
     });
 });
 
+describe('reminderDueAt()', function () {
+    test('is 9am Eastern on the day the month opens', function () {
+        /** @var TestCase $this */
+        expect(monthWith($this->september)->reminderDueAt()->toIso8601String())->toBe('2026-10-01T13:00:00+00:00');
+    });
+});
+
+describe('nudgeDueAt()', function () {
+    test('is 9am Eastern on the 15th of the month after', function () {
+        /** @var TestCase $this */
+        expect(monthWith($this->september)->nudgeDueAt()->toIso8601String())->toBe('2026-10-15T13:00:00+00:00');
+    });
+});
+
 describe('revealDeadline()', function () {
     test('is the end of the following month', function () {
         /** @var TestCase $this */

@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Notifications\Memories\MonthOpened;
 use App\Notifications\Memories\Nudge;
 use App\Support\CalendarMonth;
-use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -17,7 +16,7 @@ beforeEach(function () {
 });
 
 /**
- * David and Katie, both made participants at the given time.
+ * Two participants, both made participants at the given time.
  *
  * @return array{User, User}
  */
@@ -25,10 +24,26 @@ function participantsJoinedAt(string $at): array
 {
     test()->travelTo($at);
 
-    $david = MemoryParticipant::factory()->for(User::factory()->state(['display_name' => 'David']))->create()->user;
-    $katie = MemoryParticipant::factory()->for(User::factory()->state(['display_name' => 'Katie']))->create()->user;
+    return [
+        MemoryParticipant::factory()->create()->user,
+        MemoryParticipant::factory()->create()->user,
+    ];
+}
 
-    return [$david, $katie];
+/**
+ * Two participants: the first joined long ago, the second at the given time.
+ *
+ * @return array{User, User}
+ */
+function secondParticipantJoinedAt(string $at): array
+{
+    test()->travelTo('2026-09-01T12:00:00Z');
+    $first = MemoryParticipant::factory()->create()->user;
+
+    test()->travelTo($at);
+    $second = MemoryParticipant::factory()->create()->user;
+
+    return [$first, $second];
 }
 
 function sendEmailsAt(string $at): void
@@ -42,8 +57,13 @@ function expectEmailedAbout(User $user, string $notification, string $month): vo
     Notification::assertSentTo($user, $notification, fn ($sent) => $sent->month->id === "{$month}-01");
 }
 
+function sharedMemoryFor(User $user, CalendarMonth $month): Memory
+{
+    return Memory::factory()->for($user)->forMonth($month)->shared()->create();
+}
+
 describe('the month open reminder', function () {
-    test('is not due before 9am Eastern on the 1st, in :dataset', function (string $month, string $at) {
+    test('is not due before 9am Eastern on the 1st, in :dataset', function (string $at) {
         /** @var TestCase $this */
         participantsJoinedAt('2026-10-20T12:00:00Z');
 
@@ -52,8 +72,8 @@ describe('the month open reminder', function () {
         Notification::assertNothingSent();
         expect(MemoryEmail::count())->toBe(0);
     })->with([
-        'standard time, the day daylight saving ends' => ['2026-10', '2026-11-01T13:59:59Z'],
-        'daylight time' => ['2027-06', '2027-07-01T12:59:59Z'],
+        'standard time, the day daylight saving ends' => '2026-11-01T13:59:59Z',
+        'daylight time' => '2027-07-01T12:59:59Z',
     ]);
 
     test('goes to both participants from 9am Eastern on the 1st, in :dataset', function (string $month, string $at) {
@@ -93,7 +113,7 @@ describe('the month open reminder', function () {
     test('skips someone who has already shared', function () {
         /** @var TestCase $this */
         [$david, $katie] = participantsJoinedAt('2026-10-20T12:00:00Z');
-        Memory::factory()->for($katie)->forMonth(CalendarMonth::of(2026, 10))->shared(CarbonImmutable::parse('2026-11-01T12:00:00Z'))->create(['created_at' => '2026-11-01T11:00:00Z']);
+        sharedMemoryFor($katie, CalendarMonth::of(2026, 10));
 
         sendEmailsAt('2026-11-01T14:00:00Z');
 
@@ -103,18 +123,17 @@ describe('the month open reminder', function () {
 });
 
 describe('the nudge', function () {
-    test('is not due before 9am Eastern on the 15th, in :dataset', function (string $month, string $at) {
+    test('is not due before 9am Eastern on the 15th, in :dataset', function (string $at) {
         /** @var TestCase $this */
         [$david, $katie] = participantsJoinedAt('2026-10-20T12:00:00Z');
-        MemoryEmail::factory()->for($david)->sent()->create(['month_id' => "{$month}-01"]);
-        MemoryEmail::factory()->for($katie)->sent()->create(['month_id' => "{$month}-01"]);
 
         sendEmailsAt($at);
 
-        Notification::assertNothingSent();
+        Notification::assertNotSentTo($david, Nudge::class);
+        Notification::assertNotSentTo($katie, Nudge::class);
     })->with([
-        'standard time' => ['2026-10', '2026-11-15T13:59:59Z'],
-        'daylight time, the week after it starts' => ['2027-02', '2027-03-15T12:59:59Z'],
+        'standard time' => '2026-11-15T13:59:59Z',
+        'daylight time, the week after it starts' => '2027-03-15T12:59:59Z',
     ]);
 
     test('goes to both from 9am Eastern on the 15th when neither has shared, in :dataset', function (string $month, string $at) {
@@ -125,6 +144,7 @@ describe('the nudge', function () {
 
         expectEmailedAbout($david, Nudge::class, $month);
         expectEmailedAbout($katie, Nudge::class, $month);
+        Notification::assertCount(2);
     })->with([
         'standard time' => ['2026-10', '2026-11-15T14:00:00Z'],
         'daylight time, the week after it starts' => ['2027-02', '2027-03-15T13:00:00Z'],
@@ -133,8 +153,8 @@ describe('the nudge', function () {
     test('goes only to whoever has not shared, counting a draft as not shared', function () {
         /** @var TestCase $this */
         [$david, $katie] = participantsJoinedAt('2026-10-20T12:00:00Z');
-        Memory::factory()->for($david)->forMonth(CalendarMonth::of(2026, 10))->create();
-        Memory::factory()->for($katie)->forMonth(CalendarMonth::of(2026, 10))->shared()->create();
+        Memory::factory()->for($david)->forMonth(CalendarMonth::of(2026, 10))->create(['shared_at' => null]);
+        sharedMemoryFor($katie, CalendarMonth::of(2026, 10));
 
         sendEmailsAt('2026-11-15T14:00:00Z');
 
@@ -151,14 +171,13 @@ describe('the nudge', function () {
         expectEmailedAbout($david, Nudge::class, '2026-10');
     });
 
-    test('is not sent once the next month opens', function () {
+    test('is not sent once the next month opens, before its reminder is due', function () {
         /** @var TestCase $this */
-        [$david] = participantsJoinedAt('2026-10-20T12:00:00Z');
+        participantsJoinedAt('2026-10-20T12:00:00Z');
 
-        sendEmailsAt('2026-12-01T14:00:00Z');
+        sendEmailsAt('2026-12-01T05:00:00Z');
 
-        Notification::assertNotSentTo($david, Nudge::class);
-        expectEmailedAbout($david, MonthOpened::class, '2026-11');
+        Notification::assertNothingSent();
     });
 });
 
@@ -175,21 +194,21 @@ describe('who gets emails', function () {
 
     test('nobody about a month that opened before the second participant joined', function () {
         /** @var TestCase $this */
-        participantsJoinedAt('2026-11-02T12:00:00Z');
+        secondParticipantJoinedAt('2026-11-02T12:00:00Z');
 
         sendEmailsAt('2026-11-15T14:00:00Z');
 
         Notification::assertNothingSent();
     });
 
-    test('both participants about the first month that opens after they joined', function () {
+    test('both participants about a month that opens the moment the second joins', function () {
         /** @var TestCase $this */
-        [$david, $katie] = participantsJoinedAt('2026-11-02T12:00:00Z');
+        [$first, $second] = secondParticipantJoinedAt('2026-12-01T05:00:00Z');
 
         sendEmailsAt('2026-12-01T14:00:00Z');
 
-        expectEmailedAbout($david, MonthOpened::class, '2026-11');
-        expectEmailedAbout($katie, MonthOpened::class, '2026-11');
+        expectEmailedAbout($first, MonthOpened::class, '2026-11');
+        expectEmailedAbout($second, MonthOpened::class, '2026-11');
     });
 
     test('never someone who is not a participant', function () {
@@ -209,9 +228,7 @@ describe('running it again', function () {
         [$david, $katie] = participantsJoinedAt('2026-10-20T12:00:00Z');
 
         sendEmailsAt('2026-11-01T14:00:00Z');
-        $this->artisan('memories:send-emails')
-            ->expectsOutputToContain('Queued 0 emails.')
-            ->assertSuccessful();
+        sendEmailsAt('2026-11-01T14:00:00Z');
         sendEmailsAt('2026-11-02T14:00:00Z');
 
         Notification::assertSentToTimes($david, MonthOpened::class, 1);
@@ -234,12 +251,19 @@ describe('running it again', function () {
     });
 });
 
-test('says how many emails it queued', function () {
-    /** @var TestCase $this */
-    participantsJoinedAt('2026-10-20T12:00:00Z');
-    $this->travelTo('2026-11-01T14:00:00Z');
+describe('its output', function () {
+    test('says how many emails it queued: :dataset', function (int $sharedAlready, string $output) {
+        /** @var TestCase $this */
+        $participants = participantsJoinedAt('2026-10-20T12:00:00Z');
+        collect($participants)->take($sharedAlready)->each(fn (User $user) => sharedMemoryFor($user, CalendarMonth::of(2026, 10)));
+        $this->travelTo('2026-11-01T14:00:00Z');
 
-    $this->artisan('memories:send-emails')
-        ->expectsOutputToContain('Queued 2 emails.')
-        ->assertSuccessful();
+        $this->artisan('memories:send-emails')
+            ->expectsOutputToContain($output)
+            ->assertSuccessful();
+    })->with([
+        'two' => [0, 'Queued 2 emails.'],
+        'one' => [1, 'Queued 1 email.'],
+        'none' => [2, 'Queued 0 emails.'],
+    ]);
 });
