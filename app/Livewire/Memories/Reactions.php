@@ -5,10 +5,8 @@ namespace App\Livewire\Memories;
 use App\Memories\MemoryReactionWriter;
 use App\Models\Memory;
 use App\Models\MemoryReaction;
-use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
@@ -25,9 +23,9 @@ class Reactions extends Component
     public Memory $memory;
 
     /**
-     * The reaction removed last, kept so Undo can put it back in its place.
+     * The reaction removed last, kept so Undo can put it back as it was.
      *
-     * @var array{emoji: string, addedAt: string}|null
+     * @var array<string, mixed>|null
      */
     #[Locked]
     public ?array $removed = null;
@@ -40,29 +38,32 @@ class Reactions extends Component
     }
 
     /**
-     * Anything that isn't one emoji, or a sixth, is ignored: the browser
-     * only sends what it believes is one, and hides + at the limit.
+     * Whoever may no longer read the memory may not refresh the row either.
      */
+    public function hydrate(): void
+    {
+        $this->authorize('view', $this->memory);
+    }
+
     public function add(string $emoji): void
     {
         $this->authorize('react', $this->memory);
 
-        try {
-            $this->writer()->add($emoji);
-        } catch (ValidationException) {
-            return;
-        }
+        $this->writer()->add($emoji);
     }
 
-    public function remove(string $emoji): void
+    /**
+     * Returns whether there was a reaction to remove, so the browser only
+     * offers Undo when there is something to undo.
+     */
+    public function remove(string $emoji): bool
     {
         $this->authorize('react', $this->memory);
 
         $reaction = $this->writer()->remove($emoji);
+        $this->removed = $reaction?->attributesToArray();
 
-        if ($reaction !== null) {
-            $this->removed = ['emoji' => $reaction->emoji, 'addedAt' => $reaction->created_at->toIso8601String()];
-        }
+        return $reaction !== null;
     }
 
     public function undo(): void
@@ -73,13 +74,10 @@ class Reactions extends Component
             return;
         }
 
-        try {
-            $this->writer()->restore($this->removed['emoji'], CarbonImmutable::parse($this->removed['addedAt']));
-        } catch (ValidationException) {
-            return;
-        } finally {
-            $this->removed = null;
-        }
+        $removed = (new MemoryReaction)->forceFill($this->removed);
+        $this->removed = null;
+
+        $this->writer()->restore($removed);
     }
 
     #[Computed]

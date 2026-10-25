@@ -49,7 +49,7 @@ describe('before the reveal', function () {
             ->assertDontSeeText('It snowed for the first time');
     });
 
-    test('has no reaction row on either tab', function () {
+    test('has no reaction row on either tab before the month reveals', function () {
         /** @var TestCase $this */
         $this->actingAs($this->david)->get('/memories/2026-09')
             ->assertDontSeeLivewire(Reactions::class);
