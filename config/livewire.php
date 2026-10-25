@@ -10,16 +10,25 @@ use App\Memories\AddMemoryPhoto;
 return [
 
     /*
-     * Temporary uploads go to the default disk, which is the private disk (R2
-     * outside local development), so the browser uploads straight to it.
-     * Photos from a phone can be larger than Livewire's 12 MB default.
+     * Photos from a phone can be larger than Livewire's 12 MB default, which
+     * is the reason for this key; the rest restates Livewire's defaults,
+     * except the disk and the upload time.
      *
-     * `cleanup` only clears old uploads on a local disk. On R2, uploads that
-     * never landed stay under `livewire-tmp/` until a bucket lifecycle rule
-     * expires them.
+     * Temporary uploads go to the private disk (R2 outside local development),
+     * so the browser uploads straight to it.
+     *
+     * `max_upload_time` is how many minutes the signed upload link lasts. A
+     * link is made for each photo just before it is sent; a local disk checks
+     * it only once the whole photo has arrived, so it allows for a 50 MB
+     * photo on a slow phone connection.
+     *
+     * `cleanup` deletes temporary uploads older than a day whenever a new one
+     * lands, but only on a local disk. On R2, uploads that never landed stay
+     * under `livewire-tmp/` for good; production deliberately has no lifecycle
+     * rule to expire them.
      */
     'temporary_file_upload' => [
-        'disk' => null,
+        'disk' => 'private',
         'rules' => ['required', 'file', 'max:'.AddMemoryPhoto::MAX_KILOBYTES],
         'directory' => null,
         'middleware' => null,
@@ -28,7 +37,7 @@ return [
             'mov', 'avi', 'wmv', 'mp3', 'm4a',
             'jpg', 'jpeg', 'mpga', 'webp', 'wma',
         ],
-        'max_upload_time' => 5,
+        'max_upload_time' => 30,
         'cleanup' => true,
     ],
 

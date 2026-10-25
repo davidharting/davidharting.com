@@ -8,8 +8,11 @@
  *
  * Livewire tells nobody when one of its upload requests is lost, so an
  * upload that goes quiet for too long is given up on and offered again.
+ * This times silence, not the whole upload: every bit of progress starts it
+ * over, so a large photo on a slow connection keeps going for as long as it
+ * keeps moving.
  */
-const QUIET_UPLOAD_MILLISECONDS = 45000;
+const GIVE_UP_AFTER_SILENCE_MILLISECONDS = 45000;
 
 document.addEventListener("alpine:init", () => {
     window.Alpine.store("memoryUploads", { pending: 0, abandoned: false });
@@ -110,7 +113,7 @@ document.addEventListener("alpine:init", () => {
             this.watchdog = setTimeout(() => {
                 this.$wire.cancelUpload("upload");
                 this.fail(upload);
-            }, QUIET_UPLOAD_MILLISECONDS);
+            }, GIVE_UP_AFTER_SILENCE_MILLISECONDS);
         },
 
         fail(upload) {

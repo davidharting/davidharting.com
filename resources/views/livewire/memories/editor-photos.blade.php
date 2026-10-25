@@ -141,7 +141,7 @@
         <div wire:poll.3s></div>
     @endif
 
-    {{-- The caption sheet --}}
+    {{-- The caption sheet. Every photo's panel is rendered up front, and Alpine shows the one for the tapped photo. --}}
     <div class="modal modal-bottom" x-bind:class="sheet !== null && 'modal-open'">
         <div class="modal-box max-h-[90dvh] w-full max-w-none p-0 font-sans sm:max-w-lg">
             @foreach ($photos as $photo)
