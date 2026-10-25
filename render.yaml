@@ -194,3 +194,23 @@ projects:
                 fromDatabase:
                   name: davidhartingdotcom-db
                   property: connectionString
+
+          - name: davidhartingdotcom-memories-emails
+            type: cron
+            buildSource: davidhartingdotcom-laravel
+            plan: starter
+            region: ohio
+            autoDeployTrigger: checksPass
+            # 14:00 UTC is 9am America/New_York in standard time and 10am in
+            # daylight time. Emails are due from 9am Eastern, so they go out an
+            # hour late in summer, which is fine. The script skips itself in
+            # preview environments.
+            schedule: "0 14 * * *"
+            dockerCommand: bash /app/scripts/render-with-secrets.sh bash /app/scripts/send-memories-emails.sh
+            envVars:
+              - fromGroup: davidhartingdotcom-shared
+              - fromGroup: davidhartingdotcom-preview-env-secrets
+              - key: DATABASE_URL
+                fromDatabase:
+                  name: davidhartingdotcom-db
+                  property: connectionString
