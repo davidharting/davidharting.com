@@ -69,6 +69,12 @@
         @if ($shownMemory())
             <x-memories.body :memory="$shownMemory()" class="mt-5 text-lg leading-relaxed" />
 
+            @if ($revealed)
+                <div class="mt-5">
+                    <livewire:memories.reactions :memory="$shownMemory()" :key="'reactions-'.$shownMemory()->id" />
+                </div>
+            @endif
+
             @foreach ($photos() as $photo)
                 <x-memories.photo
                     :photo="$photo"

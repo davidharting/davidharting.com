@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Memories\Reactions;
 use App\Models\Memory;
 use App\Models\MemoryPhoto;
 use App\Models\User;
@@ -48,6 +49,15 @@ describe('before the reveal', function () {
             ->assertDontSeeText('It snowed for the first time');
     });
 
+    test('has no reaction row on either tab', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->david)->get('/memories/2026-09')
+            ->assertDontSeeLivewire(Reactions::class);
+
+        $this->actingAs($this->david)->get('/memories/2026-09?who=yours')
+            ->assertDontSeeLivewire(Reactions::class);
+    });
+
     test('shows the viewer their own draft', function () {
         /** @var TestCase $this */
         $this->actingAs($this->katie)->get('/memories/2026-09?who=yours')
@@ -73,6 +83,13 @@ describe('after the reveal', function () {
         $this->actingAs($this->david)->get('/memories/2026-07?who=yours')
             ->assertDontSeeText('Revealed')
             ->assertDontSeeText('Shared');
+    });
+
+    test('puts the reaction row between the text and the photos', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->katie)->get('/memories/2026-08')
+            ->assertSeeLivewire(Reactions::class)
+            ->assertSeeInOrder(['Late again, sorry.', 'Remove your 😂 reaction', 'Add a reaction', 'Didn’t know half the songs'], false);
     });
 
     test('shows a share that came after a deadline reveal like any other', function () {
