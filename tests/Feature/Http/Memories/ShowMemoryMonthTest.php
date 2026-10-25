@@ -65,7 +65,7 @@ describe('after the reveal', function () {
 
     test('doesn\'t say when the month revealed or when either memory was shared', function () {
         /** @var TestCase $this */
-        // Katie shared on Aug 16, which revealed July; David shared before her.
+        // Katie's share on Aug 16 revealed July.
         $this->actingAs($this->david)->get('/memories/2026-07')
             ->assertDontSeeText('Revealed')
             ->assertDontSeeText('Shared');
@@ -118,7 +118,9 @@ test('links to the neighbouring months next to All months, above the title', fun
     $this->actingAs($this->david)->get('/memories/2026-07')
         ->assertSee(route('memories.show', '2026-06'))
         ->assertSee(route('memories.show', '2026-08'))
-        ->assertSeeTextInOrder(['← All months', '← June', 'August →', 'July 2026']);
+        ->assertSeeTextInOrder(['← All months', '← June', 'August →', 'July 2026'])
+        ->assertDontSeeText('June 2026')
+        ->assertSee('aria-label="June 2026"', false);
 });
 
 test('doesn\'t link past the latest open month or before launch', function () {
@@ -155,10 +157,12 @@ test('is not found for a month outside the list or a malformed month', function 
 ]);
 
 describe('ways into the editor', function () {
-    test('offers an Edit link, not Keep writing, next to your shared memory', function () {
+    test('offers an Edit link, not Keep writing or a shared date, above your shared memory', function () {
         /** @var TestCase $this */
+        // David shared September on Oct 5.
         $this->actingAs($this->david)->get('/memories/2026-09?who=yours')
             ->assertSeeText('Edit')
+            ->assertDontSeeText('Shared Oct 5')
             ->assertDontSeeText('Keep writing')
             ->assertSee(route('memories.write', '2026-09'));
     });
