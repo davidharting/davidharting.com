@@ -12,14 +12,18 @@ use Tests\TestCase;
 beforeEach(function () {
     /** @var TestCase $this */
     $this->travelTo('2026-11-15T14:00:00Z');
-    $this->october = CalendarMonth::of(2026, 10);
     $this->david = MemoryParticipant::factory()->for(User::factory()->state(['display_name' => 'David']))->create()->user;
     $this->katie = MemoryParticipant::factory()->for(User::factory()->state(['display_name' => 'Katie']))->create()->user;
 });
 
+function october(): CalendarMonth
+{
+    return CalendarMonth::of(2026, 10);
+}
+
 function octoberNudgeFor(User $user): MailMessage
 {
-    return (new Nudge(Month::of(test()->october)))->toMail($user);
+    return (new Nudge(Month::of(october())))->toMail($user);
 }
 
 test('names the month and links to their editor for it', function () {
@@ -28,14 +32,7 @@ test('names the month and links to their editor for it', function () {
 
     expect($mail->subject)->toBe('A nudge about your October memory')
         ->and($mail->greeting)->toBe('Hi David,')
-        ->and($mail->actionUrl)->toBe(route('memories.write', Month::of($this->october)));
-});
-
-test('says when the month reveals at the latest', function () {
-    /** @var TestCase $this */
-    $mail = octoberNudgeFor($this->david);
-
-    expect($mail->outroLines)->toBe(["October reveals once you've both shared, or on Dec 1."]);
+        ->and($mail->actionUrl)->toBe(route('memories.write', Month::of(october())));
 });
 
 describe('where they stand', function () {
@@ -49,7 +46,7 @@ describe('where they stand', function () {
 
     test('asks them to keep writing a draft', function () {
         /** @var TestCase $this */
-        Memory::factory()->for($this->david)->forMonth($this->october)->create(['shared_at' => null]);
+        Memory::factory()->for($this->david)->forMonth(october())->create(['shared_at' => null]);
 
         $mail = octoberNudgeFor($this->david);
 
@@ -66,7 +63,7 @@ describe('where the other person stands', function () {
 
     test('says when they started a draft', function () {
         /** @var TestCase $this */
-        Memory::factory()->for($this->katie)->forMonth($this->october)->create([
+        Memory::factory()->for($this->katie)->forMonth(october())->create([
             'created_at' => '2026-11-02T15:00:00Z',
             'shared_at' => null,
         ]);
@@ -76,15 +73,15 @@ describe('where the other person stands', function () {
 
     test('says when they have shared', function () {
         /** @var TestCase $this */
-        Memory::factory()->for($this->katie)->forMonth($this->october)->shared()->create();
+        Memory::factory()->for($this->katie)->forMonth(october())->shared()->create();
 
-        expect(octoberNudgeFor($this->david)->introLines)->toContain('Katie has shared.');
+        expect(octoberNudgeFor($this->david)->introLines)->toContain('Katie has shared their memory.');
     });
 });
 
 test('carries no memory text', function () {
     /** @var TestCase $this */
-    Memory::factory()->for($this->katie)->forMonth($this->october)->shared()->create(['body' => 'We went apple picking.']);
+    Memory::factory()->for($this->katie)->forMonth(october())->shared()->create(['body' => 'We went apple picking.']);
 
     $rendered = (string) octoberNudgeFor($this->david)->render();
 

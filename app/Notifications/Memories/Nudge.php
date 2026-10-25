@@ -35,12 +35,11 @@ class Nudge extends Notification
             ->greeting("Hi {$notifiable->displayName()},")
             ->line($this->otherStandingLabel($notifiable))
             ->line($hasStarted ? 'Yours is still a draft.' : "You haven't started yours yet.")
-            ->action($hasStarted ? 'Keep writing' : 'Write yours', route('memories.write', $this->month))
-            ->line("{$name} reveals once you've both shared, or on ".CalendarMonth::dayLabel($this->month->revealDeadline()).'.');
+            ->action($hasStarted ? 'Keep writing' : 'Write yours', route('memories.write', $this->month));
     }
 
     /**
-     * Where the other person's memory stands, for example "Katie has shared hers."
+     * Where the other person's memory stands, for example "Katie has shared their memory."
      */
     protected function otherStandingLabel(User $notifiable): string
     {
@@ -56,6 +55,6 @@ class Nudge extends Notification
             return "{$otherName} started on ".CalendarMonth::dayLabel($otherMemory->created_at)." and hasn't shared yet.";
         }
 
-        return "{$otherName} has shared.";
+        return "{$otherName} has shared their memory.";
     }
 }
