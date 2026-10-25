@@ -7,6 +7,7 @@
 <div
     x-data="{
         confirming: false,
+        leaving: false,
         justSaved: false,
         savedFading: false,
         savedTimers: [],
@@ -139,17 +140,26 @@
         <a
             @class(['btn btn-outline', 'w-1/3' => ! $this->isShared(), 'grow' => $this->isShared()])
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
+            x-bind:class="leaving && 'btn-disabled'"
+            x-bind:aria-disabled="leaving"
+            x-on:pageshow.window="leaving = false"
             x-on:click.prevent="
+                if (leaving) return;
                 if ($store.memoryUploads.pending > 0 && !confirm('Your photos are still uploading. Leave anyway?'))
                     return;
+                leaving = true;
                 $wire
                     .$commit()
                     .then(() => {
-                        if (!$wire.changedElsewhere) window.location = $el.href;
+                        if ($wire.changedElsewhere) leaving = false;
+                        else window.location = $el.href;
                     })
-                    .catch(() => {});
+                    .catch(() => (leaving = false));
             "
-        >Done</a>
+        >
+            <span x-show="leaving" class="loading loading-spinner loading-sm" style="display: none"></span>
+            Done
+        </a>
         @unless ($this->isShared())
             <button
                 type="button"
