@@ -2,7 +2,7 @@
 
 use App\Jobs\ProcessMemoryPhoto;
 use App\Memories\AddMemoryPhoto;
-use App\Memories\MemoryPhotos;
+use App\Memories\MemoryPhotoWriter;
 use App\Models\Memory;
 use App\Models\MemoryPhoto;
 use Illuminate\Support\Facades\Queue;
@@ -12,7 +12,7 @@ use Tests\TestCase;
 beforeEach(function () {
     /** @var TestCase $this */
     $this->memory = Memory::factory()->create(['body' => 'Some text', 'lock_version' => 4]);
-    $this->photos = new MemoryPhotos($this->memory);
+    $this->writer = new MemoryPhotoWriter($this->memory);
 });
 
 /**
@@ -43,7 +43,7 @@ describe('caption()', function () {
         /** @var TestCase $this */
         [$photo] = photosOn($this->memory, 1);
 
-        $this->photos->caption($photo->id, '  The pumpkin patch  ');
+        $this->writer->caption($photo->id, '  The pumpkin patch  ');
 
         expect($photo->fresh()->caption)->toBe('The pumpkin patch')
             ->and($this->memory->fresh()->lock_version)->toBe(4);
@@ -53,7 +53,7 @@ describe('caption()', function () {
         /** @var TestCase $this */
         $photo = MemoryPhoto::factory()->for($this->memory)->captioned('Before')->create();
 
-        $this->photos->caption($photo->id, ' ');
+        $this->writer->caption($photo->id, ' ');
 
         expect($photo->fresh()->caption)->toBeNull();
     });
@@ -62,7 +62,7 @@ describe('caption()', function () {
         /** @var TestCase $this */
         $photo = MemoryPhoto::factory()->for($this->memory)->captioned('Before')->create();
 
-        expect(fn () => $this->photos->caption($photo->id, str_repeat('a', MemoryPhotos::MAX_CAPTION_LENGTH + 1)))
+        expect(fn () => $this->writer->caption($photo->id, str_repeat('a', MemoryPhotoWriter::MAX_CAPTION_LENGTH + 1)))
             ->toThrow(ValidationException::class);
 
         expect($photo->fresh()->caption)->toBe('Before');
@@ -72,7 +72,7 @@ describe('caption()', function () {
         /** @var TestCase $this */
         $someoneElses = MemoryPhoto::factory()->captioned('Not yours')->create();
 
-        $this->photos->caption($someoneElses->id, 'Mine now');
+        $this->writer->caption($someoneElses->id, 'Mine now');
 
         expect($someoneElses->fresh()->caption)->toBe('Not yours');
     });
@@ -82,7 +82,7 @@ describe('caption()', function () {
         [$photo] = photosOn($this->memory, 1);
         $photo->delete();
 
-        $this->photos->caption($photo->id, 'Too late');
+        $this->writer->caption($photo->id, 'Too late');
 
         expect($photo->fresh()->caption)->toBeNull();
     });
@@ -93,7 +93,7 @@ describe('move()', function () {
         /** @var TestCase $this */
         [$first, $second, $third] = photosOn($this->memory, 3);
 
-        $this->photos->move($third->id, 0);
+        $this->writer->move($third->id, 0);
 
         expect(photoOrder($this->memory))->toBe([$third->id, $first->id, $second->id])
             ->and($this->memory->photos()->pluck('position')->all())->toBe([0, 1, 2]);
@@ -103,7 +103,7 @@ describe('move()', function () {
         /** @var TestCase $this */
         [$first, $second, $third] = photosOn($this->memory, 3);
 
-        $this->photos->move($first->id, 7);
+        $this->writer->move($first->id, 7);
 
         expect(photoOrder($this->memory))->toBe([$second->id, $third->id, $first->id]);
     });
@@ -113,7 +113,7 @@ describe('move()', function () {
         [$first, $second, $third] = photosOn($this->memory, 3);
         $second->delete();
 
-        $this->photos->move($third->id, 0);
+        $this->writer->move($third->id, 0);
 
         expect($this->memory->photos()->pluck('position', 'id')->all())->toBe([$third->id => 0, $first->id => 1]);
     });
@@ -123,7 +123,7 @@ describe('move()', function () {
         [$first, $second] = photosOn($this->memory, 2);
         $someoneElses = MemoryPhoto::factory()->create(['position' => 5]);
 
-        $this->photos->move($someoneElses->id, 0);
+        $this->writer->move($someoneElses->id, 0);
 
         expect(photoOrder($this->memory))->toBe([$first->id, $second->id])
             ->and($someoneElses->fresh()->position)->toBe(5);
@@ -135,7 +135,7 @@ describe('remove()', function () {
         /** @var TestCase $this */
         [$first, $second] = photosOn($this->memory, 2);
 
-        expect($this->photos->remove($first->id))->toBeTrue()
+        expect($this->writer->remove($first->id))->toBeTrue()
             ->and(photoOrder($this->memory))->toBe([$second->id])
             ->and($first->fresh()->trashed())->toBeTrue();
     });
@@ -145,7 +145,7 @@ describe('remove()', function () {
         $shared = Memory::factory()->shared()->create(['body' => '']);
         [$photo] = photosOn($shared, 1);
 
-        expect(fn () => (new MemoryPhotos($shared))->remove($photo->id))
+        expect(fn () => (new MemoryPhotoWriter($shared))->remove($photo->id))
             ->toThrow(ValidationException::class);
 
         expect($photo->fresh()->trashed())->toBeFalse();
@@ -156,7 +156,7 @@ describe('remove()', function () {
         $shared = Memory::factory()->shared()->create(['body' => 'Still has words']);
         [$photo] = photosOn($shared, 1);
 
-        (new MemoryPhotos($shared))->remove($photo->id);
+        (new MemoryPhotoWriter($shared))->remove($photo->id);
 
         expect($photo->fresh()->trashed())->toBeTrue();
     });
@@ -165,7 +165,7 @@ describe('remove()', function () {
         /** @var TestCase $this */
         $someoneElses = MemoryPhoto::factory()->create();
 
-        expect($this->photos->remove($someoneElses->id))->toBeFalse()
+        expect($this->writer->remove($someoneElses->id))->toBeFalse()
             ->and($someoneElses->fresh()->trashed())->toBeFalse();
     });
 });
@@ -174,9 +174,9 @@ describe('restore()', function () {
     test('puts a removed photo back where it was', function () {
         /** @var TestCase $this */
         [$first, $second, $third] = photosOn($this->memory, 3);
-        $this->photos->remove($second->id);
+        $this->writer->remove($second->id);
 
-        $this->photos->restore($second->id);
+        $this->writer->restore($second->id);
 
         expect(photoOrder($this->memory))->toBe([$first->id, $second->id, $third->id]);
     });
@@ -184,10 +184,10 @@ describe('restore()', function () {
     test('puts it back among photos that moved in the meantime', function () {
         /** @var TestCase $this */
         [$first, $second, $third] = photosOn($this->memory, 3);
-        $this->photos->remove($second->id);
-        $this->photos->move($third->id, 0);
+        $this->writer->remove($second->id);
+        $this->writer->move($third->id, 0);
 
-        $this->photos->restore($second->id);
+        $this->writer->restore($second->id);
 
         expect(photoOrder($this->memory))->toBe([$third->id, $second->id, $first->id])
             ->and($this->memory->photos()->pluck('position')->all())->toBe([0, 1, 2]);
@@ -199,7 +199,7 @@ describe('restore()', function () {
         $removed->delete();
         MemoryPhoto::factory()->for($this->memory)->count(AddMemoryPhoto::MAX_PHOTOS)->create(['position' => 1]);
 
-        expect(fn () => $this->photos->restore($removed->id))
+        expect(fn () => $this->writer->restore($removed->id))
             ->toThrow(ValidationException::class);
 
         expect($removed->fresh()->trashed())->toBeTrue();
@@ -210,7 +210,7 @@ describe('restore()', function () {
         $someoneElses = MemoryPhoto::factory()->create();
         $someoneElses->delete();
 
-        $this->photos->restore($someoneElses->id);
+        $this->writer->restore($someoneElses->id);
 
         expect($someoneElses->fresh()->trashed())->toBeTrue();
     });
@@ -222,7 +222,7 @@ describe('retry()', function () {
         Queue::fake();
         $photo = MemoryPhoto::factory()->for($this->memory)->failed()->create();
 
-        $this->photos->retry($photo->id);
+        $this->writer->retry($photo->id);
 
         expect($photo->fresh()->isProcessing())->toBeTrue();
         Queue::assertPushed(ProcessMemoryPhoto::class, fn (ProcessMemoryPhoto $job) => $job->photo->is($photo));
@@ -233,7 +233,7 @@ describe('retry()', function () {
         Queue::fake();
         $photo = MemoryPhoto::factory()->for($this->memory)->ready()->create();
 
-        $this->photos->retry($photo->id);
+        $this->writer->retry($photo->id);
 
         Queue::assertNothingPushed();
     });

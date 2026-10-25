@@ -19,7 +19,7 @@ use Illuminate\Validation\ValidationException;
  * This class performs no authorization. The caller is expected to have
  * checked that the author may write the memory.
  */
-final readonly class MemoryPhotos
+final readonly class MemoryPhotoWriter
 {
     /**
      * The longest caption, in characters.

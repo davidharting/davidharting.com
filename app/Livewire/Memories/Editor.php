@@ -4,7 +4,7 @@ namespace App\Livewire\Memories;
 
 use App\Memories\AddMemoryPhoto;
 use App\Memories\MemoryChangedElsewhere;
-use App\Memories\MemoryPhotos;
+use App\Memories\MemoryPhotoWriter;
 use App\Memories\MemoryWriter;
 use App\Models\Memory;
 use App\Models\MemoryParticipant;
@@ -190,12 +190,12 @@ class Editor extends Component
 
     public function caption(int $photoId, string $caption): void
     {
-        $this->changePhotos(fn (MemoryPhotos $photos) => $photos->caption($photoId, $caption));
+        $this->changePhotos(fn (MemoryPhotoWriter $writer) => $writer->caption($photoId, $caption));
     }
 
     public function movePhoto(int $photoId, int $position): void
     {
-        $this->changePhotos(fn (MemoryPhotos $photos) => $photos->move($photoId, $position));
+        $this->changePhotos(fn (MemoryPhotoWriter $writer) => $writer->move($photoId, $position));
     }
 
     /**
@@ -204,7 +204,7 @@ class Editor extends Component
      */
     public function removePhoto(int $photoId): void
     {
-        $removed = $this->changePhotos(fn (MemoryPhotos $photos) => $photos->remove($photoId));
+        $removed = $this->changePhotos(fn (MemoryPhotoWriter $writer) => $writer->remove($photoId));
 
         if ($removed === true) {
             $this->dispatch('photo-removed', photoId: $photoId);
@@ -213,12 +213,12 @@ class Editor extends Component
 
     public function restorePhoto(int $photoId): void
     {
-        $this->changePhotos(fn (MemoryPhotos $photos) => $photos->restore($photoId));
+        $this->changePhotos(fn (MemoryPhotoWriter $writer) => $writer->restore($photoId));
     }
 
     public function retryPhoto(int $photoId): void
     {
-        $this->changePhotos(fn (MemoryPhotos $photos) => $photos->retry($photoId));
+        $this->changePhotos(fn (MemoryPhotoWriter $writer) => $writer->retry($photoId));
     }
 
     /**
@@ -380,7 +380,7 @@ class Editor extends Component
      *
      * @template TResult
      *
-     * @param  callable(MemoryPhotos): TResult  $change
+     * @param  callable(MemoryPhotoWriter): TResult  $change
      * @return TResult|null
      */
     private function changePhotos(callable $change): mixed
@@ -393,7 +393,7 @@ class Editor extends Component
         }
 
         $this->resetErrorBag(['photo', 'caption']);
-        $result = $change(new MemoryPhotos($memory));
+        $result = $change(new MemoryPhotoWriter($memory));
         $this->photoSaved();
 
         return $result;

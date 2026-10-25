@@ -177,7 +177,7 @@
                             wire:ignore
                             class="textarea w-full font-serif text-base italic"
                             rows="2"
-                            maxlength="{{ \App\Memories\MemoryPhotos::MAX_CAPTION_LENGTH }}"
+                            maxlength="{{ \App\Memories\MemoryPhotoWriter::MAX_CAPTION_LENGTH }}"
                             placeholder="Add a caption (optional)"
                             aria-label="Caption for photo {{ $loop->iteration }}"
                             x-data="{ saved: @js($photo->caption ?? '') }"
