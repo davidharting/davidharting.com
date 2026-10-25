@@ -201,11 +201,11 @@ projects:
             plan: starter
             region: ohio
             autoDeployTrigger: checksPass
-            # 13:00 and 14:00 UTC, so one run falls at or just after 9am
-            # America/New_York in both standard and daylight time. The command
-            # queues only what is due and unsent, so the other run is a no-op.
-            # The script skips itself in preview environments.
-            schedule: "0 13,14 * * *"
+            # 14:00 UTC is 9am America/New_York in standard time and 10am in
+            # daylight time. Emails are due from 9am Eastern, so they go out an
+            # hour late in summer, which is fine. The script skips itself in
+            # preview environments.
+            schedule: "0 14 * * *"
             dockerCommand: bash /app/scripts/render-with-secrets.sh bash /app/scripts/send-memories-emails.sh
             envVars:
               - fromGroup: davidhartingdotcom-shared

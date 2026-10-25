@@ -29,7 +29,7 @@ Supporting services:
 - `davidhartingdotcom-worker`: runs `php artisan queue:work`.
 - `davidhartingdotcom-backup-run`: Render cron job that runs database backups.
 - `davidhartingdotcom-backup-clean`: Render cron job that prunes old backups.
-- `davidhartingdotcom-memories-emails`: Render cron job that runs `memories:send-emails` at 13:00 and 14:00 UTC (9am Eastern year-round).
+- `davidhartingdotcom-memories-emails`: Render cron job that runs `memories:send-emails` at 14:00 UTC (9am Eastern in winter, 10am in summer).
 - Cloudflare DNS points `davidharting.com` at Render. Cloudflare R2 stores public and private objects.
 
 Operational notes:
