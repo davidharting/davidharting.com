@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Notifications\Memories\MonthOpened;
 use App\Notifications\Memories\Nudge;
 use App\Support\CalendarMonth;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -22,7 +24,7 @@ beforeEach(function () {
  */
 function participantsJoinedAt(string $at): array
 {
-    test()->travelTo($at);
+    Carbon::setTestNow($at);
 
     return [
         MemoryParticipant::factory()->create()->user,
@@ -37,10 +39,10 @@ function participantsJoinedAt(string $at): array
  */
 function secondParticipantJoinedAt(string $at): array
 {
-    test()->travelTo('2026-09-01T12:00:00Z');
+    Carbon::setTestNow('2026-09-01T12:00:00Z');
     $first = MemoryParticipant::factory()->create()->user;
 
-    test()->travelTo($at);
+    Carbon::setTestNow($at);
     $second = MemoryParticipant::factory()->create()->user;
 
     return [$first, $second];
@@ -48,8 +50,8 @@ function secondParticipantJoinedAt(string $at): array
 
 function sendEmailsAt(string $at): void
 {
-    test()->travelTo($at);
-    test()->artisan('memories:send-emails')->assertSuccessful();
+    Carbon::setTestNow($at);
+    expect(Artisan::call('memories:send-emails'))->toBe(0);
 }
 
 function expectEmailedAbout(User $user, string $notification, string $month): void
