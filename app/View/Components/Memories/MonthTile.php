@@ -45,16 +45,21 @@ class MonthTile extends Component
     }
 
     /**
-     * The first ready photos of the revealed memories, the other person's
-     * first. None before the reveal.
+     * Each revealed memory's first ready photo, the other person's first.
+     * When one memory has no ready photos, the other's next photos fill the
+     * remaining slots. None before the reveal.
      *
      * @return Collection<int, MemoryPhoto>
      */
     public function thumbnails(): Collection
     {
-        return $this->revealedMemories()
-            ->flatMap(fn (Memory $memory) => $memory->photos)
-            ->filter(fn (MemoryPhoto $photo) => $photo->isReady())
+        $readyPhotosByMemory = $this->revealedMemories()
+            ->map(fn (Memory $memory) => $memory->photos->filter(fn (MemoryPhoto $photo) => $photo->isReady())->values());
+
+        $firstOfEach = $readyPhotosByMemory->map(fn (Collection $photos) => $photos->first())->filter();
+        $theRest = $readyPhotosByMemory->flatMap(fn (Collection $photos) => $photos->slice(1));
+
+        return $firstOfEach->concat($theRest)
             ->take(self::THUMBNAIL_COUNT)
             ->values();
     }
