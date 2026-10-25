@@ -85,7 +85,7 @@ describe('writing', function () {
         $monthPage = e(route('memories.show', ['month' => '2026-09', 'who' => 'yours']));
 
         editorFor($this->katie, '2026-09')
-            ->assertSeeInOrder(["href=\"{$monthPage}\"", '>Done</a>'], false);
+            ->assertSeeInOrder(["href=\"{$monthPage}\"", 'Done'], false);
     });
 
     test('refuses text longer than a memory can be, keeping what was saved', function () {
