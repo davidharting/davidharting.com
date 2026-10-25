@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -66,15 +65,5 @@ class Memory extends Model
     public function isDraft(): bool
     {
         return ! $this->isShared();
-    }
-
-    /**
-     * Whether the memory had been shared at the given moment. A reveal email
-     * carries the memories shared by the time it was claimed, and a memory
-     * shared after that goes out as a late share.
-     */
-    public function wasSharedBy(DateTimeInterface $at): bool
-    {
-        return $this->isShared() && $this->shared_at->lessThanOrEqualTo($at);
     }
 }

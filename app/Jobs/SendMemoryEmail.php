@@ -40,7 +40,7 @@ class SendMemoryEmail implements ShouldQueue
             return;
         }
 
-        $this->email->user->notifyNow($this->email->kind->notification($this->email));
+        $this->email->user->notifyNow($this->email->kind->notification($this->email->month));
 
         $this->email->update([
             'sent_at' => now(),

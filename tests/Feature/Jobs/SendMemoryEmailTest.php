@@ -3,7 +3,6 @@
 use App\Jobs\SendMemoryEmail;
 use App\Memories\MemoryEmailKind;
 use App\Models\MemoryEmail;
-use App\Notifications\Memories\LateShare;
 use App\Notifications\Memories\MonthOpened;
 use App\Notifications\Memories\Nudge;
 use App\Notifications\Memories\Revealed;
@@ -30,7 +29,6 @@ describe('handle()', function () {
         'month open' => [MemoryEmailKind::MonthOpened, MonthOpened::class],
         'nudge' => [MemoryEmailKind::Nudge, Nudge::class],
         'reveal' => [MemoryEmailKind::Reveal, Revealed::class],
-        'late share' => [MemoryEmailKind::LateShare, LateShare::class],
     ]);
 
     test('does nothing when the email has already gone out', function () {
