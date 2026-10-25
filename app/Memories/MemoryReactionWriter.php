@@ -5,7 +5,6 @@ namespace App\Memories;
 use App\Models\Memory;
 use App\Models\MemoryReaction;
 use App\Models\User;
-use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -39,7 +38,11 @@ final readonly class MemoryReactionWriter
      */
     public function add(string $emoji): void
     {
-        $this->insert($emoji, now());
+        $this->insert($emoji, fn () => new MemoryReaction([
+            'memory_id' => $this->memory->id,
+            'user_id' => $this->reactor->id,
+            'emoji' => $emoji,
+        ]));
     }
 
     /**
@@ -56,21 +59,30 @@ final readonly class MemoryReactionWriter
     }
 
     /**
-     * Put a removed reaction back in its place, by the time it was first
-     * added.
+     * Put a reaction removed from this memory back exactly as it was, with
+     * its id and timestamps, so it returns to its place in the order.
      *
-     * @throws ValidationException when it isn't one emoji, or the reactor already left the most they can.
+     * @throws ValidationException when the reactor already left the most they can.
      */
-    public function restore(string $emoji, CarbonInterface $addedAt): void
+    public function restore(MemoryReaction $removed): void
     {
-        $this->insert($emoji, $addedAt);
+        if ($removed->memory_id !== $this->memory->id || $removed->user_id !== $this->reactor->id) {
+            return;
+        }
+
+        $this->insert($removed->emoji, fn () => (new MemoryReaction)->forceFill($removed->only([
+            'id', 'memory_id', 'user_id', 'emoji', 'created_at', 'updated_at',
+        ])));
     }
 
     /**
-     * The memory is locked while counting, so two reactions sent at once
-     * can't both slip in under the limit.
+     * Save the reaction that `$make` builds, unless the reactor already left
+     * that emoji. The memory is locked while counting, so two reactions sent
+     * at once can't both slip in under the limit.
+     *
+     * @param  callable(): MemoryReaction  $make
      */
-    private function insert(string $emoji, CarbonInterface $addedAt): void
+    private function insert(string $emoji, callable $make): void
     {
         if (! self::isOneEmoji($emoji)) {
             throw ValidationException::withMessages([
@@ -78,7 +90,7 @@ final readonly class MemoryReactionWriter
             ]);
         }
 
-        DB::transaction(function () use ($emoji, $addedAt): void {
+        DB::transaction(function () use ($emoji, $make): void {
             Memory::query()->whereKey($this->memory->id)->lockForUpdate()->sole();
 
             if ($this->reactions()->where('emoji', $emoji)->exists()) {
@@ -91,25 +103,33 @@ final readonly class MemoryReactionWriter
                 ]);
             }
 
-            $reaction = new MemoryReaction([
-                'memory_id' => $this->memory->id,
-                'user_id' => $this->reactor->id,
-                'emoji' => $emoji,
-            ]);
-            $reaction->created_at = $addedAt;
-            $reaction->save();
+            $make()->save();
         });
     }
 
     /**
-     * One user-perceived character that is an emoji: a pictograph with any
-     * skin tone or joined sequence, a flag, or a keycap.
+     * One user-perceived character that is an emoji: a flag, a keycap, or a
+     * pictograph with any presentation selector, skin tone or joined
+     * sequence. Stray combining marks are refused so nothing draws outside
+     * its button. The browser runs a looser check before sending, in
+     * resources/js/memory-reactions.js.
      */
     private static function isOneEmoji(string $text): bool
     {
-        return strlen($text) <= self::MAX_EMOJI_BYTES
-            && preg_match('/^\X$/u', $text) === 1
-            && preg_match('/[\p{Extended_Pictographic}\p{Regional_Indicator}\x{20E3}]/u', $text) === 1;
+        if (strlen($text) > self::MAX_EMOJI_BYTES || preg_match('/^\X$/u', $text) !== 1) {
+            return false;
+        }
+
+        if (preg_match('/\p{Regional_Indicator}/u', $text) === 1) {
+            return preg_match('/^\p{Regional_Indicator}{2}$/u', $text) === 1;
+        }
+
+        if (str_contains($text, "\u{20E3}")) {
+            return preg_match('/^[0-9#*]\x{FE0F}?\x{20E3}$/u', $text) === 1;
+        }
+
+        return preg_match('/^\p{Extended_Pictographic}/u', $text) === 1
+            && preg_match('/[^\P{M}\x{FE0F}]/u', $text) === 0;
     }
 
     /**

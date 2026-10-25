@@ -29,7 +29,6 @@ describe('add()', function () {
     test('adds reactions in the order they were left', function () {
         /** @var TestCase $this */
         $this->writer->add('❤️');
-        $this->travel(1)->minute();
         $this->writer->add('😂');
 
         expect(reactionsOf($this->katie, $this->memory))->toBe(['❤️', '😂']);
@@ -40,14 +39,24 @@ describe('add()', function () {
         $this->writer->add($emoji);
 
         expect(reactionsOf($this->katie, $this->memory))->toBe([$emoji]);
-    })->with(['👍🏽', '👨‍👩‍👧', '🇺🇸', '1️⃣']);
+    })->with(['👍🏽', '👨‍👩‍👧', '🇺🇸', '🏴󠁧󠁢󠁳󠁣󠁴󠁿', '1️⃣', '❤️']);
 
     test('refuses anything that is not exactly one emoji', function (string $text) {
         /** @var TestCase $this */
         expect(fn () => $this->writer->add($text))->toThrow(ValidationException::class, 'A reaction is a single emoji.');
 
         expect(reactionsOf($this->katie, $this->memory))->toBe([]);
-    })->with(['', 'a', 'lol', '❤️❤️', '❤️ ', '😂a']);
+    })->with([
+        'nothing' => '',
+        'a letter' => 'a',
+        'a word' => 'lol',
+        'two emoji' => '❤️❤️',
+        'an emoji and a space' => '❤️ ',
+        'an emoji and a letter' => '😂a',
+        'half a flag' => '🇦',
+        'a letter in a keycap' => "a\u{20E3}",
+        'an emoji under stacked accents' => '😀'.str_repeat("\u{0301}", 10),
+    ]);
 
     test('ignores an emoji the reactor already left', function () {
         /** @var TestCase $this */
@@ -91,25 +100,31 @@ describe('remove()', function () {
             ->and(reactionsOf($this->katie, $this->memory))->toBe([]);
     });
 
+    test("returns null when the reactor hadn't left that emoji", function () {
+        /** @var TestCase $this */
+        expect($this->writer->remove('❤️'))->toBeNull();
+    });
+
     test("leaves someone else's same emoji alone", function () {
         /** @var TestCase $this */
         $other = MemoryReaction::factory()->for($this->memory)->create(['emoji' => '❤️']);
 
-        expect($this->writer->remove('❤️'))->toBeNull()
-            ->and($other->fresh())->not->toBeNull();
+        $this->writer->remove('❤️');
+
+        expect($other->fresh())->not->toBeNull();
     });
 });
 
 describe('restore()', function () {
     test('puts a removed reaction back in its original place', function () {
         /** @var TestCase $this */
+        // All three land in the same second, so only the id keeps them in order.
         foreach (['❤️', '😂', '🥹'] as $emoji) {
             $this->writer->add($emoji);
-            $this->travel(1)->minute();
         }
 
         $removed = $this->writer->remove('😂');
-        $this->writer->restore($removed->emoji, $removed->created_at);
+        $this->writer->restore($removed);
 
         expect(reactionsOf($this->katie, $this->memory))->toBe(['❤️', '😂', '🥹']);
     });
@@ -122,7 +137,18 @@ describe('restore()', function () {
             $this->writer->add($emoji);
         }
 
-        expect(fn () => $this->writer->restore($removed->emoji, $removed->created_at))
+        expect(fn () => $this->writer->restore($removed))
             ->toThrow(ValidationException::class, 'up to 5 reactions');
+    });
+
+    test("ignores a reaction from someone else's memory", function () {
+        /** @var TestCase $this */
+        $elsewhere = MemoryReaction::factory()->for($this->katie)->create(['emoji' => '❤️']);
+        $elsewhere->delete();
+
+        $this->writer->restore($elsewhere);
+
+        expect(reactionsOf($this->katie, $this->memory))->toBe([])
+            ->and(MemoryReaction::find($elsewhere->id))->toBeNull();
     });
 });
