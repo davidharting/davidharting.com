@@ -41,7 +41,7 @@ Operational notes:
 
 ### PR preview environments
 
-`render.yaml` has `previews.generation: automatic`, so every PR gets its own preview environment (web + worker; the cron jobs are excluded via `previews.generation: off`). The web service's preview URL is always:
+`render.yaml` has `previews.generation: manual`, so a PR gets a preview environment (web + worker; the cron jobs are excluded via `previews.generation: off`) only when it carries the `preview` label. The `render-preview-label` workflow turns the label into the `[render preview]` title tag Render looks for, and removing the label removes the tag and the preview. In a stack of PRs, label only the top one. Remove the label before squash merging so the tag stays out of main's history. The web service's preview URL is always:
 
 ```
 https://davidhartingdotcom-web-pr-<PR_NUMBER>.onrender.com
