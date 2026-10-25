@@ -107,6 +107,23 @@ describe('save()', function () {
         $this->assertDatabaseHas('memories', ['body' => 'Shared text']);
     });
 
+    test('lets a shared memory with photos lose its text', function () {
+        /** @var TestCase $this */
+        $shared = $this->authorsMemoryFactory->shared()->create(['body' => 'Shared text']);
+        MemoryPhoto::factory()->for($shared)->create();
+
+        expect($this->writer->save('', 0)->body)->toBe('');
+    });
+
+    test('refuses to empty a shared memory whose only photos were removed', function () {
+        /** @var TestCase $this */
+        $shared = $this->authorsMemoryFactory->shared()->create(['body' => 'Shared text']);
+        MemoryPhoto::factory()->for($shared)->create()->delete();
+
+        expect(fn () => $this->writer->save('', 0))
+            ->toThrow(ValidationException::class);
+    });
+
     test('refuses text longer than a memory can be', function () {
         /** @var TestCase $this */
         $this->authorsMemoryFactory->create(['body' => 'Before']);
@@ -172,6 +189,25 @@ describe('share()', function () {
         'before there is a memory' => [false],
     ]);
 
+    test('shares a memory with photos and no text', function () {
+        /** @var TestCase $this */
+        $draft = $this->authorsMemoryFactory->create(['body' => '']);
+        MemoryPhoto::factory()->for($draft)->create();
+
+        expect($this->writer->share('', 0)->isShared())->toBeTrue();
+    });
+
+    test('refuses to share a memory whose only photos were removed', function () {
+        /** @var TestCase $this */
+        $draft = $this->authorsMemoryFactory->create(['body' => '']);
+        MemoryPhoto::factory()->for($draft)->create()->delete();
+
+        expect(fn () => $this->writer->share('', 0))
+            ->toThrow(ValidationException::class);
+
+        expect($draft->fresh()->isDraft())->toBeTrue();
+    });
+
     test('refuses to share over text saved on another device', function () {
         /** @var TestCase $this */
         $this->authorsMemoryFactory->create(['body' => 'From the phone', 'lock_version' => 1]);
@@ -191,5 +227,30 @@ describe('share()', function () {
         $shared = $this->writer->share('Shared', 0);
 
         expect($this->writer->save('Edited after sharing', $shared->lock_version)->body)->toBe('Edited after sharing');
+    });
+});
+
+describe('findOrStartForPhotos()', function () {
+    test('starts a memory without text when there is none', function () {
+        /** @var TestCase $this */
+        $memory = $this->writer->findOrStartForPhotos();
+
+        expect($memory)
+            ->wasRecentlyCreated->toBeTrue()
+            ->body->toBe('')
+            ->lock_version->toBe(0)
+            ->isDraft()->toBeTrue();
+    });
+
+    test('returns the memory there is, leaving its version alone', function () {
+        /** @var TestCase $this */
+        $existing = $this->authorsMemoryFactory->create(['body' => 'Already here', 'lock_version' => 3]);
+
+        $memory = $this->writer->findOrStartForPhotos();
+
+        expect($memory)
+            ->id->toBe($existing->id)
+            ->wasRecentlyCreated->toBeFalse()
+            ->lock_version->toBe(3);
     });
 });
