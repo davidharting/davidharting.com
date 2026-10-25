@@ -104,3 +104,34 @@ describe('update()', function () {
         expect(Gate::forUser($this->david)->inspect('update', $this->davidsMemory)->status())->toBe(404);
     });
 });
+
+describe('react()', function () {
+    test('allows the other participant once the month has revealed', function () {
+        /** @var TestCase $this */
+        $shared = Memory::factory()->for($this->david)->forMonth($this->august)->shared(CarbonImmutable::parse('2026-09-05T12:00:00Z'))->create();
+
+        expect(Gate::forUser($this->katie)->allows('react', $shared))->toBeTrue();
+    });
+
+    test('is not found for the author, even once revealed', function () {
+        /** @var TestCase $this */
+        $shared = Memory::factory()->for($this->david)->forMonth($this->august)->shared(CarbonImmutable::parse('2026-09-05T12:00:00Z'))->create();
+
+        expect(Gate::forUser($this->david)->inspect('react', $shared)->status())->toBe(404);
+    });
+
+    test('is not found for the other participant before the month reveals', function () {
+        /** @var TestCase $this */
+        $shared = Memory::factory()->for($this->david)->forMonth($this->september)->shared()->create();
+
+        expect(Gate::forUser($this->katie)->inspect('react', $shared)->status())->toBe(404);
+    });
+
+    test('is not found for a guest or a non-participant, even once revealed', function () {
+        /** @var TestCase $this */
+        $shared = Memory::factory()->for($this->david)->forMonth($this->august)->shared(CarbonImmutable::parse('2026-09-05T12:00:00Z'))->create();
+
+        expect(Gate::inspect('react', $shared)->status())->toBe(404)
+            ->and(Gate::forUser(User::factory()->create())->inspect('react', $shared)->status())->toBe(404);
+    });
+});

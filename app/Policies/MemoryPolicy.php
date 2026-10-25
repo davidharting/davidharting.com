@@ -58,4 +58,17 @@ class MemoryPolicy
 
         return Response::allow();
     }
+
+    /**
+     * Only the other participant may react to a memory, and only once the
+     * month has revealed it to them.
+     */
+    public function react(User $user, Memory $memory): Response
+    {
+        if ($user->id === $memory->user_id) {
+            return Response::denyAsNotFound();
+        }
+
+        return $this->view($user, $memory);
+    }
 }
