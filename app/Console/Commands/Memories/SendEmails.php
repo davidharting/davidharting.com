@@ -3,7 +3,6 @@
 namespace App\Console\Commands\Memories;
 
 use App\Memories\MemoryReminders;
-use App\Memories\RevealEmails;
 use Illuminate\Console\Command;
 
 /**
@@ -31,9 +30,9 @@ class SendEmails extends Command
     /**
      * Execute the console command.
      */
-    public function handle(MemoryReminders $reminders, RevealEmails $revealEmails): int
+    public function handle(MemoryReminders $reminders): int
     {
-        $claimed = $reminders->claimDue()->concat($revealEmails->claimAllDue());
+        $claimed = $reminders->claimDue();
 
         $this->components->info("Queued {$claimed->count()} ".str('email')->plural($claimed->count()).'.');
 

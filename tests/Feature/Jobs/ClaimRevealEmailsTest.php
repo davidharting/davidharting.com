@@ -1,6 +1,6 @@
 <?php
 
-use App\Memories\RevealEmails;
+use App\Jobs\ClaimRevealEmails;
 use App\Models\Memory;
 use App\Models\MemoryEmail;
 use App\Models\MemoryParticipant;
@@ -36,10 +36,10 @@ function shareOctoberMemory(User $author, string $sharedAt): Memory
     ]);
 }
 
-function claimOctoberAt(string $at): void
+function claimOctoberRevealsAt(string $at): void
 {
     test()->travelTo($at);
-    app(RevealEmails::class)->claimDue(octoberMonth());
+    ClaimRevealEmails::dispatch(octoberMonth());
 }
 
 /**
@@ -59,12 +59,12 @@ function octoberEmails(): array
         ->all();
 }
 
-describe('claimDue()', function () {
+describe('handle()', function () {
     test('claims nothing while only one person has shared before the deadline', function () {
         /** @var TestCase $this */
         shareOctoberMemory($this->katie, '2026-11-05T12:00:00Z');
 
-        claimOctoberAt('2026-11-30T12:00:00Z');
+        claimOctoberRevealsAt('2026-11-05T12:00:00Z');
 
         expect(octoberEmails())->toBe([]);
     });
@@ -74,43 +74,16 @@ describe('claimDue()', function () {
         shareOctoberMemory($this->katie, '2026-11-05T12:00:00Z');
         shareOctoberMemory($this->david, '2026-11-06T12:00:00Z');
 
-        claimOctoberAt('2026-11-06T12:00:00Z');
+        claimOctoberRevealsAt('2026-11-06T12:00:00Z');
 
         expect(octoberEmails())->toBe(['David: reveal', 'Katie: reveal']);
     });
 
-    test('at the deadline, claims the reveal only for someone with something to read', function () {
-        /** @var TestCase $this */
-        shareOctoberMemory($this->katie, '2026-11-05T12:00:00Z');
-
-        claimOctoberAt('2026-12-01T14:00:00Z');
-
-        expect(octoberEmails())->toBe(['David: reveal']);
-    });
-
-    test('at the deadline, claims nothing when nobody has shared', function () {
-        /** @var TestCase $this */
-        claimOctoberAt('2026-12-01T14:00:00Z');
-
-        expect(octoberEmails())->toBe([]);
-    });
-
-    test('after a late share, claims the reveal for the other person, who now has something to read', function () {
-        /** @var TestCase $this */
-        shareOctoberMemory($this->katie, '2026-11-05T12:00:00Z');
-        claimOctoberAt('2026-12-01T14:00:00Z');
-
-        shareOctoberMemory($this->david, '2026-12-03T12:00:00Z');
-        claimOctoberAt('2026-12-03T12:00:00Z');
-
-        expect(octoberEmails())->toBe(['David: reveal', 'Katie: reveal']);
-    });
-
-    test('when nobody shared by the deadline, a late share is revealed to the other person', function () {
+    test('after the deadline, a share tells the other person their memory is there', function () {
         /** @var TestCase $this */
         shareOctoberMemory($this->katie, '2026-12-03T12:00:00Z');
 
-        claimOctoberAt('2026-12-03T12:00:00Z');
+        claimOctoberRevealsAt('2026-12-03T12:00:00Z');
 
         expect(octoberEmails())->toBe(['David: reveal']);
     });
@@ -120,9 +93,8 @@ describe('claimDue()', function () {
         shareOctoberMemory($this->katie, '2026-11-05T12:00:00Z');
         shareOctoberMemory($this->david, '2026-11-06T12:00:00Z');
 
-        claimOctoberAt('2026-11-06T12:00:00Z');
-        claimOctoberAt('2026-11-07T12:00:00Z');
-        claimOctoberAt('2026-12-07T12:00:00Z');
+        claimOctoberRevealsAt('2026-11-06T12:00:00Z');
+        claimOctoberRevealsAt('2026-11-07T12:00:00Z');
 
         expect(octoberEmails())->toBe(['David: reveal', 'Katie: reveal']);
     });
@@ -134,41 +106,29 @@ describe('claimDue()', function () {
         Memory::factory()->for($this->katie)->forMonth($september->calendarMonth)->shared()->create();
         Memory::factory()->for($this->david)->forMonth($september->calendarMonth)->shared()->create();
 
-        app(RevealEmails::class)->claimDue($september);
+        ClaimRevealEmails::dispatch($september);
 
         expect(MemoryEmail::count())->toBe(0);
-    });
-
-    test('sends each email it claims', function () {
-        /** @var TestCase $this */
-        shareOctoberMemory($this->katie, '2026-11-05T12:00:00Z');
-
-        claimOctoberAt('2026-12-01T14:00:00Z');
-
-        Notification::assertSentTo($this->david, Revealed::class);
-        Notification::assertCount(1);
-    });
-});
-
-describe('claimAllDue()', function () {
-    test('catches up on reveals from months long past', function () {
-        /** @var TestCase $this */
-        shareOctoberMemory($this->katie, '2026-11-05T12:00:00Z');
-        shareOctoberMemory($this->david, '2026-11-06T12:00:00Z');
-        $this->travelTo('2027-03-01T14:00:00Z');
-
-        $claimed = app(RevealEmails::class)->claimAllDue();
-
-        expect($claimed)->toHaveCount(2)
-            ->and(octoberEmails())->toBe(['David: reveal', 'Katie: reveal']);
     });
 
     test('claims nothing without two participants', function () {
         /** @var TestCase $this */
         MemoryParticipant::query()->whereBelongsTo($this->katie)->delete();
         shareOctoberMemory($this->david, '2026-11-05T12:00:00Z');
-        $this->travelTo('2026-12-01T14:00:00Z');
+        shareOctoberMemory($this->katie, '2026-11-06T12:00:00Z');
 
-        expect(app(RevealEmails::class)->claimAllDue())->toBeEmpty();
+        claimOctoberRevealsAt('2026-11-06T12:00:00Z');
+
+        expect(octoberEmails())->toBe([]);
+    });
+
+    test('sends each email it claims', function () {
+        /** @var TestCase $this */
+        shareOctoberMemory($this->katie, '2026-12-03T12:00:00Z');
+
+        claimOctoberRevealsAt('2026-12-03T12:00:00Z');
+
+        Notification::assertSentTo($this->david, Revealed::class);
+        Notification::assertCount(1);
     });
 });
