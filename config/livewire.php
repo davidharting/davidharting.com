@@ -1,6 +1,6 @@
 <?php
 
-use App\Livewire\Memories\Editor;
+use App\Memories\AddMemoryPhoto;
 
 /*
  * Only what this app changes from Livewire's defaults. Livewire merges its
@@ -13,10 +13,14 @@ return [
      * Temporary uploads go to the default disk, which is the private disk (R2
      * outside local development), so the browser uploads straight to it.
      * Photos from a phone can be larger than Livewire's 12 MB default.
+     *
+     * `cleanup` only clears old uploads on a local disk. On R2, uploads that
+     * never landed stay under `livewire-tmp/` until a bucket lifecycle rule
+     * expires them.
      */
     'temporary_file_upload' => [
         'disk' => null,
-        'rules' => ['required', 'file', 'max:'.Editor::MAX_PHOTO_KILOBYTES],
+        'rules' => ['required', 'file', 'max:'.AddMemoryPhoto::MAX_KILOBYTES],
         'directory' => null,
         'middleware' => null,
         'preview_mimes' => [

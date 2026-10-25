@@ -38,19 +38,6 @@ class Editor extends Component
     use WithFileUploads;
 
     /**
-     * The largest photo the browser may upload, in kilobytes.
-     */
-    public const int MAX_PHOTO_KILOBYTES = 50 * 1024;
-
-    /**
-     * The kinds of photo the editor takes: what phones and cameras save, and
-     * what libvips can read.
-     *
-     * @var list<string>
-     */
-    public const array PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'];
-
-    /**
      * The month as `Y-m`.
      */
     #[Locked]
@@ -165,13 +152,14 @@ class Editor extends Component
         $upload = $this->upload;
         $this->upload = null;
         $photoId = null;
+        $memory = null;
 
         try {
             validator(['upload' => $upload], ['upload' => [
                 'required',
                 'file',
-                'mimetypes:'.implode(',', self::PHOTO_MIME_TYPES),
-                'max:'.self::MAX_PHOTO_KILOBYTES,
+                'mimetypes:'.implode(',', AddMemoryPhoto::MIME_TYPES),
+                'max:'.AddMemoryPhoto::MAX_KILOBYTES,
             ]], ['upload.mimetypes' => "That file isn't a photo the editor can take."])->validate();
 
             $this->authorizeWriting();
@@ -189,12 +177,12 @@ class Editor extends Component
             $this->resetErrorBag('upload');
             $this->photoSaved();
         } catch (ValidationException $exception) {
-            $this->refuseUpload($upload, $exception->validator->errors()->first());
+            $this->refuseUpload($upload, $memory, $exception->validator->errors()->first());
         } catch (AuthorizationException) {
-            $this->refuseUpload($upload, "You can't add photos to this memory.");
+            $this->refuseUpload($upload, $memory, "You can't add photos to this memory.");
         } catch (Throwable $exception) {
             report($exception);
-            $this->refuseUpload($upload, "That photo didn't save. Try adding it again.");
+            $this->refuseUpload($upload, $memory, "That photo didn't save. Try adding it again.");
         }
 
         $this->dispatch('upload-handled', photoId: $photoId);
@@ -412,11 +400,18 @@ class Editor extends Component
     }
 
     /**
-     * Turn down the upload in flight, and clean up its temporary file.
+     * Turn down the upload in flight, clean up its temporary file, and take
+     * back the memory it started if the photo was all it would have held.
      */
-    private function refuseUpload(?TemporaryUploadedFile $upload, string $message): void
+    private function refuseUpload(?TemporaryUploadedFile $upload, ?Memory $started, string $message): void
     {
         rescue(fn () => $upload?->delete());
+
+        if ($started?->wasRecentlyCreated && rescue(fn () => $this->writer()->discardIfEmpty($started), false)) {
+            $this->lockVersion = null;
+            unset($this->monthForViewer);
+        }
+
         $this->addError('upload', $message);
     }
 

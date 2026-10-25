@@ -5,6 +5,7 @@ namespace App\Memories;
 use App\Models\Memory;
 use App\Models\User;
 use App\Support\CalendarMonth;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -118,8 +119,21 @@ final readonly class MemoryWriter
         try {
             return $this->start('');
         } catch (MemoryChangedElsewhere) {
-            return $this->find();
+            return $this->find() ?? $this->start('');
         }
+    }
+
+    /**
+     * Delete a memory that has neither text nor photos, removed ones
+     * included. Returns whether it was deleted.
+     */
+    public function discardIfEmpty(Memory $memory): bool
+    {
+        return Memory::query()
+            ->whereKey($memory->id)
+            ->where('body', '')
+            ->whereDoesntHave('photos', fn (Builder $photos) => $photos->withTrashed())
+            ->delete() > 0;
     }
 
     private function find(): ?Memory

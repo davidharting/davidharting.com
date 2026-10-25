@@ -348,7 +348,7 @@ describe('photos', function () {
         /** @var TestCase $this */
         Queue::fake();
         Storage::fake('private');
-        // Livewire keeps test uploads on this disk; point it at the private one, where real uploads land.
+        /** Livewire keeps test uploads on this disk; point it at the private one, where real uploads land. */
         Storage::set('tmp-for-tests', Storage::disk('private'));
     });
 
@@ -415,6 +415,23 @@ describe('photos', function () {
 
         Exceptions::assertReported(RuntimeException::class);
         expect(storedMemoryOf($this->katie, '2026-09')->photos)->toHaveCount(1);
+    });
+
+    test('doesn\'t leave an empty draft behind when the first photo fails to save', function () {
+        /** @var TestCase $this */
+        Exceptions::fake();
+        MemoryPhoto::creating(fn () => throw new RuntimeException('The database went away'));
+
+        $editor = editorFor($this->david, '2026-06')
+            ->set('upload', UploadedFile::fake()->image('june.jpg'))
+            ->assertHasErrors('upload')
+            ->assertSet('lockVersion', null);
+
+        expect(storedMemoryOf($this->david, '2026-06'))->toBeNull();
+
+        $editor->set('body', 'Words instead.')->assertSet('changedElsewhere', false);
+
+        expect(storedMemoryOf($this->david, '2026-06')->body)->toBe('Words instead.');
     });
 
     test('shares a memory that has photos and no text', function () {

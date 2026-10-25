@@ -121,7 +121,7 @@
             </span>
             <input
                 type="file"
-                accept="{{ implode(",", [...\App\Livewire\Memories\Editor::PHOTO_MIME_TYPES, ".heic", ".heif"]) }}"
+                accept="{{ implode(",", [...\App\Memories\AddMemoryPhoto::MIME_TYPES, ".heic", ".heif"]) }}"
                 multiple
                 class="hidden"
                 x-on:change="pick($event)"

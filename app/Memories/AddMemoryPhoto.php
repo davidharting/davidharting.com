@@ -26,6 +26,19 @@ final class AddMemoryPhoto
     public const int MAX_PHOTOS = 10;
 
     /**
+     * The largest photo a memory takes, in kilobytes.
+     */
+    public const int MAX_KILOBYTES = 50 * 1024;
+
+    /**
+     * The kinds of photo a memory takes: what phones and cameras save, and
+     * what libvips can read.
+     *
+     * @var list<string>
+     */
+    public const array MIME_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'];
+
+    /**
      * Record an upload that is already on the private disk as the memory's
      * last photo, move it into a directory of its own, and queue processing.
      * The memory is locked while it is counted, so two uploads at once can't
