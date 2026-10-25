@@ -62,6 +62,14 @@ _Avoid_: Publish, post, submit
 The moment both people's shared memories for a month become readable to each other. It happens when both have shared, or at the end of the following month, whichever comes first. A memory shared after its month's reveal is readable as soon as it is shared.
 _Avoid_: Unlock, publish
 
+**Reminder**:
+The email on the 1st telling both participants a month is open for their memories. A plain reminder: it never carries memory text or photos.
+_Avoid_: Notification, alert
+
+**Nudge**:
+The email on the 15th to a participant who hasn't shared yet (a draft counts as not shared), saying where the other person stands.
+_Avoid_: Reminder, chase
+
 **Reaction**:
 An emoji one person leaves on the other's revealed memory. Any emoji, up to five per person per memory.
 _Avoid_: Like, heart, vote
