@@ -25,13 +25,6 @@ final readonly class MemoryWriter
      */
     public const int MAX_LENGTH = 20_000;
 
-    /**
-     * How long after a share its emails are claimed, so photos added just
-     * before sharing have time to process and quick fixes after sharing
-     * make it into the email.
-     */
-    public const int REVEAL_EMAIL_DELAY_MINUTES = 5;
-
     public function __construct(
         public User $author,
         public CalendarMonth $month,
@@ -86,9 +79,8 @@ final readonly class MemoryWriter
     /**
      * Save the body and share the memory. Sharing an already shared memory
      * just saves it; it keeps its first `shared_at`. A memory with photos can
-     * be shared without text. Once the share commits, the reveal and
-     * late-share emails it makes due are claimed in the background, a few
-     * minutes later.
+     * be shared without text. Once the share commits, the reveal emails
+     * it makes due are claimed in the background.
      *
      * @param  ?int  $expectedVersion  The `lock_version` the writer last saw, or null if it saw no memory.
      *
@@ -106,7 +98,7 @@ final readonly class MemoryWriter
 
             if ($memory->isDraft()) {
                 $this->update($memory, $memory->lock_version, ['shared_at' => now()]);
-                ClaimRevealEmails::dispatch($memory->month)->afterCommit()->delay(now()->addMinutes(self::REVEAL_EMAIL_DELAY_MINUTES));
+                ClaimRevealEmails::dispatch($memory->month)->afterCommit();
             }
 
             return $memory->refresh();

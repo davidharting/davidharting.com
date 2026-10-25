@@ -182,7 +182,7 @@ describe('share()', function () {
             ->and($shared->body)->toBe('Edited after sharing');
     });
 
-    test('claims the reveal emails a share makes due, a few minutes after it commits', function () {
+    test('claims the reveal emails a share makes due', function () {
         /** @var TestCase $this */
         Notification::fake();
         MemoryParticipant::factory()->for($this->author)->create(['created_at' => '2026-08-01T12:00:00Z']);
@@ -195,15 +195,14 @@ describe('share()', function () {
             ->toBe(collect([$this->author->id, $other->id])->sort()->values()->all());
     });
 
-    test('delays claiming the reveal emails until the share has committed and settled', function () {
+    test('claims the reveal emails only once the share commits', function () {
         /** @var TestCase $this */
         Queue::fake();
 
         $this->writer->share('Short and sweet', null);
 
         Queue::assertPushed(ClaimRevealEmails::class, fn (ClaimRevealEmails $job): bool => $job->month->calendarMonth->equals($this->month)
-            && $job->afterCommit === true
-            && $job->delay->equalTo(now()->addMinutes(MemoryWriter::REVEAL_EMAIL_DELAY_MINUTES)));
+            && $job->afterCommit === true);
     });
 
     test('queues no reveal emails when sharing an already shared memory again', function () {

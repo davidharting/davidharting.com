@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
 /**
- * Claims the reveal and late-share emails a share has made due.
+ * Claims the reveal emails a share has made due.
  */
 class ClaimRevealEmails implements ShouldQueue
 {

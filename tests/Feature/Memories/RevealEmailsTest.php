@@ -95,7 +95,7 @@ describe('claimDue()', function () {
         expect(octoberEmails())->toBe([]);
     });
 
-    test('after a late share, claims the reveal for the person who now has something to read and a copy for the one who shared', function () {
+    test('after a late share, claims the reveal for the other person, who now has something to read', function () {
         /** @var TestCase $this */
         shareOctoberMemory($this->katie, '2026-11-05T12:00:00Z');
         claimOctoberAt('2026-12-01T14:00:00Z');
@@ -103,7 +103,7 @@ describe('claimDue()', function () {
         shareOctoberMemory($this->david, '2026-12-03T12:00:00Z');
         claimOctoberAt('2026-12-03T12:00:00Z');
 
-        expect(octoberEmails())->toBe(['David: reveal', 'David: late_share', 'Katie: reveal']);
+        expect(octoberEmails())->toBe(['David: reveal', 'Katie: reveal']);
     });
 
     test('when nobody shared by the deadline, a late share is revealed to the other person', function () {

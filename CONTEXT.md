@@ -71,12 +71,8 @@ The email on the 15th to a participant who hasn't shared yet (a draft counts as 
 _Avoid_: Reminder, chase
 
 **Reveal email**:
-The email that carries a month's memories to a participant once the month has revealed and the other person's memory is there to read: every memory shared by then, text inline and photos attached. At the reveal deadline it goes only to someone with something to read. It is a backup record of the month, so later edits never resend it.
+The heads-up to a participant that the other person's memory for a month is ready to read, with a link to it. It goes once the month has revealed and the other person has shared, so at the reveal deadline only someone with something to read gets one. Like the reminder, it never carries memory text or photos.
 _Avoid_: Reveal notification
-
-**Late-share email**:
-A copy of a participant's own memory, sent when they share it after their reveal email went out without it, so their inbox still ends up holding both memories.
-_Avoid_: Reminder
 
 **Reaction**:
 An emoji one person leaves on the other's revealed memory. Any emoji, up to five per person per memory.
