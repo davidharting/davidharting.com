@@ -26,7 +26,7 @@
     <div
         class="grid grid-cols-3 gap-1.5"
         wire:sort="movePhoto"
-        wire:sort:config="{ delay: 200, delayOnTouchOnly: true }"
+        wire:sort:config="{ delay: 200, delayOnTouchOnly: true, touchStartThreshold: 8, forceFallback: true, fallbackTolerance: 3 }"
     >
         @foreach ($photos as $photo)
             <button
@@ -35,21 +35,23 @@
                 wire:sort:item="{{ $photo->id }}"
                 x-on:click="sheet = {{ $photo->id }}"
                 aria-label="Photo {{ $loop->iteration }}: {{ $photo->caption ?? "no caption" }}"
-                class="block"
+                class="block select-none [-webkit-touch-callout:none]"
             >
                 <span class="rounded-field bg-base-200 relative block aspect-square overflow-hidden">
                     @if ($photo->isReady())
                         <img
                             src="{{ route("memories.photos.show", [$photo, "thumbnail"]) }}"
                             alt=""
-                            class="h-full w-full object-cover"
+                            draggable="false"
+                            class="pointer-events-none h-full w-full object-cover"
                         />
                     @else
                         <img
                             x-show="previews[{{ $photo->id }}]"
                             x-bind:src="previews[{{ $photo->id }}]"
                             alt=""
-                            class="h-full w-full object-cover opacity-40"
+                            draggable="false"
+                            class="pointer-events-none h-full w-full object-cover opacity-40"
                             style="display: none"
                         />
                         <span class="absolute inset-0 grid place-items-center">
