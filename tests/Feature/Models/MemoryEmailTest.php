@@ -40,4 +40,26 @@ describe('claim()', function () {
             ->and(MemoryEmail::count())->toBe(1);
         Queue::assertPushed(SendMemoryEmail::class, 1);
     });
+
+    test('claims nothing when an earlier claim failed', function () {
+        /** @var TestCase $this */
+        $failed = MemoryEmail::factory()->failed()->create();
+
+        $again = MemoryEmail::claim($failed->user, $failed->month, $failed->kind);
+
+        expect($again)->toBeNull()
+            ->and(MemoryEmail::count())->toBe(1);
+        Queue::assertNothingPushed();
+    });
+
+    test('claims the same email separately for each person', function () {
+        /** @var TestCase $this */
+        $month = Month::of(Month::latestOpen());
+        MemoryEmail::claim(User::factory()->create(), $month, MemoryEmailKind::MonthOpened);
+
+        $other = MemoryEmail::claim(User::factory()->create(), $month, MemoryEmailKind::MonthOpened);
+
+        expect($other)->not->toBeNull();
+        Queue::assertPushed(SendMemoryEmail::class, 2);
+    });
 });
