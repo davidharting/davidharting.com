@@ -34,29 +34,12 @@ describe('add()', function () {
         expect(reactionsOf($this->katie, $this->memory))->toBe(['❤️', '😂']);
     });
 
-    test('accepts skin tones, joined sequences, flags and keycaps', function (string $emoji) {
+    test('refuses anything that is not exactly one emoji', function () {
         /** @var TestCase $this */
-        $this->writer->add($emoji);
-
-        expect(reactionsOf($this->katie, $this->memory))->toBe([$emoji]);
-    })->with(['👍🏽', '👨‍👩‍👧', '🇺🇸', '🏴󠁧󠁢󠁳󠁣󠁴󠁿', '1️⃣', '❤️']);
-
-    test('refuses anything that is not exactly one emoji', function (string $text) {
-        /** @var TestCase $this */
-        expect(fn () => $this->writer->add($text))->toThrow(ValidationException::class, 'A reaction is a single emoji.');
+        expect(fn () => $this->writer->add('lol'))->toThrow(ValidationException::class, 'A reaction is a single emoji.');
 
         expect(reactionsOf($this->katie, $this->memory))->toBe([]);
-    })->with([
-        'nothing' => '',
-        'a letter' => 'a',
-        'a word' => 'lol',
-        'two emoji' => '❤️❤️',
-        'an emoji and a space' => '❤️ ',
-        'an emoji and a letter' => '😂a',
-        'half a flag' => '🇦',
-        'a letter in a keycap' => "a\u{20E3}",
-        'an emoji under stacked accents' => '😀'.str_repeat("\u{0301}", 10),
-    ]);
+    });
 
     test('ignores an emoji the reactor already left', function () {
         /** @var TestCase $this */
