@@ -79,7 +79,7 @@ test('marks their unshared draft after the reveal, without its text, and preview
 });
 
 describe('thumbnails', function () {
-    test('lead a revealed month with the first two ready photos, theirs first', function () {
+    test('lead a revealed month with the other person\'s first photo, then the viewer\'s', function () {
         /** @var TestCase $this */
         // July: Katie's one photo, then the first of David's ten.
         $tomatoes = MemoryPhoto::firstWhere('caption', 'Eleven tomatoes');
@@ -92,6 +92,37 @@ describe('thumbnails', function () {
                 route('memories.photos.show', [$counters, 'thumbnail']),
             ])
             ->assertDontSee(route('memories.photos.show', [$secondOfDavids, 'thumbnail']));
+    });
+
+    test("lead with each person's first photo rather than two of the other's", function () {
+        /** @var TestCase $this */
+        // July from Katie's side: the first of David's ten, then her one photo.
+        $counters = MemoryPhoto::firstWhere('caption', 'Counters!');
+        $tomatoes = MemoryPhoto::firstWhere('caption', 'Eleven tomatoes');
+        $secondOfDavids = MemoryPhoto::where('memory_id', $counters->memory_id)->where('position', 1)->sole();
+
+        $this->actingAs(User::firstWhere('email', 'katie@example.com'))
+            ->get('/memories')
+            ->assertSeeInOrder([
+                route('memories.photos.show', [$counters, 'thumbnail']),
+                route('memories.photos.show', [$tomatoes, 'thumbnail']),
+            ])
+            ->assertDontSee(route('memories.photos.show', [$secondOfDavids, 'thumbnail']));
+    });
+
+    test('fill both slots from one person when the other has no ready photos', function () {
+        /** @var TestCase $this */
+        // July from Katie's side, with her one photo removed.
+        MemoryPhoto::firstWhere('caption', 'Eleven tomatoes')->delete();
+        $counters = MemoryPhoto::firstWhere('caption', 'Counters!');
+        $secondOfDavids = MemoryPhoto::where('memory_id', $counters->memory_id)->where('position', 1)->sole();
+
+        $this->actingAs(User::firstWhere('email', 'katie@example.com'))
+            ->get('/memories')
+            ->assertSeeInOrder([
+                route('memories.photos.show', [$counters, 'thumbnail']),
+                route('memories.photos.show', [$secondOfDavids, 'thumbnail']),
+            ]);
     });
 
     test('never show photos before the reveal, not even the viewer\'s own', function () {

@@ -7,6 +7,7 @@
 <div
     x-data="{
         confirming: false,
+        leaving: false,
         justSaved: false,
         savedFading: false,
         savedTimers: [],
@@ -35,6 +36,21 @@
             this.justSaved = false;
             this.savedFading = false;
         },
+        leave(href) {
+            if (this.leaving) return;
+            if (this.$store.memoryUploads.pending > 0) {
+                if (! confirm('Your photos are still uploading. Leave anyway?')) return;
+                this.$store.memoryUploads.abandoned = true;
+            }
+            this.leaving = true;
+            this.$wire
+                .$commit()
+                .then(() => {
+                    if (this.$wire.changedElsewhere) this.leaving = false;
+                    else window.location = href;
+                })
+                .catch(() => (this.leaving = false));
+        },
     }"
     x-init="
         $nextTick(() => growText());
@@ -46,12 +62,17 @@
     x-on:memory-saved="flashSaved()"
     x-on:online.window="$wire.$commit()"
     x-on:beforeunload.window="if ($wire.$dirty('body') || $wire.changedElsewhere) $event.preventDefault();"
+    x-on:pageshow.window="
+        leaving = false;
+        $store.memoryUploads.abandoned = false;
+    "
     class="flex min-h-dvh flex-col"
 >
     <header class="border-base-300 border-b px-4 py-3 font-sans text-sm">
         <a
             class="link link-hover"
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
+            x-on:click.prevent="leave($el.href)"
         >← {{ $month->name() }}</a>
     </header>
 
@@ -127,32 +148,48 @@
         x-on:input="growText()"
         x-on:input.debounce.1000ms="$wire.$commit()"
         x-on:blur="$wire.$commit()"
-        class="min-h-[50dvh] shrink-0 grow resize-none overflow-hidden bg-transparent px-4 py-4 text-lg leading-relaxed outline-none"
+        class="min-h-40 shrink-0 resize-none overflow-hidden bg-transparent px-4 py-4 text-lg leading-relaxed outline-none"
         maxlength="{{ \App\Memories\MemoryWriter::MAX_LENGTH }}"
         placeholder="What do you want to remember about {{ $month->name() }}?"
         aria-label="Your memory for {{ $month->label() }}"
     ></textarea>
-    <footer class="flex gap-2 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] font-sans">
+
+    @include('livewire.memories.editor-photos')
+
+    <footer class="mt-auto flex gap-2 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] font-sans">
         <a
             @class(['btn btn-outline', 'w-1/3' => ! $this->isShared(), 'grow' => $this->isShared()])
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
-            x-on:click.prevent="
-                $wire
-                    .$commit()
-                    .then(() => {
-                        if (!$wire.changedElsewhere) window.location = $el.href;
-                    })
-                    .catch(() => {})
-            "
-        >Done</a>
+            x-bind:class="leaving && 'btn-disabled'"
+            x-bind:aria-disabled="leaving"
+            x-on:click.prevent="leave($el.href)"
+        >
+            <span class="relative">
+                <span
+                    x-show="leaving"
+                    class="loading loading-spinner loading-sm absolute top-1/2 right-full mr-2 -translate-y-1/2"
+                    style="display: none"
+                ></span>
+                Done
+            </span>
+        </a>
         @unless ($this->isShared())
             <button
                 type="button"
                 class="btn btn-primary grow"
-                x-bind:disabled="$wire.body.trim() === ''"
+                x-bind:disabled="
+                    ($wire.body.trim() === '' && $wire.photoCount === 0) || $store.memoryUploads.pending > 0
+                "
                 x-on:click="confirming = true"
             >
-                Share with {{ $otherName }}…
+                <span x-show="$store.memoryUploads.pending === 0">Share with {{ $otherName }}…</span>
+                <span
+                    x-show="$store.memoryUploads.pending > 0"
+                    x-text="
+                        `Uploading ${$store.memoryUploads.pending} ${$store.memoryUploads.pending === 1 ? 'photo' : 'photos'}…`
+                    "
+                    style="display: none"
+                ></span>
             </button>
         @endunless
     </footer>

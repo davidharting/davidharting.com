@@ -1,12 +1,20 @@
 <?php
 
+use App\Jobs\SendShareNotificationsIfNeeded;
 use App\Memories\MemoryChangedElsewhere;
+use App\Memories\MemoryEmailKind;
 use App\Memories\MemoryWriter;
 use App\Models\Memory;
+use App\Models\MemoryEmail;
+use App\Models\MemoryParticipant;
 use App\Models\MemoryPhoto;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -107,6 +115,23 @@ describe('save()', function () {
         $this->assertDatabaseHas('memories', ['body' => 'Shared text']);
     });
 
+    test('lets a shared memory with photos lose its text', function () {
+        /** @var TestCase $this */
+        $shared = $this->authorsMemoryFactory->shared()->create(['body' => 'Shared text']);
+        MemoryPhoto::factory()->for($shared)->create();
+
+        expect($this->writer->save('', 0)->body)->toBe('');
+    });
+
+    test('refuses to empty a shared memory whose only photos were removed', function () {
+        /** @var TestCase $this */
+        $shared = $this->authorsMemoryFactory->shared()->create(['body' => 'Shared text']);
+        MemoryPhoto::factory()->for($shared)->create()->delete();
+
+        expect(fn () => $this->writer->save('', 0))
+            ->toThrow(ValidationException::class);
+    });
+
     test('refuses text longer than a memory can be', function () {
         /** @var TestCase $this */
         $this->authorsMemoryFactory->create(['body' => 'Before']);
@@ -159,6 +184,49 @@ describe('share()', function () {
             ->and($shared->body)->toBe('Edited after sharing');
     });
 
+    test('sends the reveal emails a share makes due', function () {
+        /** @var TestCase $this */
+        Notification::fake();
+        MemoryParticipant::factory()->for($this->author)->create(['created_at' => '2026-08-01T12:00:00Z']);
+        $other = MemoryParticipant::factory()->create(['created_at' => '2026-08-01T12:00:00Z'])->user;
+        Memory::factory()->for($other)->forMonth($this->month)->shared()->create();
+
+        $this->writer->share('Short and sweet', null);
+
+        expect(MemoryEmail::query()->where('kind', MemoryEmailKind::Reveal)->pluck('user_id')->sort()->values()->all())
+            ->toBe(collect([$this->author->id, $other->id])->sort()->values()->all());
+    });
+
+    test('queues the job that sends any emails the share made due', function () {
+        /** @var TestCase $this */
+        Queue::fake();
+
+        $this->writer->share('Short and sweet', null);
+
+        Queue::assertPushed(SendShareNotificationsIfNeeded::class, fn (SendShareNotificationsIfNeeded $job): bool => $job->month->calendarMonth->equals($this->month));
+    });
+
+    test('still shares, and logs the error, when the job can\'t be queued', function () {
+        /** @var TestCase $this */
+        Exceptions::fake();
+        Bus::shouldReceive('dispatch')->andThrow(new RuntimeException('The queue is down.'));
+
+        $shared = $this->writer->share('Short and sweet', null);
+
+        expect($shared->isShared())->toBeTrue();
+        Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'The queue is down.');
+    });
+
+    test('queues no reveal emails when sharing an already shared memory again', function () {
+        /** @var TestCase $this */
+        Queue::fake();
+        $this->authorsMemoryFactory->shared()->create();
+
+        $this->writer->share('Edited after sharing', 0);
+
+        Queue::assertNotPushed(SendShareNotificationsIfNeeded::class);
+    });
+
     test('refuses to share nothing', function (bool $hasDraft) {
         /** @var TestCase $this */
         $draft = $hasDraft ? $this->authorsMemoryFactory->create() : null;
@@ -171,6 +239,25 @@ describe('share()', function () {
         'over a draft' => [true],
         'before there is a memory' => [false],
     ]);
+
+    test('shares a memory with photos and no text', function () {
+        /** @var TestCase $this */
+        $draft = $this->authorsMemoryFactory->create(['body' => '']);
+        MemoryPhoto::factory()->for($draft)->create();
+
+        expect($this->writer->share('', 0)->isShared())->toBeTrue();
+    });
+
+    test('refuses to share a memory whose only photos were removed', function () {
+        /** @var TestCase $this */
+        $draft = $this->authorsMemoryFactory->create(['body' => '']);
+        MemoryPhoto::factory()->for($draft)->create()->delete();
+
+        expect(fn () => $this->writer->share('', 0))
+            ->toThrow(ValidationException::class);
+
+        expect($draft->fresh()->isDraft())->toBeTrue();
+    });
 
     test('refuses to share over text saved on another device', function () {
         /** @var TestCase $this */
@@ -191,5 +278,30 @@ describe('share()', function () {
         $shared = $this->writer->share('Shared', 0);
 
         expect($this->writer->save('Edited after sharing', $shared->lock_version)->body)->toBe('Edited after sharing');
+    });
+});
+
+describe('findOrStartForPhotos()', function () {
+    test('starts a memory without text when there is none', function () {
+        /** @var TestCase $this */
+        $memory = $this->writer->findOrStartForPhotos();
+
+        expect($memory)
+            ->wasRecentlyCreated->toBeTrue()
+            ->body->toBe('')
+            ->lock_version->toBe(0)
+            ->isDraft()->toBeTrue();
+    });
+
+    test('returns the memory there is, leaving its version alone', function () {
+        /** @var TestCase $this */
+        $existing = $this->authorsMemoryFactory->create(['body' => 'Already here', 'lock_version' => 3]);
+
+        $memory = $this->writer->findOrStartForPhotos();
+
+        expect($memory)
+            ->id->toBe($existing->id)
+            ->wasRecentlyCreated->toBeFalse()
+            ->lock_version->toBe(3);
     });
 });

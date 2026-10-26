@@ -1,4 +1,5 @@
 import "./bootstrap";
+import "./memory-photos";
 
 // Import only hljs core + specific languages to reduce bundle size
 import hljs from "highlight.js/lib/core";

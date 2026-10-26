@@ -44,9 +44,12 @@ class Memory extends Model
         return $this->belongsTo(Month::class);
     }
 
+    /**
+     * The memory's reactions in the order they were added.
+     */
     public function reactions(): HasMany
     {
-        return $this->hasMany(MemoryReaction::class);
+        return $this->hasMany(MemoryReaction::class)->orderBy('created_at')->orderBy('id');
     }
 
     /**

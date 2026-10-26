@@ -101,6 +101,22 @@ final class CalendarMonth implements Stringable
     }
 
     /**
+     * The moment the Eastern clock reads the given hour on a day of the month,
+     * for example 9am on the 15th. Like every moment here, it comes back as a
+     * UTC instant.
+     */
+    public function at(int $day, int $hour): CarbonImmutable
+    {
+        $daysInMonth = $this->firstDay()->daysInMonth;
+
+        if ($day < 1 || $day > $daysInMonth) {
+            throw new InvalidArgumentException("Day must be between 1 and {$daysInMonth}, got {$day}.");
+        }
+
+        return $this->firstDay()->setDay($day)->setTime($hour, 0)->utc();
+    }
+
+    /**
      * For example "September 2026".
      */
     public function label(): string

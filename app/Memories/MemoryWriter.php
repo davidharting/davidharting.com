@@ -2,12 +2,15 @@
 
 namespace App\Memories;
 
+use App\Jobs\SendShareNotificationsIfNeeded;
 use App\Models\Memory;
 use App\Models\User;
 use App\Support\CalendarMonth;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * Writes one person's memory for one month, never overwriting a newer
@@ -31,13 +34,15 @@ final readonly class MemoryWriter
     /**
      * Save the body without sharing it. Returns the memory as saved, or null
      * when there is no memory afterwards: a draft only exists while it has
-     * text or photos, so emptying a draft without photos deletes it. A shared
-     * memory can't be emptied, because shared memories are never deleted.
+     * text or photos, so emptying a draft without photos deletes it. Removed
+     * photos count, so a removed photo can always be put back. A shared memory
+     * can't be left with neither text nor photos, because shared memories are
+     * never deleted.
      *
      * @param  ?int  $expectedVersion  The `lock_version` the writer last saw, or null if it saw no memory.
      *
      * @throws MemoryChangedElsewhere when the memory has moved past the expected version.
-     * @throws ValidationException when emptying a shared memory, or when the body is too long.
+     * @throws ValidationException when emptying a shared memory without photos, or when the body is too long.
      */
     public function save(string $body, ?int $expectedVersion): ?Memory
     {
@@ -57,7 +62,7 @@ final readonly class MemoryWriter
             return trim($body) === '' ? null : $this->start($body);
         }
 
-        if ($memory->isShared() && trim($body) === '') {
+        if ($memory->isShared() && trim($body) === '' && ! $memory->photos()->exists()) {
             throw ValidationException::withMessages(['body' => "A shared memory can't be empty."]);
         }
 
@@ -74,28 +79,87 @@ final readonly class MemoryWriter
 
     /**
      * Save the body and share the memory. Sharing an already shared memory
-     * just saves it; it keeps its first `shared_at`.
+     * just saves it; it keeps its first `shared_at`. A memory with photos can
+     * be shared without text. Once the share commits, it queues a job
+     * that sends any emails the share made due.
      *
      * @param  ?int  $expectedVersion  The `lock_version` the writer last saw, or null if it saw no memory.
      *
      * @throws MemoryChangedElsewhere when the memory has moved past the expected version.
-     * @throws ValidationException when the body is empty.
+     * @throws ValidationException when there is neither text nor a photo to share.
      */
     public function share(string $body, ?int $expectedVersion): Memory
     {
-        if (trim($body) === '') {
+        if (trim($body) === '' && ! $this->find()?->photos()->exists()) {
             throw ValidationException::withMessages(['body' => "There's nothing to share yet."]);
         }
 
-        return DB::transaction(function () use ($body, $expectedVersion) {
+        $justShared = false;
+
+        $memory = DB::transaction(function () use ($body, $expectedVersion, &$justShared) {
             $memory = $this->save($body, $expectedVersion);
 
             if ($memory->isDraft()) {
                 $this->update($memory, $memory->lock_version, ['shared_at' => now()]);
+                $justShared = true;
             }
 
             return $memory->refresh();
         });
+
+        if ($justShared) {
+            $this->queueShareNotifications($memory);
+        }
+
+        return $memory;
+    }
+
+    /**
+     * The memory to add photos to: the author's memory for the month, started
+     * without text if there isn't one yet. Photos stay out of `lock_version`,
+     * so this never checks or bumps it. The memory comes back with
+     * `wasRecentlyCreated` set when this call started it.
+     */
+    public function findOrStartForPhotos(): Memory
+    {
+        $memory = $this->find();
+
+        if ($memory !== null) {
+            return $memory;
+        }
+
+        try {
+            return $this->start('');
+        } catch (MemoryChangedElsewhere) {
+            return $this->find() ?? $this->start('');
+        }
+    }
+
+    /**
+     * Delete a memory that has neither text nor photos, removed ones
+     * included. Returns whether it was deleted.
+     */
+    public function discardIfEmpty(Memory $memory): bool
+    {
+        return Memory::query()
+            ->whereKey($memory->id)
+            ->where('body', '')
+            ->whereDoesntHave('photos', fn (Builder $photos) => $photos->withTrashed())
+            ->delete() > 0;
+    }
+
+    /**
+     * Queue the job that sends any emails a share made due. The share has
+     * already saved, so failing to queue is only logged, and the author never
+     * sees it.
+     */
+    private function queueShareNotifications(Memory $memory): void
+    {
+        try {
+            SendShareNotificationsIfNeeded::dispatch($memory->month);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 
     private function find(): ?Memory
@@ -107,8 +171,8 @@ final readonly class MemoryWriter
     }
 
     /**
-     * Create the memory on its first save with text. If another device
-     * created it first, this one is stale.
+     * Create the memory on its first save with text, or its first photo. If
+     * another device created it first, this one is stale.
      */
     private function start(string $body): Memory
     {

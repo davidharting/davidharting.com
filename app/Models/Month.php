@@ -67,11 +67,41 @@ class Month extends Model
     }
 
     /**
+     * Whether the month opened once both participants existed. Emails are
+     * only for these months, so adding the second participant never sends
+     * emails about older months.
+     */
+    public function openedWithBothParticipants(): bool
+    {
+        $secondJoinedAt = MemoryParticipant::secondJoinedAt();
+
+        return $secondJoinedAt !== null && $this->opensAt()->greaterThanOrEqualTo($secondJoinedAt);
+    }
+
+    /**
      * The fallback reveal: the end of the following month, whether or not both have shared.
      */
     public function revealDeadline(): CarbonImmutable
     {
         return $this->calendarMonth->next()->endsAt();
+    }
+
+    /**
+     * When the reminder that the month is open is due: 9am Eastern on the day
+     * it opens.
+     */
+    public function reminderDueAt(): CarbonImmutable
+    {
+        return $this->calendarMonth->next()->at(day: 1, hour: 9);
+    }
+
+    /**
+     * When the nudge to whoever hasn't shared is due: 9am Eastern on the 15th
+     * of the month after.
+     */
+    public function nudgeDueAt(): CarbonImmutable
+    {
+        return $this->calendarMonth->next()->at(day: 15, hour: 9);
     }
 
     /**

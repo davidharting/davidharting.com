@@ -6,7 +6,27 @@
 @endphp
 
 <article class="mx-auto max-w-xl">
-    <a class="link font-sans text-sm" href="{{ route("memories.index") }}">← All months</a>
+    <nav class="flex justify-between gap-4 font-sans text-sm">
+        <a class="link" href="{{ route("memories.index") }}">← All months</a>
+
+        <div class="flex gap-4">
+            @if ($previous)
+                <a
+                    class="link"
+                    href="{{ route("memories.show", $previous->toYearMonth()) }}"
+                    aria-label="{{ $previous->label() }}"
+                >← {{ $previous->name() }}</a>
+            @endif
+
+            @if ($next)
+                <a
+                    class="link"
+                    href="{{ route("memories.show", $next->toYearMonth()) }}"
+                    aria-label="{{ $next->label() }}"
+                >{{ $next->name() }} →</a>
+            @endif
+        </div>
+    </nav>
 
     <x-type.page-title class="mt-8 text-5xl">{{ $month->label() }}</x-type.page-title>
 
@@ -29,18 +49,14 @@
         >Yours</a>
     </nav>
 
-    @if ($revealed)
-        <p class="mt-4 font-sans text-sm opacity-60">{{ $monthForViewer->revealStatusLabel() }}</p>
-    @endif
-
     <section class="mt-10">
         @if ($statusLabel() !== null)
+            <p class="font-sans text-sm opacity-60">{{ $statusLabel() }}</p>
+        @endif
+
+        @if ($showingYours && $monthForViewer->viewerMemory?->isShared())
             <p class="font-sans text-sm">
-                <span class="opacity-60">{{ $statusLabel() }}</span>
-                @if ($showingYours && $monthForViewer->viewerMemory?->isShared())
-                    <span class="opacity-60">·</span>
-                    <a class="link" href="{{ route("memories.write", $month->toYearMonth()) }}">Edit</a>
-                @endif
+                <a class="link" href="{{ route("memories.write", $month->toYearMonth()) }}">Edit</a>
             </p>
         @endif
 
@@ -79,19 +95,4 @@
             </div>
         @endif
     </section>
-
-    @if ($previous || $next)
-        <nav class="mt-12 flex justify-between gap-4 font-sans text-sm">
-            @if ($previous)
-                <a class="link" href="{{ route("memories.show", $previous->toYearMonth()) }}"
-                    >← {{ $previous->label() }}</a>
-            @else
-                <span></span>
-            @endif
-
-            @if ($next)
-                <a class="link" href="{{ route("memories.show", $next->toYearMonth()) }}">{{ $next->label() }} →</a>
-            @endif
-        </nav>
-    @endif
 </article>
