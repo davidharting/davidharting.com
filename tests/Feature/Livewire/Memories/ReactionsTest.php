@@ -181,6 +181,15 @@ describe('render()', function () {
             ->assertDontSeeHtml('Add a reaction');
     });
 
+    test('offers only the quick picks the viewer has not left yet', function () {
+        /** @var TestCase $this */
+        Livewire::actingAs($this->david)
+            ->test(Reactions::class, ['memory' => reactionsTestMemory($this->katie, 8)])
+            ->assertSeeHtml('aria-label="React 😂"')
+            ->assertDontSeeHtml('aria-label="React ❤️"')
+            ->assertDontSeeHtml('aria-label="React 🥹"');
+    });
+
     test('hides the add button once the viewer has left five', function () {
         /** @var TestCase $this */
         Livewire::actingAs($this->katie)

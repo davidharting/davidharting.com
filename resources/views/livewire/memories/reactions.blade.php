@@ -26,35 +26,59 @@
             @endforeach
 
             @if ($this->canReact && $this->hasRoom)
-                <div class="relative" wire:key="picker">
-                    <button
-                        type="button"
-                        wire:loading.attr="disabled"
-                        class="btn btn-circle btn-outline border-base-300 text-xl"
-                        aria-label="Add a reaction"
-                        x-on:click="pick()"
-                    >
-                        +
-                    </button>
-                    <input
-                        x-ref="picker"
-                        type="text"
-                        class="pointer-events-none absolute inset-0 opacity-0"
-                        style="font-size: 16px"
-                        tabindex="-1"
-                        aria-label="Type an emoji to react"
-                        autocomplete="off"
-                        autocorrect="off"
-                        autocapitalize="off"
-                        spellcheck="false"
-                        x-on:input="picked($event)"
-                        x-on:compositionend="picked($event)"
-                        x-on:blur="hint = null"
-                        x-on:keydown.escape="$el.blur()"
-                    />
-                </div>
+                <button
+                    type="button"
+                    wire:key="add"
+                    wire:loading.attr="disabled"
+                    class="btn btn-circle btn-outline border-base-300 text-xl"
+                    aria-label="Add a reaction"
+                    x-bind:aria-expanded="open"
+                    x-on:click="open = ! open"
+                >
+                    +
+                </button>
             @endif
         </div>
+
+        @if ($this->canReact && $this->hasRoom)
+            <div
+                wire:key="picker"
+                x-show="open"
+                x-on:keydown.escape.window="open = false"
+                class="relative mt-2 flex flex-wrap items-center gap-1"
+                style="display: none"
+            >
+                @foreach ($this->quickPicks as $emoji)
+                    <button
+                        type="button"
+                        wire:key="pick-{{ $emoji }}"
+                        wire:loading.attr="disabled"
+                        class="btn btn-ghost btn-square text-xl"
+                        aria-label="React {{ $emoji }}"
+                        x-on:click="quickPick(@js($emoji))"
+                    >
+                        {{ $emoji }}
+                    </button>
+                @endforeach
+                <button type="button" class="btn btn-ghost btn-sm font-sans" x-on:click="pick()">More…</button>
+                <input
+                    x-ref="picker"
+                    type="text"
+                    class="pointer-events-none absolute inset-0 opacity-0"
+                    style="font-size: 16px"
+                    tabindex="-1"
+                    aria-label="Type an emoji to react"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    x-on:input="picked($event)"
+                    x-on:compositionend="picked($event)"
+                    x-on:blur="hint = null"
+                    x-on:keydown.escape="$el.blur()"
+                />
+            </div>
+        @endif
 
         <p x-show="hint" x-text="hint" class="mt-2 font-sans text-sm opacity-60" style="display: none"></p>
 

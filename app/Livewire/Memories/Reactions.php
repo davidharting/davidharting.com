@@ -19,6 +19,12 @@ use Livewire\Component;
  */
 class Reactions extends Component
 {
+    /**
+     * The emoji offered in one tap when adding a reaction. Any other emoji
+     * comes from the keyboard.
+     */
+    public const array QUICK_PICKS = ['❤️', '😂', '🥹', '😍', '🎉', '👏', '🔥', '😮'];
+
     #[Locked]
     public Memory $memory;
 
@@ -97,6 +103,19 @@ class Reactions extends Component
     public function hasRoom(): bool
     {
         return $this->reactions->where('user_id', auth()->id())->count() < MemoryReactionWriter::MAX_PER_PERSON;
+    }
+
+    /**
+     * The quick picks the viewer hasn't left yet.
+     *
+     * @return list<string>
+     */
+    #[Computed]
+    public function quickPicks(): array
+    {
+        $left = $this->reactions->where('user_id', auth()->id())->pluck('emoji')->all();
+
+        return array_values(array_diff(self::QUICK_PICKS, $left));
     }
 
     public function render(): View

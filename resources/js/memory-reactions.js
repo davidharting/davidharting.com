@@ -1,7 +1,8 @@
 /**
- * The reaction row's picker and toast. A page can't open the phone's emoji
- * keyboard, so + focuses a hidden input and the first emoji typed into it is
- * sent, after which the keyboard closes. Anything else typed is dropped.
+ * The reaction row's picker and toast. + opens a few quick picks. A page
+ * can't open the phone's emoji keyboard, so More… focuses a hidden input and
+ * the first emoji typed into it is sent, after which the keyboard closes.
+ * Anything else typed is dropped.
  *
  * The emoji test here is looser than the server's, in
  * App\Support\Emoji, which has the final say.
@@ -10,10 +11,16 @@ const EMOJI = /[\p{Extended_Pictographic}\p{Regional_Indicator}\u{20E3}]/u;
 
 document.addEventListener("alpine:init", () => {
     window.Alpine.data("memoryReactions", () => ({
+        open: false,
         hint: null,
         notice: null,
         noticeTimer: null,
         segmenter: new Intl.Segmenter(),
+
+        quickPick(emoji) {
+            this.open = false;
+            this.$wire.add(emoji);
+        },
 
         pick() {
             this.$refs.picker.focus();
@@ -40,6 +47,7 @@ document.addEventListener("alpine:init", () => {
             for (const { segment } of this.segmenter.segment(text)) {
                 if (EMOJI.test(segment)) {
                     this.$refs.picker.blur();
+                    this.open = false;
                     this.$wire.add(segment);
                     return;
                 }
