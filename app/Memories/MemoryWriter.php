@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Support\CalendarMonth;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -157,7 +156,7 @@ final readonly class MemoryWriter
     private function queueShareNotifications(Memory $memory): void
     {
         try {
-            Bus::dispatch(new SendShareNotificationsIfNeeded($memory->month));
+            SendShareNotificationsIfNeeded::dispatch($memory->month);
         } catch (Throwable $exception) {
             report($exception);
         }
