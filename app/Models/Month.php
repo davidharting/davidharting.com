@@ -67,6 +67,18 @@ class Month extends Model
     }
 
     /**
+     * Whether the month opened once both participants existed. Emails are
+     * only for these months, so adding the second participant never sends
+     * emails about older months.
+     */
+    public function openedWithBothParticipants(): bool
+    {
+        $secondJoinedAt = MemoryParticipant::secondJoinedAt();
+
+        return $secondJoinedAt !== null && $this->opensAt()->greaterThanOrEqualTo($secondJoinedAt);
+    }
+
+    /**
      * The fallback reveal: the end of the following month, whether or not both have shared.
      */
     public function revealDeadline(): CarbonImmutable
