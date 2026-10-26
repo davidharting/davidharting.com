@@ -5,6 +5,7 @@ namespace App\Memories;
 use App\Models\Memory;
 use App\Models\MemoryReaction;
 use App\Models\User;
+use App\Support\Emoji;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -21,12 +22,6 @@ final readonly class MemoryReactionWriter
      * The most reactions one person may leave on one memory.
      */
     public const int MAX_PER_PERSON = 5;
-
-    /**
-     * The longest emoji accepted, in bytes. The longest standard emoji
-     * sequences are well under it.
-     */
-    private const int MAX_EMOJI_BYTES = 64;
 
     public function __construct(public User $reactor, public Memory $memory) {}
 
@@ -84,7 +79,7 @@ final readonly class MemoryReactionWriter
      */
     private function insert(string $emoji, callable $make): void
     {
-        if (! self::isOneEmoji($emoji)) {
+        if (! Emoji::isOne($emoji)) {
             throw ValidationException::withMessages([
                 'emoji' => 'A reaction is a single emoji.',
             ]);
@@ -105,31 +100,6 @@ final readonly class MemoryReactionWriter
 
             $make()->save();
         });
-    }
-
-    /**
-     * One user-perceived character that is an emoji: a flag, a keycap, or a
-     * pictograph with any presentation selector, skin tone or joined
-     * sequence. Stray combining marks are refused so nothing draws outside
-     * its button. The browser runs a looser check before sending, in
-     * resources/js/memory-reactions.js.
-     */
-    private static function isOneEmoji(string $text): bool
-    {
-        if (strlen($text) > self::MAX_EMOJI_BYTES || preg_match('/^\X$/u', $text) !== 1) {
-            return false;
-        }
-
-        if (preg_match('/\p{Regional_Indicator}/u', $text) === 1) {
-            return preg_match('/^\p{Regional_Indicator}{2}$/u', $text) === 1;
-        }
-
-        if (str_contains($text, "\u{20E3}")) {
-            return preg_match('/^[0-9#*]\x{FE0F}?\x{20E3}$/u', $text) === 1;
-        }
-
-        return preg_match('/^\p{Extended_Pictographic}/u', $text) === 1
-            && preg_match('/[^\P{M}\x{FE0F}]/u', $text) === 0;
     }
 
     /**
