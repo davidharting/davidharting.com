@@ -1,12 +1,20 @@
 <?php
 
+use App\Jobs\SendShareNotificationsIfNeeded;
 use App\Memories\MemoryChangedElsewhere;
+use App\Memories\MemoryEmailKind;
 use App\Memories\MemoryWriter;
 use App\Models\Memory;
+use App\Models\MemoryEmail;
+use App\Models\MemoryParticipant;
 use App\Models\MemoryPhoto;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -174,6 +182,49 @@ describe('share()', function () {
 
         expect($shared->shared_at->toIso8601String())->toBe('2026-10-05T21:40:00+00:00')
             ->and($shared->body)->toBe('Edited after sharing');
+    });
+
+    test('sends the reveal emails a share makes due', function () {
+        /** @var TestCase $this */
+        Notification::fake();
+        MemoryParticipant::factory()->for($this->author)->create(['created_at' => '2026-08-01T12:00:00Z']);
+        $other = MemoryParticipant::factory()->create(['created_at' => '2026-08-01T12:00:00Z'])->user;
+        Memory::factory()->for($other)->forMonth($this->month)->shared()->create();
+
+        $this->writer->share('Short and sweet', null);
+
+        expect(MemoryEmail::query()->where('kind', MemoryEmailKind::Reveal)->pluck('user_id')->sort()->values()->all())
+            ->toBe(collect([$this->author->id, $other->id])->sort()->values()->all());
+    });
+
+    test('queues the job that sends any emails the share made due', function () {
+        /** @var TestCase $this */
+        Queue::fake();
+
+        $this->writer->share('Short and sweet', null);
+
+        Queue::assertPushed(SendShareNotificationsIfNeeded::class, fn (SendShareNotificationsIfNeeded $job): bool => $job->month->calendarMonth->equals($this->month));
+    });
+
+    test('still shares, and logs the error, when the job can\'t be queued', function () {
+        /** @var TestCase $this */
+        Exceptions::fake();
+        Bus::shouldReceive('dispatch')->andThrow(new RuntimeException('The queue is down.'));
+
+        $shared = $this->writer->share('Short and sweet', null);
+
+        expect($shared->isShared())->toBeTrue();
+        Exceptions::assertReported(fn (RuntimeException $exception): bool => $exception->getMessage() === 'The queue is down.');
+    });
+
+    test('queues no reveal emails when sharing an already shared memory again', function () {
+        /** @var TestCase $this */
+        Queue::fake();
+        $this->authorsMemoryFactory->shared()->create();
+
+        $this->writer->share('Edited after sharing', 0);
+
+        Queue::assertNotPushed(SendShareNotificationsIfNeeded::class);
     });
 
     test('refuses to share nothing', function (bool $hasDraft) {

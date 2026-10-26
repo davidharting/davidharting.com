@@ -5,6 +5,7 @@ namespace App\Memories;
 use App\Models\Month;
 use App\Notifications\Memories\MonthOpened;
 use App\Notifications\Memories\Nudge;
+use App\Notifications\Memories\Revealed;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -23,11 +24,17 @@ enum MemoryEmailKind: string
      */
     case Nudge = 'nudge';
 
+    /**
+     * Once the other person's memory can be read: a heads-up and a link.
+     */
+    case Reveal = 'reveal';
+
     public function notification(Month $month): Notification
     {
         return match ($this) {
             self::MonthOpened => new MonthOpened($month),
             self::Nudge => new Nudge($month),
+            self::Reveal => new Revealed($month),
         };
     }
 }

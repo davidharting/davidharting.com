@@ -2,6 +2,7 @@
 
 namespace App\Memories;
 
+use App\Jobs\SendShareNotificationsIfNeeded;
 use App\Models\Memory;
 use App\Models\User;
 use App\Support\CalendarMonth;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * Writes one person's memory for one month, never overwriting a newer
@@ -78,7 +80,8 @@ final readonly class MemoryWriter
     /**
      * Save the body and share the memory. Sharing an already shared memory
      * just saves it; it keeps its first `shared_at`. A memory with photos can
-     * be shared without text.
+     * be shared without text. Once the share commits, it queues a job
+     * that sends any emails the share made due.
      *
      * @param  ?int  $expectedVersion  The `lock_version` the writer last saw, or null if it saw no memory.
      *
@@ -91,15 +94,24 @@ final readonly class MemoryWriter
             throw ValidationException::withMessages(['body' => "There's nothing to share yet."]);
         }
 
-        return DB::transaction(function () use ($body, $expectedVersion) {
+        $justShared = false;
+
+        $memory = DB::transaction(function () use ($body, $expectedVersion, &$justShared) {
             $memory = $this->save($body, $expectedVersion);
 
             if ($memory->isDraft()) {
                 $this->update($memory, $memory->lock_version, ['shared_at' => now()]);
+                $justShared = true;
             }
 
             return $memory->refresh();
         });
+
+        if ($justShared) {
+            $this->queueShareNotifications($memory);
+        }
+
+        return $memory;
     }
 
     /**
@@ -134,6 +146,20 @@ final readonly class MemoryWriter
             ->where('body', '')
             ->whereDoesntHave('photos', fn (Builder $photos) => $photos->withTrashed())
             ->delete() > 0;
+    }
+
+    /**
+     * Queue the job that sends any emails a share made due. The share has
+     * already saved, so failing to queue is only logged, and the author never
+     * sees it.
+     */
+    private function queueShareNotifications(Memory $memory): void
+    {
+        try {
+            SendShareNotificationsIfNeeded::dispatch($memory->month);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 
     private function find(): ?Memory
