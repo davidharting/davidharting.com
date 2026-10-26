@@ -23,7 +23,7 @@ class Reactions extends Component
      * The emoji offered in one tap when adding a reaction. Any other emoji
      * comes from the keyboard.
      */
-    public const array QUICK_PICKS = ['❤️', '😂', '🥹', '😍', '🎉', '👏', '🔥', '😮'];
+    public const array QUICK_PICKS = ['❤️', '🥰', '🎉', '☠️', '😊', '😘', '🥹', '🫣'];
 
     #[Locked]
     public Memory $memory;

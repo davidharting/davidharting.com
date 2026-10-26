@@ -185,7 +185,7 @@ describe('render()', function () {
         /** @var TestCase $this */
         Livewire::actingAs($this->david)
             ->test(Reactions::class, ['memory' => reactionsTestMemory($this->katie, 8)])
-            ->assertSeeHtml('aria-label="React 😂"')
+            ->assertSeeHtml('aria-label="React 🎉"')
             ->assertDontSeeHtml('aria-label="React ❤️"')
             ->assertDontSeeHtml('aria-label="React 🥹"');
     });
