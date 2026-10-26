@@ -36,7 +36,8 @@ class Reactions extends Component
     }
 
     /**
-     * Whoever may no longer read the memory may not refresh the row either.
+     * Runs on every request after the first, so a page left open after the
+     * viewer lost access to the memory can't keep re-rendering the row.
      */
     public function hydrate(): void
     {
