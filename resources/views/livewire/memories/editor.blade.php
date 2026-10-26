@@ -8,6 +8,7 @@
     x-data="{
         confirming: false,
         leaving: false,
+        catchingUp: false,
         justSaved: false,
         savedFading: false,
         savedTimers: [],
@@ -36,6 +37,12 @@
             this.justSaved = false;
             this.savedFading = false;
         },
+        catchUp() {
+            this.catchingUp = true;
+            const done = () => (this.catchingUp = false);
+            setTimeout(done, 5000);
+            this.$wire.catchUp().then(done, done);
+        },
         leave(href) {
             if (this.leaving) return;
             if (this.$store.memoryUploads.pending > 0) {
@@ -60,13 +67,13 @@
         $wire.$watch('body', () => $nextTick(() => growText()));
     "
     x-on:memory-saved="flashSaved()"
-    x-on:online.window="$wire.$commit()"
+    x-on:online.window="catchUp()"
     x-on:beforeunload.window="if ($wire.$dirty('body') || $wire.changedElsewhere) $event.preventDefault();"
-    x-on:visibilitychange.document="if (document.visibilityState === 'visible') $wire.catchUp();"
+    x-on:visibilitychange.document="if (document.visibilityState === 'visible') catchUp();"
     x-on:pageshow.window="
         leaving = false;
         $store.memoryUploads.abandoned = false;
-        if ($event.persisted) $wire.catchUp();
+        if ($event.persisted) catchUp();
     "
     class="flex min-h-dvh flex-col"
 >
@@ -147,6 +154,7 @@
         wire:model="body"
         x-ref="text"
         wire:ignore.self
+        x-bind:readonly="catchingUp"
         x-on:input="growText()"
         x-on:input.debounce.1000ms="$wire.$commit()"
         x-on:blur="$wire.$commit()"

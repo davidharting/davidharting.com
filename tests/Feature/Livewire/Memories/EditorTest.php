@@ -258,7 +258,7 @@ describe('another device', function () {
             ->isDraft()->toBeTrue();
     });
 
-    test('picks up the other device\'s version on coming back, when nothing here is unsaved', function () {
+    test('picks up the other device\'s version on coming back with no unsaved typing, and saves on from it', function () {
         /** @var TestCase $this */
         $this->editor->call('catchUp')
             ->assertSet('body', 'From the phone')
@@ -272,13 +272,35 @@ describe('another device', function () {
 
     test('asks which version to keep on coming back with unsaved typing', function () {
         /** @var TestCase $this */
-        $this->editor->set('body', 'From the laptop')
-            ->call('catchUp')
+        // The browser sends unsaved typing in the same request as catchUp.
+        $this->editor->update(
+            calls: [['method' => 'catchUp', 'params' => [], 'path' => '']],
+            updates: ['body' => 'From the laptop'],
+        )
             ->assertSet('body', 'From the laptop')
             ->assertSet('changedElsewhere', true)
             ->assertSeeText('This changed on another device since you opened it.');
 
         expect(storedMemoryOf($this->katie, '2026-09')->body)->toBe('From the phone');
+    });
+
+    test('keeps the question and the typing on coming back while already asking', function () {
+        /** @var TestCase $this */
+        $this->editor->set('body', 'From the laptop')
+            ->call('catchUp')
+            ->assertSet('body', 'From the laptop')
+            ->assertSet('changedElsewhere', true);
+    });
+
+    test('asks rather than replacing text that was refused, on coming back', function () {
+        /** @var TestCase $this */
+        $tooLong = str_repeat('a', MemoryWriter::MAX_LENGTH + 1);
+
+        $this->editor->set('body', $tooLong)
+            ->assertHasErrors('body')
+            ->call('catchUp')
+            ->assertSet('body', $tooLong)
+            ->assertSet('changedElsewhere', true);
     });
 
     test('ignores "Keep this one" when no conflict has been detected', function () {

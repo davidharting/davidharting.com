@@ -138,7 +138,9 @@ class Editor extends Component
      * Pick up what another device saved while this page was out of sight.
      * The browser calls this when the page comes back into view, sending any
      * unsaved typing with it, so typing that clashes has already raised the
-     * conflict by the time this runs.
+     * conflict by the time this runs. Text that was refused (too long, or
+     * emptying a shared memory) is unsaved too, so it asks rather than
+     * replacing it.
      */
     public function catchUp(): void
     {
@@ -148,9 +150,17 @@ class Editor extends Component
 
         unset($this->monthForViewer);
 
-        if ($this->monthForViewer->viewerMemory?->lock_version !== $this->lockVersion) {
-            $this->load();
+        if ($this->monthForViewer->viewerMemory?->lock_version === $this->lockVersion) {
+            return;
         }
+
+        if ($this->getErrorBag()->has('body')) {
+            $this->changedElsewhere = true;
+
+            return;
+        }
+
+        $this->load();
     }
 
     public function keepEditing(): void
