@@ -2,11 +2,9 @@
 
 use App\Livewire\Memories\Reactions;
 use App\Models\Memory;
-use App\Models\MemoryParticipant;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Database\Seeders\MemorySeeder;
-use Illuminate\Support\Once;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -50,17 +48,6 @@ describe('mount()', function () {
         Livewire::actingAs($this->katie)
             ->test(Reactions::class, ['memory' => $davidsUnrevealed])
             ->assertNotFound();
-    });
-});
-
-describe('hydrate()', function () {
-    test('is not found once the viewer may no longer read the memory', function () {
-        /** @var TestCase $this */
-        $component = Livewire::actingAs($this->david)->test(Reactions::class, ['memory' => reactionsTestMemory($this->katie, 8)]);
-        MemoryParticipant::query()->where('user_id', $this->katie->id)->delete();
-        Once::flush();
-
-        $component->call('$refresh')->assertNotFound();
     });
 });
 

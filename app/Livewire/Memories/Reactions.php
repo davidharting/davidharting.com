@@ -41,15 +41,6 @@ class Reactions extends Component
         $this->memory = $memory;
     }
 
-    /**
-     * Runs on every request after the first, so a page left open after the
-     * viewer lost access to the memory can't keep re-rendering the row.
-     */
-    public function hydrate(): void
-    {
-        $this->authorize('view', $this->memory);
-    }
-
     public function add(string $emoji): void
     {
         $this->authorize('react', $this->memory);
