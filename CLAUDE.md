@@ -42,7 +42,13 @@ Operational notes:
 
 ### PR preview environments
 
-`render.yaml` has `previews.generation: manual`, so a PR gets a preview environment (web + worker; the cron jobs are excluded via `previews.generation: off`) only when it carries the `preview` label. The `render-preview-label` workflow turns the label into the `[render preview]` title tag Render looks for, and removing the label removes the tag and the preview. In a stack of PRs, label only the top one. Remove the label before squash merging so the tag stays out of main's history. The web service's preview URL is always:
+`render.yaml` has `previews.generation: manual`, so a PR gets a preview environment only when it carries the `preview` label. The `render-preview-label` workflow turns the label into the `[render preview]` title tag Render looks for, and removing the label removes the tag and the preview. Remove the label before squash merging so the tag stays out of main's history.
+
+Render only previews PRs whose base branch is `main`, whatever the label or title says. In a stack, only the bottom PR targets `main`, so labeling the top PR does nothing. To preview a stack, open a separate draft PR from the top branch to `main`, titled e.g. `Preview only: <stack> [render preview]`, and close it unmerged once testing is done.
+
+A preview environment copies every service in the Blueprint, including the cron jobs (backups, memories emails); nothing in `render.yaml` excludes them. Closing the PR removes them all.
+
+The web service's preview URL is always:
 
 ```
 https://davidhartingdotcom-web-pr-<PR_NUMBER>.onrender.com
