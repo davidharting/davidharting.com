@@ -2,9 +2,9 @@
 
 use App\Support\Emoji;
 
-describe('isOne()', function () {
+describe('isEmoji()', function () {
     test('accepts a single emoji', function (string $emoji) {
-        expect(Emoji::isOne($emoji))->toBeTrue();
+        expect(Emoji::isEmoji($emoji))->toBeTrue();
     })->with([
         'a pictograph' => '😂',
         'a pictograph with its presentation selector' => '❤️',
@@ -16,7 +16,7 @@ describe('isOne()', function () {
     ]);
 
     test('refuses anything that is not exactly one emoji', function (string $text) {
-        expect(Emoji::isOne($text))->toBeFalse();
+        expect(Emoji::isEmoji($text))->toBeFalse();
     })->with([
         'nothing' => '',
         'a letter' => 'a',
