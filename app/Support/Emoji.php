@@ -14,12 +14,12 @@ final class Emoji
     private const int MAX_BYTES = 64;
 
     /**
-     * Whether the text is exactly one emoji: a flag, a keycap, or a
+     * Whether the text is exactly one emoji, and nothing else: a flag, a keycap, or a
      * pictograph with any presentation selector, skin tone or joined
      * sequence. Stray combining marks are refused so nothing draws outside
      * the space one emoji takes.
      */
-    public static function isOne(string $text): bool
+    public static function isEmoji(string $text): bool
     {
         if (strlen($text) > self::MAX_BYTES || preg_match('/^\X$/u', $text) !== 1) {
             return false;

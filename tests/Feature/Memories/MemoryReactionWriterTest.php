@@ -73,6 +73,16 @@ describe('add()', function () {
 });
 
 describe('remove()', function () {
+    test('lets the reactor leave the same emoji again', function () {
+        /** @var TestCase $this */
+        $this->writer->add('❤️');
+        $this->writer->remove('❤️');
+
+        $this->writer->add('❤️');
+
+        expect(reactionsOf($this->katie, $this->memory))->toBe(['❤️']);
+    });
+
     test('removes the reaction and returns it so it can be restored', function () {
         /** @var TestCase $this */
         $this->writer->add('❤️');
@@ -107,7 +117,7 @@ describe('restore()', function () {
         }
 
         $removed = $this->writer->remove('😂');
-        $this->writer->restore($removed);
+        $this->writer->restore($removed->id);
 
         expect(reactionsOf($this->katie, $this->memory))->toBe(['❤️', '😂', '🥹']);
     });
@@ -120,8 +130,20 @@ describe('restore()', function () {
             $this->writer->add($emoji);
         }
 
-        expect(fn () => $this->writer->restore($removed))
+        expect(fn () => $this->writer->restore($removed->id))
             ->toThrow(ValidationException::class, 'up to 5 reactions');
+
+        expect(reactionsOf($this->katie, $this->memory))->toBe(['😂', '🥹', '🎉', '😍', '👏']);
+    });
+
+    test('changes nothing when the reactor has left that emoji again since', function () {
+        /** @var TestCase $this */
+        $removed = tap($this->writer)->add('❤️')->remove('❤️');
+        $this->writer->add('❤️');
+
+        $this->writer->restore($removed->id);
+
+        expect(reactionsOf($this->katie, $this->memory))->toBe(['❤️']);
     });
 
     test("ignores a reaction from someone else's memory", function () {
@@ -129,9 +151,8 @@ describe('restore()', function () {
         $elsewhere = MemoryReaction::factory()->for($this->katie)->create(['emoji' => '❤️']);
         $elsewhere->delete();
 
-        $this->writer->restore($elsewhere);
+        $this->writer->restore($elsewhere->id);
 
-        expect(reactionsOf($this->katie, $this->memory))->toBe([])
-            ->and(MemoryReaction::find($elsewhere->id))->toBeNull();
+        expect($elsewhere->fresh()->trashed())->toBeTrue();
     });
 });
