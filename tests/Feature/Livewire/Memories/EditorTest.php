@@ -258,6 +258,29 @@ describe('another device', function () {
             ->isDraft()->toBeTrue();
     });
 
+    test('picks up the other device\'s version on coming back, when nothing here is unsaved', function () {
+        /** @var TestCase $this */
+        $this->editor->call('catchUp')
+            ->assertSet('body', 'From the phone')
+            ->assertSet('changedElsewhere', false)
+            ->assertDontSeeText('This changed on another device since you opened it.')
+            ->set('body', 'From the phone, then the laptop')
+            ->assertSet('changedElsewhere', false);
+
+        expect(storedMemoryOf($this->katie, '2026-09')->body)->toBe('From the phone, then the laptop');
+    });
+
+    test('asks which version to keep on coming back with unsaved typing', function () {
+        /** @var TestCase $this */
+        $this->editor->set('body', 'From the laptop')
+            ->call('catchUp')
+            ->assertSet('body', 'From the laptop')
+            ->assertSet('changedElsewhere', true)
+            ->assertSeeText('This changed on another device since you opened it.');
+
+        expect(storedMemoryOf($this->katie, '2026-09')->body)->toBe('From the phone');
+    });
+
     test('ignores "Keep this one" when no conflict has been detected', function () {
         /** @var TestCase $this */
         $this->editor->call('keepMine');

@@ -62,9 +62,11 @@
     x-on:memory-saved="flashSaved()"
     x-on:online.window="$wire.$commit()"
     x-on:beforeunload.window="if ($wire.$dirty('body') || $wire.changedElsewhere) $event.preventDefault();"
+    x-on:visibilitychange.document="if (document.visibilityState === 'visible') $wire.catchUp();"
     x-on:pageshow.window="
         leaving = false;
         $store.memoryUploads.abandoned = false;
+        if ($event.persisted) $wire.catchUp();
     "
     class="flex min-h-dvh flex-col"
 >
