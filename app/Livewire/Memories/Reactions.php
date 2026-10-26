@@ -23,12 +23,10 @@ class Reactions extends Component
     public Memory $memory;
 
     /**
-     * The reaction removed last, kept so Undo can put it back as it was.
-     *
-     * @var array<string, mixed>|null
+     * The id of the reaction removed last, which Undo puts back.
      */
     #[Locked]
-    public ?array $removed = null;
+    public ?int $removedId = null;
 
     public function mount(Memory $memory): void
     {
@@ -60,24 +58,23 @@ class Reactions extends Component
     {
         $this->authorize('react', $this->memory);
 
-        $reaction = $this->writer()->remove($emoji);
-        $this->removed = $reaction?->attributesToArray();
+        $this->removedId = $this->writer()->remove($emoji)?->id;
 
-        return $reaction !== null;
+        return $this->removedId !== null;
     }
 
     public function undo(): void
     {
         $this->authorize('react', $this->memory);
 
-        if ($this->removed === null) {
+        if ($this->removedId === null) {
             return;
         }
 
-        $removed = (new MemoryReaction)->forceFill($this->removed);
-        $this->removed = null;
+        $removedId = $this->removedId;
+        $this->removedId = null;
 
-        $this->writer()->restore($removed);
+        $this->writer()->restore($removedId);
     }
 
     #[Computed]
