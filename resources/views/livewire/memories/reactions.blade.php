@@ -44,8 +44,14 @@
             <div
                 wire:key="picker"
                 x-show="open"
+                x-transition:enter="transition duration-150 ease-out"
+                x-transition:enter-start="-translate-y-1 scale-95 opacity-0"
+                x-transition:enter-end="translate-y-0 scale-100 opacity-100"
+                x-transition:leave="transition duration-100 ease-in"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
                 x-on:keydown.escape.window="open = false"
-                class="relative mt-2 flex flex-wrap items-center gap-1"
+                class="relative mt-2 flex origin-top-left flex-wrap items-center gap-1"
                 style="display: none"
             >
                 @foreach ($this->quickPicks as $emoji)
