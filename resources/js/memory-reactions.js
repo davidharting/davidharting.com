@@ -4,7 +4,7 @@
  * sent, after which the keyboard closes. Anything else typed is dropped.
  *
  * The emoji test here is looser than the server's, in
- * App\Memories\MemoryReactionWriter, which has the final say.
+ * App\Support\Emoji, which has the final say.
  */
 const EMOJI = /[\p{Extended_Pictographic}\p{Regional_Indicator}\u{20E3}]/u;
 
