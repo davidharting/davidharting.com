@@ -1,6 +1,6 @@
 <?php
 
-use App\Jobs\ClaimRevealEmails;
+use App\Jobs\SendShareNotificationsIfNeeded;
 use App\Models\Memory;
 use App\Models\MemoryEmail;
 use App\Models\MemoryParticipant;
@@ -39,7 +39,7 @@ function shareOctoberMemory(User $author, string $sharedAt): Memory
 function claimOctoberRevealsAt(string $at): void
 {
     test()->travelTo($at);
-    ClaimRevealEmails::dispatch(octoberMonth());
+    SendShareNotificationsIfNeeded::dispatch(octoberMonth());
 }
 
 /**
@@ -106,7 +106,7 @@ describe('handle()', function () {
         Memory::factory()->for($this->katie)->forMonth($september->calendarMonth)->shared()->create();
         Memory::factory()->for($this->david)->forMonth($september->calendarMonth)->shared()->create();
 
-        ClaimRevealEmails::dispatch($september);
+        SendShareNotificationsIfNeeded::dispatch($september);
 
         expect(MemoryEmail::count())->toBe(0);
     });

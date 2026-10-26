@@ -2,7 +2,7 @@
 
 namespace App\Memories;
 
-use App\Jobs\ClaimRevealEmails;
+use App\Jobs\SendShareNotificationsIfNeeded;
 use App\Models\Memory;
 use App\Models\User;
 use App\Support\CalendarMonth;
@@ -82,7 +82,7 @@ final readonly class MemoryWriter
      * Save the body and share the memory. Sharing an already shared memory
      * just saves it; it keeps its first `shared_at`. A memory with photos can
      * be shared without text. Once the share commits, it queues a job
-     * to claim the reveal emails it makes due.
+     * that sends any emails the share made due.
      *
      * @param  ?int  $expectedVersion  The `lock_version` the writer last saw, or null if it saw no memory.
      *
@@ -109,7 +109,7 @@ final readonly class MemoryWriter
         });
 
         if ($justShared) {
-            $this->queueRevealEmails($memory);
+            $this->queueShareNotifications($memory);
         }
 
         return $memory;
@@ -150,14 +150,14 @@ final readonly class MemoryWriter
     }
 
     /**
-     * Queue the job that claims the reveal emails a share made due. The share
-     * has already saved, so failing to queue is only logged: the daily
-     * memories:send-emails run claims any reveal email this misses.
+     * Queue the job that sends any emails a share made due. The share has
+     * already saved, so failing to queue is only logged, and the author never
+     * sees it.
      */
-    private function queueRevealEmails(Memory $memory): void
+    private function queueShareNotifications(Memory $memory): void
     {
         try {
-            Bus::dispatch(new ClaimRevealEmails($memory->month));
+            Bus::dispatch(new SendShareNotificationsIfNeeded($memory->month));
         } catch (Throwable $exception) {
             report($exception);
         }

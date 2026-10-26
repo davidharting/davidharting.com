@@ -1,6 +1,6 @@
 <?php
 
-use App\Jobs\ClaimRevealEmails;
+use App\Jobs\SendShareNotificationsIfNeeded;
 use App\Memories\MemoryChangedElsewhere;
 use App\Memories\MemoryEmailKind;
 use App\Memories\MemoryWriter;
@@ -184,7 +184,7 @@ describe('share()', function () {
             ->and($shared->body)->toBe('Edited after sharing');
     });
 
-    test('claims the reveal emails a share makes due', function () {
+    test('sends the reveal emails a share makes due', function () {
         /** @var TestCase $this */
         Notification::fake();
         MemoryParticipant::factory()->for($this->author)->create(['created_at' => '2026-08-01T12:00:00Z']);
@@ -197,13 +197,13 @@ describe('share()', function () {
             ->toBe(collect([$this->author->id, $other->id])->sort()->values()->all());
     });
 
-    test('queues the job that claims the reveal emails', function () {
+    test('queues the job that sends any emails the share made due', function () {
         /** @var TestCase $this */
         Queue::fake();
 
         $this->writer->share('Short and sweet', null);
 
-        Queue::assertPushed(ClaimRevealEmails::class, fn (ClaimRevealEmails $job): bool => $job->month->calendarMonth->equals($this->month));
+        Queue::assertPushed(SendShareNotificationsIfNeeded::class, fn (SendShareNotificationsIfNeeded $job): bool => $job->month->calendarMonth->equals($this->month));
     });
 
     test('still shares, and logs the error, when the job can\'t be queued', function () {
@@ -224,7 +224,7 @@ describe('share()', function () {
 
         $this->writer->share('Edited after sharing', 0);
 
-        Queue::assertNotPushed(ClaimRevealEmails::class);
+        Queue::assertNotPushed(SendShareNotificationsIfNeeded::class);
     });
 
     test('refuses to share nothing', function (bool $hasDraft) {

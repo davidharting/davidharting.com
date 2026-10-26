@@ -11,14 +11,17 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
 /**
- * Queued after a memory is shared: claims the reveal emails that are due for
- * its month. Safe to run any number of times, since each email is claimed
- * only once.
+ * Queued after a memory is shared: sends whatever emails the share made due
+ * for its month. Safe to run any number of times, since each email goes out
+ * at most once.
  */
-class ClaimRevealEmails implements ShouldQueue
+class SendShareNotificationsIfNeeded implements ShouldQueue
 {
     use Queueable;
 
+    /**
+     * The first try and two more, a minute and then five minutes apart.
+     */
     public int $tries = 3;
 
     /**
@@ -29,10 +32,12 @@ class ClaimRevealEmails implements ShouldQueue
     public function __construct(public Month $month) {}
 
     /**
-     * A person's reveal email is due once the month has revealed and the
-     * other person's memory is shared. So when the second person shares,
-     * both get one, and a memory shared after the reveal deadline tells the
-     * other person it's there. Nothing is sent at the deadline itself.
+     * Each participant gets the month's reveal email once the month has
+     * revealed and the other person's memory is shared. So when the second
+     * person shares, before or after the reveal deadline, both get one; when
+     * the only shared memory is shared after the deadline, just the other
+     * person does. Nothing is sent at the deadline itself, since no share
+     * queues this job then.
      */
     public function handle(): void
     {

@@ -71,7 +71,7 @@ The email on the 15th to a participant who hasn't shared yet (a draft counts as 
 _Avoid_: Reminder, chase
 
 **Reveal email**:
-The heads-up to a participant that the other person's memory for a month is ready to read, with a link to it. A share sends it: when the second person shares, both get one, and a memory shared after the reveal deadline sends one to the other person. Nothing is sent at the deadline itself. Like the reminder, it never carries memory text or photos.
+The heads-up to a participant that the other person's memory for a month is ready to read, with a link to it. A share sends it, once the month has revealed: when the second person shares, both get one; when the only shared memory is shared after the reveal deadline, just the other person does. Nothing is sent at the deadline itself. Like the reminder, it never carries memory text or photos.
 _Avoid_: Reveal notification
 
 **Reaction**:
