@@ -25,10 +25,12 @@ test('gives memories pages a slim nav of Home, Memories and Account', function (
 
     $this->actingAs(User::firstWhere('email', 'katie@example.com'))->get($url)
         ->assertSuccessful()
-        ->assertSee(route('memories.index'))
-        ->assertSee(route('dashboard'))
+        ->assertSee('href="'.route('home').'"', false)
+        ->assertSee('href="'.route('memories.index').'"', false)
+        ->assertSee('href="'.route('dashboard').'"', false)
         ->assertDontSee(route('notes.index'))
-        ->assertDontSee(route('media.index'));
+        ->assertDontSee(route('media.index'))
+        ->assertDontSee(route('pages.index'));
 })->with([
     'the list' => '/memories',
     'a month' => '/memories/2026-09',

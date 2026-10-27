@@ -1,10 +1,10 @@
 <x-layout.app>
     <x-type.page-title class="mb-8">Account</x-type.page-title>
 
-    <ul class="space-y-4">
-        <li><a class="link" href="{{ route("profile.edit") }}">Profile</a></li>
+    <ul class="menu menu-lg bg-base-200 rounded-box w-full max-w-md">
+        <li><a href="{{ route("profile.edit") }}">Profile</a></li>
         @can('administrate')
-            <li><a class="link" href="{{ route("admin.index") }}">Admin</a></li>
+            <li><a href="{{ route("admin.index") }}">Admin</a></li>
         @endcan
     </ul>
 

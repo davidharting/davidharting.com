@@ -10,11 +10,11 @@
                 <x-profile.update-password />
             </x-card>
 
-            @if ($user->memoryParticipant === null)
+            @unless ($user->isMemoryParticipant())
                 <x-card title="Delete Your Account">
                     <x-profile.delete-user />
                 </x-card>
-            @endif
+            @endunless
         </div>
     </div>
 </x-layout.app>

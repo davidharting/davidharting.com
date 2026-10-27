@@ -66,6 +66,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, OAu
         return $this->hasOne(MemoryParticipant::class);
     }
 
+    public function isMemoryParticipant(): bool
+    {
+        return $this->memoryParticipant !== null;
+    }
+
     /**
      * The short name to show people, such as "Katie", falling back to the full name.
      */

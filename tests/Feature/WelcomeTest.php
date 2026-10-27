@@ -51,7 +51,7 @@ test('navigation links are present for anonymous users', function () {
     $response->assertDontSee(route('admin.index'));
 });
 
-test('admin users reach Admin from the Account page, not the nav', function () {
+test('does not show admin users an Admin link in the nav', function () {
     /** @var TestCase $this */
     $admin = User::factory()->admin()->create();
 

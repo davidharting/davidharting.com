@@ -22,7 +22,7 @@ test('renders for logged in user', function () {
 
 test('links the admin to Admin', function () {
     /** @var TestCase $this */
-    $this->actingAs(User::factory()->create(['is_admin' => true]))->get('/dashboard')
+    $this->actingAs(User::factory()->admin()->create())->get('/dashboard')
         ->assertSee(route('admin.index'));
 });
 
