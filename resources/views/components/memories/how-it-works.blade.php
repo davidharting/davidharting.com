@@ -15,7 +15,9 @@
             <ul class="mt-4 list-disc space-y-2 pl-5">
                 <li>Each month, you each write a memory of last month: words, photos, or both.</li>
                 <li>It saves as you go. Nobody sees it until you share it.</li>
-                <li>You'll read each other's once you've both shared, or at the end of the next month at the latest.</li>
+                <li>
+                    You'll read each other's once you've both shared, or at the end of the next month at the latest.
+                </li>
             </ul>
             <form method="dialog" class="mt-6">
                 <button class="btn btn-ghost btn-block">Close</button>
