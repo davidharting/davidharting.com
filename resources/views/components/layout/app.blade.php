@@ -17,7 +17,6 @@
     <meta name="theme-color" content="#21110a" media="(prefers-color-scheme: dark)" />
     @head
 
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
