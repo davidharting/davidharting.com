@@ -12,7 +12,7 @@
     </div>
 @else
     <div @class([
-        'card relative transition-shadow hover:shadow-md',
+        'card relative transition hover:shadow-md active:scale-[0.98] active:brightness-95 duration-150',
         'bg-base-200' => $revealed,
         'bg-accent/20' => ! $revealed,
     ])>
@@ -21,6 +21,7 @@
                 <h2 class="text-2xl">
                     <a
                         href="{{ $monthUrl }}"
+                        style="view-transition-name: month-{{ $month->toYearMonth() }}; view-transition-class: month-title"
                         class="after:rounded-box focus-visible:after:outline-primary after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2"
                     >{{ $month->label() }}</a>
                 </h2>
@@ -54,7 +55,8 @@
                                 height="{{ $thumbnail->height }}"
                                 alt="{{ $photo->caption ?? "A photo by {$authorNameOf($photo)}" }}"
                                 loading="lazy"
-                                class="h-full w-full object-cover text-transparent"
+                                class="photo-fade h-full w-full object-cover text-transparent"
+                                onload="this.classList.add('is-loaded')"
                             />
                         </div>
                     @endforeach

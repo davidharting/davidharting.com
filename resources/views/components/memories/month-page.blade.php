@@ -7,12 +7,12 @@
 
 <article class="mx-auto max-w-xl">
     <nav class="flex justify-between gap-4 font-sans text-sm">
-        <a class="link" href="{{ route("memories.index") }}">← All months</a>
+        <a class="link -my-3 inline-block py-3" href="{{ route("memories.index") }}">← All months</a>
 
         <div class="flex gap-4">
             @if ($previous)
                 <a
-                    class="link"
+                    class="link -my-3 inline-block py-3"
                     href="{{ route("memories.show", $previous->toYearMonth()) }}"
                     aria-label="{{ $previous->label() }}"
                 >← {{ $previous->name() }}</a>
@@ -20,7 +20,7 @@
 
             @if ($next)
                 <a
-                    class="link"
+                    class="link -my-3 inline-block py-3"
                     href="{{ route("memories.show", $next->toYearMonth()) }}"
                     aria-label="{{ $next->label() }}"
                 >{{ $next->name() }} →</a>
@@ -28,7 +28,11 @@
         </div>
     </nav>
 
-    <x-type.page-title class="mt-8 text-5xl">{{ $month->label() }}</x-type.page-title>
+    <x-type.page-title
+        class="mt-8 w-fit text-5xl"
+        style="view-transition-name: month-{{ $month->toYearMonth() }}; view-transition-class: month-title"
+    >
+        {{ $month->label() }}</x-type.page-title>
 
     <nav class="mt-4 flex gap-6 text-xl">
         <a
@@ -37,6 +41,7 @@
             @class([
                 'underline decoration-2 underline-offset-8' => ! $showingYours,
                 'opacity-50 hover:opacity-100' => $showingYours,
+                'press -my-2 py-2',
             ])
         >{{ $otherName }}</a>
         <a
@@ -45,6 +50,7 @@
             @class([
                 'underline decoration-2 underline-offset-8' => $showingYours,
                 'opacity-50 hover:opacity-100' => ! $showingYours,
+                'press -my-2 py-2',
             ])
         >Yours</a>
     </nav>
@@ -67,21 +73,34 @@
         @endif
 
         @if ($shownMemory())
-            <x-memories.body :memory="$shownMemory()" class="mt-5 text-lg leading-relaxed" />
+            <div id="shown-memory">
+                @if ($revealed && ! $showingYours)
+                    <script>
+                        try {
+                            const key = 'memory-unveiled-{{ $shownMemory()->id }}';
+                            if (!localStorage.getItem(key)) {
+                                document.getElementById('shown-memory').classList.add('animate-unveil');
+                                localStorage.setItem(key, '1');
+                            }
+                        } catch (e) {}
+                    </script>
+                @endif
+                <x-memories.body :memory="$shownMemory()" class="mt-5 text-lg leading-relaxed" />
 
-            @if ($revealed)
-                <div class="mt-5">
-                    <livewire:memories.reactions :memory="$shownMemory()" :key="'reactions-'.$shownMemory()->id" />
-                </div>
-            @endif
+                @if ($revealed)
+                    <div class="mt-5">
+                        <livewire:memories.reactions :memory="$shownMemory()" :key="'reactions-'.$shownMemory()->id" />
+                    </div>
+                @endif
 
-            @foreach ($photos() as $photo)
-                <x-memories.photo
-                    :photo="$photo"
-                    :author-name="$showingYours ? $monthForViewer->viewer->displayName() : $otherName"
-                    class="mt-8"
-                />
-            @endforeach
+                @foreach ($photos() as $photo)
+                    <x-memories.photo
+                        :photo="$photo"
+                        :author-name="$showingYours ? $monthForViewer->viewer->displayName() : $otherName"
+                        class="mt-8"
+                    />
+                @endforeach
+            </div>
         @elseif ($showingYours)
             <p class="mt-5 text-lg italic opacity-70">You haven't written about this month yet.</p>
         @elseif (! $revealed)

@@ -41,7 +41,7 @@ class HeadServiceProvider extends ServiceProvider
                     manifest: '/manifest.json',
                     themeColor: '#1a1a2e',
                     appleTouchIcon: '/icons/apple-touch-icon.png',
-                    appleWebAppStatusBarStyle: 'black',
+                    appleWebAppStatusBarStyle: 'default',
                 )
                 ->feed(
                     url(config('feed.feeds.main.url')),

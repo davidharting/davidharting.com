@@ -4,11 +4,13 @@
 ])
 
 <!DOCTYPE html>
-<html lang="{{ str_replace("_", "-", app()->getLocale()) }}">
+<html lang="{{ str_replace("_", "-", app()->getLocale()) }}" @class(['compose-page' => $hideNav])>
 <head>
     <meta charset="utf-8" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
+    <meta name="theme-color" content="#f8f1e3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#21110a" media="(prefers-color-scheme: dark)" />
     @head
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])

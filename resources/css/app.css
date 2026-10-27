@@ -255,3 +255,126 @@
         color: oklch(92% 0.03 70); /* warm cream */
     }
 }
+
+/*
+  PROTOTYPE (mobile polish, #334): throwaway, lives on prototype/mobile-polish.
+*/
+@layer base {
+    html {
+        -webkit-tap-highlight-color: transparent;
+    }
+    a,
+    button {
+        touch-action: manipulation;
+    }
+}
+
+.link:active,
+.press:active {
+    opacity: 0.6;
+}
+
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+    animation-duration: 220ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+html.compose-page::view-transition-group(*.month-title) {
+    display: none;
+}
+html.compose-page::view-transition-old(root) {
+    animation: none;
+}
+html.compose-page::view-transition-new(root) {
+    animation: 280ms cubic-bezier(0.2, 0, 0, 1) both rise-in;
+}
+
+.photo-fade {
+    opacity: 0;
+    transition: opacity 300ms ease-out;
+}
+.photo-fade.is-loaded {
+    opacity: 1;
+}
+
+@keyframes rise-in {
+    from {
+        opacity: 0;
+        translate: 0 24px;
+    }
+}
+@keyframes pop {
+    0% {
+        scale: 0.5;
+    }
+    60% {
+        scale: 1.2;
+    }
+    100% {
+        scale: 1;
+    }
+}
+@keyframes unveil {
+    from {
+        opacity: 0;
+        filter: blur(6px);
+        translate: 0 6px;
+    }
+}
+@keyframes draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+@keyframes meet-left {
+    from {
+        translate: -40px 0;
+        opacity: 0;
+    }
+}
+@keyframes meet-right {
+    from {
+        translate: 40px 0;
+        opacity: 0;
+    }
+}
+
+.animate-pop {
+    animation: pop 320ms cubic-bezier(0.2, 0, 0, 1);
+}
+.animate-unveil {
+    animation: unveil 700ms ease-out both;
+}
+.animate-rise {
+    animation: rise-in 300ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+.animate-draw {
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: draw 450ms 150ms ease-out forwards;
+}
+.animate-meet-left {
+    animation: meet-left 450ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+.animate-meet-right {
+    animation: meet-right 450ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    @view-transition {
+        navigation: none;
+    }
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}

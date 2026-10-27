@@ -15,10 +15,17 @@ document.addEventListener("alpine:init", () => {
         hint: null,
         notice: null,
         noticeTimer: null,
+        justAdded: null,
         segmenter: new Intl.Segmenter(),
+
+        popIn(emoji) {
+            this.justAdded = emoji;
+            setTimeout(() => (this.justAdded = null), 800);
+        },
 
         quickPick(emoji) {
             this.open = false;
+            this.popIn(emoji);
             this.$wire.add(emoji);
         },
 
@@ -48,6 +55,7 @@ document.addEventListener("alpine:init", () => {
                 if (EMOJI.test(segment)) {
                     this.$refs.picker.blur();
                     this.open = false;
+                    this.popIn(segment);
                     this.$wire.add(segment);
                     return;
                 }
