@@ -40,14 +40,9 @@ final readonly class MonthForViewer
         return Gate::forUser($this->viewer)->allows('view', $this->otherMemory) ? $this->otherMemory : null;
     }
 
-    /**
-     * Whether the month revealed without the viewer's memory: they wrote
-     * nothing, or left a draft. The latest open month only reveals once both
-     * have shared, so it is never missed.
-     */
     public function viewerMissed(): bool
     {
-        return $this->month->hasRevealed() && ! $this->viewerMemory?->isShared();
+        return $this->month->missedBy($this->viewer);
     }
 
     /**

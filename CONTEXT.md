@@ -62,6 +62,10 @@ _Avoid_: Publish, post, submit
 The moment both people's shared memories for a month become readable to each other. It happens when both have shared, or at the end of the following month, whichever comes first. A memory shared after its month's reveal is readable as soon as it is shared.
 _Avoid_: Unlock, publish
 
+**Missed**:
+A month a participant missed is one that revealed without their shared memory: they wrote nothing, or left a draft. The latest open month is never missed, since it only reveals once both have shared. A late share stops the month being missed. A month both people missed revealed at its deadline with nothing shared. A code word only: the app never shows it, or any copy that counts or calls out a missing memory.
+_Avoid_: Late, overdue, skipped
+
 **Reminder**:
 The email on the 1st telling both participants a month is open for their memories. A plain reminder: it never carries memory text or photos.
 _Avoid_: Notification, alert

@@ -5,7 +5,7 @@
     $monthUrl = route('memories.show', $month->toYearMonth());
 @endphp
 
-@if ($isQuietLine())
+@if ($monthForViewer->month->missed())
     <div class="flex items-center justify-between gap-4 px-4 py-1 opacity-70">
         <h2 class="text-lg"><a href="{{ $monthUrl }}" class="inline-block py-2">{{ $month->label() }}</a></h2>
         <x-memories.cta :memory="$monthForViewer->viewerMemory" :month="$month" quiet class="-mr-3" />
