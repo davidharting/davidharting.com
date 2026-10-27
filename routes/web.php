@@ -28,7 +28,7 @@ Route::withHead(robots: 'noindex, nofollow')->group(function () {
 
     Route::get('/dashboard', function () {
         return view('dashboard');
-    })->middleware(['auth', 'verified'])->name('dashboard')->withHead(title: 'Dashboard');
+    })->middleware(['auth', 'verified'])->name('dashboard')->withHead(title: 'Account');
 
     Route::get('/kitchen-sink', function () {
         return view('kitchen-sink');

@@ -8,7 +8,7 @@
         @csrf
         <x-form.input name="email" type="email" label="Email" required autofocus autocomplete />
         <x-form.input name="password" type="password" label="Password" required autocomplete="current-password" />
-        <x-form.checkbox name="remember" label="Remember me" />
+        <x-form.checkbox name="remember" label="Remember me" checked />
 
         <div class="mt-4 flex items-center justify-end">
             @if (Route::has('password.request'))

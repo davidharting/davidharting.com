@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\MemoryParticipant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -19,6 +20,24 @@ class ProfileTest extends TestCase
             ->get('/profile');
 
         $response->assertOk();
+    }
+
+    public function test_profile_page_offers_to_delete_the_account(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/profile')
+            ->assertSeeText('Delete Your Account');
+    }
+
+    public function test_profile_page_does_not_offer_a_memories_participant_to_delete_their_account(): void
+    {
+        $user = User::factory()->create();
+        MemoryParticipant::create(['user_id' => $user->id]);
+
+        $this->actingAs($user)->get('/profile')
+            ->assertOk()
+            ->assertDontSeeText('Delete Your Account');
     }
 
     public function test_profile_information_can_be_updated(): void

@@ -51,15 +51,16 @@ test('navigation links are present for anonymous users', function () {
     $response->assertDontSee(route('admin.index'));
 });
 
-test('admin link is visible to admin users', function () {
+test('admin users reach Admin from the Account page, not the nav', function () {
     /** @var TestCase $this */
     $admin = User::factory()->admin()->create();
 
     $response = $this->actingAs($admin)->get('/');
     $response->assertSuccessful();
 
-    $response->assertSeeText('Admin');
-    $response->assertSee(route('admin.index'));
+    $response->assertDontSee(route('admin.index'));
+    $response->assertSeeText('Account');
+    $response->assertSee(route('dashboard'));
 
     // Login link should not be visible when authenticated
     $response->assertDontSeeText('Login');
