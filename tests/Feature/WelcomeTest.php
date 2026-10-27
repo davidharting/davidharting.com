@@ -48,14 +48,14 @@ test('navigation links are present for anonymous users', function () {
     $response->assertSee(route('login'));
 });
 
-test('shows admin users an Account link instead of Login', function () {
+test('does not show admin users an Admin link in the nav', function () {
     /** @var TestCase $this */
     $admin = User::factory()->admin()->create();
 
     $response = $this->actingAs($admin)->get('/');
     $response->assertSuccessful();
 
-    $response->assertSeeText('Account');
+    $response->assertDontSee('href="/admin"', false);
     $response->assertSee(route('profile.edit'));
 
     // Login link should not be visible when authenticated

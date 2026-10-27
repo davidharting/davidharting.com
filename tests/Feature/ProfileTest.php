@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\MemoryParticipant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\RenderedHead;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -26,9 +27,11 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/profile')
-            ->assertSeeTextInOrder(['Account - davidharting.com', 'Account'])
+        $response = $this->actingAs($user)->get('/profile')
+            ->assertSeeHtml('>Account</h1>')
             ->assertSee(route('logout'));
+
+        $this->assertSame('Account - davidharting.com', RenderedHead::from($response)->title);
     }
 
     public function test_profile_page_gives_the_admin_the_admin_tools(): void

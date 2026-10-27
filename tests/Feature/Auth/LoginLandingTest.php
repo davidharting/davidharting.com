@@ -31,10 +31,10 @@ test('lands someone who is not a participant on the Account page', function () {
 
 test('lands the only participant on the Account page while memories is not live yet', function () {
     /** @var TestCase $this */
-    $katie = User::factory()->create();
-    MemoryParticipant::create(['user_id' => $katie->id]);
+    $participant = User::factory()->create();
+    MemoryParticipant::create(['user_id' => $participant->id]);
 
-    $this->post('/login', ['email' => $katie->email, 'password' => 'password'])
+    $this->post('/login', ['email' => $participant->email, 'password' => 'password'])
         ->assertRedirect(route('profile.edit', absolute: false));
 });
 
@@ -51,13 +51,13 @@ test('returns a participant to the page they were sent to log in from', function
 describe('Remember me', function () {
     test('is ticked when the login page first loads', function () {
         /** @var TestCase $this */
-        $this->get('/login')->assertSee('checked', false);
+        $this->assertMatchesRegularExpression('/name="remember"\s+checked/', $this->get('/login')->getContent());
     });
 
     test('stays unticked after a failed login where it was unticked', function () {
         /** @var TestCase $this */
         $this->from('/login')->post('/login', ['email' => 'nobody@example.com', 'password' => 'wrong']);
 
-        $this->get('/login')->assertDontSee('checked', false);
+        $this->assertMatchesRegularExpression('/name="remember"\s+class=/', $this->get('/login')->getContent());
     });
 });
