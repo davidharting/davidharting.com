@@ -31,3 +31,11 @@ if ("serviceWorker" in navigator) {
             console.error("Service worker registration failed:", err),
         );
 }
+
+// PROTOTYPE (mobile polish, #334): a tile stays pressed while its month
+// loads; clear that when Back restores the list from the back/forward cache.
+window.addEventListener("pageshow", () => {
+    document
+        .querySelectorAll(".is-pressed")
+        .forEach((el) => el.classList.remove("is-pressed"));
+});

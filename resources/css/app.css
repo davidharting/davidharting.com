@@ -323,8 +323,7 @@ html.compose-page::view-transition-new(root) {
 @keyframes unveil {
     from {
         opacity: 0;
-        filter: blur(6px);
-        translate: 0 6px;
+        translate: 0 8px;
     }
 }
 @keyframes draw {
@@ -349,7 +348,11 @@ html.compose-page::view-transition-new(root) {
     animation: pop 320ms cubic-bezier(0.2, 0, 0, 1);
 }
 .animate-unveil {
-    animation: unveil 700ms ease-out both;
+    animation: unveil 500ms 200ms ease-out both;
+}
+.is-pressed {
+    scale: 0.98;
+    filter: brightness(0.95);
 }
 .animate-rise {
     animation: rise-in 300ms cubic-bezier(0.2, 0, 0, 1) both;

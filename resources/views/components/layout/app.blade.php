@@ -13,6 +13,23 @@
     <meta name="theme-color" content="#21110a" media="(prefers-color-scheme: dark)" />
     @head
 
+    <script type="speculationrules">
+        {
+            "prefetch": [
+                {
+                    "where": {
+                        "and": [
+                            { "href_matches": "/memories/*" },
+                            { "not": { "href_matches": "/memories/*/write" } },
+                            { "not": { "href_matches": "/memories/photos/*" } }
+                        ]
+                    },
+                    "eagerness": "moderate"
+                }
+            ]
+        }
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 

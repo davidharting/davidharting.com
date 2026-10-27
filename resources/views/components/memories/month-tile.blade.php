@@ -22,6 +22,7 @@
                     <a
                         href="{{ $monthUrl }}"
                         style="view-transition-name: month-{{ $month->toYearMonth() }}; view-transition-class: month-title"
+                        onclick="this.closest('.card').classList.add('is-pressed')"
                         class="after:rounded-box focus-visible:after:outline-primary after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2"
                     >{{ $month->label() }}</a>
                 </h2>
