@@ -9,9 +9,9 @@
         ?
     </button>
 
-    <dialog id="how-it-works" class="modal modal-bottom" aria-labelledby="how-it-works-title">
+    <dialog id="how-it-works" class="modal modal-bottom" aria-label="How it works">
         <div class="modal-box font-sans">
-            <h2 id="how-it-works-title" class="font-serif text-2xl">How it works</h2>
+            <h2 class="font-serif text-2xl">How it works</h2>
             <ul class="mt-4 list-disc space-y-2 pl-5">
                 <li>Each month, you each write a memory of last month: words, photos, or both.</li>
                 <li>It saves as you go. Nobody sees it until you share it.</li>
