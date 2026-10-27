@@ -4,7 +4,7 @@
 
         <x-type.page-title class="mt-8 text-5xl">An earlier month</x-type.page-title>
 
-        <form method="POST" action="{{ route("memories.earlier.store") }}" class="mt-6">
+        <form method="POST" action="{{ route("memories.earlier.open") }}" class="mt-6">
             @csrf
 
             <fieldset class="fieldset">
@@ -13,14 +13,17 @@
                     id="month"
                     name="month"
                     type="month"
-                    class="input w-full"
+                    @class(['input w-full text-base', 'input-error' => $errors->has('month')])
+                    placeholder="YYYY-MM"
+                    pattern="\d{4}-\d{2}"
                     min="{{ $earliest->toYearMonth() }}"
                     max="{{ $latest->toYearMonth() }}"
                     value="{{ old("month", $latest->toYearMonth()) }}"
                     required
+                    @error('month') aria-invalid="true" aria-describedby="month-error" @enderror
                 />
                 @error('month')
-                    <p class="text-error text-sm">{{ $message }}</p>
+                    <p id="month-error" class="text-error text-sm">{{ $message }}</p>
                 @enderror
             </fieldset>
 

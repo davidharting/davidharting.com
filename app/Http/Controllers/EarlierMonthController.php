@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Month;
+use App\Support\CalendarMonth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,21 +15,21 @@ use Illuminate\View\View;
  */
 class EarlierMonthController extends Controller
 {
-    public function create(): View
+    public function show(): View
     {
         return view('memories.earlier', [
             'earliest' => Month::earliest(),
-            'latest' => Month::launch()->previous(),
+            'latest' => $this->latest(),
         ]);
     }
 
     /**
      * Send the viewer to the editor for the month they picked.
      */
-    public function store(Request $request): RedirectResponse
+    public function open(Request $request): RedirectResponse
     {
         $earliest = Month::earliest();
-        $latest = Month::launch()->previous();
+        $latest = $this->latest();
 
         $validated = $request->validate([
             'month' => [
@@ -38,9 +39,18 @@ class EarlierMonthController extends Controller
                 "before_or_equal:{$latest->toYearMonth()}",
             ],
         ], [
+            'month.date_format' => 'Write the month as YYYY-MM, for example 2019-07.',
             'month.*' => "Pick a month from {$earliest->label()} to {$latest->label()}.",
         ]);
 
         return redirect()->route('memories.write', $validated['month']);
+    }
+
+    /**
+     * The latest month the picker offers: the one before launch.
+     */
+    private function latest(): CalendarMonth
+    {
+        return Month::launch()->previous();
     }
 }

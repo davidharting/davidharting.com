@@ -69,7 +69,7 @@ test('ends with a quiet link to write about an earlier month', function () {
     /** @var TestCase $this */
     $this->get('/memories')
         ->assertSeeTextInOrder(['September 2024', 'Write about an earlier month'])
-        ->assertSee('href="'.route('memories.earlier.create').'"', false);
+        ->assertSee('href="'.route('memories.earlier.show').'"', false);
 });
 
 test('previews the first line of their memory once a month has revealed', function () {

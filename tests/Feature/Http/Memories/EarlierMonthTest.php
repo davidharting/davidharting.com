@@ -17,15 +17,20 @@ beforeEach(function () {
 });
 
 describe('the picker page', function () {
-    test('offers a month picker from January 2016 to the month before launch, starting at the latest', function () {
+    test('offers months from January 2016 to the month before launch, starting at the latest', function () {
         /** @var TestCase $this */
-        $response = $this->get('/memories/earlier')
+        $this->get('/memories/earlier')
             ->assertSuccessful()
             ->assertSee('type="month"', false)
             ->assertSee('min="2016-01"', false)
             ->assertSee('max="2026-02"', false)
             ->assertSee('value="2026-02"', false)
-            ->assertSeeText('Write');
+            ->assertSee('<button type="submit"', false);
+    });
+
+    test('titles the page An earlier month', function () {
+        /** @var TestCase $this */
+        $response = $this->get('/memories/earlier');
 
         expect(RenderedHead::from($response)->title)->toBe('An earlier month - davidharting.com');
     });
@@ -38,19 +43,17 @@ describe('the picker page', function () {
 });
 
 describe('picking a month', function () {
-    test('opens the editor for the month', function () {
-        /** @var TestCase $this */
-        $this->post('/memories/earlier', ['month' => '2019-03'])
-            ->assertRedirect(route('memories.write', '2019-03'));
-    });
-
-    test('accepts both ends of the range', function (string $month) {
+    test('opens the editor for any month in the range', function (string $month) {
         /** @var TestCase $this */
         $this->post('/memories/earlier', ['month' => $month])
             ->assertRedirect(route('memories.write', $month));
-    })->with(['2016-01', '2026-02']);
+    })->with([
+        'the earliest' => '2016-01',
+        'a middle month' => '2019-03',
+        'the latest' => '2026-02',
+    ]);
 
-    test('sends the viewer back with a hint for a month outside the range or not a month', function (?string $month) {
+    test('sends the viewer back with the range for a month outside it', function (?string $month) {
         /** @var TestCase $this */
         $this->from('/memories/earlier')
             ->post('/memories/earlier', ['month' => $month])
@@ -59,8 +62,18 @@ describe('picking a month', function () {
     })->with([
         'the launch month' => '2026-03',
         'before 2016' => '2015-12',
-        'not a month' => '2019-13',
-        'a whole date' => '2019-03-01',
         'nothing' => null,
+    ]);
+
+    test('sends the viewer back with the format for something that isn\'t a month', function (string $month) {
+        /** @var TestCase $this */
+        $this->from('/memories/earlier')
+            ->post('/memories/earlier', ['month' => $month])
+            ->assertRedirect('/memories/earlier')
+            ->assertSessionHasErrors(['month' => 'Write the month as YYYY-MM, for example 2019-07.']);
+    })->with([
+        'a month 13' => '2019-13',
+        'a whole date' => '2019-03-01',
+        'words' => 'March 2019',
     ]);
 });

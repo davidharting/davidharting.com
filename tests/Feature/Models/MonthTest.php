@@ -280,6 +280,13 @@ describe('latestOpen()', function () {
     });
 });
 
+describe('earliest()', function () {
+    test('is the first month in the months table', function () {
+        /** @var TestCase $this */
+        expect(Month::query()->min('id'))->toBe(Month::earliest()->toDateString());
+    });
+});
+
 describe('launch()', function () {
     test('is the month the second participant joined in, in Eastern time', function () {
         /** @var TestCase $this */
