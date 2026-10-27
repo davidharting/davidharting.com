@@ -66,7 +66,7 @@ describe('defaults', function () {
             'viewport' => 'width=device-width, initial-scale=1',
             'application-name' => 'David Harting',
             'apple-mobile-web-app-title' => 'David Harting',
-            'apple-mobile-web-app-status-bar-style' => 'black',
+            'apple-mobile-web-app-status-bar-style' => 'default',
             'mobile-web-app-capable' => 'yes',
             'theme-color' => '#1a1a2e',
         ]);
