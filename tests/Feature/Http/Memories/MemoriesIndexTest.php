@@ -73,6 +73,7 @@ describe('months the viewer missed', function () {
         /** @var TestCase $this */
         // June: nobody wrote.
         $this->get('/memories')
+            ->assertSee('href="'.route('memories.show', '2026-06').'"', false)
             ->assertSee('href="'.route('memories.write', '2026-06').'"', false)
             ->assertSeeTextInOrder(['June 2026', 'Write yours', 'May 2026'])
             ->assertDontSeeText('Nothing written.');
@@ -93,8 +94,18 @@ describe('months the viewer missed', function () {
 
         $this->actingAs(User::firstWhere('email', 'katie@example.com'))
             ->get('/memories')
-            ->assertSeeTextInOrder(['June 2026', 'Write yours'])
+            ->assertSeeTextInOrder(['June 2026', 'Write yours', 'May 2026'])
             ->assertDontSeeText("didn't share");
+    });
+
+    test('offer to keep writing a draft left behind when there is nothing to read', function () {
+        /** @var TestCase $this */
+        // June, with a draft David never shared.
+        Memory::factory()->for(User::firstWhere('email', 'david@example.com'))->forMonth(CalendarMonth::of(2026, 6))->create();
+
+        $this->get('/memories')
+            ->assertSee('href="'.route('memories.write', '2026-06').'"', false)
+            ->assertSeeTextInOrder(['June 2026', 'Keep writing', 'May 2026']);
     });
 
     test('do not include the latest open month, even before the viewer shares', function () {
@@ -102,16 +113,16 @@ describe('months the viewer missed', function () {
         // September: Katie's draft, before the reveal.
         $this->actingAs(User::firstWhere('email', 'katie@example.com'))
             ->get('/memories')
-            ->assertDontSee(route('memories.write', '2026-09'));
+            ->assertDontSee('href="'.route('memories.write', '2026-09').'"', false);
     });
 
-    test('do not include months the viewer shared, however late', function () {
+    test('do not include months the viewer shared, on time or late', function () {
         /** @var TestCase $this */
         // August: David shared after the reveal; July and April: both shared.
         $this->get('/memories')
-            ->assertDontSee(route('memories.write', '2026-08'))
-            ->assertDontSee(route('memories.write', '2026-07'))
-            ->assertDontSee(route('memories.write', '2026-04'));
+            ->assertDontSee('href="'.route('memories.write', '2026-08').'"', false)
+            ->assertDontSee('href="'.route('memories.write', '2026-07').'"', false)
+            ->assertDontSee('href="'.route('memories.write', '2026-04').'"', false);
     });
 });
 

@@ -102,14 +102,6 @@ class MonthTile extends Component
         return $this->monthForViewer->viewerMissed() && $this->revealedMemories()->isEmpty();
     }
 
-    /**
-     * "Write yours", or "Keep writing" on a draft.
-     */
-    public function writeLabel(): string
-    {
-        return $this->monthForViewer->viewerMemory === null ? 'Write yours' : 'Keep writing';
-    }
-
     public function render(): View
     {
         return view('components.memories.month-tile');

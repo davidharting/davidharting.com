@@ -3,13 +3,12 @@
     $revealed = $monthForViewer->month->hasRevealed();
     $leadingPhotos = $thumbnails();
     $monthUrl = route('memories.show', $month->toYearMonth());
-    $writeUrl = route('memories.write', $month->toYearMonth());
 @endphp
 
 @if ($isQuietLine())
     <div class="flex items-center justify-between gap-4 px-4 py-1 opacity-70">
-        <a href="{{ $monthUrl }}" class="text-lg">{{ $month->label() }}</a>
-        <a class="link link-hover font-sans text-sm" href="{{ $writeUrl }}">{{ $writeLabel() }}</a>
+        <h2 class="text-lg"><a href="{{ $monthUrl }}" class="inline-block py-2">{{ $month->label() }}</a></h2>
+        <x-memories.cta :memory="$monthForViewer->viewerMemory" :month="$month" quiet class="-mr-3" />
     </div>
 @else
     <div @class([
@@ -20,7 +19,10 @@
         <div class="card-body gap-3 p-4">
             <div class="flex items-center justify-between gap-4">
                 <h2 class="text-2xl">
-                    <a href="{{ $monthUrl }}" class="after:absolute after:inset-0">{{ $month->label() }}</a>
+                    <a
+                        href="{{ $monthUrl }}"
+                        class="after:rounded-box focus-visible:after:outline-primary after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2"
+                    >{{ $month->label() }}</a>
                 </h2>
                 <div class="flex gap-1">
                     <x-memories.initial
@@ -68,9 +70,12 @@
             @endif
 
             @if ($monthForViewer->viewerMissed())
-                <a class="link link-hover relative self-start font-sans text-sm opacity-70" href="{{ $writeUrl }}">
-                    {{ $writeLabel() }}
-                </a>
+                <x-memories.cta
+                    :memory="$monthForViewer->viewerMemory"
+                    :month="$month"
+                    quiet
+                    class="relative -ml-3 self-start opacity-80"
+                />
             @endif
         </div>
     </div>
