@@ -41,7 +41,7 @@ class SendShareNotificationsIfNeeded implements ShouldQueue
      */
     public function handle(): void
     {
-        if (! MemoryParticipant::featureIsEnabled() || ! $this->month->openedWithBothParticipants() || ! $this->month->hasRevealed()) {
+        if (! MemoryParticipant::featureIsEnabled() || ! $this->month->hasRevealed()) {
             return;
         }
 

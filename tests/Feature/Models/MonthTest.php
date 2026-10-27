@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Memory;
+use App\Models\MemoryParticipant;
 use App\Models\Month;
 use App\Models\User;
 use App\Support\CalendarMonth;
@@ -276,6 +277,32 @@ describe('latestOpen()', function () {
         $this->travelTo('2026-10-01T02:00:00Z');
 
         expect(Month::latestOpen()->equals(CalendarMonth::of(2026, 8)))->toBeTrue();
+    });
+});
+
+describe('launch()', function () {
+    test('is the month the second participant joined in, in Eastern time', function () {
+        /** @var TestCase $this */
+        MemoryParticipant::factory()->create(['created_at' => '2026-03-02T12:00:00Z']);
+        // 02:00Z on Jul 1 is still June in Eastern time.
+        MemoryParticipant::factory()->create(['created_at' => '2026-07-01T02:00:00Z']);
+
+        expect(Month::launch())->toEqual(CalendarMonth::of(2026, 6));
+    });
+
+    test('is the latest open month before there are two participants', function () {
+        /** @var TestCase $this */
+        MemoryParticipant::factory()->create(['created_at' => '2026-03-02T12:00:00Z']);
+
+        expect(Month::launch())->toEqual(CalendarMonth::of(2026, 9));
+    });
+
+    test('stays put when someone writes about an earlier month', function () {
+        /** @var TestCase $this */
+        MemoryParticipant::factory()->count(2)->create(['created_at' => '2026-06-10T12:00:00Z']);
+        monthTestMemory($this->david, CalendarMonth::of(2019, 3), sharedAt: '2026-10-17T12:00:00Z');
+
+        expect(Month::launch())->toEqual(CalendarMonth::of(2026, 6));
     });
 });
 

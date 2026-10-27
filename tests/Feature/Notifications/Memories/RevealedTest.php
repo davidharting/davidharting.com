@@ -16,9 +16,9 @@ test('says the other person\'s memory is ready to read and links to the month pa
 
     $mail = (new Revealed($october))->toMail($david);
 
-    expect($mail->subject)->toBe("Katie's October memory is ready to read")
+    expect($mail->subject)->toBe("Katie's October 2026 memory is ready to read")
         ->and($mail->greeting)->toBe('Hi David,')
-        ->and($mail->introLines)->toBe(["Katie's October memory is ready to read."])
+        ->and($mail->introLines)->toBe(["Katie's October 2026 memory is ready to read."])
         ->and($mail->actionText)->toBe("Read Katie's memory")
         ->and($mail->actionUrl)->toBe(route('memories.show', $october));
 });

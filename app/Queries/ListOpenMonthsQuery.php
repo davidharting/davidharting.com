@@ -2,19 +2,19 @@
 
 namespace App\Queries;
 
-use App\Models\Memory;
 use App\Models\Month;
 use App\Support\CalendarMonth;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 /**
- * The months memories can be written about: from the launch month to the
- * latest open month. The launch month is the earliest month anyone has a
- * memory for, or the latest open month before anyone has written one.
+ * The months on the memories list: every month from the launch month to the
+ * latest open month, and any earlier month either participant has written
+ * about, a draft included.
  *
- * Open here has two bounds. A month must have opened, which is the clock
- * rule on Month, and it must not be before the launch month, which takes
- * the database.
+ * Every month up to the latest open one can be written about. The list
+ * leaves out the months before launch nobody has written about, so it
+ * doesn't stretch back to 2016.
  *
  * This query performs no authorization. The caller is expected to have
  * checked that the viewer may see monthly memories.
@@ -22,33 +22,48 @@ use Illuminate\Database\Eloquent\Collection;
 class ListOpenMonthsQuery
 {
     /**
-     * Every open month with its memories and their photos, newest first, including months
-     * nobody wrote about.
+     * Every listed month with its memories and their photos, newest first,
+     * including months since launch that nobody wrote about.
      *
      * @return Collection<int, Month>
      */
     public function execute(): Collection
     {
-        return Month::query()
-            ->whereBetween('id', [$this->launchMonth()->toDateString(), Month::latestOpen()->toDateString()])
+        return $this->listed()
             ->with('memories.photos')
             ->orderByDesc('id')
             ->get();
     }
 
     /**
-     * Whether the month is one of the open months, without listing them all.
+     * The nearest listed month before the provided one, or null if there is none.
      */
-    public function contains(CalendarMonth $calendarMonth): bool
+    public function previous(CalendarMonth $calendarMonth): ?CalendarMonth
     {
-        return ! $calendarMonth->isAfter(Month::latestOpen())
-            && ! $this->launchMonth()->isAfter($calendarMonth);
+        $id = $this->listed()->where('id', '<', $calendarMonth->toDateString())->max('id');
+
+        return $id === null ? null : CalendarMonth::parse($id);
     }
 
-    private function launchMonth(): CalendarMonth
+    /**
+     * The nearest listed month after the provided one, or null if there is none.
+     */
+    public function next(CalendarMonth $calendarMonth): ?CalendarMonth
     {
-        $earliest = Memory::query()->min('month_id');
+        $id = $this->listed()->where('id', '>', $calendarMonth->toDateString())->min('id');
 
-        return $earliest === null ? Month::latestOpen() : CalendarMonth::parse($earliest);
+        return $id === null ? null : CalendarMonth::parse($id);
+    }
+
+    /**
+     * @return Builder<Month>
+     */
+    private function listed(): Builder
+    {
+        return Month::query()
+            ->where('id', '<=', Month::latestOpen()->toDateString())
+            ->where(fn (Builder $query) => $query
+                ->where('id', '>=', Month::launch()->toDateString())
+                ->orWhereHas('memories'));
     }
 }

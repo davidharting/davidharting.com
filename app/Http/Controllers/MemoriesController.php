@@ -29,7 +29,8 @@ class MemoriesController extends Controller
 
     /**
      * One month, one person per page: the other participant's memory by
-     * default, or the viewer's own with `?who=yours`.
+     * default, or the viewer's own with `?who=yours`. Previous and next
+     * step to the nearest months on the list.
      */
     public function show(Request $request, Month $month): View
     {
@@ -43,8 +44,8 @@ class MemoriesController extends Controller
         return view('memories.show', [
             'monthForViewer' => new MonthForViewer($month, $viewer, MemoryParticipant::otherThan($viewer)),
             'showingYours' => $request->query('who') === 'yours',
-            'previous' => $openMonths->contains($calendarMonth->previous()) ? $calendarMonth->previous() : null,
-            'next' => $openMonths->contains($calendarMonth->next()) ? $calendarMonth->next() : null,
+            'previous' => $openMonths->previous($calendarMonth),
+            'next' => $openMonths->next($calendarMonth),
         ]);
     }
 }

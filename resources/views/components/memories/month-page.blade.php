@@ -15,7 +15,7 @@
                     class="link"
                     href="{{ route("memories.show", $previous->toYearMonth()) }}"
                     aria-label="{{ $previous->label() }}"
-                >← {{ $previous->name() }}</a>
+                >← {{ $neighbourLabel($previous) }}</a>
             @endif
 
             @if ($next)
@@ -23,7 +23,7 @@
                     class="link"
                     href="{{ route("memories.show", $next->toYearMonth()) }}"
                     aria-label="{{ $next->label() }}"
-                >{{ $next->name() }} →</a>
+                >{{ $neighbourLabel($next) }} →</a>
             @endif
         </div>
     </nav>

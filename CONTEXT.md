@@ -43,8 +43,12 @@ One of the two people who write and read memories: David and Katie. A role in th
 _Avoid_: Member, user
 
 **Month**:
-One month of memories: a calendar month from the launch month onward, together with the zero, one or two memories written about it and their reveal. It opens for drafting once the calendar month is over, on the 1st of the next month in Eastern time, and every month since launch exists whether or not anyone has written about it.
+One month of memories: a calendar month from January 2016 onward, together with the zero, one or two memories written about it and their reveal. It opens for drafting once the calendar month is over, on the 1st of the next month in Eastern time. Every month since launch is on the list whether or not anyone has written about it; an earlier month is listed once either person has written about it, a draft included.
 _Avoid_: Period, cycle, issue
+
+**Launch month**:
+The first month that opened with both participants: the month the second one joined in. Writing about an earlier month never moves it.
+_Avoid_: First month
 
 **Memory**:
 One person's entry for one past calendar month, written by David or Katie: free text alongside photos, each photo with an optional caption. A single memory may recount several moments or reflections; what makes it one memory is that each person has at most one per month. Private to David and Katie.

@@ -13,7 +13,8 @@ use Tests\TestCase;
  * The seeder counts back from the latest open month, September 2026:
  * September is before its reveal, August has David's late share, July
  * revealed when both shared, June is empty, and May revealed at its deadline
- * with David's draft never shared. March is the launch month.
+ * with David's draft never shared. March is the launch month. Before launch,
+ * only September 2024 is listed: David wrote about it later.
  */
 beforeEach(function () {
     /** @var TestCase $this */
@@ -22,7 +23,7 @@ beforeEach(function () {
     $this->actingAs(User::firstWhere('email', 'david@example.com'));
 });
 
-test('lists every month since launch, newest first, empty months included', function () {
+test('lists every month since launch, then the earlier months someone wrote about, newest first', function () {
     /** @var TestCase $this */
     $this->get('/memories')
         ->assertSuccessful()
@@ -34,8 +35,10 @@ test('lists every month since launch, newest first, empty months included', func
             'May 2026',
             'April 2026',
             'March 2026',
+            'September 2024',
         ])
-        ->assertDontSeeText('February 2026');
+        ->assertDontSeeText('February 2026')
+        ->assertDontSeeText('October 2024');
 });
 
 test('titles the page Memories', function () {
