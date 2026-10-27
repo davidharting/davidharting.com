@@ -60,7 +60,7 @@ describe('Signed-in user opening a guest-only page', function () {
 
     test('sends everyone else to the Account page', function () {
         /** @var TestCase $this */
-        $this->actingAs(User::factory()->create())->get('/forgot-password')
+        $this->actingAs(User::factory()->create())->get('/login')
             ->assertRedirect(route('profile.edit', absolute: false));
     });
 });
