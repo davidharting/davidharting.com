@@ -19,8 +19,10 @@ use Illuminate\Database\Eloquent\Collection;
  * This query performs no authorization. The caller is expected to have
  * checked that the viewer may see monthly memories.
  */
-class ListOpenMonthsQuery
+class ListMemoryMonthsQuery
 {
+    private ?CalendarMonth $launch = null;
+
     /**
      * Every listed month with its memories and their photos, newest first,
      * including months since launch that nobody wrote about.
@@ -63,7 +65,7 @@ class ListOpenMonthsQuery
         return Month::query()
             ->where('id', '<=', Month::latestOpen()->toDateString())
             ->where(fn (Builder $query) => $query
-                ->where('id', '>=', Month::launch()->toDateString())
+                ->where('id', '>=', ($this->launch ??= Month::launch())->toDateString())
                 ->orWhereHas('memories'));
     }
 }

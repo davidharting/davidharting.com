@@ -3,7 +3,7 @@
 use App\Models\Memory;
 use App\Models\MemoryParticipant;
 use App\Models\Month;
-use App\Queries\ListOpenMonthsQuery;
+use App\Queries\ListMemoryMonthsQuery;
 use App\Support\CalendarMonth;
 use Tests\TestCase;
 
@@ -22,7 +22,7 @@ beforeEach(function () {
  */
 function listedYearMonths(): array
 {
-    return (new ListOpenMonthsQuery)->execute()
+    return (new ListMemoryMonthsQuery)->execute()
         ->map(fn (Month $month) => $month->calendarMonth->toYearMonth())
         ->all();
 }
@@ -46,7 +46,7 @@ describe('execute()', function () {
         $march = Memory::factory()->forMonth(CalendarMonth::of(2019, 3))->create();
         $august = Memory::factory()->forMonth(CalendarMonth::of(2026, 8))->create();
 
-        $months = (new ListOpenMonthsQuery)->execute()
+        $months = (new ListMemoryMonthsQuery)->execute()
             ->mapWithKeys(fn (Month $month) => [$month->calendarMonth->toYearMonth() => $month->memories->pluck('id')->all()]);
 
         expect($months->all())->toBe([
@@ -76,19 +76,19 @@ describe('execute()', function () {
 describe('previous()', function () {
     test('is the month before when it is listed', function () {
         /** @var TestCase $this */
-        expect((new ListOpenMonthsQuery)->previous(CalendarMonth::of(2026, 8)))->toEqual(CalendarMonth::of(2026, 7));
+        expect((new ListMemoryMonthsQuery)->previous(CalendarMonth::of(2026, 8)))->toEqual(CalendarMonth::of(2026, 7));
     });
 
     test('skips the unlisted months back to the nearest one written about before launch', function () {
         /** @var TestCase $this */
         Memory::factory()->forMonth(CalendarMonth::of(2019, 3))->create();
 
-        expect((new ListOpenMonthsQuery)->previous(CalendarMonth::of(2026, 6)))->toEqual(CalendarMonth::of(2019, 3));
+        expect((new ListMemoryMonthsQuery)->previous(CalendarMonth::of(2026, 6)))->toEqual(CalendarMonth::of(2019, 3));
     });
 
     test('is null for the earliest listed month', function () {
         /** @var TestCase $this */
-        expect((new ListOpenMonthsQuery)->previous(CalendarMonth::of(2026, 6)))->toBeNull();
+        expect((new ListMemoryMonthsQuery)->previous(CalendarMonth::of(2026, 6)))->toBeNull();
     });
 });
 
@@ -97,11 +97,11 @@ describe('next()', function () {
         /** @var TestCase $this */
         Memory::factory()->forMonth(CalendarMonth::of(2019, 3))->create();
 
-        expect((new ListOpenMonthsQuery)->next(CalendarMonth::of(2019, 3)))->toEqual(CalendarMonth::of(2026, 6));
+        expect((new ListMemoryMonthsQuery)->next(CalendarMonth::of(2019, 3)))->toEqual(CalendarMonth::of(2026, 6));
     });
 
     test('is null for the latest open month', function () {
         /** @var TestCase $this */
-        expect((new ListOpenMonthsQuery)->next(CalendarMonth::of(2026, 9)))->toBeNull();
+        expect((new ListMemoryMonthsQuery)->next(CalendarMonth::of(2026, 9)))->toBeNull();
     });
 });

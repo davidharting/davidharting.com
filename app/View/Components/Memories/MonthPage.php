@@ -65,7 +65,7 @@ class MonthPage extends Component
 
     /**
      * How a link to a neighbouring month reads: just its name in the same
-     * year, with the year when the list jumps to another one.
+     * year, and with the year when it is in another one.
      */
     public function neighbourLabel(CalendarMonth $neighbour): string
     {

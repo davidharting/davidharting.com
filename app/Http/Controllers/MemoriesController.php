@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MemoryParticipant;
 use App\Models\Month;
-use App\Queries\ListOpenMonthsQuery;
+use App\Queries\ListMemoryMonthsQuery;
 use App\View\Memories\MonthForViewer;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -22,7 +22,7 @@ class MemoriesController extends Controller
         $other = MemoryParticipant::otherThan($viewer);
 
         return view('memories.index', [
-            'monthsForViewer' => (new ListOpenMonthsQuery)->execute()
+            'monthsForViewer' => (new ListMemoryMonthsQuery)->execute()
                 ->map(fn (Month $month) => new MonthForViewer($month, $viewer, $other)),
         ]);
     }
@@ -35,7 +35,7 @@ class MemoriesController extends Controller
     public function show(Request $request, Month $month): View
     {
         $calendarMonth = $month->calendarMonth;
-        $openMonths = new ListOpenMonthsQuery;
+        $listedMonths = new ListMemoryMonthsQuery;
 
         Head::title($calendarMonth->label());
 
@@ -44,8 +44,8 @@ class MemoriesController extends Controller
         return view('memories.show', [
             'monthForViewer' => new MonthForViewer($month, $viewer, MemoryParticipant::otherThan($viewer)),
             'showingYours' => $request->query('who') === 'yours',
-            'previous' => $openMonths->previous($calendarMonth),
-            'next' => $openMonths->next($calendarMonth),
+            'previous' => $listedMonths->previous($calendarMonth),
+            'next' => $listedMonths->next($calendarMonth),
         ]);
     }
 }

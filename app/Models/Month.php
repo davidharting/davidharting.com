@@ -15,7 +15,7 @@ use InvalidArgumentException;
  *
  * The `months` table holds every month from 2016 to 2096 as fixed system
  * data, keyed by its first day. Which months are open and which are listed
- * is decided here and in ListOpenMonthsQuery, never by which rows exist.
+ * is decided here and in ListMemoryMonthsQuery, never by which rows exist.
  */
 class Month extends Model
 {

@@ -6,10 +6,10 @@
 @endphp
 
 <article class="mx-auto max-w-xl">
-    <nav class="flex justify-between gap-4 font-sans text-sm">
+    <nav class="flex flex-wrap justify-between gap-x-4 gap-y-2 font-sans text-sm">
         <a class="link" href="{{ route("memories.index") }}">← All months</a>
 
-        <div class="flex gap-4">
+        <div class="flex gap-4 whitespace-nowrap">
             @if ($previous)
                 <a
                     class="link"

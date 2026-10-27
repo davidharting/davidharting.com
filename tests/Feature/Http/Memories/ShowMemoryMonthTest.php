@@ -161,7 +161,7 @@ test('steps over unlisted months before launch, naming the year of a month in an
         ->assertDontSee(route('memories.show', '2024-08'));
 });
 
-test('shows a month before launch nobody wrote about, for the way back from its editor', function () {
+test('shows a month before launch that nobody wrote about and isn\'t listed', function () {
     /** @var TestCase $this */
     $this->actingAs($this->david)->get('/memories/2019-03?who=yours')
         ->assertSuccessful()
