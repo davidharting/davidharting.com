@@ -128,7 +128,7 @@ describe('robots', function () {
         $response = $this->actingAs(User::factory()->create(['is_admin' => true]))->get($path);
 
         expect(RenderedHead::from($response)->meta('robots'))->toBe('noindex, nofollow');
-    })->with(['/profile', '/backend', '/kitchen-sink']);
+    })->with(['/profile', '/kitchen-sink']);
 
     test('the debug page is hidden from robots despite being public', function () {
         /** @var TestCase $this */

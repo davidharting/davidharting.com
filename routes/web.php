@@ -23,7 +23,6 @@ Route::get('/', function () {
 })->name('home')->middleware(ProvideMarkdownResponse::class);
 
 Route::withHead(robots: 'noindex, nofollow')->group(function () {
-    Route::get('/backend', [AdminController::class, 'index'])->name('admin.index')->middleware('can:administrate')->withHead(title: 'Admin');
     Route::post('/backend/backup', [AdminController::class, 'backupDatabase'])->name('admin.backup')->middleware('can:administrate');
 
     Route::get('/kitchen-sink', function () {

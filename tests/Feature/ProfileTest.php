@@ -31,20 +31,22 @@ class ProfileTest extends TestCase
             ->assertSee(route('logout'));
     }
 
-    public function test_profile_page_links_the_admin_to_admin(): void
+    public function test_profile_page_gives_the_admin_the_admin_tools(): void
     {
         $admin = User::factory()->admin()->create();
 
         $this->actingAs($admin)->get('/profile')
-            ->assertSee(route('admin.index'));
+            ->assertSeeTextInOrder(['Admin', 'Filament Admin', 'Backup database', 'Kitchen Sink'])
+            ->assertSee(route('admin.backup'));
     }
 
-    public function test_profile_page_does_not_link_anyone_else_to_admin(): void
+    public function test_profile_page_does_not_give_anyone_else_the_admin_tools(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get('/profile')
-            ->assertDontSee(route('admin.index'));
+            ->assertDontSeeText('Filament Admin')
+            ->assertDontSee(route('admin.backup'));
     }
 
     public function test_profile_page_offers_to_delete_the_account(): void
