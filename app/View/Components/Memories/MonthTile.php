@@ -13,7 +13,8 @@ use Illuminate\View\View;
 /**
  * One month in the list. Before the reveal it says where both memories
  * stand; after, it leads with up to two thumbnails and a line of what the
- * viewer can read.
+ * viewer can read. A month the viewer missed stays quiet and links to the
+ * editor.
  */
 class MonthTile extends Component
 {
@@ -92,9 +93,21 @@ class MonthTile extends Component
         ])->filter()->values();
     }
 
-    public function isEmpty(): bool
+    /**
+     * Whether a missed month has nothing for the viewer to read, so the tile
+     * shrinks to a single quiet line.
+     */
+    public function isQuietLine(): bool
     {
-        return $this->monthForViewer->viewerMemory === null && $this->monthForViewer->otherMemory === null;
+        return $this->monthForViewer->viewerMissed() && $this->revealedMemories()->isEmpty();
+    }
+
+    /**
+     * "Write yours", or "Keep writing" on a draft.
+     */
+    public function writeLabel(): string
+    {
+        return $this->monthForViewer->viewerMemory === null ? 'Write yours' : 'Keep writing';
     }
 
     public function render(): View

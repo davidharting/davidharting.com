@@ -68,10 +68,51 @@ test('previews the first line of their memory once a month has revealed', functi
         ->assertSeeText('Beach week! Five days with nowhere to be.');
 });
 
-test('says nothing was written for an empty month', function () {
-    /** @var TestCase $this */
-    $this->get('/memories')
-        ->assertSeeText('Nothing written.');
+describe('months the viewer missed', function () {
+    test('offer to write one, without saying nothing was written', function () {
+        /** @var TestCase $this */
+        // June: nobody wrote.
+        $this->get('/memories')
+            ->assertSee('href="'.route('memories.write', '2026-06').'"', false)
+            ->assertSeeTextInOrder(['June 2026', 'Write yours', 'May 2026'])
+            ->assertDontSeeText('Nothing written.');
+    });
+
+    test('offer to keep writing a draft left behind, under the other person\'s memory', function () {
+        /** @var TestCase $this */
+        // May: Katie shared "New job!"; David's draft was never shared.
+        $this->get('/memories')
+            ->assertSee('href="'.route('memories.write', '2026-05').'"', false)
+            ->assertSeeTextInOrder(['May 2026', 'New job!', 'Keep writing', 'April 2026']);
+    });
+
+    test('never say the other person didn\'t share one', function () {
+        /** @var TestCase $this */
+        // June from Katie's side, with a draft David never shared.
+        Memory::factory()->for(User::firstWhere('email', 'david@example.com'))->forMonth(CalendarMonth::of(2026, 6))->create();
+
+        $this->actingAs(User::firstWhere('email', 'katie@example.com'))
+            ->get('/memories')
+            ->assertSeeTextInOrder(['June 2026', 'Write yours'])
+            ->assertDontSeeText("didn't share");
+    });
+
+    test('do not include the latest open month, even before the viewer shares', function () {
+        /** @var TestCase $this */
+        // September: Katie's draft, before the reveal.
+        $this->actingAs(User::firstWhere('email', 'katie@example.com'))
+            ->get('/memories')
+            ->assertDontSee(route('memories.write', '2026-09'));
+    });
+
+    test('do not include months the viewer shared, however late', function () {
+        /** @var TestCase $this */
+        // August: David shared after the reveal; July and April: both shared.
+        $this->get('/memories')
+            ->assertDontSee(route('memories.write', '2026-08'))
+            ->assertDontSee(route('memories.write', '2026-07'))
+            ->assertDontSee(route('memories.write', '2026-04'));
+    });
 });
 
 test('marks their unshared draft after the reveal, without its text, and previews the viewer\'s own memory instead', function () {

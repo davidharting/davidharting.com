@@ -41,6 +41,16 @@ final readonly class MonthForViewer
     }
 
     /**
+     * Whether the month revealed without the viewer's memory: they wrote
+     * nothing, or left a draft. The latest open month only reveals once both
+     * have shared, so it is never missed.
+     */
+    public function viewerMissed(): bool
+    {
+        return $this->month->hasRevealed() && ! $this->viewerMemory?->isShared();
+    }
+
+    /**
      * For example "Draft, started Oct 3".
      */
     public function viewerStatusLabel(): string
