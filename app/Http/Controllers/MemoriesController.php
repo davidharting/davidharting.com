@@ -21,11 +21,9 @@ class MemoriesController extends Controller
         $viewer = $request->user();
         $other = MemoryParticipant::otherThan($viewer);
 
-        $months = (new ListOpenMonthsQuery)->execute();
-
         return view('memories.index', [
-            'monthsForViewer' => $months->map(fn (Month $month) => new MonthForViewer($month, $viewer, $other)),
-            'anyMonthRevealed' => $months->contains(fn (Month $month) => $month->hasRevealed()),
+            'monthsForViewer' => (new ListOpenMonthsQuery)->execute()
+                ->map(fn (Month $month) => new MonthForViewer($month, $viewer, $other)),
         ]);
     }
 

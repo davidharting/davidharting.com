@@ -18,31 +18,9 @@ class MemoryParticipant extends Model
         'user_id',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'how_it_works_dismissed_at' => 'datetime',
-        ];
-    }
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Closes the "How it works" card on the memories list for good, on every
-     * device. Closing it again keeps the first time.
-     */
-    public function dismissHowItWorks(): void
-    {
-        $this->how_it_works_dismissed_at ??= now();
-        $this->save();
-    }
-
-    public function hasDismissedHowItWorks(): bool
-    {
-        return $this->how_it_works_dismissed_at !== null;
     }
 
     /**

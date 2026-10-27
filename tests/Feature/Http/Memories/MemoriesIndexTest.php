@@ -54,6 +54,13 @@ test('says where both memories stand before the reveal, without either memory\'s
         ->assertDontSeeText('It snowed for the first time');
 });
 
+test('explains how it works behind a ? beside the title', function () {
+    /** @var TestCase $this */
+    $this->get('/memories')
+        ->assertSee('aria-label="How it works"', false)
+        ->assertSeeText('Nobody sees it until you share it.');
+});
+
 test('previews the first line of their memory once a month has revealed', function () {
     /** @var TestCase $this */
     // Katie's August memory.
@@ -179,12 +186,4 @@ test('runs each query once, however many months there are', function () {
         ->duplicates();
 
     expect($repeated->all())->toBe([]);
-});
-
-test('hides How it works behind a ? once a month has revealed', function () {
-    /** @var TestCase $this */
-    // July and May have revealed. The card's open twin is in ListHeadingTest, which starts with no memories.
-    $this->get('/memories')
-        ->assertSee('aria-label="How it works"', false)
-        ->assertDontSee('Close How it works');
 });
