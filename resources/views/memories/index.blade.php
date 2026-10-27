@@ -10,5 +10,9 @@
                 <x-memories.month-tile :month-for-viewer="$monthForViewer" />
             @endforeach
         </div>
+
+        <p class="mt-10 text-center font-sans text-sm">
+            <a class="link opacity-70" href="{{ route("memories.earlier.create") }}">Write about an earlier month</a>
+        </p>
     </div>
 </x-layout.memories>

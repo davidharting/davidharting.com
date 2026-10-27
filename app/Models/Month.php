@@ -43,6 +43,14 @@ class Month extends Model
     }
 
     /**
+     * The earliest month anyone can write about, where the `months` table starts.
+     */
+    public static function earliest(): CalendarMonth
+    {
+        return CalendarMonth::of(2016, 1);
+    }
+
+    /**
      * The first month that opened with both participants: the month the
      * second one joined in. Before there are two, the latest open month.
      * Writing about an earlier month never moves it.
