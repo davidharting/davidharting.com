@@ -44,7 +44,7 @@ class AuthenticatedSessionController extends Controller
             return route('memories.index', absolute: false);
         }
 
-        return route('dashboard', absolute: false);
+        return route('profile.edit', absolute: false);
     }
 
     /**

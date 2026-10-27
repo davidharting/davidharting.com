@@ -18,7 +18,7 @@ test('lands the admin on the Account page, even as a participant', function () {
     $this->seed(MemorySeeder::class);
 
     $this->post('/login', ['email' => 'david@example.com', 'password' => 'password'])
-        ->assertRedirect(route('dashboard', absolute: false));
+        ->assertRedirect(route('profile.edit', absolute: false));
 });
 
 test('lands someone who is not a participant on the Account page', function () {
@@ -26,7 +26,7 @@ test('lands someone who is not a participant on the Account page', function () {
     $user = User::factory()->create();
 
     $this->post('/login', ['email' => $user->email, 'password' => 'password'])
-        ->assertRedirect(route('dashboard', absolute: false));
+        ->assertRedirect(route('profile.edit', absolute: false));
 });
 
 test('lands the only participant on the Account page while memories is not live yet', function () {
@@ -35,7 +35,7 @@ test('lands the only participant on the Account page while memories is not live 
     MemoryParticipant::create(['user_id' => $katie->id]);
 
     $this->post('/login', ['email' => $katie->email, 'password' => 'password'])
-        ->assertRedirect(route('dashboard', absolute: false));
+        ->assertRedirect(route('profile.edit', absolute: false));
 });
 
 test('returns a participant to the page they were sent to log in from', function () {

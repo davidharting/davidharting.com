@@ -16,7 +16,7 @@
         @endcan
 
         @auth
-            <x-nav-link :href="route('dashboard')"> Account </x-nav-link>
+            <x-nav-link :href="route('profile.edit')"> Account </x-nav-link>
         @endauth
     </x-slot:end>
 </x-layout.nav-bar>

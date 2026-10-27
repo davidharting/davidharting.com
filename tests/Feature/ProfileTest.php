@@ -22,6 +22,31 @@ class ProfileTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_profile_page_is_titled_account_and_offers_log_out(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/profile')
+            ->assertSeeTextInOrder(['Account - davidharting.com', 'Account'])
+            ->assertSee(route('logout'));
+    }
+
+    public function test_profile_page_links_the_admin_to_admin(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->get('/profile')
+            ->assertSee(route('admin.index'));
+    }
+
+    public function test_profile_page_does_not_link_anyone_else_to_admin(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/profile')
+            ->assertDontSee(route('admin.index'));
+    }
+
     public function test_profile_page_offers_to_delete_the_account(): void
     {
         $user = User::factory()->create();

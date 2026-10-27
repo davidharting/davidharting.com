@@ -26,10 +26,6 @@ Route::withHead(robots: 'noindex, nofollow')->group(function () {
     Route::get('/backend', [AdminController::class, 'index'])->name('admin.index')->middleware('can:administrate')->withHead(title: 'Admin');
     Route::post('/backend/backup', [AdminController::class, 'backupDatabase'])->name('admin.backup')->middleware('can:administrate');
 
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->middleware(['auth', 'verified'])->name('dashboard')->withHead(title: 'Account');
-
     Route::get('/kitchen-sink', function () {
         return view('kitchen-sink');
     })->name('kitchen-sink')->withHead(
@@ -65,7 +61,7 @@ Route::get('/media/log', function () {
 Route::get('/media/{media}', [MediaController::class, 'show'])->name('media.show')->can('view', 'media')->whereNumber('media');
 
 Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')->withHead(title: 'Profile');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')->withHead(title: 'Account');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
@@ -74,7 +70,7 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
     Route::get('/fileshare/{path}', [FileShareController::class, 'show'])->name('fileshare.show')->where('path', '.*');
 });
 
-Route::withHead(robots: 'noindex, nofollow')->group(function () {
+Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
     Route::get('/memories', [MemoriesController::class, 'index'])->name('memories.index')->withHead(title: 'Memories')->can('viewAny', Month::class);
     Route::get('/memories/{month}', [MemoriesController::class, 'show'])->name('memories.show')->where('month', '\d{4}-\d{2}')->can('view', 'month');
     Route::get('/memories/{month}/write', MemoryEditorController::class)->name('memories.write')->where('month', '\d{4}-\d{2}')->can('write', 'month');

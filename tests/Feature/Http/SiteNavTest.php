@@ -8,13 +8,13 @@ test('offers a guest the login link and no Account link', function () {
     /** @var TestCase $this */
     $this->get('/')
         ->assertSee(route('login'))
-        ->assertDontSee(route('dashboard'));
+        ->assertDontSee(route('profile.edit'));
 });
 
 test('offers anyone signed in an Account link instead of Login', function () {
     /** @var TestCase $this */
     $this->actingAs(User::factory()->create())->get('/')
-        ->assertSee(route('dashboard'))
+        ->assertSee(route('profile.edit'))
         ->assertDontSee(route('login'));
 });
 
@@ -27,7 +27,7 @@ test('gives memories pages a slim nav of Home, Memories and Account', function (
         ->assertSuccessful()
         ->assertSee('href="'.route('home').'"', false)
         ->assertSee('href="'.route('memories.index').'"', false)
-        ->assertSee('href="'.route('dashboard').'"', false)
+        ->assertSee('href="'.route('profile.edit').'"', false)
         ->assertDontSee(route('notes.index'))
         ->assertDontSee(route('media.index'))
         ->assertDontSee(route('pages.index'));

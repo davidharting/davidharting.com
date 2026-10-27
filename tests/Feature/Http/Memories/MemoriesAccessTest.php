@@ -16,17 +16,26 @@ dataset('memories urls', [
     '/memories/2026-09/write',
 ]);
 
-test('is not found for anyone who is not a participant', function (string $url, Closure $as) {
+test('sends a guest to log in, and back to the page afterwards', function (string $url) {
     /** @var TestCase $this */
     $this->seed(MemorySeeder::class);
-    $as($this);
 
-    $this->get($url)->assertNotFound();
+    $this->get($url)->assertRedirect(route('login'));
+
+    $this->post('/login', ['email' => 'katie@example.com', 'password' => 'password'])
+        ->assertRedirect($url);
+})->with('memories urls');
+
+test('is not found for a signed-in user who is not a participant', function (string $url, bool $isAdmin) {
+    /** @var TestCase $this */
+    $this->seed(MemorySeeder::class);
+
+    $this->actingAs(User::factory()->create(['is_admin' => $isAdmin]))
+        ->get($url)
+        ->assertNotFound();
 })->with('memories urls')->with([
-    // Pest resolves the outer fn lazily; the inner one runs inside the test to sign in as that visitor.
-    'a guest' => fn () => fn (TestCase $test) => null,
-    'a signed-in user' => fn () => fn (TestCase $test) => $test->actingAs(User::factory()->create()),
-    'an admin' => fn () => fn (TestCase $test) => $test->actingAs(User::factory()->create(['is_admin' => true])),
+    'an ordinary user' => false,
+    'the admin' => true,
 ]);
 
 test('is not found for a participant while they are the only one', function (string $url) {

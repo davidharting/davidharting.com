@@ -60,7 +60,7 @@ test('does not show admin users an Admin link in the nav', function () {
 
     $response->assertDontSee(route('admin.index'));
     $response->assertSeeText('Account');
-    $response->assertSee(route('dashboard'));
+    $response->assertSee(route('profile.edit'));
 
     // Login link should not be visible when authenticated
     $response->assertDontSeeText('Login');
