@@ -28,7 +28,7 @@ class MonthTile extends Component
      */
     public const THUMBNAIL_COUNT = 2;
 
-    public function __construct(public MonthForViewer $monthForViewer) {}
+    public function __construct(public MonthForViewer $monthForViewer, public ?string $pageVersion = null) {}
 
     /**
      * The start of the first revealed memory, up to the end of its first

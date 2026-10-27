@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Memories\MonthPageVersion;
 use App\Models\MemoryParticipant;
 use App\Models\Month;
 use App\Queries\ListOpenMonthsQuery;
@@ -21,9 +22,11 @@ class MemoriesController extends Controller
         $viewer = $request->user();
         $other = MemoryParticipant::otherThan($viewer);
 
+        $months = (new ListOpenMonthsQuery)->execute();
+
         return view('memories.index', [
-            'monthsForViewer' => (new ListOpenMonthsQuery)->execute()
-                ->map(fn (Month $month) => new MonthForViewer($month, $viewer, $other)),
+            'monthsForViewer' => $months->map(fn (Month $month) => new MonthForViewer($month, $viewer, $other)),
+            'pageVersions' => MonthPageVersion::forMonths($months, $viewer),
         ]);
     }
 

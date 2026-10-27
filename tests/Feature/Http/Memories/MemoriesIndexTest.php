@@ -73,7 +73,7 @@ describe('months the viewer missed', function () {
         /** @var TestCase $this */
         // June: nobody wrote.
         $this->get('/memories')
-            ->assertSee('href="'.route('memories.show', '2026-06').'"', false)
+            ->assertSee('href="'.route('memories.show', '2026-06').'?v=', false)
             ->assertSee('href="'.route('memories.write', '2026-06').'"', false)
             ->assertSeeTextInOrder(['June 2026', 'Write yours', 'May 2026'])
             ->assertDontSeeText('Nothing written.');

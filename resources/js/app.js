@@ -39,3 +39,27 @@ window.addEventListener("pageshow", () => {
         .querySelectorAll(".is-pressed")
         .forEach((el) => el.classList.remove("is-pressed"));
 });
+
+// PROTOTYPE (mobile polish, #334): phones never hover, so start Livewire's
+// hover prefetch for each month as its tile scrolls into view, and again
+// the moment a finger lands on it.
+const prefetchMonth = (link) =>
+    link.dispatchEvent(new MouseEvent("mouseenter"));
+const prefetcher = new IntersectionObserver(
+    (entries) => {
+        for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            prefetcher.unobserve(entry.target);
+            prefetchMonth(entry.target);
+        }
+    },
+    { rootMargin: "200px 0px" },
+);
+const watchMonthLinks = () =>
+    document.querySelectorAll("a[data-prefetch]").forEach((link) => {
+        prefetcher.observe(link);
+        link.addEventListener("touchstart", () => prefetchMonth(link), {
+            passive: true,
+        });
+    });
+document.addEventListener("livewire:navigated", watchMonthLinks);

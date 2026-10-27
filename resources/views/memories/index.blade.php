@@ -7,7 +7,10 @@
 
         <div class="mt-8 space-y-4">
             @foreach ($monthsForViewer as $monthForViewer)
-                <x-memories.month-tile :month-for-viewer="$monthForViewer" />
+                <x-memories.month-tile
+                    :month-for-viewer="$monthForViewer"
+                    :page-version="$pageVersions[$monthForViewer->month->id] ?? null"
+                />
             @endforeach
         </div>
     </div>

@@ -4,7 +4,11 @@
 ])
 
 <!DOCTYPE html>
-<html lang="{{ str_replace("_", "-", app()->getLocale()) }}" @class(['compose-page' => $hideNav])>
+<html
+    lang="{{ str_replace("_", "-", app()->getLocale()) }}"
+    @class(['compose-page' => $hideNav])
+    wire:transition.navigate
+>
 <head>
     <meta charset="utf-8" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
@@ -13,22 +17,6 @@
     <meta name="theme-color" content="#21110a" media="(prefers-color-scheme: dark)" />
     @head
 
-    <script type="speculationrules">
-        {
-            "prefetch": [
-                {
-                    "where": {
-                        "and": [
-                            { "href_matches": "/memories/*" },
-                            { "not": { "href_matches": "/memories/*/write" } },
-                            { "not": { "href_matches": "/memories/photos/*" } }
-                        ]
-                    },
-                    "eagerness": "moderate"
-                }
-            ]
-        }
-    </script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
