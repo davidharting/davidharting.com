@@ -54,6 +54,13 @@ test('says where both memories stand before the reveal, without either memory\'s
         ->assertDontSeeText('It snowed for the first time');
 });
 
+test('explains how it works behind a ? beside the title', function () {
+    /** @var TestCase $this */
+    $this->get('/memories')
+        ->assertSee('aria-label="How it works"', false)
+        ->assertSeeText('Nobody sees it until you share it.');
+});
+
 test('previews the first line of their memory once a month has revealed', function () {
     /** @var TestCase $this */
     // Katie's August memory.
