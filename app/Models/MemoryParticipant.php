@@ -18,6 +18,13 @@ class MemoryParticipant extends Model
         'user_id',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'how_it_works_dismissed_at' => 'datetime',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
