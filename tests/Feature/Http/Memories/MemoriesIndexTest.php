@@ -181,8 +181,9 @@ test('runs each query once, however many months there are', function () {
     expect($repeated->all())->toBe([]);
 });
 
-test('keeps How it works behind a ? once a month has revealed', function () {
+test('hides How it works behind a ? once a month has revealed', function () {
     /** @var TestCase $this */
+    // July and May have revealed. The card's open twin is in ListHeadingTest, which starts with no memories.
     $this->get('/memories')
         ->assertSee('aria-label="How it works"', false)
         ->assertDontSee('Close How it works');

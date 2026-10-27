@@ -24,29 +24,28 @@ class ListHeading extends Component
     #[Locked]
     public bool $anyMonthRevealed;
 
-    public function mount(bool $anyMonthRevealed): void
+    /**
+     * Every request, the first render and each update alike, is a participant's.
+     */
+    public function boot(): void
     {
         $this->authorize('viewAny', Month::class);
+    }
 
+    public function mount(bool $anyMonthRevealed): void
+    {
         $this->anyMonthRevealed = $anyMonthRevealed;
     }
 
-    /**
-     * Closes the card for good, on every device.
-     */
     public function dismiss(): void
     {
-        $this->authorize('viewAny', Month::class);
-
-        $participant = $this->participant();
-        $participant->how_it_works_dismissed_at ??= now();
-        $participant->save();
+        $this->participant()->dismissHowItWorks();
     }
 
     #[Computed]
     public function showsCard(): bool
     {
-        return ! $this->anyMonthRevealed && $this->participant()->how_it_works_dismissed_at === null;
+        return ! $this->anyMonthRevealed && ! $this->participant()->hasDismissedHowItWorks();
     }
 
     public function render(): View

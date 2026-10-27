@@ -31,6 +31,21 @@ class MemoryParticipant extends Model
     }
 
     /**
+     * Closes the "How it works" card on the memories list for good, on every
+     * device. Closing it again keeps the first time.
+     */
+    public function dismissHowItWorks(): void
+    {
+        $this->how_it_works_dismissed_at ??= now();
+        $this->save();
+    }
+
+    public function hasDismissedHowItWorks(): bool
+    {
+        return $this->how_it_works_dismissed_at !== null;
+    }
+
+    /**
      * Monthly memories is live only with exactly two participants. With fewer
      * or more, nobody can reach the feature. Counted once per request, since
      * every memory's policy check asks.

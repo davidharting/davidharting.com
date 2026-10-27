@@ -6,22 +6,30 @@ use App\Models\User;
 use Livewire\Livewire;
 use Tests\TestCase;
 
+/**
+ * The card's ✕ is only there while the card is open, and the ? only once it
+ * has gone.
+ */
+const HOW_IT_WORKS_CARD = 'aria-label="Close How it works"';
+const HOW_IT_WORKS_QUESTION_MARK = 'aria-label="How it works"';
+
 beforeEach(function () {
     /** @var TestCase $this */
     $this->travelTo('2026-10-18T12:00:00Z');
-    $this->david = User::factory()->create();
-    $this->katie = User::factory()->create();
-    MemoryParticipant::create(['user_id' => $this->david->id]);
-    MemoryParticipant::create(['user_id' => $this->katie->id]);
+    $this->david = MemoryParticipant::factory()->create()->user;
+    $this->katie = MemoryParticipant::factory()->create()->user;
 });
 
-test('the memories list opens the card before any month has revealed', function () {
-    /** @var TestCase $this */
-    // Nobody has written yet, so the list is September alone, revealing at the end of October.
-    $this->actingAs($this->david)
-        ->get('/memories')
-        ->assertSeeText('September 2026')
-        ->assertSee('Close How it works');
+describe('the memories list', function () {
+    test('opens the card before any month has revealed', function () {
+        /** @var TestCase $this */
+        // Nobody has written yet, so the list is September alone, revealing at the end of October.
+        $this->actingAs($this->david)
+            ->get('/memories')
+            ->assertSeeText('September 2026')
+            ->assertSee(HOW_IT_WORKS_CARD, false)
+            ->assertDontSee(HOW_IT_WORKS_QUESTION_MARK, false);
+    });
 });
 
 describe('mount()', function () {
@@ -39,17 +47,17 @@ describe('render()', function () {
         Livewire::actingAs($this->david)
             ->test(ListHeading::class, ['anyMonthRevealed' => false])
             ->assertSeeText('Nobody sees it until you share it.')
-            ->assertSee('Close How it works')
-            ->assertDontSee('aria-label="How it works"', false);
+            ->assertSee(HOW_IT_WORKS_CARD, false)
+            ->assertDontSee(HOW_IT_WORKS_QUESTION_MARK, false);
     });
 
-    test('keeps the lines behind a ? once a month has revealed', function () {
+    test('hides the card behind a ? once a month has revealed', function () {
         /** @var TestCase $this */
         Livewire::actingAs($this->david)
             ->test(ListHeading::class, ['anyMonthRevealed' => true])
             ->assertSeeText('Nobody sees it until you share it.')
-            ->assertSee('aria-label="How it works"', false)
-            ->assertDontSee('Close How it works');
+            ->assertSee(HOW_IT_WORKS_QUESTION_MARK, false)
+            ->assertDontSee(HOW_IT_WORKS_CARD, false);
     });
 });
 
@@ -59,11 +67,11 @@ describe('dismiss()', function () {
         Livewire::actingAs($this->david)
             ->test(ListHeading::class, ['anyMonthRevealed' => false])
             ->call('dismiss')
-            ->assertDontSee('Close How it works')
-            ->assertSee('aria-label="How it works"', false);
+            ->assertDontSee(HOW_IT_WORKS_CARD, false)
+            ->assertSee(HOW_IT_WORKS_QUESTION_MARK, false);
     });
 
-    test('keeps the card closed on later visits, for the viewer only', function () {
+    test('keeps the card closed on later visits', function () {
         /** @var TestCase $this */
         Livewire::actingAs($this->david)
             ->test(ListHeading::class, ['anyMonthRevealed' => false])
@@ -71,11 +79,18 @@ describe('dismiss()', function () {
 
         Livewire::actingAs($this->david)
             ->test(ListHeading::class, ['anyMonthRevealed' => false])
-            ->assertDontSee('Close How it works');
+            ->assertDontSee(HOW_IT_WORKS_CARD, false);
+    });
+
+    test('leaves the card open for the other participant', function () {
+        /** @var TestCase $this */
+        Livewire::actingAs($this->david)
+            ->test(ListHeading::class, ['anyMonthRevealed' => false])
+            ->call('dismiss');
 
         Livewire::actingAs($this->katie)
             ->test(ListHeading::class, ['anyMonthRevealed' => false])
-            ->assertSee('Close How it works');
+            ->assertSee(HOW_IT_WORKS_CARD, false);
     });
 
     test('keeps the time it was first closed', function () {
