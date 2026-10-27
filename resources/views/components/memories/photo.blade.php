@@ -20,7 +20,6 @@
                 alt="{{ $photo->caption ?? "A photo by {$authorName}" }}"
                 loading="lazy"
                 class="photo-fade h-full w-full object-cover text-transparent"
-                onload="this.classList.add('is-loaded')"
             />
         </div>
     @else

@@ -48,5 +48,20 @@
             </main>
         </div>
     @endif
+
+    {{-- PROTOTYPE (mobile polish, #334): fade in only photos that are not already in the cache. --}}
+    <script>
+        document.querySelectorAll('img.photo-fade').forEach((img) => {
+            if (img.complete) return;
+            const hiddenAt = performance.now();
+            img.classList.add('is-loading');
+            const show = () => {
+                if (performance.now() - hiddenAt < 100) img.style.transition = 'none';
+                img.classList.remove('is-loading');
+            };
+            img.addEventListener('load', show, { once: true });
+            img.addEventListener('error', show, { once: true });
+        });
+    </script>
 </body>
 </html>
