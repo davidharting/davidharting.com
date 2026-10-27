@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\MemoryParticipant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\RenderedHead;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
@@ -19,6 +21,53 @@ class ProfileTest extends TestCase
             ->get('/profile');
 
         $response->assertOk();
+    }
+
+    public function test_profile_page_is_titled_account_and_offers_log_out(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/profile')
+            ->assertSeeHtml('>Account</h1>')
+            ->assertSee(route('logout'));
+
+        $this->assertSame('Account - davidharting.com', RenderedHead::from($response)->title);
+    }
+
+    public function test_profile_page_gives_the_admin_the_admin_tools(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->get('/profile')
+            ->assertSeeTextInOrder(['Admin', 'Filament Admin', 'Backup database', 'Kitchen Sink'])
+            ->assertSee(route('admin.backup'));
+    }
+
+    public function test_profile_page_does_not_give_anyone_else_the_admin_tools(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/profile')
+            ->assertDontSeeText('Filament Admin')
+            ->assertDontSee(route('admin.backup'));
+    }
+
+    public function test_profile_page_offers_to_delete_the_account(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/profile')
+            ->assertSeeText('Delete Your Account');
+    }
+
+    public function test_profile_page_does_not_offer_a_memories_participant_to_delete_their_account(): void
+    {
+        $user = User::factory()->create();
+        MemoryParticipant::create(['user_id' => $user->id]);
+
+        $this->actingAs($user)->get('/profile')
+            ->assertOk()
+            ->assertDontSeeText('Delete Your Account');
     }
 
     public function test_profile_information_can_be_updated(): void

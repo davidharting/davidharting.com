@@ -10,11 +10,6 @@ use RuntimeException;
 
 class AdminController extends Controller
 {
-    public function index()
-    {
-        return view('admin.index');
-    }
-
     public function backupDatabase()
     {
         $timestamp = Carbon::now()->format('Y-m-d-H-i-s');
@@ -26,7 +21,7 @@ class AdminController extends Controller
 
             return Storage::download($path, $filename);
         } catch (RuntimeException $e) {
-            return redirect('/backend')->withErrors(['backup' => $e->getMessage()]);
+            return redirect()->route('profile.edit')->withErrors(['backup' => $e->getMessage()]);
         }
     }
 }

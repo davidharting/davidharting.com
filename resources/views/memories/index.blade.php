@@ -1,4 +1,4 @@
-<x-layout.app>
+<x-layout.memories>
     <div class="mx-auto max-w-xl">
         <div class="flex items-center gap-3">
             <x-type.page-title class="text-5xl">Memories</x-type.page-title>
@@ -11,4 +11,4 @@
             @endforeach
         </div>
     </div>
-</x-layout.app>
+</x-layout.memories>

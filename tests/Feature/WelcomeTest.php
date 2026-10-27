@@ -46,20 +46,17 @@ test('navigation links are present for anonymous users', function () {
     // Guest-only link
     $response->assertSeeText('Login');
     $response->assertSee(route('login'));
-
-    // Admin link should not be visible
-    $response->assertDontSee(route('admin.index'));
 });
 
-test('admin link is visible to admin users', function () {
+test('does not show admin users an Admin link in the nav', function () {
     /** @var TestCase $this */
     $admin = User::factory()->admin()->create();
 
     $response = $this->actingAs($admin)->get('/');
     $response->assertSuccessful();
 
-    $response->assertSeeText('Admin');
-    $response->assertSee(route('admin.index'));
+    $response->assertDontSee('href="/admin"', false);
+    $response->assertSee(route('profile.edit'));
 
     // Login link should not be visible when authenticated
     $response->assertDontSeeText('Login');

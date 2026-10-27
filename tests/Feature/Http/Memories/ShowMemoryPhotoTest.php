@@ -89,11 +89,11 @@ test('is not found for someone who is not a participant', function () {
     $this->actingAs(User::factory()->create())->get(route('memories.photos.show', [$photo, 'web']))->assertNotFound();
 });
 
-test('is not found for a guest', function () {
+test('sends a guest to log in', function () {
     /** @var TestCase $this */
     $photo = photoAfterTheReveal($this->david);
 
-    $this->get(route('memories.photos.show', [$photo, 'web']))->assertNotFound();
+    $this->get(route('memories.photos.show', [$photo, 'web']))->assertRedirect(route('login'));
 });
 
 test('is not found once the photo is removed, even for its author', function () {
