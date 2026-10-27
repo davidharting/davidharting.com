@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\LandingPage;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -32,7 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->redirectTo(
             guests: fn () => route('login'),
-            users: fn () => route('dashboard'),
+            users: fn (Request $request) => LandingPage::for($request->user()),
         );
 
         // routes/api.php is not throttled unless we ask for it. The 'api'

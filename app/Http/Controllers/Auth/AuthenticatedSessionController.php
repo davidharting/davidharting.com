@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\LandingPage;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Models\Month;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,21 +29,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended($this->landingPageFor($request->user()));
-    }
-
-    /**
-     * Where a login with no intended URL lands: a memories participant who
-     * isn't the admin goes straight to their memories, everyone else to the
-     * Account page.
-     */
-    private function landingPageFor(User $user): string
-    {
-        if ($user->can('viewAny', Month::class) && $user->cannot('administrate')) {
-            return route('memories.index', absolute: false);
-        }
-
-        return route('profile.edit', absolute: false);
+        return redirect()->intended(LandingPage::for($request->user()));
     }
 
     /**
