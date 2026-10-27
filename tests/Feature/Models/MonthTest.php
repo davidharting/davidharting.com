@@ -170,6 +170,57 @@ describe('isRevealed()', function () {
     });
 });
 
+describe('missedBy()', function () {
+    test('is false for everyone before the reveal, even with nothing shared', function () {
+        /** @var TestCase $this */
+        $month = monthWith($this->september, monthTestMemory($this->david, $this->september));
+
+        expect($month->missedBy($this->david))->toBeFalse()
+            ->and($month->missedBy($this->katie))->toBeFalse();
+    });
+
+    test('is true after the reveal for whoever wrote nothing or left a draft', function () {
+        /** @var TestCase $this */
+        $august = CalendarMonth::of(2026, 8);
+        $month = monthWith($august, monthTestMemory($this->david, $august));
+
+        expect($month->missedBy($this->david))->toBeTrue()
+            ->and($month->missedBy($this->katie))->toBeTrue();
+    });
+
+    test('is false after the reveal for whoever shared, even late', function () {
+        /** @var TestCase $this */
+        $august = CalendarMonth::of(2026, 8);
+        $month = monthWith($august, monthTestMemory($this->david, $august, '2026-10-04T12:00:00Z'));
+
+        expect($month->missedBy($this->david))->toBeFalse()
+            ->and($month->missedBy($this->katie))->toBeTrue();
+    });
+});
+
+describe('missed()', function () {
+    test('is false before the reveal, even with nothing shared', function () {
+        /** @var TestCase $this */
+        expect(Month::of($this->september)->missed())->toBeFalse();
+    });
+
+    test('is true once the month revealed with nothing shared', function () {
+        /** @var TestCase $this */
+        $august = CalendarMonth::of(2026, 8);
+        $month = monthWith($august, monthTestMemory($this->david, $august));
+
+        expect($month->missed())->toBeTrue();
+    });
+
+    test('is false once either person shared', function () {
+        /** @var TestCase $this */
+        $august = CalendarMonth::of(2026, 8);
+        $month = monthWith($august, monthTestMemory($this->katie, $august, '2026-09-05T12:00:00Z'));
+
+        expect($month->missed())->toBeFalse();
+    });
+});
+
 describe('memoryOf()', function () {
     test('is the user\'s memory, or null when they have none', function () {
         /** @var TestCase $this */

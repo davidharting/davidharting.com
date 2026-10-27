@@ -40,6 +40,11 @@ final readonly class MonthForViewer
         return Gate::forUser($this->viewer)->allows('view', $this->otherMemory) ? $this->otherMemory : null;
     }
 
+    public function viewerMissed(): bool
+    {
+        return $this->month->missedBy($this->viewer);
+    }
+
     /**
      * For example "Draft, started Oct 3".
      */

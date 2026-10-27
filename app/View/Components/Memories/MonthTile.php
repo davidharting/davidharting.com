@@ -13,7 +13,8 @@ use Illuminate\View\View;
 /**
  * One month in the list. Before the reveal it says where both memories
  * stand; after, it leads with up to two thumbnails and a line of what the
- * viewer can read.
+ * viewer can read. A month both people missed is de-emphasized to a single line,
+ * and any month the viewer missed links to the editor.
  */
 class MonthTile extends Component
 {
@@ -90,11 +91,6 @@ class MonthTile extends Component
             $this->monthForViewer->revealedOtherMemory(),
             $viewerMemory !== null && $this->monthForViewer->month->isRevealed($viewerMemory) ? $viewerMemory : null,
         ])->filter()->values();
-    }
-
-    public function isEmpty(): bool
-    {
-        return $this->monthForViewer->viewerMemory === null && $this->monthForViewer->otherMemory === null;
     }
 
     public function render(): View

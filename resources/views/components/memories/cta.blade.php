@@ -2,10 +2,14 @@
 @props([
     'memory',
     'month',
+    'quiet' => false,
 ])
 
 @if ($memory === null || $memory->isDraft())
-    <a class="btn btn-primary font-sans" href="{{ route("memories.write", $month->toYearMonth()) }}">
+    <a
+        {{ $attributes->class(["btn font-sans", "btn-primary" => ! $quiet, "btn-ghost btn-sm" => $quiet]) }}
+        href="{{ route("memories.write", $month->toYearMonth()) }}"
+    >
         {{ $memory === null ? "Write yours" : "Keep writing" }}
     </a>
 @endif

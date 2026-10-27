@@ -146,6 +146,26 @@ class Month extends Model
     }
 
     /**
+     * Whether the user missed the month: it revealed without their shared
+     * memory. Before the reveal nobody has missed it, so the latest open
+     * month never counts until its deadline passes, by which time it is no
+     * longer the latest.
+     */
+    public function missedBy(User $user): bool
+    {
+        return $this->hasRevealed() && ! $this->memoryOf($user)?->isShared();
+    }
+
+    /**
+     * Whether both people missed the month: it revealed at its deadline with
+     * nothing shared.
+     */
+    public function missed(): bool
+    {
+        return $this->hasRevealed() && $this->memories->doesntContain(fn (Memory $memory) => $memory->isShared());
+    }
+
+    /**
      * The user's memory for the month, or null if they haven't started one.
      */
     public function memoryOf(User $user): ?Memory
