@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./memories.css";
 
 @plugin '@tailwindcss/typography';
 @plugin "daisyui";
@@ -274,107 +275,21 @@
     opacity: 0.6;
 }
 
-/* Grows something small to a 44px tap target without changing how it looks. */
-.tap-target {
-    position: relative;
-}
-.tap-target::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: max(100%, 44px);
-    height: max(100%, 44px);
-    translate: -50% -50%;
-}
-
-/* A month tile pressed, and held until its month shows (resources/js/memory-pages.js). */
-[data-month-tile]:has(a[data-holds-press]:active),
-[data-month-tile].is-pressed {
-    scale: 0.98;
-    filter: brightness(0.95);
-}
-/* A short wait, so a scroll that starts on a tile doesn't press it. */
-[data-month-tile]:has(a[data-holds-press]:active) {
-    transition-delay: 80ms;
-}
-
-.photo-fade {
-    transition: opacity 300ms ease-out;
-}
-.photo-fade.is-loading {
-    opacity: 0;
-}
-
 /*
-  Moving between memories pages, as set on <html data-memories-movement> by
-  resources/js/memory-pages.js. wire:transition.navigate on <html> makes
-  Livewire swap pages inside a view transition of the whole page (root).
+  Grows something small to the 44px tap target Apple and WCAG recommend,
+  without changing how it looks.
 */
-::view-transition-group(root),
-::view-transition-old(root),
-::view-transition-new(root) {
-    animation-duration: 300ms;
-    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
-}
+@utility tap-target {
+    position: relative;
 
-html[data-memories-movement="forward"]::view-transition-old(root) {
-    animation-name: page-recede;
-}
-html[data-memories-movement="forward"]::view-transition-new(root) {
-    animation-name: page-enter-from-right;
-    box-shadow: -8px 0 24px rgb(0 0 0 / 0.15);
-}
-
-html[data-memories-movement="back"]::view-transition-old(root) {
-    z-index: 1;
-    animation-name: page-leave-to-right;
-    box-shadow: -8px 0 24px rgb(0 0 0 / 0.15);
-}
-html[data-memories-movement="back"]::view-transition-new(root) {
-    animation-name: page-return;
-}
-
-html[data-memories-movement="fade"]::view-transition-old(root),
-html[data-memories-movement="fade"]::view-transition-new(root) {
-    animation-duration: 150ms;
-}
-
-html[data-memories-movement="none"]::view-transition-old(root),
-html[data-memories-movement="none"]::view-transition-new(root) {
-    animation: none;
-}
-
-@keyframes page-recede {
-    to {
-        translate: -30% 0;
-        filter: brightness(0.9);
-    }
-}
-@keyframes page-enter-from-right {
-    from {
-        translate: 100% 0;
-    }
-}
-@keyframes page-leave-to-right {
-    to {
-        translate: 100% 0;
-    }
-}
-@keyframes page-return {
-    from {
-        translate: -30% 0;
-        filter: brightness(0.9);
-    }
-}
-/* The editor rises in when it opens. */
-.page-rise {
-    animation: page-rise 280ms cubic-bezier(0.2, 0, 0, 1) backwards;
-}
-@keyframes page-rise {
-    from {
-        opacity: 0;
-        translate: 0 24px;
+    &::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: max(100%, 44px);
+        height: max(100%, 44px);
+        translate: -50% -50%;
     }
 }
 
