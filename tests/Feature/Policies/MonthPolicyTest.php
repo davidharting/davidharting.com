@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Memory;
 use App\Models\MemoryParticipant;
 use App\Models\Month;
 use App\Models\User;
@@ -44,21 +43,17 @@ describe('viewAny()', function () {
 });
 
 describe('view()', function () {
-    test('allows a participant into any month from launch to the latest open one', function () {
+    test('allows a participant into any month from January 2016 to the latest open one, listed or not', function () {
         /** @var TestCase $this */
-        Memory::factory()->forMonth(CalendarMonth::of(2026, 6))->create();
-
-        expect(Gate::forUser($this->david)->allows('view', Month::of(CalendarMonth::of(2026, 6))))->toBeTrue()
-            ->and(Gate::forUser($this->david)->allows('view', Month::of(CalendarMonth::of(2026, 7))))->toBeTrue()
+        expect(Gate::forUser($this->david)->allows('view', Month::of(CalendarMonth::of(2016, 1))))->toBeTrue()
+            ->and(Gate::forUser($this->david)->allows('view', Month::of(CalendarMonth::of(2019, 3))))->toBeTrue()
             ->and(Gate::forUser($this->david)->allows('view', Month::of(CalendarMonth::of(2026, 9))))->toBeTrue();
     });
 
-    test('is not found for the month in progress or a month before launch', function () {
+    test('is not found for the month in progress or a future month', function () {
         /** @var TestCase $this */
-        Memory::factory()->forMonth(CalendarMonth::of(2026, 6))->create();
-
         expect(Gate::forUser($this->david)->inspect('view', Month::of(CalendarMonth::of(2026, 10)))->status())->toBe(404)
-            ->and(Gate::forUser($this->david)->inspect('view', Month::of(CalendarMonth::of(2026, 5)))->status())->toBe(404);
+            ->and(Gate::forUser($this->david)->inspect('view', Month::of(CalendarMonth::of(2027, 1)))->status())->toBe(404);
     });
 
     test('is not found for a guest, even in an open month', function () {
@@ -68,9 +63,10 @@ describe('view()', function () {
 });
 
 describe('write()', function () {
-    test('allows a participant in an open month', function () {
+    test('allows a participant in an open month, before launch included', function () {
         /** @var TestCase $this */
-        expect(Gate::forUser($this->david)->allows('write', Month::of(CalendarMonth::of(2026, 9))))->toBeTrue();
+        expect(Gate::forUser($this->david)->allows('write', Month::of(CalendarMonth::of(2026, 9))))->toBeTrue()
+            ->and(Gate::forUser($this->david)->allows('write', Month::of(CalendarMonth::of(2019, 3))))->toBeTrue();
     });
 
     test('is not found for the month in progress', function () {

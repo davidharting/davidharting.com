@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\SendShareNotificationsIfNeeded;
+use App\Memories\MemoryEmailKind;
 use App\Models\Memory;
 use App\Models\MemoryEmail;
 use App\Models\MemoryParticipant;
@@ -99,16 +100,19 @@ describe('handle()', function () {
         expect(octoberEmails())->toBe(['David: reveal', 'Katie: reveal']);
     });
 
-    test('claims nothing for a month that opened before both participants existed', function () {
+    test('emails the other person when a memory of a month before launch is shared', function () {
         /** @var TestCase $this */
-        // Both joined on October 20, so September had already opened.
-        $september = Month::of(CalendarMonth::of(2026, 9));
-        Memory::factory()->for($this->katie)->forMonth($september->calendarMonth)->shared()->create();
-        Memory::factory()->for($this->david)->forMonth($september->calendarMonth)->shared()->create();
+        // Both joined on October 20. March 2019's deadline passed long ago,
+        // so David's memory is readable the moment he shares it.
+        $march = Month::of(CalendarMonth::of(2019, 3));
+        Memory::factory()->for($this->david)->forMonth($march->calendarMonth)->shared()->create();
 
-        SendShareNotificationsIfNeeded::dispatch($september);
+        SendShareNotificationsIfNeeded::dispatch($march);
 
-        expect(MemoryEmail::count())->toBe(0);
+        $email = MemoryEmail::sole();
+        expect($email->user->is($this->katie))->toBeTrue()
+            ->and($email->kind)->toBe(MemoryEmailKind::Reveal)
+            ->and($email->month->is($march))->toBeTrue();
     });
 
     test('claims nothing without two participants', function () {

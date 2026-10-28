@@ -14,8 +14,8 @@ use InvalidArgumentException;
  * written about it, with the rules for when it opens and when it reveals.
  *
  * The `months` table holds every month from 2016 to 2096 as fixed system
- * data, keyed by its first day. Which months are open is decided here and
- * in ListOpenMonthsQuery, never by which rows exist.
+ * data, keyed by its first day. Which months are open and which are listed
+ * is decided here and in ListMonthsQuery, never by which rows exist.
  */
 class Month extends Model
 {
@@ -43,6 +43,18 @@ class Month extends Model
     }
 
     /**
+     * The first month that opened with both participants: the month the
+     * second one joined in. Before there are two, the latest open month.
+     * Writing about an earlier month never moves it.
+     */
+    public static function launch(): CalendarMonth
+    {
+        $secondJoinedAt = MemoryParticipant::secondJoinedAt();
+
+        return $secondJoinedAt === null ? self::latestOpen() : CalendarMonth::ofInstant($secondJoinedAt);
+    }
+
+    /**
      * Every memory written for the month.
      */
     public function memories(): HasMany
@@ -67,9 +79,9 @@ class Month extends Model
     }
 
     /**
-     * Whether the month opened once both participants existed. Emails are
+     * Whether the month opened once both participants existed. Reminders are
      * only for these months, so adding the second participant never sends
-     * emails about older months.
+     * reminders about older months.
      */
     public function openedWithBothParticipants(): bool
     {

@@ -26,7 +26,10 @@ use Illuminate\Support\Str;
  * - 2 back: both shared, revealed when the second one shared.
  * - 3 back: an empty month; nobody wrote.
  * - 4 back: Katie shared; David's draft was never shared, so the month revealed at its deadline.
- * - 5 and 6 back: both shared and revealed. 6 back is the launch month.
+ * - 5 and 6 back: both shared and revealed. 6 back is the launch month:
+ *   both participants joined on its 2nd.
+ * - 24 back: before launch. David wrote about it later and shared, so it is
+ *   on the list; the months around it are not.
  *
  * Photos cover each state a photo can be in: ready with and without a
  * caption, still processing, failed, and removed. One memory holds the full
@@ -41,10 +44,11 @@ class MemorySeeder extends Seeder
     {
         $this->now = CarbonImmutable::now();
 
-        $david = $this->participant('David Harting', 'David', 'david@example.com', isAdmin: true);
-        $katie = $this->participant('Katie Harting', 'Katie', 'katie@example.com', isAdmin: false);
-
         $latest = Month::latestOpen();
+        $joinedAt = $latest->previous(6)->at(day: 2, hour: 12);
+
+        $david = $this->participant('David Harting', 'David', 'david@example.com', isAdmin: true, joinedAt: $joinedAt);
+        $katie = $this->participant('Katie Harting', 'Katie', 'katie@example.com', isAdmin: false, joinedAt: $joinedAt->addHour());
 
         // 0 back: open and not yet revealed.
         $month = $latest;
@@ -100,9 +104,13 @@ class MemorySeeder extends Seeder
         $katies = $this->memory($katie, $month, self::BODIES['first_one_katie'], startedAfter: 1, sharedAfter: 2);
         $this->react($katie, $davids, ['🥹']);
         $this->react($david, $katies, ['❤️']);
+
+        // 24 back: before launch, written about later.
+        $month = $latest->previous(24);
+        $this->memory($david, $month, self::BODIES['looking_back'], startedAfter: 1, sharedAfter: 1);
     }
 
-    private function participant(string $name, string $displayName, string $email, bool $isAdmin): User
+    private function participant(string $name, string $displayName, string $email, bool $isAdmin, CarbonImmutable $joinedAt): User
     {
         $user = User::factory()->create([
             'name' => $name,
@@ -111,7 +119,11 @@ class MemorySeeder extends Seeder
             'is_admin' => $isAdmin,
         ]);
 
-        MemoryParticipant::create(['user_id' => $user->id]);
+        MemoryParticipant::forceCreate([
+            'user_id' => $user->id,
+            'created_at' => $joinedAt,
+            'updated_at' => $joinedAt,
+        ]);
 
         return $user;
     }
@@ -325,6 +337,11 @@ Road trip to see my parents. Nine hours there, eleven back because of the detour
 We listened to an entire audiobook and argued about the ending for the last hundred miles. You were wrong, for the record.
 
 Mom made the lemon cake.
+TEXT,
+        'looking_back' => <<<'TEXT'
+Going back to write about this one. It was the month we moved, and I'd forgotten how much of it was boxes.
+
+The first night in the new place we ate takeout on the floor because the table was still in pieces.
 TEXT,
         'first_one' => <<<'TEXT'
 The first one of these. I'm not sure yet what it's supposed to be, so here's what stuck with me.

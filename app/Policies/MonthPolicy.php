@@ -5,7 +5,6 @@ namespace App\Policies;
 use App\Models\MemoryParticipant;
 use App\Models\Month;
 use App\Models\User;
-use App\Queries\ListOpenMonthsQuery;
 use Illuminate\Auth\Access\Response;
 
 /**
@@ -28,8 +27,9 @@ class MonthPolicy
     }
 
     /**
-     * A participant may look at any open month, from the launch month to the
-     * latest open one.
+     * A participant may look at any open month, back to January 2016 where
+     * the months table starts, whether or not it is on the list. Earlier
+     * months have no row, so their URLs are already a 404.
      */
     public function view(?User $user, Month $month): Response
     {
@@ -39,7 +39,7 @@ class MonthPolicy
             return $viewAny;
         }
 
-        if (! (new ListOpenMonthsQuery)->contains($month->calendarMonth)) {
+        if ($month->calendarMonth->isAfter(Month::latestOpen())) {
             return Response::denyAsNotFound();
         }
 

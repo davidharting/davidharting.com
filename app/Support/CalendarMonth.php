@@ -40,6 +40,15 @@ final class CalendarMonth implements Stringable
     }
 
     /**
+     * The month an instant falls in on the Eastern clock, for example the
+     * month a participant joined in.
+     */
+    public static function ofInstant(DateTimeInterface $instant): self
+    {
+        return self::containing(CarbonImmutable::instance($instant)->tz(self::TIMEZONE));
+    }
+
+    /**
      * Parse a first-of-month `Y-m-d` string such as "2026-09-01". The `month`
      * column is a Postgres `date`, but PDO hands every date to PHP as a string.
      */

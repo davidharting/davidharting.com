@@ -22,12 +22,19 @@ test('opens the viewer\'s editor for the month', function () {
     expect(RenderedHead::from($response)->title)->toBe('Your September 2026 - davidharting.com');
 });
 
-test('is not found for a month outside the list or a malformed month', function (string $month) {
+test('opens for any month back to January 2016, even one before launch that isn\'t listed', function () {
+    /** @var TestCase $this */
+    // The seeder's launch month is March 2026.
+    $this->actingAs($this->katie)->get('/memories/2016-01/write')
+        ->assertSuccessful()
+        ->assertSeeLivewire('memories.editor');
+});
+
+test('is not found for a month not open yet, before 2016, or malformed', function (string $month) {
     /** @var TestCase $this */
     $this->actingAs($this->katie)->get("/memories/{$month}/write")->assertNotFound();
 })->with([
     'not open yet' => '2026-10',
-    // The seeder's launch month is March 2026.
-    'before launch' => '2026-02',
+    'before 2016' => '2015-12',
     'not a month' => '2026-13',
 ]);
