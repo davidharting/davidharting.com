@@ -67,8 +67,60 @@ document.addEventListener("click", (event) => {
         ?.classList.add("is-pressed");
 });
 
-// iOS Safari only applies :active while something listens for touches.
-document.addEventListener("touchstart", () => {}, { passive: true });
+/**
+ * Phones never hover, and iOS presses a link only when the finger lifts, so
+ * Livewire's own prefetch starts too late there. Each month link marked
+ * data-prefetch-in-view is prefetched as it scrolls into view, again every
+ * 25 seconds while it stays there (Livewire drops a prefetch after 30), and
+ * again the moment a finger lands on it. (Listening for touches also lets
+ * iOS Safari apply :active, which the pressed tile needs.)
+ *
+ * Livewire has no prefetch API, so this starts the prefetch its
+ * wire:navigate.hover listens for by sending the link a mouseenter.
+ */
+const PREFETCH_AGAIN_AFTER_MILLISECONDS = 25000;
+
+const prefetch = (link) => link.dispatchEvent(new MouseEvent("mouseenter"));
+
+const linksInView = new Set();
+
+const prefetchWhenInView = new IntersectionObserver(
+    (entries) => {
+        for (const entry of entries) {
+            if (entry.isIntersecting) {
+                linksInView.add(entry.target);
+                prefetch(entry.target);
+            } else {
+                linksInView.delete(entry.target);
+            }
+        }
+    },
+    { rootMargin: "200px 0px" },
+);
+
+setInterval(
+    () => linksInView.forEach(prefetch),
+    PREFETCH_AGAIN_AFTER_MILLISECONDS,
+);
+
+document.addEventListener(
+    "touchstart",
+    (event) => {
+        const link = event.target.closest("a[data-prefetch-in-view]");
+        if (link) {
+            prefetch(link);
+        }
+    },
+    { passive: true },
+);
+
+const watchLinksToPrefetch = () => {
+    prefetchWhenInView.disconnect();
+    linksInView.clear();
+    document
+        .querySelectorAll("a[data-prefetch-in-view]")
+        .forEach((link) => prefetchWhenInView.observe(link));
+};
 
 document.addEventListener("livewire:navigating", (event) => {
     const from = placeOfPage();
@@ -82,7 +134,10 @@ document.addEventListener("livewire:navigating", (event) => {
     });
 });
 
-document.addEventListener("livewire:navigated", releasePressedTiles);
+document.addEventListener("livewire:navigated", () => {
+    releasePressedTiles();
+    watchLinksToPrefetch();
+});
 window.addEventListener("pageshow", releasePressedTiles);
 
 fadeInPhotosStillLoading();

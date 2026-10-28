@@ -28,7 +28,10 @@ class MonthTile extends Component
      */
     public const THUMBNAIL_COUNT = 2;
 
-    public function __construct(public MonthForViewer $monthForViewer) {}
+    /**
+     * @param  string  $pageVersion  the month page's fingerprint, so the tile never opens a stale prefetch
+     */
+    public function __construct(public MonthForViewer $monthForViewer, public string $pageVersion) {}
 
     /**
      * The start of the first revealed memory, up to the end of its first

@@ -2,6 +2,7 @@
 
 use App\Models\Memory;
 use App\Models\MemoryPhoto;
+use App\Models\MemoryReaction;
 use App\Models\User;
 use App\Support\CalendarMonth;
 use Database\Seeders\MemorySeeder;
@@ -73,7 +74,7 @@ describe('months the viewer missed', function () {
         /** @var TestCase $this */
         // June: nobody wrote.
         $this->get('/memories')
-            ->assertSee('href="'.route('memories.show', '2026-06').'"', false)
+            ->assertSee('href="'.route('memories.show', '2026-06').'?v=', false)
             ->assertSee('href="'.route('memories.write', '2026-06').'"', false)
             ->assertSeeTextInOrder(['June 2026', 'Write yours', 'May 2026'])
             ->assertDontSeeText('Nothing written.');
@@ -219,6 +220,20 @@ test('loads Livewire, so month links can swap pages in place', function () {
     $this->get('/memories')
         ->assertSee('livewire.min.js', false)
         ->assertSee('wire:navigate.hover', false);
+});
+
+test('links each month with its page\'s fingerprint, which changes once anything on the page does', function () {
+    /** @var TestCase $this */
+    $augustLink = fn () => preg_match('#'.preg_quote(route('memories.show', '2026-08'), '#').'\?v=(\w+)#', $this->get('/memories')->getContent(), $match) ? $match[1] : null;
+    $before = $augustLink();
+
+    MemoryReaction::factory()
+        ->for(Memory::query()->where('month_id', '2026-08-01')->whereBelongsTo(User::firstWhere('email', 'katie@example.com'))->sole())
+        ->for(User::firstWhere('email', 'david@example.com'))
+        ->create(['emoji' => '🌊']);
+
+    expect($before)->not->toBeNull()
+        ->and($augustLink())->not->toBeNull()->not->toBe($before);
 });
 
 test('truncates a long first line with an ellipsis', function () {

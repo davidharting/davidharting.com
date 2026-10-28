@@ -2,13 +2,18 @@
     $month = $monthForViewer->month->calendarMonth;
     $revealed = $monthForViewer->month->hasRevealed();
     $leadingPhotos = $thumbnails();
-    $monthUrl = route('memories.show', $month->toYearMonth());
+    $monthUrl = route('memories.show', ['month' => $month->toYearMonth(), 'v' => $pageVersion]);
 @endphp
 
 @if ($monthForViewer->month->missed())
     <div class="flex items-center justify-between gap-4 px-4 py-1 opacity-70">
         <h2 class="text-lg">
-            <a href="{{ $monthUrl }}" wire:navigate.hover class="inline-block py-2">{{ $month->label() }}</a>
+            <a
+                href="{{ $monthUrl }}"
+                wire:navigate.hover
+                data-prefetch-in-view
+                class="inline-block py-2"
+            >{{ $month->label() }}</a>
         </h2>
         <x-memories.cta :memory="$monthForViewer->viewerMemory" :month="$month" quiet class="-mr-3" />
     </div>
@@ -27,6 +32,7 @@
                     <a
                         href="{{ $monthUrl }}"
                         wire:navigate.hover
+                        data-prefetch-in-view
                         data-holds-press
                         class="after:rounded-box focus-visible:after:outline-primary after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2"
                     >{{ $month->label() }}</a>
