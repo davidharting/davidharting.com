@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Collection;
  * This query performs no authorization. The caller is expected to have
  * checked that the viewer may see monthly memories.
  */
-class ListMemoryMonthsQuery
+class ListMonthsQuery
 {
     private ?CalendarMonth $launch = null;
 
