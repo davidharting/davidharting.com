@@ -216,10 +216,11 @@ test('links each month to its page', function () {
         ->assertSee(route('memories.show', '2026-03'));
 });
 
-test('loads Livewire, so month links can swap pages in place', function () {
+test('loads Livewire and its styles, so month links can swap pages in place', function () {
     /** @var TestCase $this */
     $this->get('/memories')
         ->assertSee('data-update-uri', false)
+        ->assertSee('--livewire-progress-bar-color', false)
         ->assertSee('wire:navigate.hover', false);
 });
 

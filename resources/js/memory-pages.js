@@ -49,17 +49,29 @@ document.addEventListener("livewire:navigate", (event) => {
 
 /**
  * Photos that are already loaded or cached show at once; the rest fade in
- * as they arrive, so a cached photo never flashes its skeleton. A page
- * restored by Back can carry a photo still marked loading from when it was
- * left, so every photo is checked again.
+ * as they arrive, so a cached photo never flashes its skeleton. A swapped-in
+ * photo is never complete straight away, even from the cache, so it gets a
+ * moment to arrive before it is hidden to fade in. A page restored by Back
+ * can carry a photo still hidden from when it was left, so every photo is
+ * checked again.
  */
+const PHOTO_ARRIVAL_GRACE_MILLISECONDS = 100;
+
 const fadeInPhotosStillLoading = () => {
     document.querySelectorAll("img.photo-fade").forEach((img) => {
-        img.classList.toggle("is-loading", !img.complete);
+        img.classList.remove("is-loading");
         if (img.complete) {
             return;
         }
-        const show = () => img.classList.remove("is-loading");
+        const hide = setTimeout(() => {
+            if (!img.complete) {
+                img.classList.add("is-loading");
+            }
+        }, PHOTO_ARRIVAL_GRACE_MILLISECONDS);
+        const show = () => {
+            clearTimeout(hide);
+            img.classList.remove("is-loading");
+        };
         img.addEventListener("load", show, { once: true });
         img.addEventListener("error", show, { once: true });
     });

@@ -34,10 +34,11 @@ describe('before the reveal', function () {
             ->assertDontSeeText('pumpkin patch');
     });
 
-    test('loads Livewire even with no reactions on the page, so its links can swap pages in place', function () {
+    test('loads Livewire and its styles even with no reactions on the page, so its links can swap pages in place', function () {
         /** @var TestCase $this */
         $this->actingAs($this->david)->get('/memories/2026-09')
             ->assertSee('data-update-uri', false)
+            ->assertSee('--livewire-progress-bar-color', false)
             ->assertSee('wire:navigate.hover', false);
     });
 

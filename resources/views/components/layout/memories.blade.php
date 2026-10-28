@@ -5,5 +5,6 @@
 
     {{ $slot }}
 
+    @livewireStyles
     @livewireScripts
 </x-layout.app>
