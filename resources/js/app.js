@@ -63,3 +63,61 @@ const watchMonthLinks = () =>
         });
     });
 document.addEventListener("livewire:navigated", watchMonthLinks);
+
+// PROTOTYPE (mobile polish, #334): each month shows a different transition
+// between the list and its page. The tapped tile (or the month page being
+// left) names it on <html data-vt> before Livewire snapshots the old page,
+// and it's put back after the swap, which replaces <html>'s attributes.
+let transition = null;
+document.addEventListener(
+    "click",
+    (event) => {
+        const link = event.target.closest("a[data-vt]");
+        transition = link
+            ? {
+                  vt: link.dataset.vt,
+                  dir: "in",
+                  month: link.closest("[data-vt-month]")?.dataset.vtMonth,
+              }
+            : null;
+    },
+    true,
+);
+const applyTransition = () => {
+    const html = document.documentElement;
+    if (!transition || transition.vt === "title") {
+        delete html.dataset.vt;
+        delete html.dataset.vtDir;
+        return;
+    }
+    html.dataset.vt = transition.vt;
+    html.dataset.vtDir = transition.dir;
+    document
+        .querySelectorAll("[data-vt-keep]:not(article)")
+        .forEach((el) => delete el.dataset.vtKeep);
+    document
+        .querySelectorAll(`[data-vt-month="${transition.month}"]`)
+        .forEach((el) => (el.dataset.vtKeep = ""));
+};
+document.addEventListener("livewire:navigating", (event) => {
+    const page = document.querySelector("[data-page-vt]");
+    if (page && !transition) {
+        transition = {
+            vt: page.dataset.pageVt,
+            dir: "out",
+            month: page.dataset.vtMonth,
+        };
+    }
+    applyTransition();
+    event.detail.onSwap(() => {
+        const leftMonthForList =
+            transition?.dir === "out" &&
+            document.querySelector("[data-page-vt]");
+        const enteredWithoutMonth =
+            transition?.dir === "in" &&
+            !document.querySelector("[data-page-vt]");
+        if (leftMonthForList || enteredWithoutMonth) transition = null;
+        applyTransition();
+        transition = null;
+    });
+});

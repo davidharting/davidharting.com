@@ -6,6 +6,8 @@
         'month' => $month->toYearMonth(),
         'v' => $pageVersion,
     ]);
+    $transition = \App\Memories\PrototypeTransition::for($month);
+    $ym = $month->toYearMonth();
 @endphp
 
 @if ($monthForViewer->month->missed())
@@ -15,17 +17,22 @@
                 href="{{ $monthUrl }}"
                 wire:navigate.hover
                 data-prefetch
+                data-vt="{{ $transition }}"
                 class="inline-block py-2"
             >{{ $month->label() }}</a>
         </h2>
         <x-memories.cta :memory="$monthForViewer->viewerMemory" :month="$month" quiet class="-mr-3" />
     </div>
 @else
-    <div @class([
-        'card relative transition hover:shadow-md active:scale-[0.98] active:brightness-95 duration-150',
-        'bg-base-200' => $revealed,
-        'bg-accent/20' => ! $revealed,
-    ])>
+    <div
+        data-vt-month="{{ $ym }}"
+        @if ($transition === 'expand') style="view-transition-name: card-{{ $ym }}; view-transition-class: card-expand" @endif
+        @class([
+            'card relative transition hover:shadow-md active:scale-[0.98] active:brightness-95 duration-150',
+            'bg-base-200' => $revealed,
+            'bg-accent/20' => ! $revealed,
+        ])
+    >
         <div class="card-body gap-3 p-4">
             <div class="flex items-center justify-between gap-4">
                 <h2 class="text-2xl">
@@ -33,7 +40,8 @@
                         href="{{ $monthUrl }}"
                         wire:navigate.hover
                         data-prefetch
-                        style="view-transition-name: month-{{ $month->toYearMonth() }}; view-transition-class: month-title"
+                        data-vt="{{ $transition }}"
+                        @if (\App\Memories\PrototypeTransition::fliesTitle($month)) style="view-transition-name: month-{{ $ym }}; view-transition-class: month-title" @endif
                         onclick="this.closest('.card').classList.add('is-pressed')"
                         class="after:rounded-box focus-visible:after:outline-primary after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2"
                     >{{ $month->label() }}</a>
@@ -57,11 +65,14 @@
                             $thumbnail = $photo->thumbnail();
                         @endphp
 
-                        <div @class([
-                            'skeleton rounded-box overflow-hidden',
-                            'aspect-square' => $leadingPhotos->count() > 1,
-                            'aspect-video' => $leadingPhotos->count() === 1,
-                        ])>
+                        <div
+                            @if ($transition === 'photo' && $loop->first) style="view-transition-name: photo-{{ $ym }}; view-transition-class: photo-morph" @endif
+                            @class([
+                                'skeleton rounded-box overflow-hidden',
+                                'aspect-square' => $leadingPhotos->count() > 1,
+                                'aspect-video' => $leadingPhotos->count() === 1,
+                            ])
+                        >
                             <img
                                 src="{{ route("memories.photos.show", [$photo, "thumbnail"]) }}"
                                 width="{{ $thumbnail->width }}"

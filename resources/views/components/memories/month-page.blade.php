@@ -3,9 +3,20 @@
     $month = $monthForViewer->month->calendarMonth;
     $revealed = $monthForViewer->month->hasRevealed();
     $otherName = $monthForViewer->other->displayName();
+    $transition = \App\Memories\PrototypeTransition::for($month);
+    $ym = $month->toYearMonth();
+    $hero = $transition === 'photo' && ! $showingYours ? $photos()->first() : null;
 @endphp
 
-<article class="mx-auto max-w-xl">
+<article class="mx-auto max-w-xl" data-page-vt="{{ $transition }}" data-vt-month="{{ $ym }}" data-vt-keep>
+    @if ($transition === 'expand')
+        <div
+            aria-hidden="true"
+            @class(['pointer-events-none fixed inset-0 -z-10', 'bg-base-200' => $revealed, 'bg-accent/20' => ! $revealed])
+            style="view-transition-name: card-{{ $ym }}; view-transition-class: card-expand"
+        ></div>
+    @endif
+
     <nav class="flex justify-between gap-4 font-sans text-sm">
         <a class="link -my-3 inline-block py-3" href="{{ route("memories.index") }}" wire:navigate.hover
             >← All months</a>
@@ -31,9 +42,22 @@
         </div>
     </nav>
 
+    @if ($hero !== null)
+        <div
+            class="rounded-box mt-6 aspect-video overflow-hidden bg-cover bg-center"
+            style="view-transition-name: photo-{{ $ym }}; view-transition-class: photo-morph; background-image: url('{{ route("memories.photos.show", [$hero, "thumbnail"]) }}')"
+        >
+            <img
+                src="{{ route("memories.photos.show", [$hero, "web"]) }}"
+                alt="{{ $hero->caption ?? "A photo by {$otherName}" }}"
+                class="h-full w-full object-cover"
+            />
+        </div>
+    @endif
+
     <x-type.page-title
         class="mt-8 w-fit text-5xl"
-        style="view-transition-name: month-{{ $month->toYearMonth() }}; view-transition-class: month-title"
+        :style="\App\Memories\PrototypeTransition::fliesTitle($month) ? 'view-transition-name: month-'.$ym.'; view-transition-class: month-title' : null"
     >
         {{ $month->label() }}</x-type.page-title>
 
@@ -99,6 +123,7 @@
                 @endif
 
                 @foreach ($photos() as $photo)
+                    @continue($hero !== null && $loop->first)
                     <x-memories.photo
                         :photo="$photo"
                         :author-name="$showingYours ? $monthForViewer->viewer->displayName() : $otherName"
