@@ -12,7 +12,7 @@
 <a
     href="{{ $href }}"
     @if ($isActive) aria-current="page" @endif
-    class="btn btn-ghost btn-sm relative {{ $isActive ? "text-primary" : "" }}"
+    class="btn btn-ghost btn-sm tap-target {{ $isActive ? "text-primary" : "" }}"
 >
     {{ $slot }}
     @if ($isActive)

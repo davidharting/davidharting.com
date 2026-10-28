@@ -1,4 +1,5 @@
 import "./bootstrap";
+import "./memory-pages";
 import "./memory-photos";
 import "./memory-reactions";
 

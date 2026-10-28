@@ -214,6 +214,13 @@ test('links each month to its page', function () {
         ->assertSee(route('memories.show', '2026-03'));
 });
 
+test('loads Livewire, so month links can swap pages in place', function () {
+    /** @var TestCase $this */
+    $this->get('/memories')
+        ->assertSee('livewire.min.js', false)
+        ->assertSee('wire:navigate.hover', false);
+});
+
 test('truncates a long first line with an ellipsis', function () {
     /** @var TestCase $this */
     Memory::factory()->for(User::firstWhere('email', 'katie@example.com'))->forMonth(CalendarMonth::of(2026, 6))->shared()->create([

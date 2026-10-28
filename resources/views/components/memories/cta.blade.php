@@ -7,8 +7,9 @@
 
 @if ($memory === null || $memory->isDraft())
     <a
-        {{ $attributes->class(["btn font-sans", "btn-primary" => ! $quiet, "btn-ghost btn-sm" => $quiet]) }}
+        {{ $attributes->class(["btn tap-target font-sans", "btn-primary" => ! $quiet, "btn-ghost btn-sm" => $quiet]) }}
         href="{{ route("memories.write", $month->toYearMonth()) }}"
+        wire:navigate
     >
         {{ $memory === null ? "Write yours" : "Keep writing" }}
     </a>

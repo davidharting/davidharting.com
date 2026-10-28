@@ -1,7 +1,7 @@
 <div>
     <button
         type="button"
-        class="btn btn-circle btn-outline btn-sm border-base-300 text-base-content/40 font-sans"
+        class="btn btn-circle btn-outline btn-sm tap-target border-base-300 text-base-content/40 font-sans"
         aria-label="How it works"
         aria-haspopup="dialog"
         onclick="document.getElementById('how-it-works').showModal()"

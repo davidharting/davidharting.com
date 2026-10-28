@@ -7,7 +7,7 @@
                         type="button"
                         wire:key="reaction-{{ $reaction->id }}"
                         wire:loading.attr="disabled"
-                        class="btn btn-circle btn-outline border-base-300 text-xl"
+                        class="btn btn-circle btn-outline tap-target border-base-300 text-xl"
                         aria-label="Remove your {{ $reaction->emoji }} reaction"
                         x-on:click="remove(@js($reaction->emoji))"
                     >
@@ -30,7 +30,7 @@
                     type="button"
                     wire:key="add"
                     wire:loading.attr="disabled"
-                    class="btn btn-circle btn-outline border-base-300 text-xl"
+                    class="btn btn-circle btn-outline tap-target border-base-300 text-xl"
                     aria-label="Add a reaction"
                     x-bind:aria-expanded="open"
                     x-on:click="open = ! open"
@@ -66,7 +66,9 @@
                         {{ $emoji }}
                     </button>
                 @endforeach
-                <button type="button" class="btn btn-ghost btn-sm font-sans" x-on:click="pick()">More…</button>
+                <button type="button" class="btn btn-ghost btn-sm tap-target font-sans" x-on:click="pick()">
+                    More…
+                </button>
                 <input
                     x-ref="picker"
                     type="text"

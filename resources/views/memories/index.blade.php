@@ -1,5 +1,5 @@
 <x-layout.memories>
-    <div class="mx-auto max-w-xl">
+    <div class="mx-auto max-w-xl" data-memories-page="list">
         <div class="flex items-center gap-3">
             <x-type.page-title class="text-5xl">Memories</x-type.page-title>
             <x-memories.how-it-works />

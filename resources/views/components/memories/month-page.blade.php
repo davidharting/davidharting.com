@@ -5,24 +5,26 @@
     $otherName = $monthForViewer->other->displayName();
 @endphp
 
-<article class="mx-auto max-w-xl">
+<article class="mx-auto max-w-xl" data-memories-page="{{ $month->toYearMonth() }}">
     <nav class="flex justify-between gap-4 font-sans text-sm">
-        <a class="link" href="{{ route("memories.index") }}">← All months</a>
+        <a class="link tap-target" href="{{ route("memories.index") }}" wire:navigate.hover>← All months</a>
 
         <div class="flex gap-4">
             @if ($previous)
                 <a
-                    class="link"
+                    class="link tap-target"
                     href="{{ route("memories.show", $previous->toYearMonth()) }}"
                     aria-label="{{ $previous->label() }}"
+                    wire:navigate.hover
                 >← {{ $previous->name() }}</a>
             @endif
 
             @if ($next)
                 <a
-                    class="link"
+                    class="link tap-target"
                     href="{{ route("memories.show", $next->toYearMonth()) }}"
                     aria-label="{{ $next->label() }}"
+                    wire:navigate.hover
                 >{{ $next->name() }} →</a>
             @endif
         </div>
@@ -34,7 +36,9 @@
         <a
             href="{{ route("memories.show", $month->toYearMonth()) }}"
             @if (! $showingYours) aria-current="page" @endif
+            wire:navigate.hover
             @class([
+                'tap-target',
                 'underline decoration-2 underline-offset-8' => ! $showingYours,
                 'opacity-50 hover:opacity-100' => $showingYours,
             ])
@@ -42,7 +46,9 @@
         <a
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
             @if ($showingYours) aria-current="page" @endif
+            wire:navigate.hover
             @class([
+                'tap-target',
                 'underline decoration-2 underline-offset-8' => $showingYours,
                 'opacity-50 hover:opacity-100' => ! $showingYours,
             ])
@@ -56,7 +62,8 @@
 
         @if ($showingYours && $monthForViewer->viewerMemory?->isShared())
             <p class="font-sans text-sm">
-                <a class="link" href="{{ route("memories.write", $month->toYearMonth()) }}">Edit</a>
+                <a class="link tap-target" href="{{ route("memories.write", $month->toYearMonth()) }}" wire:navigate
+                    >Edit</a>
             </p>
         @endif
 

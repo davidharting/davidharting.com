@@ -4,4 +4,6 @@
     </x-slot:nav>
 
     {{ $slot }}
+
+    @livewireScripts
 </x-layout.app>

@@ -7,20 +7,27 @@
 
 @if ($monthForViewer->month->missed())
     <div class="flex items-center justify-between gap-4 px-4 py-1 opacity-70">
-        <h2 class="text-lg"><a href="{{ $monthUrl }}" class="inline-block py-2">{{ $month->label() }}</a></h2>
+        <h2 class="text-lg">
+            <a href="{{ $monthUrl }}" wire:navigate.hover class="inline-block py-2">{{ $month->label() }}</a>
+        </h2>
         <x-memories.cta :memory="$monthForViewer->viewerMemory" :month="$month" quiet class="-mr-3" />
     </div>
 @else
-    <div @class([
-        'card relative transition-shadow hover:shadow-md',
-        'bg-base-200' => $revealed,
-        'bg-accent/20' => ! $revealed,
-    ])>
+    <div
+        data-month-tile
+        @class([
+            'card relative transition duration-150 hover:shadow-md',
+            'bg-base-200' => $revealed,
+            'bg-accent/20' => ! $revealed,
+        ])
+    >
         <div class="card-body gap-3 p-4">
             <div class="flex items-center justify-between gap-4">
                 <h2 class="text-2xl">
                     <a
                         href="{{ $monthUrl }}"
+                        wire:navigate.hover
+                        data-holds-press
                         class="after:rounded-box focus-visible:after:outline-primary after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2"
                     >{{ $month->label() }}</a>
                 </h2>
@@ -54,7 +61,7 @@
                                 height="{{ $thumbnail->height }}"
                                 alt="{{ $photo->caption ?? "A photo by {$authorNameOf($photo)}" }}"
                                 loading="lazy"
-                                class="h-full w-full object-cover text-transparent"
+                                class="photo-fade h-full w-full object-cover text-transparent"
                             />
                         </div>
                     @endforeach

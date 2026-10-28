@@ -34,6 +34,13 @@ describe('before the reveal', function () {
             ->assertDontSeeText('pumpkin patch');
     });
 
+    test('loads Livewire even with no reactions on the page, so its links can swap pages in place', function () {
+        /** @var TestCase $this */
+        $this->actingAs($this->david)->get('/memories/2026-09')
+            ->assertSee('livewire.min.js', false)
+            ->assertSee('wire:navigate.hover', false);
+    });
+
     test('titles the page with the month', function () {
         /** @var TestCase $this */
         $response = $this->actingAs($this->david)->get('/memories/2026-09');

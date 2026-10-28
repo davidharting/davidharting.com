@@ -255,3 +255,131 @@
         color: oklch(92% 0.03 70); /* warm cream */
     }
 }
+
+/*
+  Native touch details: no grey flash or double-tap zoom delay on taps, and
+  text links dim while pressed.
+*/
+@layer base {
+    html {
+        -webkit-tap-highlight-color: transparent;
+    }
+    a,
+    button {
+        touch-action: manipulation;
+    }
+}
+
+.link:active {
+    opacity: 0.6;
+}
+
+/* Grows something small to a 44px tap target without changing how it looks. */
+.tap-target {
+    position: relative;
+}
+.tap-target::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    translate: -50% -50%;
+}
+
+/* A month tile pressed, and held until its month shows (resources/js/memory-pages.js). */
+[data-month-tile]:has(a[data-holds-press]:active),
+[data-month-tile].is-pressed {
+    scale: 0.98;
+    filter: brightness(0.95);
+}
+
+.photo-fade {
+    transition: opacity 300ms ease-out;
+}
+.photo-fade.is-loading {
+    opacity: 0;
+}
+
+/*
+  Moving between memories pages, as set on <html data-memories-movement> by
+  resources/js/memory-pages.js. wire:transition.navigate on <html> makes
+  Livewire swap pages inside a view transition of the whole page (root).
+*/
+::view-transition-group(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 300ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+html[data-memories-movement="forward"]::view-transition-old(root) {
+    animation-name: page-recede;
+}
+html[data-memories-movement="forward"]::view-transition-new(root) {
+    animation-name: page-enter-from-right;
+    box-shadow: -8px 0 24px rgb(0 0 0 / 0.15);
+}
+
+html[data-memories-movement="back"]::view-transition-old(root) {
+    z-index: 1;
+    animation-name: page-leave-to-right;
+    box-shadow: -8px 0 24px rgb(0 0 0 / 0.15);
+}
+html[data-memories-movement="back"]::view-transition-new(root) {
+    animation-name: page-return;
+}
+
+html[data-memories-movement="rise"]::view-transition-old(root) {
+    animation: none;
+}
+html[data-memories-movement="rise"]::view-transition-new(root) {
+    animation-duration: 280ms;
+    animation-name: page-rise;
+}
+
+html[data-memories-movement="none"]::view-transition-old(root),
+html[data-memories-movement="none"]::view-transition-new(root) {
+    animation: none;
+}
+
+@keyframes page-recede {
+    to {
+        translate: -30% 0;
+        filter: brightness(0.9);
+    }
+}
+@keyframes page-enter-from-right {
+    from {
+        translate: 100% 0;
+    }
+}
+@keyframes page-leave-to-right {
+    to {
+        translate: 100% 0;
+    }
+}
+@keyframes page-return {
+    from {
+        translate: -30% 0;
+        filter: brightness(0.9);
+    }
+}
+@keyframes page-rise {
+    from {
+        opacity: 0;
+        translate: 0 24px;
+    }
+}
+
+/* Livewire already skips its view transitions for reduced motion; this stops the rest. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
