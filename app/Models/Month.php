@@ -43,11 +43,12 @@ class Month extends Model
     }
 
     /**
-     * The earliest month anyone can write about, where the `months` table starts.
+     * The earliest month anyone can write about: the first row of the
+     * `months` table.
      */
     public static function earliest(): CalendarMonth
     {
-        return CalendarMonth::of(2016, 1);
+        return CalendarMonth::parse(self::query()->min('id'));
     }
 
     /**

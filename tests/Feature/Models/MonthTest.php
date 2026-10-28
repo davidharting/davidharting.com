@@ -281,9 +281,9 @@ describe('latestOpen()', function () {
 });
 
 describe('earliest()', function () {
-    test('is the first month in the months table', function () {
+    test('is January 2016, the first month in the months table', function () {
         /** @var TestCase $this */
-        expect(Month::query()->min('id'))->toBe(Month::earliest()->toDateString());
+        expect(Month::earliest())->toEqual(CalendarMonth::of(2016, 1));
     });
 });
 

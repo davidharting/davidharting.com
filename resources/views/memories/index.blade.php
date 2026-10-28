@@ -12,7 +12,7 @@
         </div>
 
         <p class="mt-10 text-center font-sans text-sm">
-            <a class="link inline-block py-2 opacity-70" href="{{ route("memories.earlier.show") }}"
+            <a class="link inline-block py-2 opacity-70" href="{{ route("memories.earlier") }}"
                 >Write about an earlier month</a>
         </p>
     </div>

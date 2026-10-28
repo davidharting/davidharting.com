@@ -47,17 +47,6 @@ test('is not found for a participant while they are the only one', function (str
     $this->actingAs($user)->get($url)->assertNotFound();
 })->with('memories urls');
 
-test('refuses to open an earlier month for a guest or a non-participant', function () {
-    /** @var TestCase $this */
-    $this->seed(MemorySeeder::class);
-
-    $this->post('/memories/earlier', ['month' => '2019-03'])->assertRedirect(route('login'));
-
-    $this->actingAs(User::factory()->create(['is_admin' => true]))
-        ->post('/memories/earlier', ['month' => '2019-03'])
-        ->assertNotFound();
-});
-
 test('links to memories in the nav for participants only', function () {
     /** @var TestCase $this */
     $this->seed(MemorySeeder::class);
