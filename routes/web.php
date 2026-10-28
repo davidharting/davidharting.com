@@ -65,6 +65,9 @@ Route::get('/media/{media}', [MediaController::class, 'show'])->name('media.show
 
 Route::redirect('/skills', 'https://github.com/davidharting/skills');
 Route::redirect('/dotfiles', 'https://github.com/davidharting/dotfiles');
+Route::redirect('/github', 'https://github.com/davidharting');
+Route::redirect('/linkedin', 'https://www.linkedin.com/in/davidharting/');
+Route::redirect('/bluesky', 'https://bsky.app/profile/davidharting.com');
 
 Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit')->withHead(title: 'Profile');
