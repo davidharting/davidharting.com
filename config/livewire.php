@@ -10,6 +10,15 @@ use App\Memories\AddMemoryPhoto;
 return [
 
     /*
+     * wire:navigate's progress bar takes the theme's primary colour, light
+     * or dark, rather than Livewire's blue.
+     */
+    'navigate' => [
+        'show_progress_bar' => true,
+        'progress_bar_color' => 'var(--color-primary)',
+    ],
+
+    /*
      * Photos from a phone can be larger than Livewire's 12 MB default, which
      * is the reason for this key; the rest restates Livewire's defaults,
      * except the disk and the upload time.

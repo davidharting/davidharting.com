@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./memories.css";
 
 @plugin '@tailwindcss/typography';
 @plugin "daisyui";
@@ -253,5 +254,53 @@
     }
     .hljs-subst {
         color: oklch(92% 0.03 70); /* warm cream */
+    }
+}
+
+/*
+  Native touch details: no grey flash or double-tap zoom delay on taps, and
+  text links dim while pressed.
+*/
+@layer base {
+    html {
+        -webkit-tap-highlight-color: transparent;
+    }
+    a,
+    button {
+        touch-action: manipulation;
+    }
+}
+
+.link:active {
+    opacity: 0.6;
+}
+
+/*
+  Grows something small to the 44px tap target Apple and WCAG recommend,
+  without changing how it looks.
+*/
+@utility tap-target {
+    position: relative;
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: max(100%, 44px);
+        height: max(100%, 44px);
+        translate: -50% -50%;
+    }
+}
+
+/* Livewire already skips its view transitions for reduced motion; this stops the rest. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
     }
 }

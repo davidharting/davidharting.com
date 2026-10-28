@@ -75,7 +75,7 @@
         $store.memoryUploads.abandoned = false;
         if ($event.persisted) catchUp();
     "
-    class="flex min-h-dvh flex-col"
+    class="page-rise flex min-h-dvh flex-col"
 >
     <header class="border-base-300 border-b px-4 py-3 font-sans text-sm">
         <a

@@ -1,10 +1,17 @@
-{{-- hideNav drops the site nav and page container, for full-screen pages like the memory editor. --}}
+{{--
+    hideNav drops the site nav and page container, for full-screen pages like the memory editor.
+    transitionsBetweenPages lets wire:navigate links swap the page inside a view transition.
+--}}
 @props([
     'hideNav' => false,
+    'transitionsBetweenPages' => false,
 ])
 
 <!DOCTYPE html>
-<html lang="{{ str_replace("_", "-", app()->getLocale()) }}">
+<html
+    lang="{{ str_replace("_", "-", app()->getLocale()) }}"
+    @if ($transitionsBetweenPages) wire:transition.navigate @endif
+>
 <head>
     <meta charset="utf-8" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
