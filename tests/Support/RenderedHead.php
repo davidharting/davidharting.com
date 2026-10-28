@@ -135,26 +135,6 @@ class RenderedHead
     }
 
     /**
-     * Get the href of every link with the given rel, in document order.
-     *
-     * Use this when the count matters: a browser honours only the first
-     * manifest, so a second one is a bug that `link()` would never show.
-     *
-     * ```php
-     * expect($head->links('manifest'))->toBe(['/manifest.json']);
-     * ```
-     *
-     * @return array<int, string>
-     */
-    public function links(string $rel): array
-    {
-        return array_values(array_map(
-            fn (array $link) => $link['href'],
-            array_filter($this->links, fn (array $link) => $link['rel'] === $rel),
-        ));
-    }
-
-    /**
      * Get every meta tag whose key starts with one of the given prefixes.
      *
      * Use this to assert on a whole family at once -- `toBe` against the full

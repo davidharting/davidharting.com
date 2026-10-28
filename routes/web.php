@@ -70,12 +70,7 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
     Route::get('/fileshare/{path}', [FileShareController::class, 'show'])->name('fileshare.show')->where('path', '.*');
 });
 
-Route::withHead(
-    robots: 'noindex, nofollow',
-    manifest: '/memories-manifest.json',
-    applicationName: 'Memories',
-    appleWebAppTitle: 'Memories',
-)->middleware('auth')->group(function () {
+Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
     Route::get('/memories', [MemoriesController::class, 'index'])->name('memories.index')->withHead(title: 'Memories')->can('viewAny', Month::class);
     Route::get('/memories/earlier', EarlierMonthController::class)->name('memories.earlier')->withHead(title: 'Choose a month')->can('viewAny', Month::class);
     Route::get('/memories/{month}', [MemoriesController::class, 'show'])->name('memories.show')->where('month', '\d{4}-\d{2}')->can('view', 'month');
