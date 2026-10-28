@@ -62,8 +62,7 @@
 
         @if ($showingYours && $monthForViewer->viewerMemory?->isShared())
             <p class="font-sans text-sm">
-                <a class="link tap-target" href="{{ route("memories.write", $month->toYearMonth()) }}" wire:navigate
-                    >Edit</a>
+                <a class="link tap-target" href="{{ route("memories.write", $month->toYearMonth()) }}">Edit</a>
             </p>
         @endif
 

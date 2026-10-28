@@ -9,7 +9,6 @@
     <a
         {{ $attributes->class(["btn tap-target font-sans", "btn-primary" => ! $quiet, "btn-ghost btn-sm" => $quiet]) }}
         href="{{ route("memories.write", $month->toYearMonth()) }}"
-        wire:navigate
     >
         {{ $memory === null ? "Write yours" : "Keep writing" }}
     </a>
