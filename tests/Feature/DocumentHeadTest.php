@@ -74,7 +74,7 @@ describe('defaults', function () {
             ->and($head->link('apple-touch-icon'))->toBe('/icons/apple-touch-icon.png');
     });
 
-    test('the browser bar matches the page background in light and dark mode', function () {
+    test('the browser bar matches the page background in light and dark mode, with no unscoped colour', function () {
         /** @var TestCase $this */
         $head = RenderedHead::from($this->get('/'));
 

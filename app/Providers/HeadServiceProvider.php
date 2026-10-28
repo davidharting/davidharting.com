@@ -38,6 +38,7 @@ class HeadServiceProvider extends ServiceProvider
                 ->og(type: OgType::Website, siteName: self::SITE_NAME, locale: 'en_US')
                 ->ogImage(url('/headshot.jpg'), alt: 'David Harting')
                 ->twitter(card: TwitterCard::Summary)
+                // No manifest here on purpose: see the fallback composer below.
                 ->applicationName(self::SITE_NAME)
                 ->appleWebAppTitle(self::SITE_NAME)
                 ->webAppCapable()

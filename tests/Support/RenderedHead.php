@@ -80,7 +80,8 @@ class RenderedHead
      * carries both in practice, so one flat lookup covers both spellings.
      *
      * Returns null for a tag that is absent -- which is a useful assertion in
-     * its own right.
+     * its own right. Tags with a `media` attribute are not here; read those
+     * with `metaByMedia()`.
      *
      * ```php
      * expect($head->meta('robots'))->toBe('noindex, nofollow');
@@ -131,6 +132,26 @@ class RenderedHead
         }
 
         return null;
+    }
+
+    /**
+     * Get the href of every link with the given rel, in document order.
+     *
+     * Use this when the count matters: a browser honours only the first
+     * manifest, so a second one is a bug that `link()` would never show.
+     *
+     * ```php
+     * expect($head->links('manifest'))->toBe(['/manifest.json']);
+     * ```
+     *
+     * @return array<int, string>
+     */
+    public function links(string $rel): array
+    {
+        return array_values(array_map(
+            fn (array $link) => $link['href'],
+            array_filter($this->links, fn (array $link) => $link['rel'] === $rel),
+        ));
     }
 
     /**
