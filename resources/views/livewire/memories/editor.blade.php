@@ -82,7 +82,7 @@
             class="link link-hover"
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
             x-on:click.prevent="leave($el.href)"
-        >← {{ $month->name() }}</a>
+        >← {{ $month->label() }}</a>
     </header>
 
     <div
