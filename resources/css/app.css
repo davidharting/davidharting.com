@@ -335,6 +335,11 @@ html[data-memories-movement="back"]::view-transition-new(root) {
     animation-name: page-return;
 }
 
+html[data-memories-movement="fade"]::view-transition-old(root),
+html[data-memories-movement="fade"]::view-transition-new(root) {
+    animation-duration: 150ms;
+}
+
 html[data-memories-movement="none"]::view-transition-old(root),
 html[data-memories-movement="none"]::view-transition-new(root) {
     animation: none;

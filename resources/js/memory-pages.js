@@ -4,8 +4,8 @@
  * Every memories page names its place with data-memories-page: "list", or a
  * month as "YYYY-MM". The slide follows from the two places, so links, Back
  * and Forward all agree: into a month from the list slides forward, back to
- * the list slides back, and month to month slides by date. Two tabs of one
- * month don't move at all.
+ * the list slides back, and month to month slides by date. Switching
+ * between the two tabs of one month is a quick crossfade.
  *
  * Livewire replaces <html>'s attributes during the swap, so the direction is
  * set after it. The browser styles the view transition after the swap too,
@@ -20,7 +20,7 @@ const movementBetween = (from, to) => {
         return null;
     }
     if (from === to) {
-        return "none";
+        return "fade";
     }
     if (from === "list") {
         return "forward";
