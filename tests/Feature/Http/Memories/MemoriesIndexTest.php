@@ -61,7 +61,15 @@ test('explains how it works behind a ? beside the title', function () {
     /** @var TestCase $this */
     $this->get('/memories')
         ->assertSee('aria-label="How it works"', false)
-        ->assertSeeText('Nobody sees it until you share it.');
+        ->assertSeeText('Nobody sees it until you share it.')
+        ->assertSeeText('To write about a month from before you started, use the link at the bottom of the list.');
+});
+
+test('ends with a quiet link to write about an earlier month', function () {
+    /** @var TestCase $this */
+    $this->get('/memories')
+        ->assertSeeTextInOrder(['September 2024', 'Write about an earlier month'])
+        ->assertSee('href="'.route('memories.earlier').'"', false);
 });
 
 test('previews the first line of their memory once a month has revealed', function () {

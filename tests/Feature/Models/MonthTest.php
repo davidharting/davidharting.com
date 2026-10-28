@@ -280,6 +280,13 @@ describe('latestOpen()', function () {
     });
 });
 
+describe('earliest()', function () {
+    test('is January 2016, the first month in the months table', function () {
+        /** @var TestCase $this */
+        expect(Month::earliest())->toEqual(CalendarMonth::of(2016, 1));
+    });
+});
+
 describe('launch()', function () {
     test('is the month the second participant joined in, in Eastern time', function () {
         /** @var TestCase $this */

@@ -14,6 +14,7 @@ dataset('memories urls', [
     '/memories',
     '/memories/2026-09',
     '/memories/2026-09/write',
+    '/memories/earlier',
 ]);
 
 test('sends a guest to log in, and back to the page afterwards', function (string $url) {
