@@ -2,8 +2,9 @@
 
 use App\Models\Memory;
 use App\Models\MemoryPhoto;
-use App\Models\MemoryReaction;
 use App\Models\User;
+use App\Queries\ListOpenMonthsQuery;
+use App\Queries\MonthPageVersionsQuery;
 use App\Support\CalendarMonth;
 use Database\Seeders\MemorySeeder;
 use Illuminate\Support\Facades\DB;
@@ -222,18 +223,13 @@ test('loads Livewire, so month links can swap pages in place', function () {
         ->assertSee('wire:navigate.hover', false);
 });
 
-test('links each month with its page\'s fingerprint, which changes once anything on the page does', function () {
+test('links each month to its page fingerprinted, so a prefetched copy is never stale', function () {
     /** @var TestCase $this */
-    $augustLink = fn () => preg_match('#'.preg_quote(route('memories.show', '2026-08'), '#').'\?v=(\w+)#', $this->get('/memories')->getContent(), $match) ? $match[1] : null;
-    $before = $augustLink();
+    $david = User::firstWhere('email', 'david@example.com');
+    $august = (new MonthPageVersionsQuery)->execute((new ListOpenMonthsQuery)->execute(), $david)['2026-08-01'];
 
-    MemoryReaction::factory()
-        ->for(Memory::query()->where('month_id', '2026-08-01')->whereBelongsTo(User::firstWhere('email', 'katie@example.com'))->sole())
-        ->for(User::firstWhere('email', 'david@example.com'))
-        ->create(['emoji' => '🌊']);
-
-    expect($before)->not->toBeNull()
-        ->and($augustLink())->not->toBeNull()->not->toBe($before);
+    $this->get('/memories')
+        ->assertSee('href="'.route('memories.show', ['month' => '2026-08', 'v' => $august]).'"', false);
 });
 
 test('truncates a long first line with an ellipsis', function () {

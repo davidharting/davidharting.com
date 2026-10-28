@@ -26,7 +26,7 @@ class MemoriesController extends Controller
 
         return view('memories.index', [
             'monthsForViewer' => $months->map(fn (Month $month) => new MonthForViewer($month, $viewer, $other)),
-            'pageVersions' => (new MonthPageVersionsQuery)->execute($months),
+            'pageVersions' => (new MonthPageVersionsQuery)->execute($months, $viewer),
         ]);
     }
 

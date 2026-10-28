@@ -95,17 +95,22 @@ document.addEventListener("click", (event) => {
 /**
  * Phones never hover, and iOS presses a link only when the finger lifts, so
  * Livewire's own prefetch starts too late there. Each month link marked
- * data-prefetch-in-view is prefetched as it scrolls into view, again every
- * 25 seconds while it stays there (Livewire drops a prefetch after 30), and
- * again the moment a finger lands on it. (Listening for touches also lets
- * iOS Safari apply :active, which the pressed tile needs.)
+ * data-prefetch-in-view is prefetched as it scrolls into view, again while
+ * it stays there and the page is visible, and again the moment a finger
+ * lands on it. (Listening for touches also lets iOS Safari apply :active,
+ * which the pressed tile needs.)
  *
- * Livewire has no prefetch API, so this starts the prefetch its
- * wire:navigate.hover listens for by sending the link a mouseenter.
+ * Livewire has no prefetch API, so this leans on two of its internals: its
+ * wire:navigate.hover prefetch starts 60ms after a mouseenter unless a
+ * mouseleave comes first, and it keeps each prefetched page for 30 seconds
+ * after it arrives, ignoring a second prefetch of that page until then.
  */
-const PREFETCH_AGAIN_AFTER_MILLISECONDS = 25000;
+const PREFETCH_AGAIN_AFTER_MILLISECONDS = 31000;
 
-const prefetch = (link) => link.dispatchEvent(new MouseEvent("mouseenter"));
+const prefetch = (link) => {
+    link.dispatchEvent(new MouseEvent("mouseenter"));
+    setTimeout(() => link.dispatchEvent(new MouseEvent("mouseleave")), 100);
+};
 
 const linksInView = new Set();
 
@@ -123,10 +128,11 @@ const prefetchWhenInView = new IntersectionObserver(
     { rootMargin: "200px 0px" },
 );
 
-setInterval(
-    () => linksInView.forEach(prefetch),
-    PREFETCH_AGAIN_AFTER_MILLISECONDS,
-);
+setInterval(() => {
+    if (document.visibilityState === "visible") {
+        linksInView.forEach(prefetch);
+    }
+}, PREFETCH_AGAIN_AFTER_MILLISECONDS);
 
 document.addEventListener(
     "touchstart",
