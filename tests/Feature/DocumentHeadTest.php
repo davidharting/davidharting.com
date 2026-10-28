@@ -66,13 +66,22 @@ describe('defaults', function () {
             'viewport' => 'width=device-width, initial-scale=1',
             'application-name' => 'David Harting',
             'apple-mobile-web-app-title' => 'David Harting',
-            'apple-mobile-web-app-status-bar-style' => 'black',
+            'apple-mobile-web-app-status-bar-style' => 'default',
             'mobile-web-app-capable' => 'yes',
-            'theme-color' => '#1a1a2e',
         ]);
 
         expect($head->link('manifest'))->toBe('/manifest.json')
             ->and($head->link('apple-touch-icon'))->toBe('/icons/apple-touch-icon.png');
+    });
+
+    test('the browser bar matches the page background in light and dark mode', function () {
+        /** @var TestCase $this */
+        $head = RenderedHead::from($this->get('/'));
+
+        expect($head->metaByMedia('theme-color'))->toBe([
+            '(prefers-color-scheme: light)' => '#f8f1e3',
+            '(prefers-color-scheme: dark)' => '#21110a',
+        ])->and($head->meta('theme-color'))->toBeNull();
     });
 });
 

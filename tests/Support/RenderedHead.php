@@ -18,12 +18,14 @@ class RenderedHead
 {
     /**
      * @param  array<string, string>  $meta  name/property => content
+     * @param  array<string, array<string, string>>  $mediaMeta  name => media query => content
      * @param  array<int, array{rel: string, href: string, attributes: array<string, string>}>  $links
      * @param  array<int, array<string, mixed>>  $schemas
      */
     private function __construct(
         public readonly ?string $title,
         public readonly array $meta,
+        public readonly array $mediaMeta,
         public readonly array $links,
         public readonly array $schemas,
     ) {}
@@ -49,6 +51,7 @@ class RenderedHead
 
         $title = $document->getElementsByTagName('title')->item(0)?->textContent;
         $meta = [];
+        $mediaMeta = [];
         $links = [];
         $schemas = [];
 
@@ -58,14 +61,14 @@ class RenderedHead
             }
 
             match ($node->tagName) {
-                'meta' => self::collectMeta($node, $meta),
+                'meta' => self::collectMeta($node, $meta, $mediaMeta),
                 'link' => self::collectLink($node, $links),
                 'script' => self::collectSchema($node, $schemas),
                 default => null,
             };
         }
 
-        return new self($title, $meta, $links, $schemas);
+        return new self($title, $meta, $mediaMeta, $links, $schemas);
     }
 
     /**
@@ -88,6 +91,27 @@ class RenderedHead
     public function meta(string $key): ?string
     {
         return $this->meta[$key] ?? null;
+    }
+
+    /**
+     * Get every media-scoped variant of a meta tag, keyed by its media query.
+     *
+     * A tag like theme-color can appear once per colour scheme, each with its
+     * own `media` attribute. Those variants live here rather than in `meta()`,
+     * where the second would silently overwrite the first.
+     *
+     * ```php
+     * expect($head->metaByMedia('theme-color'))->toBe([
+     *     '(prefers-color-scheme: light)' => '#f8f1e3',
+     *     '(prefers-color-scheme: dark)' => '#21110a',
+     * ]);
+     * ```
+     *
+     * @return array<string, string>
+     */
+    public function metaByMedia(string $key): array
+    {
+        return $this->mediaMeta[$key] ?? [];
     }
 
     /**
@@ -189,15 +213,27 @@ class RenderedHead
      * than indexed under an empty key. Nothing asserts on them: charset is
      * written directly in the layout because Laravel Head cannot express it.
      *
+     * A tag with a `media` attribute goes to $mediaMeta instead, under its
+     * media query, so one variant per colour scheme can sit side by side.
+     *
      * @param  array<string, string>  $meta
+     * @param  array<string, array<string, string>>  $mediaMeta
      */
-    private static function collectMeta(DOMElement $node, array &$meta): void
+    private static function collectMeta(DOMElement $node, array &$meta, array &$mediaMeta): void
     {
         $key = $node->getAttribute('name') ?: $node->getAttribute('property');
 
-        if ($key !== '') {
-            $meta[$key] = $node->getAttribute('content');
+        if ($key === '') {
+            return;
         }
+
+        if ($node->hasAttribute('media')) {
+            $mediaMeta[$key][$node->getAttribute('media')] = $node->getAttribute('content');
+
+            return;
+        }
+
+        $meta[$key] = $node->getAttribute('content');
     }
 
     /**
