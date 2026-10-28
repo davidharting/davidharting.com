@@ -41,6 +41,14 @@ describe('before the reveal', function () {
             ->assertSee('wire:navigate.hover', false);
     });
 
+    test('prefetches the other tab, so switching to it is instant', function () {
+        /** @var TestCase $this */
+        $yoursTab = route('memories.show', ['month' => '2026-09', 'who' => 'yours']);
+
+        expect($this->actingAs($this->david)->get('/memories/2026-09')->getContent())
+            ->toMatch('#href="'.preg_quote($yoursTab, '#').'"\s+data-prefetch-in-view#');
+    });
+
     test('titles the page with the month', function () {
         /** @var TestCase $this */
         $response = $this->actingAs($this->david)->get('/memories/2026-09');

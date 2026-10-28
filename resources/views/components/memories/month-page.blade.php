@@ -36,6 +36,7 @@
         <a
             href="{{ route("memories.show", $month->toYearMonth()) }}"
             @if (! $showingYours) aria-current="page" @endif
+            @if ($showingYours) data-prefetch-in-view @endif
             wire:navigate.hover
             @class([
                 'tap-target',
@@ -46,6 +47,7 @@
         <a
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
             @if ($showingYours) aria-current="page" @endif
+            @unless ($showingYours) data-prefetch-in-view @endunless
             wire:navigate.hover
             @class([
                 'tap-target',
