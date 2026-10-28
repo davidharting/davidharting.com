@@ -76,7 +76,8 @@ document.addEventListener(
         transition = link
             ? {
                   vt: link.dataset.vt,
-                  dir: "in",
+                  dir: link.dataset.vtDir ?? "in",
+                  clicked: true,
                   month: link.closest("[data-vt-month]")?.dataset.vtMonth,
               }
             : null;
@@ -110,13 +111,20 @@ document.addEventListener("livewire:navigating", (event) => {
     }
     applyTransition();
     event.detail.onSwap(() => {
-        const leftMonthForList =
-            transition?.dir === "out" &&
-            document.querySelector("[data-page-vt]");
-        const enteredWithoutMonth =
-            transition?.dir === "in" &&
-            !document.querySelector("[data-page-vt]");
-        if (leftMonthForList || enteredWithoutMonth) transition = null;
+        const page = document.querySelector("[data-page-vt]");
+        if (transition && !transition.clicked && page) {
+            // Back or Forward between two months slides by date order;
+            // switching tabs within a month doesn't slide at all.
+            const from = transition.month;
+            const to = page.dataset.vtMonth;
+            transition =
+                from === to
+                    ? null
+                    : { ...transition, dir: to > from ? "in" : "out" };
+        }
+        if (transition?.clicked && transition.dir === "in" && !page) {
+            transition = null;
+        }
         applyTransition();
         transition = null;
     });

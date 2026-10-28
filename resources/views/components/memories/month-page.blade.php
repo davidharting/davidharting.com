@@ -25,6 +25,8 @@
             @if ($previous)
                 <a
                     wire:navigate.hover
+                    data-vt="push"
+                    data-vt-dir="out"
                     class="link -my-3 inline-block py-3"
                     href="{{ route("memories.show", $previous->toYearMonth()) }}"
                     aria-label="{{ $previous->label() }}"
@@ -34,6 +36,8 @@
             @if ($next)
                 <a
                     wire:navigate.hover
+                    data-vt="push"
+                    data-vt-dir="in"
                     class="link -my-3 inline-block py-3"
                     href="{{ route("memories.show", $next->toYearMonth()) }}"
                     aria-label="{{ $next->label() }}"
@@ -64,6 +68,7 @@
     <nav class="mt-4 flex gap-6 text-xl">
         <a
             wire:navigate.hover
+            data-vt="title"
             href="{{ route("memories.show", $month->toYearMonth()) }}"
             @if (! $showingYours) aria-current="page" @endif
             @class([
@@ -74,6 +79,7 @@
         >{{ $otherName }}</a>
         <a
             wire:navigate.hover
+            data-vt="title"
             href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
             @if ($showingYours) aria-current="page" @endif
             @class([

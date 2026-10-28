@@ -16,13 +16,7 @@ final class PrototypeTransition
             return 'title';
         }
 
-        return match ($month->name()) {
-            'September' => 'expand',
-            'August' => 'photo',
-            'July' => 'push',
-            'June' => 'fade',
-            default => 'title',
-        };
+        return 'push';
     }
 
     public static function fliesTitle(CalendarMonth $month): bool
