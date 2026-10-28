@@ -1,11 +1,11 @@
 /**
  * How memories pages move between each other, like an iOS navigation push.
  *
- * Every memories page names its place with data-memories-page: "list", a
- * month as "YYYY-MM", or "editor". The slide follows from the two places, so
- * links, Back and Forward all agree: into a month from the list slides
- * forward, back to the list slides back, month to month slides by date, and
- * the editor rises in. Two tabs of one month don't move at all.
+ * Every memories page names its place with data-memories-page: "list", or a
+ * month as "YYYY-MM". The slide follows from the two places, so links, Back
+ * and Forward all agree: into a month from the list slides forward, back to
+ * the list slides back, and month to month slides by date. Two tabs of one
+ * month don't move at all.
  *
  * Livewire replaces <html>'s attributes during the swap, so the direction is
  * set after it. The browser styles the view transition after the swap too,
@@ -22,9 +22,6 @@ const movementBetween = (from, to) => {
     if (from === to) {
         return "none";
     }
-    if (to === "editor") {
-        return "rise";
-    }
     if (from === "list") {
         return "forward";
     }
@@ -35,15 +32,33 @@ const movementBetween = (from, to) => {
 };
 
 /**
+ * iOS Safari animates its own swipe back. When it already has, the swap it
+ * leads to doesn't slide again.
+ */
+let browserAlreadyAnimated = false;
+
+window.addEventListener("popstate", (event) => {
+    browserAlreadyAnimated = event.hasUAVisualTransition === true;
+});
+
+document.addEventListener("livewire:navigate", (event) => {
+    if (!event.detail.history) {
+        browserAlreadyAnimated = false;
+    }
+});
+
+/**
  * Photos that are already loaded or cached show at once; the rest fade in
- * as they arrive, so a cached photo never flashes its skeleton.
+ * as they arrive, so a cached photo never flashes its skeleton. A page
+ * restored by Back can carry a photo still marked loading from when it was
+ * left, so every photo is checked again.
  */
 const fadeInPhotosStillLoading = () => {
     document.querySelectorAll("img.photo-fade").forEach((img) => {
+        img.classList.toggle("is-loading", !img.complete);
         if (img.complete) {
             return;
         }
-        img.classList.add("is-loading");
         const show = () => img.classList.remove("is-loading");
         img.addEventListener("load", show, { once: true });
         img.addEventListener("error", show, { once: true });
@@ -52,7 +67,8 @@ const fadeInPhotosStillLoading = () => {
 
 /**
  * A tapped month tile stays pressed until the month shows, and a page
- * restored by Back never comes back with one still pressed.
+ * restored by Back never comes back with one still pressed. A click that
+ * opens the month in a new tab leaves the tile alone.
  */
 const releasePressedTiles = () => {
     document
@@ -61,6 +77,15 @@ const releasePressedTiles = () => {
 };
 
 document.addEventListener("click", (event) => {
+    if (
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+    ) {
+        return;
+    }
     event.target
         .closest("a[data-holds-press]")
         ?.closest("[data-month-tile]")
@@ -126,7 +151,10 @@ document.addEventListener("livewire:navigating", (event) => {
     const from = placeOfPage();
 
     event.detail.onSwap(() => {
-        const movement = movementBetween(from, placeOfPage());
+        const movement = browserAlreadyAnimated
+            ? "none"
+            : movementBetween(from, placeOfPage());
+        browserAlreadyAnimated = false;
         if (movement !== null) {
             document.documentElement.dataset.memoriesMovement = movement;
         }

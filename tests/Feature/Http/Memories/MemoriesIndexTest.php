@@ -218,7 +218,7 @@ test('links each month to its page', function () {
 test('loads Livewire, so month links can swap pages in place', function () {
     /** @var TestCase $this */
     $this->get('/memories')
-        ->assertSee('livewire.min.js', false)
+        ->assertSee('data-update-uri', false)
         ->assertSee('wire:navigate.hover', false);
 });
 
