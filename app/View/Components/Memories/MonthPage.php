@@ -63,6 +63,15 @@ class MonthPage extends Component
         return $this->monthForViewer->month->hasRevealed() ? null : $this->monthForViewer->otherStatusLabel();
     }
 
+    /**
+     * How a link to a neighbouring month reads: just its name in the same
+     * year, and with the year when it is in another one.
+     */
+    public function neighbourLabel(CalendarMonth $neighbour): string
+    {
+        return $neighbour->year === $this->monthForViewer->month->calendarMonth->year ? $neighbour->name() : $neighbour->label();
+    }
+
     public function render(): View
     {
         return view('components.memories.month-page');

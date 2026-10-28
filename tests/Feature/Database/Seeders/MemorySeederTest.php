@@ -68,6 +68,10 @@ test('seeds each state the design sessions need', function () {
     // Revealed at the deadline with a draft left behind.
     expect(memoryOf($katie, $latest->previous(4))->isShared())->toBeTrue()
         ->and(memoryOf($david, $latest->previous(4))->isDraft())->toBeTrue();
+
+    // Both joined in the launch month, and David wrote about a month before it.
+    expect(Month::launch())->toEqual($latest->previous(6))
+        ->and(memoryOf($david, $latest->previous(24))->isShared())->toBeTrue();
 });
 
 test('only reacts to shared memories, never their own', function () {

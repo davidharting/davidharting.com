@@ -6,17 +6,17 @@
 @endphp
 
 <article class="mx-auto max-w-xl" data-memories-page="{{ $month->toYearMonth() }}">
-    <nav class="flex justify-between gap-4 font-sans text-sm">
+    <nav class="flex flex-wrap justify-between gap-x-4 gap-y-2 font-sans text-sm">
         <a class="link tap-target" href="{{ route("memories.index") }}" wire:navigate.hover>← All months</a>
 
-        <div class="flex gap-4">
+        <div class="flex gap-4 whitespace-nowrap">
             @if ($previous)
                 <a
                     class="link tap-target"
                     href="{{ route("memories.show", $previous->toYearMonth()) }}"
                     aria-label="{{ $previous->label() }}"
                     wire:navigate.hover
-                >← {{ $previous->name() }}</a>
+                >← {{ $neighbourLabel($previous) }}</a>
             @endif
 
             @if ($next)
@@ -25,7 +25,7 @@
                     href="{{ route("memories.show", $next->toYearMonth()) }}"
                     aria-label="{{ $next->label() }}"
                     wire:navigate.hover
-                >{{ $next->name() }} →</a>
+                >{{ $neighbourLabel($next) }} →</a>
             @endif
         </div>
     </nav>

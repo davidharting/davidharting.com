@@ -81,6 +81,14 @@ describe('dayLabel()', function () {
     });
 });
 
+describe('ofInstant()', function () {
+    test('reads the instant on the Eastern clock, not UTC', function () {
+        // 02:00Z on Nov 1 is 22:00 EDT on Oct 31.
+        expect(CalendarMonth::ofInstant(CarbonImmutable::parse('2026-11-01T02:00:00Z')))->toEqual(CalendarMonth::of(2026, 10))
+            ->and(CalendarMonth::ofInstant(CarbonImmutable::parse('2026-11-01T05:00:00Z')))->toEqual(CalendarMonth::of(2026, 11));
+    });
+});
+
 describe('previous() and next()', function () {
     test('cross year boundaries', function () {
         expect(CalendarMonth::of(2026, 1)->previous()->equals(CalendarMonth::of(2025, 12)))->toBeTrue()

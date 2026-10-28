@@ -90,6 +90,12 @@ describe('writing', function () {
             ->assertSeeInOrder(["href=\"{$monthPage}\"", 'Done'], false);
     });
 
+    test('names the month with its year in the link back, so an earlier month reads clearly', function () {
+        /** @var TestCase $this */
+        editorFor($this->katie, '2019-03')
+            ->assertSeeText('← March 2019');
+    });
+
     test('refuses text longer than a memory can be, keeping what was saved', function () {
         /** @var TestCase $this */
         editorFor($this->katie, '2026-09')

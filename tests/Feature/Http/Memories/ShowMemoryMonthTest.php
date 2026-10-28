@@ -13,7 +13,8 @@ use Tests\TestCase;
  * The seeder counts back from the latest open month, September 2026:
  * September is before its reveal, August has David's late share, July
  * revealed when both shared, June is empty, and May revealed at its deadline
- * with David's draft never shared. March is the launch month.
+ * with David's draft never shared. March is the launch month. Before launch,
+ * only September 2024 is listed: David wrote about it later.
  */
 beforeEach(function () {
     /** @var TestCase $this */
@@ -148,15 +149,31 @@ test('links to the neighbouring months next to All months, above the title', fun
         ->assertSee('aria-label="June 2026"', false);
 });
 
-test('doesn\'t link past the latest open month or before launch', function () {
+test('doesn\'t link past the latest open month', function () {
     /** @var TestCase $this */
     $this->actingAs($this->david)->get('/memories/2026-09')
         ->assertSee(route('memories.show', '2026-08'))
         ->assertDontSee(route('memories.show', '2026-10'));
+});
 
+test('steps over unlisted months before launch, naming the year of a month in another year', function () {
+    /** @var TestCase $this */
     $this->actingAs($this->david)->get('/memories/2026-03')
-        ->assertSee(route('memories.show', '2026-04'))
-        ->assertDontSee(route('memories.show', '2026-02'));
+        ->assertSee(route('memories.show', '2024-09'))
+        ->assertDontSee(route('memories.show', '2026-02'))
+        ->assertSeeTextInOrder(['← September 2024', 'April →']);
+
+    $this->actingAs($this->david)->get('/memories/2024-09')
+        ->assertSee(route('memories.show', '2026-03'))
+        ->assertSeeText('March 2026 →')
+        ->assertDontSee(route('memories.show', '2024-08'));
+});
+
+test('shows a month before launch that nobody wrote about and isn\'t listed', function () {
+    /** @var TestCase $this */
+    $this->actingAs($this->david)->get('/memories/2019-03?who=yours')
+        ->assertSuccessful()
+        ->assertSeeText('March 2019');
 });
 
 test('keeps paragraphs and escapes the text', function () {
@@ -171,12 +188,12 @@ test('keeps paragraphs and escapes the text', function () {
         ->assertDontSee('<b>Second</b>', false);
 });
 
-test('is not found for a month outside the list or a malformed month', function (string $month) {
+test('is not found for a month not open yet, before 2016, or malformed', function (string $month) {
     /** @var TestCase $this */
     $this->actingAs($this->david)->get("/memories/{$month}")->assertNotFound();
 })->with([
     'not open yet' => '2026-10',
-    'before launch' => '2026-02',
+    'before 2016' => '2015-12',
     'not a month' => '2026-13',
     'not a date' => 'september',
 ]);

@@ -18,6 +18,7 @@
                 <li>
                     You'll read each other's once you've both shared, or at the end of the next month at the latest.
                 </li>
+                <li>To write about a month from before you started, use the link at the bottom of the list.</li>
             </ul>
             <form method="dialog" class="mt-6">
                 <button class="btn btn-ghost btn-block">Close</button>

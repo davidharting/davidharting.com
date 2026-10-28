@@ -26,7 +26,7 @@ class Revealed extends Notification
 
     public function toMail(User $notifiable): MailMessage
     {
-        $month = $this->month->calendarMonth->name();
+        $month = $this->month->calendarMonth->label();
         $otherName = MemoryParticipant::otherThan($notifiable)->displayName();
 
         return (new MailMessage)

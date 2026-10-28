@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DebugController;
+use App\Http\Controllers\EarlierMonthController;
 use App\Http\Controllers\FileShareController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MediaIndexController;
@@ -71,6 +72,7 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
 
 Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
     Route::get('/memories', [MemoriesController::class, 'index'])->name('memories.index')->withHead(title: 'Memories')->can('viewAny', Month::class);
+    Route::get('/memories/earlier', EarlierMonthController::class)->name('memories.earlier')->withHead(title: 'Choose a month')->can('viewAny', Month::class);
     Route::get('/memories/{month}', [MemoriesController::class, 'show'])->name('memories.show')->where('month', '\d{4}-\d{2}')->can('view', 'month');
     Route::get('/memories/{month}/write', MemoryEditorController::class)->name('memories.write')->where('month', '\d{4}-\d{2}')->can('write', 'month');
     Route::get('/memories/photos/{photo}/{variant}', [MemoryPhotoController::class, 'show'])->name('memories.photos.show')->whereNumber('photo')->whereIn('variant', ['web', 'thumbnail'])->can('view', 'photo');
