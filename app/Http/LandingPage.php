@@ -6,7 +6,7 @@ use App\Models\Month;
 use App\Models\User;
 
 /**
- * Picks the page a signed-in user lands on when nothing else asked for one.
+ * Determines the default landing page for an authenticated user, e.g., after sign in.
  */
 final class LandingPage
 {
