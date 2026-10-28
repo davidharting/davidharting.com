@@ -48,6 +48,23 @@ test('returns a participant to the page they were sent to log in from', function
         ->assertRedirect('/profile');
 });
 
+describe('Signed-in user opening a guest-only page', function () {
+    test('sends a participant who is not the admin to their memories', function () {
+        /** @var TestCase $this */
+        $this->seed(MemorySeeder::class);
+        $katie = User::where('email', 'katie@example.com')->firstOrFail();
+
+        $this->actingAs($katie)->get('/login')
+            ->assertRedirect(route('memories.index', absolute: false));
+    });
+
+    test('sends everyone else to the Account page', function () {
+        /** @var TestCase $this */
+        $this->actingAs(User::factory()->create())->get('/login')
+            ->assertRedirect(route('profile.edit', absolute: false));
+    });
+});
+
 describe('Remember me', function () {
     test('is ticked when the login page first loads', function () {
         /** @var TestCase $this */
