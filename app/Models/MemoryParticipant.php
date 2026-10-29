@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,13 +25,18 @@ class MemoryParticipant extends Model
     }
 
     /**
-     * Monthly memories is live only with exactly two participants. With fewer
-     * or more, nobody can reach the feature. Counted once per request, since
-     * every memory's policy check asks.
+     * Monthly memories is live only with exactly two participants, once the
+     * month the second joined in has ended. With fewer or more, or before
+     * then, nobody can reach the feature. The participants are read once per
+     * request, since every memory's policy check asks.
      */
     public static function featureIsEnabled(): bool
     {
-        return once(fn () => self::query()->count() === 2);
+        $joinedAt = once(fn () => self::query()->pluck('created_at'));
+        $latestOpenEndedAt = Month::latestOpen()->endsAt();
+
+        return $joinedAt->count() === 2
+            && $joinedAt->every(fn (CarbonInterface $at) => $at->lessThanOrEqualTo($latestOpenEndedAt));
     }
 
     /**

@@ -41,11 +41,17 @@ test('lists every month since launch, then the earlier months someone wrote abou
         ->assertDontSeeText('October 2024');
 });
 
-test('titles the page Memories', function () {
+test('keeps the browser tab title as Memories', function () {
     /** @var TestCase $this */
     $response = $this->get('/memories');
 
     expect(RenderedHead::from($response)->title)->toBe('Memories - davidharting.com');
+});
+
+test('heads the page Our Memories, with a subtitle beneath it', function () {
+    /** @var TestCase $this */
+    $this->get('/memories')
+        ->assertSeeTextInOrder(['Our Memories', 'Treasuring the life we built together', 'September 2026']);
 });
 
 test('says where both memories stand before the reveal, without either memory\'s text', function () {

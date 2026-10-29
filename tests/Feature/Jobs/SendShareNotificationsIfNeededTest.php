@@ -102,8 +102,10 @@ describe('handle()', function () {
 
     test('emails the other person when a memory of a month before launch is shared', function () {
         /** @var TestCase $this */
-        // Both joined on October 20. March 2019's deadline passed long ago,
-        // so David's memory is readable the moment he shares it.
+        // Both joined on October 20, so memories opens on November 1.
+        // March 2019's deadline passed long ago, so David's memory is
+        // readable the moment he shares it.
+        $this->travelTo('2026-11-02T12:00:00Z');
         $march = Month::of(CalendarMonth::of(2019, 3));
         Memory::factory()->for($this->david)->forMonth($march->calendarMonth)->shared()->create();
 

@@ -78,10 +78,23 @@ describe('whether the feature is live', function () {
             ->assertSuccessful();
     });
 
-    test('says it is live once there are two', function () {
+    test('says when it opens once there are two', function () {
         /** @var TestCase $this */
+        $this->travelTo('2026-10-29T12:00:00Z');
         MemoryParticipant::factory()->for(User::factory()->state(['email' => 'david@example.test']))->create();
         User::factory()->create(['email' => 'katie@example.test']);
+
+        $this->artisan('memories:add-participant', ['email' => 'katie@example.test'])
+            ->expectsOutputToContain('Monthly memories opens for both participants on November 1.')
+            ->assertSuccessful();
+    });
+
+    test('says it is live when re-run after it opens', function () {
+        /** @var TestCase $this */
+        $this->travelTo('2026-10-29T12:00:00Z');
+        MemoryParticipant::factory()->for(User::factory()->state(['email' => 'david@example.test']))->create();
+        MemoryParticipant::factory()->for(User::factory()->state(['email' => 'katie@example.test']))->create();
+        $this->travelTo('2026-11-01T04:00:00Z');
 
         $this->artisan('memories:add-participant', ['email' => 'katie@example.test'])
             ->expectsOutputToContain('Monthly memories is live for both participants.')
