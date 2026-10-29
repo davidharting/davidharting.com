@@ -1,125 +1,117 @@
 <?php
 
-namespace Tests\Feature\Auth;
-
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
-class AuthenticationTest extends TestCase
-{
-    use RefreshDatabase;
+test('login screen can be rendered', function () {
+    /** @var TestCase $this */
+    $response = $this->get('/login');
 
-    public function test_login_screen_can_be_rendered(): void
-    {
-        $response = $this->get('/login');
+    $response->assertStatus(200);
+});
 
-        $response->assertStatus(200);
-    }
+test('users can authenticate using the login screen', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
 
-    public function test_users_can_authenticate_using_the_login_screen(): void
-    {
-        $user = User::factory()->create();
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
 
-        $response = $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('profile.edit', absolute: false));
+});
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('profile.edit', absolute: false));
-    }
+test('users can not authenticate with invalid password', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
 
-    public function test_users_can_not_authenticate_with_invalid_password(): void
-    {
-        $user = User::factory()->create();
+    $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'wrong-password',
+    ]);
 
-        $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'wrong-password',
-        ]);
+    $this->assertGuest();
+});
 
-        $this->assertGuest();
-    }
+test('users can logout', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
 
-    public function test_users_can_logout(): void
-    {
-        $user = User::factory()->create();
+    $response = $this->actingAs($user)->post('/logout');
 
-        $response = $this->actingAs($user)->post('/logout');
+    $this->assertGuest();
+    $response->assertRedirect('/');
+});
 
-        $this->assertGuest();
-        $response->assertRedirect('/');
-    }
+test('remember me creates remember cookie', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
 
-    public function test_remember_me_creates_remember_cookie(): void
-    {
-        $user = User::factory()->create();
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+        'remember' => true,
+    ]);
 
-        $response = $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'password',
-            'remember' => true,
-        ]);
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('profile.edit', absolute: false));
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('profile.edit', absolute: false));
+    // Verify that a remember cookie was created
+    $response->assertCookie(
+        Auth::getRecallerName(),
+        null,
+        false // Not encrypted
+    );
 
-        // Verify that a remember cookie was created
-        $response->assertCookie(
-            Auth::getRecallerName(),
-            null,
-            false // Not encrypted
-        );
+    // Verify the remember_token was set in the database
+    $user->refresh();
+    $this->assertNotNull($user->remember_token);
+});
 
-        // Verify the remember_token was set in the database
-        $user->refresh();
-        $this->assertNotNull($user->remember_token);
-    }
+test('remember me sets remember token in database', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create(['remember_token' => null]);
 
-    public function test_remember_me_sets_remember_token_in_database(): void
-    {
-        $user = User::factory()->create(['remember_token' => null]);
+    // Verify no remember token before login
+    $this->assertNull($user->remember_token);
 
-        // Verify no remember token before login
-        $this->assertNull($user->remember_token);
+    // Login with remember me
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+        'remember' => true,
+    ]);
 
-        // Login with remember me
-        $response = $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'password',
-            'remember' => true,
-        ]);
+    // Verify the remember cookie was created
+    $response->assertCookie(Auth::getRecallerName());
 
-        // Verify the remember cookie was created
-        $response->assertCookie(Auth::getRecallerName());
+    // Verify the remember_token was set in the database
+    $user->refresh();
+    $this->assertNotNull($user->remember_token);
+    $this->assertNotEmpty($user->remember_token);
 
-        // Verify the remember_token was set in the database
-        $user->refresh();
-        $this->assertNotNull($user->remember_token);
-        $this->assertNotEmpty($user->remember_token);
+    // Verify it's a 60-character string (Laravel's default)
+    $this->assertEquals(60, strlen($user->remember_token));
+});
 
-        // Verify it's a 60-character string (Laravel's default)
-        $this->assertEquals(60, strlen($user->remember_token));
-    }
+test('login without remember me does not create remember cookie', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create(['remember_token' => null]);
 
-    public function test_login_without_remember_me_does_not_create_remember_cookie(): void
-    {
-        $user = User::factory()->create(['remember_token' => null]);
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
 
-        $response = $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
+    $this->assertAuthenticated();
 
-        $this->assertAuthenticated();
+    // Verify no remember cookie was created
+    $response->assertCookieMissing(Auth::getRecallerName());
 
-        // Verify no remember cookie was created
-        $response->assertCookieMissing(Auth::getRecallerName());
-
-        // Verify remember_token is still null in database
-        $user->refresh();
-        $this->assertNull($user->remember_token);
-    }
-}
+    // Verify remember_token is still null in database
+    $user->refresh();
+    $this->assertNull($user->remember_token);
+});
