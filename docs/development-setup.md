@@ -100,7 +100,33 @@ npm run build
 ### 6. Run Tests
 
 ```bash
-php artisan test
+vendor/bin/pest --compact --parallel
 ```
 
-All tests should pass.
+All tests should pass. Outside CI this records the Test Impact Analysis map on the first run, and later runs only re-run what your changes affect. See the next section.
+
+## Test Impact Analysis (PCOV)
+
+`tests/Pest.php` turns on Pest's Test Impact Analysis (TIA) for every run outside CI. TIA needs a coverage driver, and this project uses PCOV, which only collects coverage. Step debugging needs Xdebug and isn't set up.
+
+Herd Lite's Linux binary is static musl and cannot load extensions, and static-php-cli can only build PCOV as a loadable extension, so no Herd Lite build will ever include it. That is why the Linux setup scripts install PHP from apt instead:
+
+- **Claude Code cloud sandboxes (Ubuntu):** `scripts/sandbox/setup.sh` installs `php8.4-*` and `php8.4-pcov` from the [ondrej/php PPA](https://launchpad.net/~ondrej/+archive/ubuntu/php).
+- **Amp orbs (Debian 12):** `.agents/setup` installs the same packages from [packages.sury.org](https://packages.sury.org/php/), the Debian side of the same archive.
+- **CI:** no driver needed. GitHub Actions sets `CI=true`, which turns TIA off, so CI keeps running the whole suite.
+
+### macOS
+
+The Herd Lite binary that mise installs has no PCOV either. Herd's documentation says its macOS binaries can load an extension compiled against Homebrew's PHP, so this should work, but it is unverified:
+
+```bash
+brew install php@8.4                         # only used to compile the extension
+$(brew --prefix php@8.4)/bin/pecl install pcov
+php --ini                                    # note "Scan for additional .ini files in"
+echo "extension=$(brew --prefix)/lib/php/pecl/20240924/pcov.so" > <scan dir>/pcov.ini
+php -m | grep pcov
+```
+
+If `php -m` doesn't list `pcov`, or PHP refuses to load it, the fallback is to run tests with Homebrew's `php@8.4` plus the same `pcov.so`, or to switch mise from Herd Lite to Homebrew PHP.
+
+Check it works by running the suite twice: the second run's summary should say every test was `replayed`.
