@@ -243,7 +243,7 @@
                 @else
                     <x-memories.shared-check />
                 @endif
-                <p class="rise-in mt-6 text-4xl [animation-delay:250ms]">{{ $month->name() }} is revealed.</p>
+                <p class="rise-in mt-6 text-4xl [animation-delay:250ms]">{{ $otherName }} can read yours now.</p>
                 <div class="rise-in mt-8 flex flex-col gap-2 font-sans [animation-delay:350ms]">
                     @if ($monthForViewer->revealedOtherMemory())
                         <a class="btn btn-primary" href="{{ route("memories.show", $month->toYearMonth()) }}"

@@ -330,7 +330,7 @@ describe('sharing', function () {
         editorFor($this->katie, '2026-09')
             ->set('body', 'The pumpkin patch, finished.')
             ->call('share')
-            ->assertSeeText('September is revealed.')
+            ->assertSeeText('David can read yours now.')
             ->assertSeeText('Read David\'s →', false)
             ->assertSee('slide-in-from-left', false)
             ->assertDontSee('draw-stroke', false);
@@ -340,14 +340,14 @@ describe('sharing', function () {
             ->isShared()->toBeTrue();
     });
 
-    test('after a deadline reveal, says they can read it right away and shows the month as revealed', function () {
+    test('after a deadline reveal, says they can read it right away, before and after sharing', function () {
         /** @var TestCase $this */
         // Katie has no June memory, so there's nothing of hers to read and the button goes back to June.
         editorFor($this->david, '2026-06')
             ->assertSeeText('Katie can read it right away.')
             ->set('body', 'Better late.')
             ->call('share')
-            ->assertSeeText('June is revealed.')
+            ->assertSeeText('Katie can read yours now.')
             ->assertSeeText('Back to June');
     });
 
@@ -367,7 +367,7 @@ describe('sharing', function () {
 
         editorFor($this->david, '2026-08')
             ->call('share')
-            ->assertSeeText('August is revealed.')
+            ->assertSeeText('Katie can read yours now.')
             ->assertSee('draw-stroke', false)
             ->assertDontSee('slide-in-from-left', false);
     });
@@ -389,7 +389,7 @@ describe('sharing', function () {
             ->assertSet('justShared', true)
             ->call('keepEditing')
             ->assertSet('justShared', false)
-            ->assertDontSeeText('September is revealed.');
+            ->assertDontSeeText('David can read yours now.');
     });
 
     test('keeps saving edits after sharing, without offering to share again', function () {
@@ -421,7 +421,7 @@ describe('sharing', function () {
             ->call('share')
             ->assertHasErrors('body')
             ->assertSeeText('There\'s nothing to share yet.')
-            ->assertDontSeeText('June is revealed.');
+            ->assertDontSeeText('Katie can read yours now.');
 
         expect(storedMemoryOf($this->david, '2026-06'))->toBeNull();
     });
