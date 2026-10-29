@@ -42,7 +42,10 @@ RUN install-php-extensions \
 # CVE-2026-109619 (stale global state RCE, fixed in PHP 8.4.27). It must be set
 # in php.ini, not via ini_set(), to apply before request parsing. We don't use
 # upload progress, so this can stay off after upgrading.
-RUN printf "memory_limit = 256M\nupload_max_filesize = 25M\npost_max_size = 27M\nsession.upload_progress.enabled = 0\n" \
+#
+# expose_php: off so responses don't send an X-Powered-By header announcing the
+# exact PHP version to anyone scanning for unpatched servers.
+RUN printf "memory_limit = 256M\nupload_max_filesize = 25M\npost_max_size = 27M\nsession.upload_progress.enabled = 0\nexpose_php = Off\n" \
     > /usr/local/etc/php/conf.d/php.ini
 
 RUN mkdir -p /app/public/build
