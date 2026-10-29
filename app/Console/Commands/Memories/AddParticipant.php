@@ -3,6 +3,7 @@
 namespace App\Console\Commands\Memories;
 
 use App\Models\MemoryParticipant;
+use App\Models\Month;
 use App\Models\User;
 use Illuminate\Console\Command;
 
@@ -86,6 +87,13 @@ class AddParticipant extends Command
     {
         if (MemoryParticipant::featureIsEnabled()) {
             $this->line('  Monthly memories is live for both participants.');
+
+            return;
+        }
+
+        if (MemoryParticipant::query()->count() === 2) {
+            $opensOn = Month::launch()->next()->startsAt()->format('F j');
+            $this->line("  Monthly memories opens for both participants on {$opensOn}.");
 
             return;
         }

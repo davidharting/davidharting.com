@@ -23,18 +23,35 @@ test('lists a user at most once', function () {
 })->throws(QueryException::class, 'memory_participants_user_id_unique');
 
 describe('featureIsEnabled()', function () {
-    test('is true with exactly two participants', function () {
+    test('is true with two participants once the month they joined in has ended', function () {
         /** @var TestCase $this */
         User::factory()->count(2)->create()
             ->each(fn (User $user) => MemoryParticipant::create(['user_id' => $user->id]));
+        $this->travel(2)->months();
 
         expect(MemoryParticipant::featureIsEnabled())->toBeTrue();
     });
+
+    test('waits until the month the second participant joined in has ended', function (string $now, bool $isEnabled) {
+        /** @var TestCase $this */
+        $this->travelTo('2026-10-29T12:00:00Z');
+        User::factory()->count(2)->create()
+            ->each(fn (User $user) => MemoryParticipant::create(['user_id' => $user->id]));
+
+        $this->travelTo($now);
+
+        expect(MemoryParticipant::featureIsEnabled())->toBe($isEnabled);
+    })->with([
+        'the same day' => ['2026-10-29T12:00:00Z', false],
+        'a second before midnight Eastern on November 1' => ['2026-11-01T03:59:59Z', false],
+        'midnight Eastern on November 1' => ['2026-11-01T04:00:00Z', true],
+    ]);
 
     test('is false with any other number of participants', function (int $count) {
         /** @var TestCase $this */
         User::factory()->count($count)->create()
             ->each(fn (User $user) => MemoryParticipant::create(['user_id' => $user->id]));
+        $this->travel(2)->months();
 
         expect(MemoryParticipant::featureIsEnabled())->toBeFalse();
     })->with([0, 1, 3]);
