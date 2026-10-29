@@ -154,8 +154,13 @@ class Month extends Model
     }
 
     /**
-     * Whether the user's share is what revealed the month: they shared
-     * second, before the deadline. A late share, after the deadline, isn't.
+     * Whether the user's share is what revealed the month. True when both:
+     *
+     * - the other person had already shared, so this share was the second;
+     * - this share came before the reveal deadline.
+     *
+     * False when the user hasn't shared, shared first, or shared after the
+     * deadline (the deadline revealed the month, not their share).
      */
     public function revealedByShareOf(User $user): bool
     {

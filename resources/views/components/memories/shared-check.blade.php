@@ -9,5 +9,5 @@
     aria-hidden="true"
 >
     <circle cx="24" cy="24" r="21" class="opacity-30" />
-    <path d="M15 24.5l6 6 12-13" pathLength="1" class="moment-draw" />
+    <path d="M15 24.5l6 6 12-13" pathLength="1" class="draw-stroke" />
 </svg>

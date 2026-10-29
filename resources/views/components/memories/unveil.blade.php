@@ -10,6 +10,6 @@
             localStorage.setItem(key, '1');
             unveiledBefore = seen;
         } catch {}
-        memory.classList.toggle('moment-unveil', !unveiledBefore);
+        memory.classList.toggle('fade-up', !unveiledBefore);
     })();
 </script>

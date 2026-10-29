@@ -332,8 +332,8 @@ describe('sharing', function () {
             ->call('share')
             ->assertSeeText('September is revealed.')
             ->assertSeeText('Read David\'s →', false)
-            ->assertSee('moment-meet-from-left', false)
-            ->assertDontSee('moment-draw', false);
+            ->assertSee('slide-in-from-left', false)
+            ->assertDontSee('draw-stroke', false);
 
         expect(storedMemoryOf($this->katie, '2026-09'))
             ->body->toBe('The pumpkin patch, finished.')
@@ -351,13 +351,13 @@ describe('sharing', function () {
             ->assertSeeText('Back to June');
     });
 
-    test('marks a late share with the same check as any other share, not the reveal moment', function () {
+    test('marks a late share with the same check as any other share, not the meeting initials', function () {
         /** @var TestCase $this */
         editorFor($this->david, '2026-06')
             ->set('body', 'Better late.')
             ->call('share')
-            ->assertSee('moment-draw', false)
-            ->assertDontSee('moment-meet-from-left', false);
+            ->assertSee('draw-stroke', false)
+            ->assertDontSee('slide-in-from-left', false);
     });
 
     test('marks a late share with the check even when the other person shared on time', function () {
@@ -368,8 +368,8 @@ describe('sharing', function () {
         editorFor($this->david, '2026-08')
             ->call('share')
             ->assertSeeText('August is revealed.')
-            ->assertSee('moment-draw', false)
-            ->assertDontSee('moment-meet-from-left', false);
+            ->assertSee('draw-stroke', false)
+            ->assertDontSee('slide-in-from-left', false);
     });
 
     test('marks a share that doesn\'t reveal the month with the check', function () {
@@ -379,7 +379,7 @@ describe('sharing', function () {
         editorFor($this->katie, '2026-09')
             ->call('share')
             ->assertSeeText('Shared.')
-            ->assertSee('moment-draw', false);
+            ->assertSee('draw-stroke', false);
     });
 
     test('goes back to editing from the screen after sharing', function () {

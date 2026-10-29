@@ -9,7 +9,7 @@
                         wire:loading.attr="disabled"
                         class="btn btn-circle btn-outline tap-target border-base-300 text-xl"
                         aria-label="Remove your {{ $reaction->emoji }} reaction"
-                        x-bind:class="justAdded === @js($reaction->emoji) && 'moment-pop'"
+                        x-bind:class="justAdded === @js($reaction->emoji) && 'pop-in'"
                         x-on:click="remove(@js($reaction->emoji))"
                     >
                         {{ $reaction->emoji }}
