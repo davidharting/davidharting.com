@@ -73,21 +73,27 @@
         @endif
 
         @if ($shownMemory())
-            <x-memories.body :memory="$shownMemory()" class="mt-5 text-lg leading-relaxed" />
+            <div id="memory-{{ $shownMemory()->id }}">
+                @if ($revealed && ! $showingYours)
+                    <x-memories.unveil :memory="$shownMemory()" />
+                @endif
 
-            @if ($revealed)
-                <div class="mt-5">
-                    <livewire:memories.reactions :memory="$shownMemory()" :key="'reactions-'.$shownMemory()->id" />
-                </div>
-            @endif
+                <x-memories.body :memory="$shownMemory()" class="mt-5 text-lg leading-relaxed" />
 
-            @foreach ($photos() as $photo)
-                <x-memories.photo
-                    :photo="$photo"
-                    :author-name="$showingYours ? $monthForViewer->viewer->displayName() : $otherName"
-                    class="mt-8"
-                />
-            @endforeach
+                @if ($revealed)
+                    <div class="mt-5">
+                        <livewire:memories.reactions :memory="$shownMemory()" :key="'reactions-'.$shownMemory()->id" />
+                    </div>
+                @endif
+
+                @foreach ($photos() as $photo)
+                    <x-memories.photo
+                        :photo="$photo"
+                        :author-name="$showingYours ? $monthForViewer->viewer->displayName() : $otherName"
+                        class="mt-8"
+                    />
+                @endforeach
+            </div>
         @elseif ($showingYours)
             <p class="mt-5 text-lg italic opacity-70">You haven't written about this month yet.</p>
         @elseif (! $revealed)

@@ -40,6 +40,11 @@ final readonly class MonthForViewer
         return Gate::forUser($this->viewer)->allows('view', $this->otherMemory) ? $this->otherMemory : null;
     }
 
+    public function viewerShareRevealed(): bool
+    {
+        return $this->month->revealedByShareOf($this->viewer);
+    }
+
     public function viewerMissed(): bool
     {
         return $this->month->missedBy($this->viewer);

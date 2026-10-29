@@ -154,6 +154,26 @@ class Month extends Model
     }
 
     /**
+     * Whether the user's share is what revealed the month. True when both:
+     *
+     * - the other person had already shared, so this share was the second;
+     * - this share came before the reveal deadline.
+     *
+     * False when the user hasn't shared, shared first, or shared after the
+     * deadline (the deadline revealed the month, not their share).
+     */
+    public function revealedByShareOf(User $user): bool
+    {
+        $sharedAt = $this->memoryOf($user)?->shared_at;
+
+        if ($sharedAt === null) {
+            return false;
+        }
+
+        return $this->revealedAt()?->equalTo($sharedAt) ?? false;
+    }
+
+    /**
      * Whether the memory is readable by someone other than its author: it is
      * shared, and the month has revealed. A memory shared after the reveal is
      * readable as soon as it is shared.

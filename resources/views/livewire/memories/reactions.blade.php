@@ -9,6 +9,7 @@
                         wire:loading.attr="disabled"
                         class="btn btn-circle btn-outline tap-target border-base-300 text-xl"
                         aria-label="Remove your {{ $reaction->emoji }} reaction"
+                        x-bind:class="justAdded === @js($reaction->emoji) && 'pop-in'"
                         x-on:click="remove(@js($reaction->emoji))"
                     >
                         {{ $reaction->emoji }}
@@ -99,7 +100,12 @@
         <div
             role="status"
             x-show="notice"
-            x-transition.opacity
+            x-transition:enter="transition duration-200 ease-out"
+            x-transition:enter-start="translate-y-4 opacity-0"
+            x-transition:enter-end="translate-y-0 opacity-100"
+            x-transition:leave="transition duration-150 ease-in"
+            x-transition:leave-start="translate-y-0 opacity-100"
+            x-transition:leave-end="translate-y-4 opacity-0"
             class="alert bg-neutral text-neutral-content pointer-events-auto flex font-sans text-sm shadow-lg"
             style="display: none"
         >
