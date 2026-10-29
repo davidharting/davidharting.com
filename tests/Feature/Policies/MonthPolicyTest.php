@@ -9,14 +9,15 @@ use Tests\TestCase;
 
 /**
  * The clock sits mid-October 2026, so September is the latest open month.
- * David and Katie are the two participants, which enables the feature.
+ * David and Katie became the two participants back in March, which enables
+ * the feature.
  */
 beforeEach(function () {
     /** @var TestCase $this */
     $this->travelTo('2026-10-18T12:00:00Z');
     [$this->david, $this->katie] = User::factory()->count(2)->create();
-    MemoryParticipant::create(['user_id' => $this->david->id]);
-    MemoryParticipant::create(['user_id' => $this->katie->id]);
+    MemoryParticipant::factory()->for($this->david)->joinedIn(CalendarMonth::of(2026, 3))->create();
+    MemoryParticipant::factory()->for($this->katie)->joinedIn(CalendarMonth::of(2026, 3))->create();
 });
 
 describe('viewAny()', function () {
