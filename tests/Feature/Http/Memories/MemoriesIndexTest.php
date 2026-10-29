@@ -48,6 +48,12 @@ test('titles the page Memories', function () {
     expect(RenderedHead::from($response)->title)->toBe('Memories - davidharting.com');
 });
 
+test('heads the page Our Memories, with a subtitle beneath it', function () {
+    /** @var TestCase $this */
+    $this->get('/memories')
+        ->assertSeeTextInOrder(['Our Memories', 'Treasuring the life we built together', 'September 2026']);
+});
+
 test('says where both memories stand before the reveal, without either memory\'s text', function () {
     /** @var TestCase $this */
     // September: Katie started her draft on Oct 3; David shared on Oct 5.
