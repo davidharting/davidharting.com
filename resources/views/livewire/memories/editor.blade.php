@@ -218,9 +218,8 @@
                     <button
                         type="button"
                         class="btn btn-primary btn-block"
-                        wire:click="share"
                         wire:loading.attr="disabled"
-                        x-on:click="confirming = false"
+                        x-on:click="$wire.share().then(() => (confirming = false))"
                     >
                         Share
                     </button>
