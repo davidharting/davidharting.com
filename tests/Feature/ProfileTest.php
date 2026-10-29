@@ -39,8 +39,8 @@ class ProfileTest extends TestCase
         $admin = User::factory()->admin()->create();
 
         $this->actingAs($admin)->get('/profile')
-            ->assertSeeTextInOrder(['Admin', 'Filament Admin', 'Backup database', 'Kitchen Sink'])
-            ->assertSee(route('admin.backup'));
+            ->assertSeeTextInOrder(['Admin', 'Filament Admin', 'Kitchen Sink'])
+            ->assertDontSeeText('Backup database');
     }
 
     public function test_profile_page_does_not_give_anyone_else_the_admin_tools(): void
@@ -48,8 +48,7 @@ class ProfileTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)->get('/profile')
-            ->assertDontSeeText('Filament Admin')
-            ->assertDontSee(route('admin.backup'));
+            ->assertDontSeeText('Filament Admin');
     }
 
     public function test_profile_page_offers_to_delete_the_account(): void
