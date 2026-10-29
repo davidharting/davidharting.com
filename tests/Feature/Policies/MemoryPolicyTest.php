@@ -19,8 +19,8 @@ beforeEach(function () {
     $this->september = CalendarMonth::of(2026, 9);
     $this->august = CalendarMonth::of(2026, 8);
     [$this->david, $this->katie] = User::factory()->count(2)->create();
-    MemoryParticipant::factory()->for($this->david)->create(['created_at' => '2026-03-15T12:00:00Z']);
-    MemoryParticipant::factory()->for($this->katie)->create(['created_at' => '2026-03-15T12:00:00Z']);
+    MemoryParticipant::factory()->for($this->david)->joinedIn(CalendarMonth::of(2026, 3))->create();
+    MemoryParticipant::factory()->for($this->katie)->joinedIn(CalendarMonth::of(2026, 3))->create();
 });
 
 describe('view()', function () {

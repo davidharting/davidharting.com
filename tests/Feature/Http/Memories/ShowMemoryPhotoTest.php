@@ -10,15 +10,15 @@ use Tests\TestCase;
 
 /**
  * The clock sits mid-October 2026: September has opened but not revealed,
- * and August has revealed. David and Katie became
- * the two participants back in March.
+ * and August has revealed. David and Katie became the two participants back
+ * in March.
  */
 beforeEach(function () {
     /** @var TestCase $this */
     $this->travelTo('2026-10-18T12:00:00Z');
     [$this->david, $this->katie] = User::factory()->count(2)->create();
-    MemoryParticipant::factory()->for($this->david)->create(['created_at' => '2026-03-15T12:00:00Z']);
-    MemoryParticipant::factory()->for($this->katie)->create(['created_at' => '2026-03-15T12:00:00Z']);
+    MemoryParticipant::factory()->for($this->david)->joinedIn(CalendarMonth::of(2026, 3))->create();
+    MemoryParticipant::factory()->for($this->katie)->joinedIn(CalendarMonth::of(2026, 3))->create();
 });
 
 /**

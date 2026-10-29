@@ -23,7 +23,7 @@ test('lists a user at most once', function () {
 })->throws(QueryException::class, 'memory_participants_user_id_unique');
 
 describe('featureIsEnabled()', function () {
-    test('is true with exactly two participants', function () {
+    test('is true with two participants once the month they joined in has ended', function () {
         /** @var TestCase $this */
         User::factory()->count(2)->create()
             ->each(fn (User $user) => MemoryParticipant::create(['user_id' => $user->id]));
@@ -51,6 +51,7 @@ describe('featureIsEnabled()', function () {
         /** @var TestCase $this */
         User::factory()->count($count)->create()
             ->each(fn (User $user) => MemoryParticipant::create(['user_id' => $user->id]));
+        $this->travel(2)->months();
 
         expect(MemoryParticipant::featureIsEnabled())->toBeFalse();
     })->with([0, 1, 3]);
