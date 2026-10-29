@@ -63,8 +63,9 @@ describe('filters', function () {
     test('by creator', function () {
         /** @var TestCase $this */
         $herbert = Creator::factory()->create(['name' => 'Frank Herbert']);
+        $asimov = Creator::factory()->create(['name' => 'Isaac Asimov']);
         Media::factory()->book()->create(['title' => 'Dune', 'creator_id' => $herbert->id]);
-        Media::factory()->book()->create(['title' => 'Foundation']);
+        Media::factory()->book()->create(['title' => 'Foundation', 'creator_id' => $asimov->id]);
 
         $response = PublicServer::tool(QueryMedia::class, ['creator' => 'herbert']);
 
