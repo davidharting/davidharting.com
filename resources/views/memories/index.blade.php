@@ -1,9 +1,12 @@
 <x-layout.memories>
     <div class="mx-auto max-w-xl" data-memories-page="list">
-        <div class="flex items-center gap-3">
-            <x-type.page-title class="text-5xl">Memories</x-type.page-title>
-            <x-memories.how-it-works />
-        </div>
+        <header>
+            <div class="flex items-center gap-3">
+                <x-type.page-title class="max-sm:text-4xl">Our Memories</x-type.page-title>
+                <x-memories.how-it-works />
+            </div>
+            <p class="text-base-content/70 mt-2 text-lg">Treasuring the life we built together</p>
+        </header>
 
         <div class="mt-8 space-y-4">
             @foreach ($monthsForViewer as $monthForViewer)
