@@ -7,17 +7,8 @@
                 <x-card title="Admin">
                     <ul class="space-y-2">
                         <li><a class="link link-primary" href="/admin">Filament Admin</a></li>
-                        <li>
-                            <form action="{{ route("admin.backup") }}" method="POST">
-                                @csrf
-                                <button type="submit" class="link link-primary">Backup database</button>
-                            </form>
-                        </li>
                         <li><a class="link link-primary" href="{{ route("kitchen-sink") }}">Kitchen Sink</a></li>
                     </ul>
-                    @error('backup')
-                        <div class="text-error mt-4">{{ $message }}</div>
-                    @enderror
                 </x-card>
             @endcan
 

@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DebugController;
 use App\Http\Controllers\EarlierMonthController;
 use App\Http\Controllers\FileShareController;
@@ -24,8 +23,6 @@ Route::get('/', function () {
 })->name('home')->middleware(ProvideMarkdownResponse::class);
 
 Route::withHead(robots: 'noindex, nofollow')->group(function () {
-    Route::post('/backend/backup', [AdminController::class, 'backupDatabase'])->name('admin.backup')->middleware('can:administrate');
-
     Route::get('/kitchen-sink', function () {
         return view('kitchen-sink');
     })->name('kitchen-sink')->withHead(
