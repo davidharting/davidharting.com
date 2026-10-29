@@ -157,7 +157,7 @@ describe('writing', function () {
     })->with([
         'the other person has shared' => ['katie', '2026-09', "David has shared. Share yours to read each other's."],
         'revealed before the viewer shared' => ['david', '2026-06', 'Katie will be able to read your memory as soon as you share it.'],
-        'the viewer shared before the reveal' => ['david', '2026-09', "Shared Oct 5. Edits still save as you type, and Katie sees them once you've both shared, or on Nov 1."],
+        'the viewer shared before the reveal' => ['david', '2026-09', "Shared Oct 5. Edits still save as you type, and you'll read each other's memories once Katie shares, or on Nov 1."],
         'the viewer shared and it revealed' => ['david', '2026-07', 'Edits still save as you type, and Katie sees them.'],
     ]);
 
@@ -205,7 +205,7 @@ describe('June, before its Aug 1 deadline', function () {
             ->set('body', 'June, at last.')
             ->call('share')
             ->assertSeeText('Shared.')
-            ->assertSeeText("You'll read each other's once Katie shares, or on Aug 1 at the latest.")
+            ->assertSeeText("You'll read each other's memories once Katie shares, or on Aug 1 at the latest.")
             ->assertSeeText('Back to June');
     });
 });

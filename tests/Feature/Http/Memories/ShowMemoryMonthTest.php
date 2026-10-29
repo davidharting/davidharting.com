@@ -31,7 +31,7 @@ describe('before the reveal', function () {
         $this->actingAs($this->david)->get('/memories/2026-09')
             ->assertSuccessful()
             ->assertSeeText('Katie started on Oct 3')
-            ->assertSeeText("You'll read each other's once Katie shares, or on Nov 1 at the latest.")
+            ->assertSeeText("You'll read each other's memories once Katie shares, or on Nov 1 at the latest.")
             ->assertDontSeeText('pumpkin patch');
     });
 

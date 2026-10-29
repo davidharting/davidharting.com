@@ -87,14 +87,14 @@ final readonly class MonthForViewer
     }
 
     /**
-     * For example "Open to read since Oct 1." or "Share yours to read each other's."
+     * For example "Revealed Oct 1." or "Share yours to read each other's."
      */
     public function revealStatusLabel(): string
     {
         $revealedAt = $this->month->revealedAt();
 
         if ($revealedAt !== null) {
-            return 'Open to read since '.CalendarMonth::dayLabel($revealedAt).'.';
+            return 'Revealed '.CalendarMonth::dayLabel($revealedAt).'.';
         }
 
         $deadline = CalendarMonth::dayLabel($this->month->revealDeadline());
@@ -102,9 +102,9 @@ final readonly class MonthForViewer
         if (! $this->viewerMemory?->isShared()) {
             return $this->otherMemory?->isShared()
                 ? "Share yours to read each other's."
-                : "You'll read each other's once you've both shared, or on {$deadline} at the latest.";
+                : "You'll read each other's memories once you've both shared, or on {$deadline} at the latest.";
         }
 
-        return "You'll read each other's once {$this->other->displayName()} shares, or on {$deadline} at the latest.";
+        return "You'll read each other's memories once {$this->other->displayName()} shares, or on {$deadline} at the latest.";
     }
 }

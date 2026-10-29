@@ -293,7 +293,7 @@ class Editor extends Component
 
             return $shared.($revealed
                 ? "{$other} sees them."
-                : "{$other} sees them once you've both shared, or on ".CalendarMonth::dayLabel($monthForViewer->month->revealDeadline()).'.');
+                : "you'll read each other's memories once {$other} shares, or on ".CalendarMonth::dayLabel($monthForViewer->month->revealDeadline()).'.');
         }
 
         if ($revealed) {
