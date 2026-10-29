@@ -90,3 +90,78 @@ html[data-memories-movement="none"]::view-transition-new(root) {
         translate: 0 24px;
     }
 }
+
+/*
+  Short, quiet touches on reacting, sharing and reading. A late share gets
+  the same as any other. Movements fill backwards, never forwards: a
+  translate held after it ends would trap fixed children, such as the
+  reactions' Undo toast, inside the moved element.
+*/
+
+/* A reaction you just added (resources/js/memory-reactions.js). */
+.pop-in {
+    animation: pop-in 320ms cubic-bezier(0.2, 0, 0, 1);
+}
+@keyframes pop-in {
+    0% {
+        scale: 0.5;
+    }
+    60% {
+        scale: 1.2;
+    }
+    100% {
+        scale: 1;
+    }
+}
+
+/* The screen after sharing: a check that draws itself, and lines that rise in after it. */
+.draw-stroke {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw-stroke 450ms 150ms ease-out forwards;
+}
+@keyframes draw-stroke {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+.rise-in {
+    animation: page-rise 300ms cubic-bezier(0.2, 0, 0, 1) backwards;
+}
+
+/* A share that reveals the month: the two initials slide in and meet. */
+.slide-in-from-left {
+    animation: slide-in-from-left 450ms cubic-bezier(0.2, 0, 0, 1) backwards;
+}
+.slide-in-from-right {
+    animation: slide-in-from-right 450ms cubic-bezier(0.2, 0, 0, 1) backwards;
+}
+@keyframes slide-in-from-left {
+    from {
+        opacity: 0;
+        translate: -40px 0;
+    }
+}
+@keyframes slide-in-from-right {
+    from {
+        opacity: 0;
+        translate: 40px 0;
+    }
+}
+
+/*
+  The other person's memory, the first time this device shows it after the
+  reveal (resources/views/components/memories/unveil.blade.php). An inline
+  script decides before the memory is first painted, and again when Back
+  restores the page, so a restored page doesn't replay it. Safari clears
+  site storage after weeks without a visit, so it can play again then.
+*/
+.fade-up {
+    animation: fade-up 500ms 200ms ease-out backwards;
+}
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        translate: 0 8px;
+    }
+}

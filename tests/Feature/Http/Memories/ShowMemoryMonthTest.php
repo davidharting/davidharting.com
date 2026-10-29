@@ -94,6 +94,19 @@ describe('after the reveal', function () {
             ->assertDontSeeText('Shared');
     });
 
+    test('includes the one-time unveil on their memory, but not on your own', function () {
+        /** @var TestCase $this */
+        $katiesJuly = Memory::where('user_id', $this->katie->id)->where('month_id', '2026-07-01')->sole();
+        $davidsJuly = Memory::where('user_id', $this->david->id)->where('month_id', '2026-07-01')->sole();
+
+        $this->actingAs($this->david)->get('/memories/2026-07')
+            ->assertSee("memory-unveiled-{$katiesJuly->id}", false);
+
+        $this->actingAs($this->david)->get('/memories/2026-07?who=yours')
+            ->assertDontSee('memory-unveiled-', false)
+            ->assertSeeText($davidsJuly->body);
+    });
+
     test('puts the reaction row between the text and the photos', function () {
         /** @var TestCase $this */
         $this->actingAs($this->katie)->get('/memories/2026-08')
