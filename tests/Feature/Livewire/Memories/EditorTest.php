@@ -331,7 +331,9 @@ describe('sharing', function () {
             ->set('body', 'The pumpkin patch, finished.')
             ->call('share')
             ->assertSeeText('September is revealed.')
-            ->assertSeeText('Read David\'s →', false);
+            ->assertSeeText('Read David\'s →', false)
+            ->assertSee('moment-meet-from-left', false)
+            ->assertDontSee('moment-draw', false);
 
         expect(storedMemoryOf($this->katie, '2026-09'))
             ->body->toBe('The pumpkin patch, finished.')
@@ -347,6 +349,25 @@ describe('sharing', function () {
             ->call('share')
             ->assertSeeText('June is revealed.')
             ->assertSeeText('Back to June');
+    });
+
+    test('marks a late share with the same check as any other share, not the reveal moment', function () {
+        /** @var TestCase $this */
+        editorFor($this->david, '2026-06')
+            ->set('body', 'Better late.')
+            ->call('share')
+            ->assertSee('moment-draw', false)
+            ->assertDontSee('moment-meet-from-left', false);
+    });
+
+    test('marks a share that doesn\'t reveal the month with the check', function () {
+        /** @var TestCase $this */
+        storedMemoryOf($this->david, '2026-09')->update(['shared_at' => null]);
+
+        editorFor($this->katie, '2026-09')
+            ->call('share')
+            ->assertSeeText('Shared.')
+            ->assertSee('moment-draw', false);
     });
 
     test('goes back to editing from the screen after sharing', function () {

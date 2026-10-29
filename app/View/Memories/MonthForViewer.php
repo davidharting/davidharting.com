@@ -40,6 +40,22 @@ final readonly class MonthForViewer
         return Gate::forUser($this->viewer)->allows('view', $this->otherMemory) ? $this->otherMemory : null;
     }
 
+    /**
+     * Whether the viewer's share is what revealed the month: they shared
+     * second, before the deadline. A late share, after the deadline, isn't.
+     */
+    public function viewerShareRevealed(): bool
+    {
+        $sharedAt = $this->viewerMemory?->shared_at;
+        $revealedAt = $this->month->revealedAt();
+
+        if ($sharedAt === null || $revealedAt === null) {
+            return false;
+        }
+
+        return $revealedAt->equalTo($sharedAt);
+    }
+
     public function viewerMissed(): bool
     {
         return $this->month->missedBy($this->viewer);

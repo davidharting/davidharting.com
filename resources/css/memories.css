@@ -90,3 +90,75 @@ html[data-memories-movement="none"]::view-transition-new(root) {
         translate: 0 24px;
     }
 }
+
+/*
+  Small moments: each one is short and quiet, and plays the same for a late
+  share as for any other.
+*/
+
+/* A reaction you just added (resources/js/memory-reactions.js). */
+.moment-pop {
+    animation: moment-pop 320ms cubic-bezier(0.2, 0, 0, 1);
+}
+@keyframes moment-pop {
+    0% {
+        scale: 0.5;
+    }
+    60% {
+        scale: 1.2;
+    }
+    100% {
+        scale: 1;
+    }
+}
+
+/* The screen after sharing: a check that draws itself, and lines that rise in after it. */
+.moment-draw {
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: moment-draw 450ms 150ms ease-out forwards;
+}
+@keyframes moment-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+.moment-rise {
+    animation: page-rise 300ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* A share that reveals the month: the two initials slide in and meet. */
+.moment-meet-from-left {
+    animation: moment-meet-from-left 450ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+.moment-meet-from-right {
+    animation: moment-meet-from-right 450ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+@keyframes moment-meet-from-left {
+    from {
+        opacity: 0;
+        translate: -40px 0;
+    }
+}
+@keyframes moment-meet-from-right {
+    from {
+        opacity: 0;
+        translate: 40px 0;
+    }
+}
+
+/*
+  The other person's memory, the first time this device shows it after the
+  reveal (resources/views/components/memories/unveil.blade.php). An inline
+  script decides before the memory is first painted, and again when Back
+  restores the page, so a restored page doesn't replay it.
+*/
+.moment-unveil {
+    animation: moment-unveil 500ms 200ms ease-out both;
+}
+@keyframes moment-unveil {
+    from {
+        opacity: 0;
+        translate: 0 8px;
+    }
+}

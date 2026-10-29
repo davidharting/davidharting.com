@@ -236,8 +236,16 @@
     @if ($justShared)
         <div class="bg-base-100 fixed inset-0 z-40 flex flex-col items-center justify-center px-8 text-center">
             @if ($monthForViewer->month->hasRevealed())
-                <p class="text-4xl">{{ $month->name() }} is revealed.</p>
-                <div class="mt-8 flex flex-col gap-2 font-sans">
+                @if ($monthForViewer->viewerShareRevealed())
+                    <div class="flex" aria-hidden="true">
+                        <span class="moment-meet-from-left bg-primary text-primary-content inline-flex size-14 items-center justify-center rounded-full font-sans text-xl">{{ mb_substr($otherName, 0, 1) }}</span>
+                        <span class="moment-meet-from-right bg-primary text-primary-content ring-base-100 -ml-3 inline-flex size-14 items-center justify-center rounded-full font-sans text-xl ring-4">{{ mb_substr($monthForViewer->viewer->displayName(), 0, 1) }}</span>
+                    </div>
+                @else
+                    <x-memories.shared-check />
+                @endif
+                <p class="moment-rise mt-6 text-4xl [animation-delay:250ms]">{{ $month->name() }} is revealed.</p>
+                <div class="moment-rise mt-8 flex flex-col gap-2 font-sans [animation-delay:350ms]">
                     @if ($monthForViewer->revealedOtherMemory())
                         <a class="btn btn-primary" href="{{ route("memories.show", $month->toYearMonth()) }}"
                             >Read {{ $otherName }}'s →</a>
@@ -250,9 +258,12 @@
                     <button type="button" class="btn btn-ghost" wire:click="keepEditing">Keep editing yours</button>
                 </div>
             @else
-                <p class="text-4xl">Shared.</p>
-                <p class="mt-4 text-lg">{{ $monthForViewer->revealStatusLabel() }}</p>
-                <div class="mt-8 flex flex-col gap-2 font-sans">
+                <x-memories.shared-check />
+                <p class="moment-rise mt-6 text-4xl [animation-delay:150ms]">Shared.</p>
+                <p class="moment-rise mt-4 text-lg [animation-delay:200ms]">
+                    {{ $monthForViewer->revealStatusLabel() }}
+                </p>
+                <div class="moment-rise mt-8 flex flex-col gap-2 font-sans [animation-delay:300ms]">
                     <a
                         class="btn btn-primary"
                         href="{{ route("memories.show", ["month" => $month->toYearMonth(), "who" => "yours"]) }}"
