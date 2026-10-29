@@ -20,14 +20,17 @@ document.addEventListener("alpine:init", () => {
         justAdded: null,
         segmenter: new Intl.Segmenter(),
 
-        add(emoji) {
+        async add(emoji) {
             this.justAdded = emoji;
-            setTimeout(() => {
-                if (this.justAdded === emoji) {
-                    this.justAdded = null;
-                }
-            }, POP_LASTS_MILLISECONDS);
-            this.$wire.add(emoji);
+            try {
+                await this.$wire.add(emoji);
+            } finally {
+                setTimeout(() => {
+                    if (this.justAdded === emoji) {
+                        this.justAdded = null;
+                    }
+                }, POP_LASTS_MILLISECONDS);
+            }
         },
 
         quickPick(emoji) {

@@ -94,7 +94,7 @@ describe('after the reveal', function () {
             ->assertDontSeeText('Shared');
     });
 
-    test('unveils their memory the first time the device shows it, but never your own', function () {
+    test('includes the one-time unveil on their memory, but not on your own', function () {
         /** @var TestCase $this */
         $katiesJuly = Memory::where('user_id', $this->katie->id)->where('month_id', '2026-07-01')->sole();
         $davidsJuly = Memory::where('user_id', $this->david->id)->where('month_id', '2026-07-01')->sole();

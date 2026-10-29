@@ -114,8 +114,8 @@ html[data-memories-movement="none"]::view-transition-new(root) {
 
 /* The screen after sharing: a check that draws itself, and lines that rise in after it. */
 .moment-draw {
-    stroke-dasharray: 60;
-    stroke-dashoffset: 60;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
     animation: moment-draw 450ms 150ms ease-out forwards;
 }
 @keyframes moment-draw {
@@ -151,7 +151,8 @@ html[data-memories-movement="none"]::view-transition-new(root) {
   The other person's memory, the first time this device shows it after the
   reveal (resources/views/components/memories/unveil.blade.php). An inline
   script decides before the memory is first painted, and again when Back
-  restores the page, so a restored page doesn't replay it.
+  restores the page, so a restored page doesn't replay it. Safari clears
+  site storage after weeks without a visit, so it can play again then.
 */
 .moment-unveil {
     animation: moment-unveil 500ms 200ms ease-out both;

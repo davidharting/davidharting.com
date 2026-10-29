@@ -360,6 +360,18 @@ describe('sharing', function () {
             ->assertDontSee('moment-meet-from-left', false);
     });
 
+    test('marks a late share with the check even when the other person shared on time', function () {
+        /** @var TestCase $this */
+        // Katie shared August on time; David's share comes after its Oct 1 deadline.
+        storedMemoryOf($this->david, '2026-08')->update(['shared_at' => null]);
+
+        editorFor($this->david, '2026-08')
+            ->call('share')
+            ->assertSeeText('August is revealed.')
+            ->assertSee('moment-draw', false)
+            ->assertDontSee('moment-meet-from-left', false);
+    });
+
     test('marks a share that doesn\'t reveal the month with the check', function () {
         /** @var TestCase $this */
         storedMemoryOf($this->david, '2026-09')->update(['shared_at' => null]);
