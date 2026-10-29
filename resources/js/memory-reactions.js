@@ -4,6 +4,7 @@
  * the first emoji typed into it is sent, after which the keyboard closes.
  * Anything else typed is dropped. The reaction you just added pops in, but
  * not the ones already there when the page loads or added by someone else.
+ * One brought back by Undo pops back into its place too.
  *
  * The emoji test here is looser than the server's, in
  * App\Support\Emoji, which has the final say.
@@ -18,12 +19,17 @@ document.addEventListener("alpine:init", () => {
         notice: null,
         noticeTimer: null,
         justAdded: null,
+        removed: null,
         segmenter: new Intl.Segmenter(),
 
-        async add(emoji) {
+        add(emoji) {
+            this.popWhenBack(emoji, () => this.$wire.add(emoji));
+        },
+
+        async popWhenBack(emoji, request) {
             this.justAdded = emoji;
             try {
-                await this.$wire.add(emoji);
+                await request();
             } finally {
                 setTimeout(() => {
                     if (this.justAdded === emoji) {
@@ -76,12 +82,13 @@ document.addEventListener("alpine:init", () => {
             }
 
             clearTimeout(this.noticeTimer);
+            this.removed = emoji;
             this.notice = `Removed ${emoji}`;
             this.noticeTimer = setTimeout(() => (this.notice = null), 6000);
         },
 
         undo() {
-            this.$wire.undo();
+            this.popWhenBack(this.removed, () => this.$wire.undo());
             clearTimeout(this.noticeTimer);
             this.notice = null;
         },
