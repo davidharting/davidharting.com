@@ -155,9 +155,9 @@ describe('writing', function () {
         /** @var TestCase $this */
         editorFor($this->{$viewer}, $month)->assertSeeText($line);
     })->with([
-        'the other person has shared' => ['katie', '2026-09', 'David has shared. Share yours to reveal both.'],
-        'revealed before the viewer shared' => ['david', '2026-06', 'June has revealed, so Katie can read yours as soon as you share it.'],
-        'the viewer shared before the reveal' => ['david', '2026-09', 'Shared Oct 5. Edits still save as you type, and Katie sees them once September is revealed.'],
+        'the other person has shared' => ['katie', '2026-09', "David has shared. Share yours to read each other's."],
+        'revealed before the viewer shared' => ['david', '2026-06', 'Katie will be able to read your memory as soon as you share it.'],
+        'the viewer shared before the reveal' => ['david', '2026-09', "Shared Oct 5. Edits still save as you type, and Katie sees them once you've both shared, or on Nov 1."],
         'the viewer shared and it revealed' => ['david', '2026-07', 'Edits still save as you type, and Katie sees them.'],
     ]);
 
@@ -205,7 +205,7 @@ describe('June, before its Aug 1 deadline', function () {
             ->set('body', 'June, at last.')
             ->call('share')
             ->assertSeeText('Shared.')
-            ->assertSeeText('Reveals when Katie shares, or on Aug 1 at the latest.')
+            ->assertSeeText("You'll read each other's once Katie shares, or on Aug 1 at the latest.")
             ->assertSeeText('Back to June');
     });
 });
@@ -318,11 +318,11 @@ describe('another device', function () {
 });
 
 describe('sharing', function () {
-    test('says in the Share sheet that September reveals as soon as you share, once David has', function () {
+    test('says in the Share sheet that you can read each other\'s as soon as you share, once David has', function () {
         /** @var TestCase $this */
         editorFor($this->katie, '2026-09')
             ->assertSeeText('Share with David…')
-            ->assertSeeText('David has shared, so September reveals as soon as you do.');
+            ->assertSeeText("David has shared, so you can read each other's as soon as you do.");
     });
 
     test('reveals the month when the second person shares', function () {
@@ -342,7 +342,7 @@ describe('sharing', function () {
         /** @var TestCase $this */
         // Katie has no June memory, so there's nothing of hers to read and the button goes back to June.
         editorFor($this->david, '2026-06')
-            ->assertSeeText('June has already revealed, so Katie can read it right away.')
+            ->assertSeeText('Katie can read it right away.')
             ->set('body', 'Better late.')
             ->call('share')
             ->assertSeeText('June is revealed.')
