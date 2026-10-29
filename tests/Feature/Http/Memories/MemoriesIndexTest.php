@@ -41,7 +41,7 @@ test('lists every month since launch, then the earlier months someone wrote abou
         ->assertDontSeeText('October 2024');
 });
 
-test('titles the page Memories', function () {
+test('keeps the browser tab title as Memories', function () {
     /** @var TestCase $this */
     $response = $this->get('/memories');
 
