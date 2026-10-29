@@ -92,7 +92,7 @@ final readonly class MonthForViewer
     }
 
     /**
-     * For example "Revealed Oct 1." or "Share yours to reveal both."
+     * For example "Revealed Oct 1." or "Share yours to read each other's."
      */
     public function revealStatusLabel(): string
     {
@@ -106,10 +106,10 @@ final readonly class MonthForViewer
 
         if (! $this->viewerMemory?->isShared()) {
             return $this->otherMemory?->isShared()
-                ? 'Share yours to reveal both.'
-                : "Reveals when you've both shared, or on {$deadline} at the latest.";
+                ? "Share yours to read each other's."
+                : "You'll read each other's memories once you've both shared, or on {$deadline} at the latest.";
         }
 
-        return "Reveals when {$this->other->displayName()} shares, or on {$deadline} at the latest.";
+        return "You'll read each other's memories once {$this->other->displayName()} shares, or on {$deadline} at the latest.";
     }
 }

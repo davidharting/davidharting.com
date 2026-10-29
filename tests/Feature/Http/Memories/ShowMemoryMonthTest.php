@@ -31,7 +31,7 @@ describe('before the reveal', function () {
         $this->actingAs($this->david)->get('/memories/2026-09')
             ->assertSuccessful()
             ->assertSeeText('Katie started on Oct 3')
-            ->assertSeeText('Reveals when Katie shares, or on Nov 1 at the latest.')
+            ->assertSeeText("You'll read each other's memories once Katie shares, or on Nov 1 at the latest.")
             ->assertDontSeeText('pumpkin patch');
     });
 
@@ -54,7 +54,7 @@ describe('before the reveal', function () {
         /** @var TestCase $this */
         $this->actingAs($this->katie)->get('/memories/2026-09')
             ->assertSeeText('David shared on Oct 5')
-            ->assertSeeText('Share yours to reveal both.')
+            ->assertSeeText("Share yours to read each other's.")
             ->assertDontSeeText('It snowed for the first time');
     });
 

@@ -279,7 +279,7 @@ class Editor extends Component
 
     /**
      * The one line above the text about where the month stands, for example
-     * "Katie has shared. Share yours to reveal both."
+     * "Katie has shared. Share yours to read each other's."
      */
     protected function standingLabel(): string
     {
@@ -293,11 +293,11 @@ class Editor extends Component
 
             return $shared.($revealed
                 ? "{$other} sees them."
-                : "{$other} sees them once {$this->calendarMonth()->name()} is revealed.");
+                : "you'll read each other's memories once {$other} shares, or on ".CalendarMonth::dayLabel($monthForViewer->month->revealDeadline()).'.');
         }
 
         if ($revealed) {
-            return "{$this->calendarMonth()->name()} has revealed, so {$other} can read yours as soon as you share it.";
+            return "{$other} will be able to read your memory as soon as you share it.";
         }
 
         if ($otherMemory === null) {
@@ -308,7 +308,7 @@ class Editor extends Component
             return "{$other} started on ".CalendarMonth::dayLabel($otherMemory->created_at)." and hasn't shared yet.";
         }
 
-        return "{$other} has shared. Share yours to reveal both.";
+        return "{$other} has shared. Share yours to read each other's.";
     }
 
     /**
@@ -318,14 +318,13 @@ class Editor extends Component
     {
         $monthForViewer = $this->monthForViewer;
         $other = $monthForViewer->other->displayName();
-        $name = $this->calendarMonth()->name();
 
         if ($monthForViewer->month->hasRevealed()) {
-            return "{$name} has already revealed, so {$other} can read it right away.";
+            return "{$other} can read it right away.";
         }
 
         if ($monthForViewer->otherMemory?->isShared()) {
-            return "{$other} has shared, so {$name} reveals as soon as you do.";
+            return "{$other} has shared, so you can read each other's as soon as you do.";
         }
 
         return "{$other} can read it once you've both shared, or on ".CalendarMonth::dayLabel($monthForViewer->month->revealDeadline()).'.';
