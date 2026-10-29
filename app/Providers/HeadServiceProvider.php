@@ -39,10 +39,11 @@ class HeadServiceProvider extends ServiceProvider
                 ->pwa(
                     name: self::SITE_NAME,
                     manifest: '/manifest.json',
-                    themeColor: '#1a1a2e',
                     appleTouchIcon: '/icons/apple-touch-icon.png',
                     appleWebAppStatusBarStyle: 'black',
                 )
+                ->themeColor('#f8f1e3', media: '(prefers-color-scheme: light)')
+                ->themeColor('#21110a', media: '(prefers-color-scheme: dark)')
                 ->feed(
                     url(config('feed.feeds.main.url')),
                     title: config('feed.feeds.main.title'),
