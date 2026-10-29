@@ -276,6 +276,15 @@
 }
 
 /*
+  Browsers with customizable selects (iOS Safari 26, Chrome) draw Daisy's
+  option list with the select's own background, which select-ghost makes
+  transparent. Give the list the page background so it covers what's beneath.
+*/
+.select::picker(select) {
+    background-color: var(--color-base-100);
+}
+
+/*
   Grows something small to the 44px tap target Apple and WCAG recommend,
   without changing how it looks.
 */
