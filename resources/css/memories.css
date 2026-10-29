@@ -93,7 +93,9 @@ html[data-memories-movement="none"]::view-transition-new(root) {
 
 /*
   Short, quiet touches on reacting, sharing and reading. A late share gets
-  the same as any other.
+  the same as any other. Movements fill backwards, never forwards: a
+  translate held after it ends would trap fixed children, such as the
+  reactions' Undo toast, inside the moved element.
 */
 
 /* A reaction you just added (resources/js/memory-reactions.js). */
@@ -124,15 +126,15 @@ html[data-memories-movement="none"]::view-transition-new(root) {
     }
 }
 .rise-in {
-    animation: page-rise 300ms cubic-bezier(0.2, 0, 0, 1) both;
+    animation: page-rise 300ms cubic-bezier(0.2, 0, 0, 1) backwards;
 }
 
 /* A share that reveals the month: the two initials slide in and meet. */
 .slide-in-from-left {
-    animation: slide-in-from-left 450ms cubic-bezier(0.2, 0, 0, 1) both;
+    animation: slide-in-from-left 450ms cubic-bezier(0.2, 0, 0, 1) backwards;
 }
 .slide-in-from-right {
-    animation: slide-in-from-right 450ms cubic-bezier(0.2, 0, 0, 1) both;
+    animation: slide-in-from-right 450ms cubic-bezier(0.2, 0, 0, 1) backwards;
 }
 @keyframes slide-in-from-left {
     from {
@@ -155,7 +157,7 @@ html[data-memories-movement="none"]::view-transition-new(root) {
   site storage after weeks without a visit, so it can play again then.
 */
 .fade-up {
-    animation: fade-up 500ms 200ms ease-out both;
+    animation: fade-up 500ms 200ms ease-out backwards;
 }
 @keyframes fade-up {
     from {
