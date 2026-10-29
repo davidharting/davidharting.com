@@ -16,24 +16,16 @@ step() {
 	echo "    done in $((SECONDS - start))s"
 }
 
-# PHP 8.4 with the PCOV coverage driver from Ondřej Surý's Debian repository
-# (Debian 12's own PHP is only 8.2). Pest's --tia needs PCOV, and the
-# Herd-lite static binary used before cannot load extensions. Composer is
-# still Herd's phar. The CLI php.ini has no memory limit, which the parallel
-# test suite needs.
+# PHP 8.4 as Herd-lite's static Linux binary: the same build mise installs on
+# macOS (mise.toml), with pdo_pgsql/intl/zip/pcntl compiled in, and matching
+# composer.json's config.platform.php. Debian 12's apt PHP is only 8.2.
 install_php() {
-	if ! php -m 2>/dev/null | grep -qx pcov; then
-		# Orbs snapshotted before the switch have Herd-lite here, ahead of apt's PHP.
-		sudo rm -f /usr/local/bin/php /usr/local/etc/php/conf.d/orb.ini
-		sudo curl -fsSL -o /usr/share/keyrings/deb.sury.org-php.gpg https://packages.sury.org/php/apt.gpg
-		echo "deb [signed-by=/usr/share/keyrings/deb.sury.org-php.gpg] https://packages.sury.org/php/ bookworm main" |
-			sudo tee /etc/apt/sources.list.d/php.list >/dev/null
-		sudo apt-get update -qq
-		sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
-			php8.4-cli php8.4-bcmath php8.4-curl php8.4-gd php8.4-gmp php8.4-intl \
-			php8.4-mbstring php8.4-pgsql php8.4-sqlite3 php8.4-xml php8.4-zip php8.4-pcov
-		sudo update-alternatives --set php /usr/bin/php8.4
-		hash -r
+	if ! command -v php >/dev/null 2>&1; then
+		local tmp
+		tmp="$(mktemp)"
+		curl -fsSL -o "$tmp" https://download.herdphp.com/herd-lite/linux/x64/8.4/php
+		sudo install -m 0755 "$tmp" /usr/local/bin/php
+		rm -f "$tmp"
 	fi
 	if ! command -v composer >/dev/null 2>&1; then
 		local tmp
@@ -41,6 +33,13 @@ install_php() {
 		curl -fsSL -o "$tmp" https://download.herdphp.com/herd-lite/composer
 		sudo install -m 0755 "$tmp" /usr/local/bin/composer
 		rm -f "$tmp"
+	fi
+	# The static binary has no php.ini; its 128M default is too small for the
+	# parallel test suite. The Dockerfile uses 256M for Octane workers.
+	local ini=/usr/local/etc/php/conf.d/orb.ini
+	if [ ! -f "$ini" ]; then
+		sudo install -d /usr/local/etc/php/conf.d
+		echo "memory_limit = 512M" | sudo tee "$ini" >/dev/null
 	fi
 	php -v | head -n 1
 }
