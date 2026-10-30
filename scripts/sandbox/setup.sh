@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bootstraps a Claude Code cloud sandbox: PHP 8.4, Node 24, libvips,
+# Bootstraps a Claude Code cloud sandbox: PHP 8.4 with PCOV, Node 24, libvips,
 # exiftool, vendor/, node_modules/, .env and PostgreSQL. Point the cloud environment's setup
 # script at this file. Safe to re-run.
 #
@@ -20,9 +20,17 @@ ARTIFACTS_API="https://api.github.com/repos/davidharting/davidharting.com/action
 # ~/.local/bin comes before the image's own PHP and Node on the sandbox PATH.
 mkdir -p "$BIN_DIR"
 
-echo "Installing PHP 8.4 (Herd Lite static binary)"
-curl -fsSL -o "$BIN_DIR/php" https://download.herdphp.com/herd-lite/linux/x64/8.4/php
-chmod +x "$BIN_DIR/php"
+# PHP 8.4 comes from Ondřej Surý's PPA, the same packages CI's setup-php
+# installs, rather than the Herd Lite static binary: Herd Lite's Linux build is
+# static musl and cannot load extensions, and Pest's --tia needs the PCOV
+# coverage driver.
+echo "Installing PHP 8.4 with PCOV (ondrej/php PPA)"
+rm -f "$BIN_DIR/php" # Herd Lite, from earlier runs of this script
+PHP_KEYRING=/usr/share/keyrings/ondrej-php.gpg
+[ -f "$PHP_KEYRING" ] || curl -fsSL 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14AA40EC0831756756D7F66C4F4EA0AAE5267A6C' \
+    | gpg --dearmor -o "$PHP_KEYRING"
+echo "deb [signed-by=$PHP_KEYRING] https://ppa.launchpadcontent.net/ondrej/php/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") main" \
+    > /etc/apt/sources.list.d/ondrej-php.list
 
 NODE_VERSION="$(curl -fsSL https://nodejs.org/dist/index.json | grep -oE '"version":"v24\.[0-9]+\.[0-9]+"' | head -1 | cut -d'"' -f4)"
 echo "Installing Node $NODE_VERSION"
@@ -33,10 +41,14 @@ done
 export PATH="$BIN_DIR:$PATH"
 
 # vipsthumbnail processes memory photos; exiftool lets tests inspect the result.
-echo "Installing libvips and exiftool"
+echo "Installing PHP, libvips and exiftool"
 apt-get update -qq
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+    php8.4-cli php8.4-bcmath php8.4-curl php8.4-gd php8.4-gmp php8.4-intl \
+    php8.4-mbstring php8.4-pgsql php8.4-sqlite3 php8.4-xml php8.4-zip php8.4-pcov \
     libvips-tools libheif-plugin-libde265 libimage-exiftool-perl
+# The image ships PHP 8.3 as /usr/bin/php.
+update-alternatives --set php /usr/bin/php8.4
 
 cd "$REPO_DIR"
 

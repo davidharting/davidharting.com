@@ -9,7 +9,7 @@ Quick check: if `php artisan test` fails with autoload errors, run the setup.
 ### Environments
 
 - **Local macOS**: dev runs through mise + pitchfork. Use `mise run setup` once, then `mise run dev` to bring up the stack (postgres, octane, queue, vite). See the macOS section of [docs/development-setup.md](docs/development-setup.md).
-- **Claude Code cloud sandboxes**: the environment's setup script runs `scripts/sandbox/setup.sh`, which puts PHP 8.4 and Node 24 in `~/.local/bin`, apt-installs libvips and exiftool for photo processing, installs `vendor/` and `node_modules/`, builds the Vite assets, and sets up `.env` and PostgreSQL so `php artisan test --parallel` works with no exports. If `php -v` shows 8.3 or `vendor/` is missing, the setup script didn't run: run `bash scripts/sandbox/setup.sh` yourself, then the Linux rules below apply.
+- **Claude Code cloud sandboxes**: the environment's setup script runs `scripts/sandbox/setup.sh`, which apt-installs PHP 8.4 with PCOV from the ondrej/php PPA, puts Node 24 in `~/.local/bin`, apt-installs libvips and exiftool for photo processing, installs `vendor/` and `node_modules/`, builds the Vite assets, and sets up `.env` and PostgreSQL so `php artisan test --parallel` works with no exports. If `php -v` shows 8.3, `php -m` lacks `pcov`, or `vendor/` is missing, the setup script didn't run: run `bash scripts/sandbox/setup.sh` yourself, then the Linux rules below apply.
 - **Remote / CI / preconfigured Linux containers** (e.g. a cloud coding agent): tools are already installed — **do not install mise or run pitchfork**. Run `php artisan`, `vendor/bin/pint`, and `npm` directly, and follow the Linux/sandboxed section of [docs/development-setup.md](docs/development-setup.md). `mise run <task>` is a local convenience, not a requirement; the underlying commands work without it.
 - **Amp orbs**: `.agents/setup` installs PHP 8.4 (Herd-lite), Composer, PostgreSQL 17 (systemd), libvips and exiftool, installs dependencies, builds assets, and migrates and seeds the dev database. Run `amp orb services ensure` to start the dev stack from `.amp/services.yaml`: the Vite dev server is the portal (HMR included) and proxies every non-asset request to `php artisan serve`, plus a queue worker. The seeded admin login is `admin@example.com` / `password`.
 
@@ -109,15 +109,22 @@ Renames are the quiet case: `RENAME COLUMN` and `RENAME TABLE` succeed, and Post
 
 - Use `ripgrep` to search files and `fd` to find files
 - Use `php artisan` for Laravel commands
-- Run tests: `php artisan test` (pass a file path to run one file)
-- Run the whole suite fast: `php artisan test --compact --parallel` (~5.5s vs ~18s serial). Laravel creates and migrates the per-process `laravel_test_test_N` databases itself, so no setup is needed.
+- Run tests while developing: `vendor/bin/pest --tia --compact`. Test Impact Analysis runs only the tests your changes affect and replays cached results for the rest. See below.
+- Run one file: `vendor/bin/pest --compact tests/Feature/SomeTest.php`.
+- Run the whole suite: `vendor/bin/pest --compact --parallel`. Laravel creates and migrates the per-process `laravel_test_test_N` databases itself, so no setup is needed.
 - Run tests with previously failed tests first, stopping on first failure: `php artisan test --compact --retry --bail`
 - Verify a one-off behavior without writing a throwaway test: `vendor/bin/pest --agent='<php>'` (single outer quotes). See the `pest-plugin-agent` skill.
 - Format code: `mise run format` (or `vendor/bin/pint && npm run format` where mise isn't available). Pint's Blade rule shells out to Node, so `node_modules` must be installed before Pint will run.
 
-### Pest's Tia engine is unavailable here
+### Test Impact Analysis (TIA)
 
-The bundled `pest-testing` skill recommends `--tia` (Test Impact Analysis). **Ignore it in this project.** Tia needs a PCOV or Xdebug coverage driver, and our PHP is a Herd-lite static binary with neither — it cannot load extensions at all. `pest --tia` prints `TIA is skipped as it needs ext-pcov or Xdebug` and quietly runs the full suite, so the flag buys nothing. Reach for `--parallel` instead.
+TIA is opt-in: pass `--tia`. Use it in your dev loop. After each change, run `vendor/bin/pest --tia --compact` instead of the whole suite or a guessed list of files. Before you open or update a PR, run the whole suite once without `--tia`. CI never uses TIA.
+
+- The first `--tia` run in a clone records which source files each test touches. It runs everything with coverage on, so add `--parallel` to it (about 45s in a cloud sandbox, against 2.5 minutes serial). Later runs re-run only the tests whose files changed since the last TIA run, plus failed tests, and replay the rest in a few seconds. The summary line reports `affected` and `replayed` counts.
+- Edits that only touch comments or whitespace re-run nothing.
+- `--tia --fresh` throws the map away and records it again.
+- TIA needs the PCOV coverage driver (`php -m | grep pcov`). Without it, `--tia` prints `TIA is skipped as it needs ext-pcov or Xdebug` and runs the full suite. Cloud sandboxes get PCOV from their setup script; macOS and Amp orbs don't have it yet.
+- TIA refuses PHPUnit-class tests. Write every test as a Pest closure.
 
 ## Rules
 

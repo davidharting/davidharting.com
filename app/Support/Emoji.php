@@ -21,7 +21,7 @@ final class Emoji
      */
     public static function isEmoji(string $text): bool
     {
-        if (strlen($text) > self::MAX_BYTES || preg_match('/^\X$/u', $text) !== 1) {
+        if (strlen($text) > self::MAX_BYTES || grapheme_strlen($text) !== 1) {
             return false;
         }
 

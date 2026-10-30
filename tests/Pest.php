@@ -23,6 +23,20 @@ uses(
 
 /*
 |--------------------------------------------------------------------------
+| Test Impact Analysis
+|--------------------------------------------------------------------------
+|
+| Opt in with --tia: the first run records which source files each test
+| touches, and later runs replay all but the tests a change affects. It needs
+| the PCOV coverage driver. Naming the default branch saves clones without
+| origin/HEAD from stopping to ask.
+|
+*/
+
+pest()->tia()->defaultBranch('main');
+
+/*
+|--------------------------------------------------------------------------
 | Expectations
 |--------------------------------------------------------------------------
 |

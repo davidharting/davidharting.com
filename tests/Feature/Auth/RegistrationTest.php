@@ -1,56 +1,48 @@
 <?php
 
-namespace Tests\Feature\Auth;
-
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class RegistrationTest extends TestCase
-{
-    use RefreshDatabase;
+test('registration screen is not available', function () {
+    /** @var TestCase $this */
+    $response = $this->get('/register');
 
-    public function test_registration_screen_is_not_available(): void
-    {
-        $response = $this->get('/register');
+    $response->assertNotFound();
+});
 
-        $response->assertNotFound();
-    }
+test('new users cannot register', function () {
+    /** @var TestCase $this */
+    $response = $this->post('/register', [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ]);
 
-    public function test_new_users_cannot_register(): void
-    {
-        $response = $this->post('/register', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ]);
+    $response->assertNotFound();
+    $this->assertGuest();
+    $this->assertDatabaseMissing('users', ['email' => 'test@example.com']);
+});
 
-        $response->assertNotFound();
-        $this->assertGuest();
-        $this->assertDatabaseMissing('users', ['email' => 'test@example.com']);
-    }
+test('registration screen can be rendered when reopened', function () {
+    /** @var TestCase $this */
+    config()->set('features.public_registration', true);
 
-    public function test_registration_screen_can_be_rendered_when_reopened(): void
-    {
-        config()->set('features.public_registration', true);
+    $response = $this->get('/register');
 
-        $response = $this->get('/register');
+    $response->assertStatus(200);
+});
 
-        $response->assertStatus(200);
-    }
+test('new users can register when reopened', function () {
+    /** @var TestCase $this */
+    config()->set('features.public_registration', true);
 
-    public function test_new_users_can_register_when_reopened(): void
-    {
-        config()->set('features.public_registration', true);
+    $response = $this->post('/register', [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ]);
 
-        $response = $this->post('/register', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ]);
-
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('profile.edit', absolute: false));
-    }
-}
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('profile.edit', absolute: false));
+});

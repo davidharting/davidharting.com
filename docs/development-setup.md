@@ -100,7 +100,19 @@ npm run build
 ### 6. Run Tests
 
 ```bash
-php artisan test
+vendor/bin/pest --compact --parallel
 ```
 
-All tests should pass.
+All tests should pass. While developing, `vendor/bin/pest --tia --compact` re-runs only what your changes affect. See the next section.
+
+## Test Impact Analysis (PCOV)
+
+Pest's Test Impact Analysis (TIA) is opt-in with `--tia`. TIA needs a coverage driver, and this project uses PCOV, which only collects coverage. Step debugging needs Xdebug and isn't set up.
+
+Herd Lite's Linux binary is static musl and cannot load extensions, and static-php-cli can only build PCOV as a loadable extension, so no Herd Lite build will ever include it. That is why the cloud sandbox installs PHP from apt instead:
+
+- **Claude Code cloud sandboxes (Ubuntu):** `scripts/sandbox/setup.sh` installs `php8.4-*` and `php8.4-pcov` from the [ondrej/php PPA](https://launchpad.net/~ondrej/+archive/ubuntu/php).
+- **macOS and Amp orbs:** not set up yet. They still use Herd Lite, so `--tia` is skipped and runs the full suite.
+- **CI:** no driver needed. CI doesn't pass `--tia`, so it runs the whole suite.
+
+Check it works by running `vendor/bin/pest --tia --compact --parallel` twice: the second run's summary should say every test was `replayed`.

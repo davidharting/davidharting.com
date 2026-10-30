@@ -1,157 +1,149 @@
 <?php
 
-namespace Tests\Feature\Auth;
-
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
-class PasswordResetTest extends TestCase
-{
-    use RefreshDatabase;
+test('reset password link screen can be rendered', function () {
+    /** @var TestCase $this */
+    $response = $this->get('/forgot-password');
 
-    public function test_reset_password_link_screen_can_be_rendered(): void
-    {
-        $response = $this->get('/forgot-password');
+    $response->assertStatus(200);
+});
+
+test('reset password link can be requested', function () {
+    /** @var TestCase $this */
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $this->post('/forgot-password', ['email' => $user->email]);
+
+    Notification::assertSentTo($user, ResetPassword::class);
+});
+
+test('reset password screen can be rendered', function () {
+    /** @var TestCase $this */
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $this->post('/forgot-password', ['email' => $user->email]);
+
+    Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
+        $response = $this->get('/reset-password/'.$notification->token);
 
         $response->assertStatus(200);
-    }
 
-    public function test_reset_password_link_can_be_requested(): void
-    {
-        Notification::fake();
+        return true;
+    });
+});
 
-        $user = User::factory()->create();
+test('password can be reset with valid token', function () {
+    /** @var TestCase $this */
+    Notification::fake();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+    $user = User::factory()->create();
 
-        Notification::assertSentTo($user, ResetPassword::class);
-    }
+    $this->post('/forgot-password', ['email' => $user->email]);
 
-    public function test_reset_password_screen_can_be_rendered(): void
-    {
-        Notification::fake();
-
-        $user = User::factory()->create();
-
-        $this->post('/forgot-password', ['email' => $user->email]);
-
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
-            $response = $this->get('/reset-password/'.$notification->token);
-
-            $response->assertStatus(200);
-
-            return true;
-        });
-    }
-
-    public function test_password_can_be_reset_with_valid_token(): void
-    {
-        Notification::fake();
-
-        $user = User::factory()->create();
-
-        $this->post('/forgot-password', ['email' => $user->email]);
-
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
-            $response = $this->post('/reset-password', [
-                'token' => $notification->token,
-                'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
-            ]);
-
-            $response->assertSessionHasNoErrors();
-
-            return true;
-        });
-    }
-
-    public function test_resetting_the_password_verifies_an_unverified_email(): void
-    {
-        Notification::fake();
-
-        $user = User::factory()->unverified()->create();
-
-        $this->post('/forgot-password', ['email' => $user->email]);
-
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
-            $this->post('/reset-password', [
-                'token' => $notification->token,
-                'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
-            ])->assertSessionHasNoErrors();
-
-            return true;
-        });
-
-        $this->assertTrue($user->fresh()->hasVerifiedEmail());
-    }
-
-    public function test_a_failed_reset_does_not_verify_the_email(): void
-    {
-        $user = User::factory()->unverified()->create();
-
-        $this->post('/reset-password', [
-            'token' => 'not-a-real-token',
+    Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+        $response = $this->post('/reset-password', [
+            'token' => $notification->token,
             'email' => $user->email,
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+
+        return true;
+    });
+});
+
+test('resetting the password verifies an unverified email', function () {
+    /** @var TestCase $this */
+    Notification::fake();
+
+    $user = User::factory()->unverified()->create();
+
+    $this->post('/forgot-password', ['email' => $user->email]);
+
+    Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+        $this->post('/reset-password', [
+            'token' => $notification->token,
+            'email' => $user->email,
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertSessionHasNoErrors();
+
+        return true;
+    });
+
+    $this->assertTrue($user->fresh()->hasVerifiedEmail());
+});
+
+test('a failed reset does not verify the email', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->unverified()->create();
+
+    $this->post('/reset-password', [
+        'token' => 'not-a-real-token',
+        'email' => $user->email,
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ])->assertSessionHasErrors('email');
+
+    $this->assertFalse($user->fresh()->hasVerifiedEmail());
+});
+
+test('a token sent to one address cannot verify another', function () {
+    /** @var TestCase $this */
+    Notification::fake();
+
+    $recipient = User::factory()->unverified()->create();
+    $other = User::factory()->unverified()->create();
+
+    $this->post('/forgot-password', ['email' => $recipient->email]);
+
+    Notification::assertSentTo($recipient, ResetPassword::class, function ($notification) use ($other) {
+        $this->post('/reset-password', [
+            'token' => $notification->token,
+            'email' => $other->email,
             'password' => 'password',
             'password_confirmation' => 'password',
         ])->assertSessionHasErrors('email');
 
-        $this->assertFalse($user->fresh()->hasVerifiedEmail());
-    }
+        return true;
+    });
 
-    public function test_a_token_sent_to_one_address_cannot_verify_another(): void
-    {
-        Notification::fake();
+    $this->assertFalse($other->fresh()->hasVerifiedEmail());
+    $this->assertFalse($recipient->fresh()->hasVerifiedEmail());
+});
 
-        $recipient = User::factory()->unverified()->create();
-        $other = User::factory()->unverified()->create();
+test('reset password screen shows the email without letting it be edited', function () {
+    /** @var TestCase $this */
+    $response = $this->get('/reset-password/a-token?email=katie@example.test');
 
-        $this->post('/forgot-password', ['email' => $recipient->email]);
+    $response->assertOk();
+    $response->assertSeeText('Choose a new password for katie@example.test.');
+    $response->assertSee('type="hidden" name="email" value="katie@example.test"', escape: false);
+    $response->assertDontSee('<label for="email"', escape: false);
+});
 
-        Notification::assertSentTo($recipient, ResetPassword::class, function ($notification) use ($other) {
-            $this->post('/reset-password', [
-                'token' => $notification->token,
-                'email' => $other->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
-            ])->assertSessionHasErrors('email');
+test('reset password screen shows why a reset failed', function () {
+    /** @var TestCase $this */
+    $user = User::factory()->create();
 
-            return true;
-        });
-
-        $this->assertFalse($other->fresh()->hasVerifiedEmail());
-        $this->assertFalse($recipient->fresh()->hasVerifiedEmail());
-    }
-
-    public function test_reset_password_screen_shows_the_email_without_letting_it_be_edited(): void
-    {
-        $response = $this->get('/reset-password/a-token?email=katie@example.test');
-
-        $response->assertOk();
-        $response->assertSeeText('Choose a new password for katie@example.test.');
-        $response->assertSee('type="hidden" name="email" value="katie@example.test"', escape: false);
-        $response->assertDontSee('<label for="email"', escape: false);
-    }
-
-    public function test_reset_password_screen_shows_why_a_reset_failed(): void
-    {
-        $user = User::factory()->create();
-
-        $this->from('/reset-password/not-a-real-token?email='.urlencode($user->email))
-            ->followingRedirects()
-            ->post('/reset-password', [
-                'token' => 'not-a-real-token',
-                'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
-            ])
-            ->assertSeeText('This password reset token is invalid.')
-            ->assertSeeText('Choose a new password for '.$user->email.'.');
-    }
-}
+    $this->from('/reset-password/not-a-real-token?email='.urlencode($user->email))
+        ->followingRedirects()
+        ->post('/reset-password', [
+            'token' => 'not-a-real-token',
+            'email' => $user->email,
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])
+        ->assertSeeText('This password reset token is invalid.')
+        ->assertSeeText('Choose a new password for '.$user->email.'.');
+});
