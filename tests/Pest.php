@@ -26,13 +26,14 @@ uses(
 | Test Impact Analysis
 |--------------------------------------------------------------------------
 |
-| Locally, every run records which source files each test touches and then
-| replays only the tests a change affects. It needs the PCOV coverage driver.
-| CI always runs the whole suite. Pass --no-tia to run everything locally.
+| Opt in with --tia: the first run records which source files each test
+| touches, and later runs replay all but the tests a change affects. It needs
+| the PCOV coverage driver. Naming the default branch saves clones without
+| origin/HEAD from stopping to ask.
 |
 */
 
-pest()->tia()->locally()->defaultBranch('main');
+pest()->tia()->defaultBranch('main');
 
 /*
 |--------------------------------------------------------------------------

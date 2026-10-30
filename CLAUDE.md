@@ -109,20 +109,21 @@ Renames are the quiet case: `RENAME COLUMN` and `RENAME TABLE` succeed, and Post
 
 - Use `ripgrep` to search files and `fd` to find files
 - Use `php artisan` for Laravel commands
-- Run tests: `vendor/bin/pest --compact` (pass a file path to run one file). Locally this uses Test Impact Analysis: it runs only the tests your changes affect and replays cached results for the rest. See below.
-- Run the whole suite for real, skipping TIA: `vendor/bin/pest --compact --parallel --no-tia`. Laravel creates and migrates the per-process `laravel_test_test_N` databases itself, so no setup is needed.
+- Run tests while developing: `vendor/bin/pest --tia --compact`. Test Impact Analysis runs only the tests your changes affect and replays cached results for the rest. See below.
+- Run one file: `vendor/bin/pest --compact tests/Feature/SomeTest.php`.
+- Run the whole suite: `vendor/bin/pest --compact --parallel`. Laravel creates and migrates the per-process `laravel_test_test_N` databases itself, so no setup is needed.
 - Run tests with previously failed tests first, stopping on first failure: `php artisan test --compact --retry --bail`
 - Verify a one-off behavior without writing a throwaway test: `vendor/bin/pest --agent='<php>'` (single outer quotes). See the `pest-plugin-agent` skill.
 - Format code: `mise run format` (or `vendor/bin/pint && npm run format` where mise isn't available). Pint's Blade rule shells out to Node, so `node_modules` must be installed before Pint will run.
 
 ### Test Impact Analysis (TIA)
 
-`tests/Pest.php` sets `pest()->tia()->locally()`, so every `vendor/bin/pest` or `php artisan test` run outside CI uses TIA. CI sets `CI=true`, which turns it off, so CI always runs the whole suite.
+TIA is opt-in: pass `--tia`. Use it in your dev loop. After each change, run `vendor/bin/pest --tia --compact` instead of the whole suite or a guessed list of files. Before you open or update a PR, run the whole suite once without `--tia`. CI never uses TIA.
 
-- The first run in a clone records which source files each test touches. It runs everything with coverage on, so add `--parallel` to it (about 45s in a cloud sandbox, against 2.5 minutes serial). Later runs re-run only the tests whose files changed since the last run, plus failed tests, and replay the rest in a few seconds. The summary line reports `affected` and `replayed` counts.
+- The first `--tia` run in a clone records which source files each test touches. It runs everything with coverage on, so add `--parallel` to it (about 45s in a cloud sandbox, against 2.5 minutes serial). Later runs re-run only the tests whose files changed since the last TIA run, plus failed tests, and replay the rest in a few seconds. The summary line reports `affected` and `replayed` counts.
 - Edits that only touch comments or whitespace re-run nothing.
-- `--no-tia` runs everything for real; `--fresh` throws the map away and records it again.
-- TIA needs the PCOV coverage driver (`php -m | grep pcov`). Without it, Pest skips TIA and runs the full suite (`--tia` says so; the `locally()` config is silent). Cloud sandboxes and Amp orbs get PCOV from their setup scripts; on macOS see the TIA section of [docs/development-setup.md](docs/development-setup.md).
+- `--tia --fresh` throws the map away and records it again.
+- TIA needs the PCOV coverage driver (`php -m | grep pcov`). Without it, `--tia` prints `TIA is skipped as it needs ext-pcov or Xdebug` and runs the full suite. Cloud sandboxes and Amp orbs get PCOV from their setup scripts; on macOS see the TIA section of [docs/development-setup.md](docs/development-setup.md).
 - TIA refuses PHPUnit-class tests. Write every test as a Pest closure.
 
 ## Rules
