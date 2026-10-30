@@ -109,10 +109,24 @@ All tests should pass. While developing, `vendor/bin/pest --tia --compact` re-ru
 
 Pest's Test Impact Analysis (TIA) is opt-in with `--tia`. TIA needs a coverage driver, and this project uses PCOV, which only collects coverage. Step debugging needs Xdebug and isn't set up.
 
-Herd Lite's Linux binary is static musl and cannot load extensions, and static-php-cli can only build PCOV as a loadable extension, so no Herd Lite build will ever include it. That is why the cloud sandbox installs PHP from apt instead:
+Herd Lite's Linux binary is static musl and cannot load extensions, and static-php-cli can only build PCOV as a loadable extension, so no Herd Lite build will ever include it. That is why the Linux setup scripts install PHP from apt instead:
 
 - **Claude Code cloud sandboxes (Ubuntu):** `scripts/sandbox/setup.sh` installs `php8.4-*` and `php8.4-pcov` from the [ondrej/php PPA](https://launchpad.net/~ondrej/+archive/ubuntu/php).
-- **macOS and Amp orbs:** not set up yet. They still use Herd Lite, so `--tia` is skipped and runs the full suite.
+- **Amp orbs (Debian 12):** `.agents/setup` installs the same packages from [packages.sury.org](https://packages.sury.org/php/), the Debian side of the same archive.
 - **CI:** no driver needed. CI doesn't pass `--tia`, so it runs the whole suite.
+
+### macOS
+
+The Herd Lite binary that mise installs has no PCOV either. Herd's documentation says its macOS binaries can load an extension compiled against Homebrew's PHP, so this should work, but it is unverified:
+
+```bash
+brew install php@8.4                         # only used to compile the extension
+$(brew --prefix php@8.4)/bin/pecl install pcov
+php --ini                                    # note "Scan for additional .ini files in"
+echo "extension=$(brew --prefix)/lib/php/pecl/20240924/pcov.so" > <scan dir>/pcov.ini
+php -m | grep pcov
+```
+
+If `php -m` doesn't list `pcov`, or PHP refuses to load it, the fallback is to run tests with Homebrew's `php@8.4` plus the same `pcov.so`, or to switch mise from Herd Lite to Homebrew PHP.
 
 Check it works by running `vendor/bin/pest --tia --compact --parallel` twice: the second run's summary should say every test was `replayed`.

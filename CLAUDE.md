@@ -11,7 +11,7 @@ Quick check: if `php artisan test` fails with autoload errors, run the setup.
 - **Local macOS**: dev runs through mise + pitchfork. Use `mise run setup` once, then `mise run dev` to bring up the stack (postgres, octane, queue, vite). See the macOS section of [docs/development-setup.md](docs/development-setup.md).
 - **Claude Code cloud sandboxes**: the environment's setup script runs `scripts/sandbox/setup.sh`, which apt-installs PHP 8.4 with PCOV from the ondrej/php PPA, puts Node 24 in `~/.local/bin`, apt-installs libvips and exiftool for photo processing, installs `vendor/` and `node_modules/`, builds the Vite assets, and sets up `.env` and PostgreSQL so `php artisan test --parallel` works with no exports. If `php -v` shows 8.3, `php -m` lacks `pcov`, or `vendor/` is missing, the setup script didn't run: run `bash scripts/sandbox/setup.sh` yourself, then the Linux rules below apply.
 - **Remote / CI / preconfigured Linux containers** (e.g. a cloud coding agent): tools are already installed — **do not install mise or run pitchfork**. Run `php artisan`, `vendor/bin/pint`, and `npm` directly, and follow the Linux/sandboxed section of [docs/development-setup.md](docs/development-setup.md). `mise run <task>` is a local convenience, not a requirement; the underlying commands work without it.
-- **Amp orbs**: `.agents/setup` installs PHP 8.4 (Herd-lite), Composer, PostgreSQL 17 (systemd), libvips and exiftool, installs dependencies, builds assets, and migrates and seeds the dev database. Run `amp orb services ensure` to start the dev stack from `.amp/services.yaml`: the Vite dev server is the portal (HMR included) and proxies every non-asset request to `php artisan serve`, plus a queue worker. The seeded admin login is `admin@example.com` / `password`.
+- **Amp orbs**: `.agents/setup` installs PHP 8.4 with PCOV (deb.sury.org), Composer, PostgreSQL 17 (systemd), libvips and exiftool, installs dependencies, builds assets, and migrates and seeds the dev database. Run `amp orb services ensure` to start the dev stack from `.amp/services.yaml`: the Vite dev server is the portal (HMR included) and proxies every non-asset request to `php artisan serve`, plus a queue worker. The seeded admin login is `admin@example.com` / `password`.
 
 ## Architecture overview
 
@@ -123,7 +123,7 @@ TIA is opt-in: pass `--tia`. Use it in your dev loop. After each change, run `ve
 - The first `--tia` run in a clone records which source files each test touches. It runs everything with coverage on, so add `--parallel` to it (about 45s in a cloud sandbox, against 2.5 minutes serial). Later runs re-run only the tests whose files changed since the last TIA run, plus failed tests, and replay the rest in a few seconds. The summary line reports `affected` and `replayed` counts.
 - Edits that only touch comments or whitespace re-run nothing.
 - `--tia --fresh` throws the map away and records it again.
-- TIA needs the PCOV coverage driver (`php -m | grep pcov`). Without it, `--tia` prints `TIA is skipped as it needs ext-pcov or Xdebug` and runs the full suite. Cloud sandboxes get PCOV from their setup script; macOS and Amp orbs don't have it yet.
+- TIA needs the PCOV coverage driver (`php -m | grep pcov`). Without it, `--tia` prints `TIA is skipped as it needs ext-pcov or Xdebug` and runs the full suite. Cloud sandboxes and Amp orbs get PCOV from their setup scripts; on macOS see the TIA section of [docs/development-setup.md](docs/development-setup.md).
 - TIA refuses PHPUnit-class tests. Write every test as a Pest closure.
 
 ## Rules
