@@ -13,21 +13,21 @@
         "check:contrast": "node scripts/check-contrast.js"
     },
     "devDependencies": {
-        "@tailwindcss/postcss": "^4.0.9",
-        "@tailwindcss/typography": "^0.5.16",
+        "@tailwindcss/postcss": "^4.3.3",
+        "@tailwindcss/typography": "^0.5.20",
         "chokidar": "^4.0.3",
         "culori": "^4.0.2",
-        "daisyui": "^5.0.0",
+        "daisyui": "^5.7.50",
         "laravel-vite-plugin": "^1.2.0",
         "postcss": "^8.5.3",
-        "prettier": "^3.9.6",
-        "prettier-plugin-blade": "^3.3.0",
+        "prettier": "^3.9.10",
+        "prettier-plugin-blade": "^3.3.3",
         "prettier-plugin-tailwindcss": "^0.8.1",
         "prettier-plugin-toml": "^2.0.6",
         "tailwindcss": "^4.0.9",
         "vite": "^6.2.0"
     },
     "dependencies": {
-        "highlight.js": "^11.11.1"
+        "highlight.js": "^11.12.0"
     }
 }
