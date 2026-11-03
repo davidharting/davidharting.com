@@ -1,0 +1,74 @@
+# Dependency updates. The policy behind this file, and how agents work the
+# PRs it opens, is in docs/agents/dependency-updates.md.
+#
+# - cooldown: a release must be this many days old before Dependabot proposes
+#   it. Most malicious releases are caught and yanked within days, so waiting
+#   a week keeps us off the bleeding edge of a supply-chain attack. Security
+#   updates ignore cooldown, so advisories still land right away.
+# - groups: minor and patch updates arrive as one PR per ecosystem per week.
+#   Majors are left ungrouped, so each potentially breaking upgrade gets its
+#   own PR that can be migrated and verified on its own.
+version: 2
+updates:
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/New_York"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+    open-pull-requests-limit: 10
+    groups:
+      composer-minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/New_York"
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+    open-pull-requests-limit: 10
+    groups:
+      npm-minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/New_York"
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  # The FrankenPHP base image tag pins both FrankenPHP and PHP
+  # (e.g. 1.13.2-php8.4.27-bookworm).
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/New_York"
+    cooldown:
+      default-days: 7
