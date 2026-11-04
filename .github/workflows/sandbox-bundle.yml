@@ -36,7 +36,7 @@ jobs:
         with:
           php-version: "8.4"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install composer dependencies
         run: composer install --no-interaction --no-progress --no-scripts --prefer-dist
@@ -44,7 +44,7 @@ jobs:
       - name: Pack vendor/
         run: tar -czf dev-sandbox-vendor.tar.gz vendor
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dev-sandbox-vendor
           path: dev-sandbox-vendor.tar.gz
