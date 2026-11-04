@@ -21,6 +21,7 @@ postgres = "17"
 
 [tools."http:php"]
 version = "8.4"
+
 [tools."http:php".platforms.macos-arm64]
 url = "https://download.herdphp.com/herd-lite/macos/arm64/8.4/php"
 
