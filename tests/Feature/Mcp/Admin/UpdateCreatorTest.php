@@ -191,6 +191,7 @@ describe('annotations', function () {
         $tool = collect($response->json('result.tools'))->firstWhere('name', 'update-creator');
 
         expect($tool['annotations'])->toEqualCanonicalizing([
+            'title' => 'Update Creator',
             'idempotentHint' => true,
             'destructiveHint' => true,
         ]);

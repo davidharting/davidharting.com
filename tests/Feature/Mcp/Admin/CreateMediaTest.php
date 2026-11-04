@@ -449,6 +449,7 @@ describe('annotations', function () {
         // readOnlyHint is omitted rather than false: laravel/mcp only emits
         // the annotations a tool declares.
         expect($tool['annotations'])->toBe([
+            'title' => 'Create Media',
             'idempotentHint' => true,
             'destructiveHint' => false,
         ]);
