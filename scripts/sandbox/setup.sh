@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bootstraps a Claude Code cloud sandbox: PHP 8.4 with PCOV, Node 24, libvips,
+# Bootstraps a Claude Code cloud sandbox: PHP 8.4 with PCOV, Node 26, libvips,
 # exiftool, vendor/, node_modules/, .env and PostgreSQL. Point the cloud environment's setup
 # script at this file. Safe to re-run.
 #
@@ -32,7 +32,7 @@ PHP_KEYRING=/usr/share/keyrings/ondrej-php.gpg
 echo "deb [signed-by=$PHP_KEYRING] https://ppa.launchpadcontent.net/ondrej/php/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") main" \
     > /etc/apt/sources.list.d/ondrej-php.list
 
-NODE_VERSION="$(curl -fsSL https://nodejs.org/dist/index.json | grep -oE '"version":"v24\.[0-9]+\.[0-9]+"' | head -1 | cut -d'"' -f4)"
+NODE_VERSION="$(curl -fsSL https://nodejs.org/dist/index.json | grep -oE '"version":"v26\.[0-9]+\.[0-9]+"' | head -1 | cut -d'"' -f4)"
 echo "Installing Node $NODE_VERSION"
 curl -fsSL "https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-x64.tar.xz" | tar -xJ -C /opt
 for bin in node npm npx; do
