@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Token;
+use Laravel\Prompts\Prompt;
 use Tests\TestCase;
 
 function toolsListRpc(): array
@@ -248,6 +249,15 @@ describe('choosing the admin', function () {
 });
 
 describe('the confirmation guard', function () {
+    // confirmToProceed() asks through Laravel Prompts. A command only routes
+    // Prompts to the test's expected questions when runningUnitTests() is true,
+    // which these tests turn off by switching the environment away from
+    // testing. Without the fallback the prompt is non-interactive, returns its
+    // default, and expectsConfirmation() never sees the question.
+    beforeEach(function () {
+        Prompt::fallbackWhen(true);
+    });
+
     test('mints without a prompt in local', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
