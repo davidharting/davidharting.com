@@ -1,10 +1,10 @@
-FROM dunglas/frankenphp:1.13.2-php8.4.27-bookworm
+FROM dunglas/frankenphp:1.13.3-php8.4.27-bookworm
 
 
 RUN apt-get update \
     && apt-get install -y curl ca-certificates gnupg2 \
     && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql-keyring.gpg \
-    && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_26.x | bash - \
     && echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] https://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
     && apt-get upgrade -y \
