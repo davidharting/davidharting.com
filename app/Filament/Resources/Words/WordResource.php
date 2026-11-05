@@ -11,7 +11,6 @@ use Closure;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
@@ -19,7 +18,6 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Str;
 
 class WordResource extends Resource
 {
@@ -45,28 +43,8 @@ class WordResource extends Resource
                         }
                     }),
                 Textarea::make('short_definition')
-                    ->helperText('A plain-words definition to quiz against.')
-                    ->columnSpanFull(),
-                Repeater::make('senses')
-                    ->hint('The dictionary senses you are learning this word in.')
-                    ->schema([
-                        TextInput::make('part_of_speech')
-                            ->datalist(['noun', 'verb', 'adjective', 'adverb'])
-                            ->maxLength(50),
-                        Textarea::make('definition')
-                            ->required(),
-                        Repeater::make('examples')
-                            ->simple(Textarea::make('example')->required())
-                            ->addActionLabel('Add example')
-                            ->defaultItems(0),
-                    ])
-                    ->itemLabel(fn (array $state): string => Str::limit(
-                        collect([$state['part_of_speech'] ?? null, $state['definition'] ?? null])->filter()->implode(': '),
-                        50,
-                    ))
-                    ->collapsible()
-                    ->addActionLabel('Add sense')
-                    ->defaultItems(0)
+                    ->required()
+                    ->helperText('Brief definitions of the senses you care about, separated by semicolons.')
                     ->columnSpanFull(),
             ]);
     }

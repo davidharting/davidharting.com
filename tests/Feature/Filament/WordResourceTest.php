@@ -31,26 +31,31 @@ test('searching the list matches words case-insensitively', function () {
         ->assertCanNotSeeTableRecords([$laconic]);
 });
 
-test('records a word with its senses and a short definition', function () {
+test('records a word with its short definition', function () {
     /** @var TestCase $this */
     Livewire::actingAs(User::factory()->admin()->create())
         ->test(CreateWord::class)
         ->fillForm([
             'word' => 'ephemeral',
-            'short_definition' => 'here today, gone tomorrow',
-            'senses' => [
-                ['part_of_speech' => 'adjective', 'definition' => 'lasting a very short time', 'examples' => [['example' => 'an ephemeral fashion']]],
-            ],
+            'short_definition' => 'lasting a very short time; a short-lived plant',
         ])
         ->call('create')
         ->assertHasNoFormErrors();
 
-    $word = Word::sole();
-    expect($word->word)->toBe('ephemeral')
-        ->and($word->short_definition)->toBe('here today, gone tomorrow')
-        ->and($word->senses)->toBe([
-            ['part_of_speech' => 'adjective', 'definition' => 'lasting a very short time', 'examples' => ['an ephemeral fashion']],
-        ]);
+    expect(Word::sole())
+        ->word->toBe('ephemeral')
+        ->short_definition->toBe('lasting a very short time; a short-lived plant');
+});
+
+test('requires a short definition', function () {
+    /** @var TestCase $this */
+    Livewire::actingAs(User::factory()->admin()->create())
+        ->test(CreateWord::class)
+        ->fillForm(['word' => 'ephemeral'])
+        ->call('create')
+        ->assertHasFormErrors(['short_definition' => 'required']);
+
+    expect(Word::count())->toBe(0);
 });
 
 test('refuses a word already on the list in another case', function () {
@@ -59,17 +64,16 @@ test('refuses a word already on the list in another case', function () {
 
     Livewire::actingAs(User::factory()->admin()->create())
         ->test(CreateWord::class)
-        ->fillForm(['word' => 'Ephemeral'])
+        ->fillForm(['word' => 'Ephemeral', 'short_definition' => 'brief'])
         ->call('create')
         ->assertHasFormErrors(['word']);
 
     expect(Word::count())->toBe(1);
 });
 
-test('edits a word, keeping its own spelling available to it and its senses intact', function () {
+test('edits a word, keeping its own spelling available to it', function () {
     /** @var TestCase $this */
-    $senses = [['part_of_speech' => 'adjective', 'definition' => 'lasting a very short time', 'examples' => ['an ephemeral fashion']]];
-    $word = Word::factory()->create(['word' => 'ephemeral', 'short_definition' => 'brief', 'senses' => $senses]);
+    $word = Word::factory()->create(['word' => 'ephemeral', 'short_definition' => 'brief']);
 
     Livewire::actingAs(User::factory()->admin()->create())
         ->test(EditWord::class, ['record' => $word->id])
@@ -79,8 +83,7 @@ test('edits a word, keeping its own spelling available to it and its senses inta
 
     expect($word->refresh())
         ->word->toBe('Ephemeral')
-        ->short_definition->toBe('here today, gone tomorrow')
-        ->senses->toBe($senses);
+        ->short_definition->toBe('here today, gone tomorrow');
 });
 
 test('refuses respelling a word onto another word on the list', function () {
