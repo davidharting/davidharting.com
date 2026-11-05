@@ -105,7 +105,7 @@ class OAuthTokenResource extends Resource
                         ->color('warning')
                         ->requiresConfirmation()
                         ->modalHeading('Revoke token')
-                        ->modalDescription('The token and its refresh token stop working at once. The record stays, marked revoked.')
+                        ->modalDescription('The token and its refresh token stop working at once. The record stays, marked revoked. To cut off a whole connector, revoke its client instead.')
                         ->hidden(fn (Token $record): bool => $record->revoked)
                         ->action(function (Token $record): void {
                             OAuthRevocation::revokeToken($record);

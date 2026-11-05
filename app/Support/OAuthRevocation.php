@@ -2,13 +2,15 @@
 
 namespace App\Support;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Laravel\Passport\Client;
 use Laravel\Passport\Passport;
 use Laravel\Passport\Token;
 
 /**
- * Revokes or deletes OAuth access tokens together with the rows that depend
- * on them.
+ * Revokes or deletes OAuth clients and access tokens together with the rows
+ * that depend on them.
  *
  * Passport stores an access token and its refresh token as separate rows, and
  * nothing cascades between its tables. Revoking or deleting only an access
@@ -23,9 +25,49 @@ use Laravel\Passport\Token;
  *
  * Revoking a single token can lose a race with a refresh that reads its
  * refresh token just before the revoke commits, leaving a fresh token pair.
+ * Revoking the client has no such gap: a revoked client is refused outright.
  */
 class OAuthRevocation
 {
+    /**
+     * Revoke a client, every token it issued, their refresh tokens and any
+     * pending authorization codes.
+     *
+     * A revoked client is refused at the resource server, so this alone cuts a
+     * connector off. Its tokens are revoked as well so that the record reads
+     * correctly and un-revoking the client would not quietly restore them.
+     */
+    public static function revokeClient(Client $client): void
+    {
+        DB::transaction(function () use ($client): void {
+            $tokenIds = self::tokenIdsFor($client);
+
+            Passport::refreshToken()->newQuery()->whereIn('access_token_id', $tokenIds)->update(['revoked' => true]);
+            Passport::token()->newQuery()->where('client_id', $client->getKey())->update(['revoked' => true]);
+            Passport::authCode()->newQuery()->where('client_id', $client->getKey())->update(['revoked' => true]);
+            Passport::deviceCode()->newQuery()->where('client_id', $client->getKey())->update(['revoked' => true]);
+
+            $client->forceFill(['revoked' => true])->save();
+        });
+    }
+
+    /**
+     * Delete a client and every row that belongs to it.
+     */
+    public static function deleteClient(Client $client): bool
+    {
+        return DB::transaction(function () use ($client): bool {
+            $tokenIds = self::tokenIdsFor($client);
+
+            Passport::refreshToken()->newQuery()->whereIn('access_token_id', $tokenIds)->delete();
+            Passport::token()->newQuery()->where('client_id', $client->getKey())->delete();
+            Passport::authCode()->newQuery()->where('client_id', $client->getKey())->delete();
+            Passport::deviceCode()->newQuery()->where('client_id', $client->getKey())->delete();
+
+            return (bool) $client->delete();
+        });
+    }
+
     /**
      * Revoke an access token and its refresh token.
      */
@@ -48,5 +90,15 @@ class OAuthRevocation
 
             return (bool) $token->delete();
         });
+    }
+
+    /**
+     * The ids of the client's access tokens, as a subquery.
+     *
+     * @return Builder<Token>
+     */
+    private static function tokenIdsFor(Client $client): Builder
+    {
+        return Passport::token()->newQuery()->where('client_id', $client->getKey())->select('id');
     }
 }
