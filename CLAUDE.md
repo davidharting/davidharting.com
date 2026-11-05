@@ -143,6 +143,8 @@ TIA is opt-in: pass `--tia`. Use it in your dev loop. After each change, run `ve
 
 ### Pull request reviews
 
+PR size: prefer reviewable PR stacks. Ideally each PR establishes one cohesive thing. A good rule of thumb is <=10 non-generated files and <=500 lines. Previews usually make sense on the tip of the stack instead of each layer (see PR preview environments above for how to preview a stack).
+
 Subagent reviews: after opening a PR (and before asking David to review), run fresh-context subagent reviews, one per lens, for each lens relevant to the change. Address the findings (fix, or note in the thread why not), then summarize what each review found. Lenses:
 
 - Laravel best practices (any PHP/Laravel change).
