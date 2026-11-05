@@ -9,7 +9,7 @@
 # tools, not mise -- see docs/development-setup.md. Add more [platforms.*]
 # entries here if another host ever needs them.
 #
-# PHP 8.4 matches composer.json's config.platform.php (8.4.1), so the runtime
+# PHP 8.5 matches composer.json's config.platform.php (8.5.0), so the runtime
 # lines up with how Composer resolves dependencies.
 
 [settings]
@@ -20,10 +20,10 @@ node = "26.13.0"
 postgres = "17"
 
 [tools."http:php"]
-version = "8.4"
+version = "8.5"
 
 [tools."http:php".platforms.macos-arm64]
-url = "https://download.herdphp.com/herd-lite/macos/arm64/8.4/php"
+url = "https://download.herdphp.com/herd-lite/macos/arm64/8.5/php"
 
 [tools."http:composer"]
 version = "2"
