@@ -16,14 +16,14 @@ step() {
 	echo "    done in $((SECONDS - start))s"
 }
 
-# PHP 8.4 as Herd-lite's static Linux binary: the same build mise installs on
+# PHP 8.5 as Herd-lite's static Linux binary: the same build mise installs on
 # macOS (mise.toml), with pdo_pgsql/intl/zip/pcntl compiled in, and matching
 # composer.json's config.platform.php. Debian 12's apt PHP is only 8.2.
 install_php() {
 	if ! command -v php >/dev/null 2>&1; then
 		local tmp
 		tmp="$(mktemp)"
-		curl -fsSL -o "$tmp" https://download.herdphp.com/herd-lite/linux/x64/8.4/php
+		curl -fsSL -o "$tmp" https://download.herdphp.com/herd-lite/linux/x64/8.5/php
 		sudo install -m 0755 "$tmp" /usr/local/bin/php
 		rm -f "$tmp"
 	fi

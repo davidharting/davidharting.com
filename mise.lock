@@ -26,11 +26,11 @@ url = "https://download.herdphp.com/herd-lite/composer"
 url = "https://download.herdphp.com/herd-lite/composer"
 
 [[tools."http:php"]]
-version = "8.4"
+version = "8.5"
 backend = "http:php"
 
 [tools."http:php"."platforms.macos-arm64"]
-url = "https://download.herdphp.com/herd-lite/macos/arm64/8.4/php"
+url = "https://download.herdphp.com/herd-lite/macos/arm64/8.5/php"
 
 [[tools.node]]
 version = "26.13.0"
