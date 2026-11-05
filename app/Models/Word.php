@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * A word David is learning and its short definition: brief, plain-words
@@ -21,6 +22,29 @@ class Word extends Model
     use HasFactory;
 
     protected $fillable = ['word', 'short_definition'];
+
+    /**
+     * Every word is practised through exactly one flashcard, made with it and
+     * removed with it.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (Word $word): void {
+            $word->flashcard()->save(Flashcard::unreviewed());
+        });
+
+        static::deleting(function (Word $word): void {
+            $word->flashcard()->delete();
+        });
+    }
+
+    /**
+     * @return MorphOne<Flashcard, $this>
+     */
+    public function flashcard(): MorphOne
+    {
+        return $this->morphOne(Flashcard::class, 'quizzable');
+    }
 
     /**
      * The word already on the list with this spelling, ignoring case and
