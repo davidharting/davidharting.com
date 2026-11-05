@@ -285,6 +285,19 @@
 }
 
 /*
+  Daisy UI 5.7 styles any .btn with aria-current as btn-active, which fills
+  it in. The site nav marks the current page with aria-current for screen
+  readers and shows it with an underline only, so keep the current-page ghost
+  button unfilled at rest. Hover still gets Daisy's normal ghost hover.
+*/
+.btn-ghost[aria-current]:not([aria-current="false"]):not(:hover) {
+    --btn-bg: transparent;
+    --btn-border: transparent;
+    --btn-shadow: 0 0 0 0 transparent;
+    --btn-inset: 0 0 0 0 transparent;
+}
+
+/*
   Grows something small to the 44px tap target Apple and WCAG recommend,
   without changing how it looks.
 */

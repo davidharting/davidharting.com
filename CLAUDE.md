@@ -392,8 +392,8 @@ TextInput::make('title')
 ->required()
 ->live(onBlur: true)
 ->afterStateUpdated(fn (Set $set, ?string $state) => $set(
-        'slug',
-        Str::slug($state ?? ''),
+'slug',
+Str::slug($state ?? ''),
 )),
 
 TextInput::make('slug')
@@ -493,9 +493,9 @@ use function Pest\Livewire\livewire;
 
 livewire(ListUsers::class)
 ->assertCanSeeTableRecords($users)
-    ->searchTable($users->first()->name)
+->searchTable($users->first()->name)
 ->assertCanSeeTableRecords($users->take(1))
-    ->assertCanNotSeeTableRecords($users->skip(1));
+->assertCanNotSeeTableRecords($users->skip(1));
 
 </code-snippet>
 
