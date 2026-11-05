@@ -89,16 +89,12 @@ _Avoid_: Like, heart, vote
 ### Vocabulary
 
 **Word**:
-A word David is learning, private to him. Recorded with the dictionary senses he is learning it in and, optionally, a short definition. One word per spelling, matched case-insensitively.
+A word David is learning, private to him, with its short definition. One word per spelling, matched case-insensitively.
 _Avoid_: Term, entry, vocab item, flashcard
 
-**Sense**:
-One meaning of a word as a dictionary gives it: a part of speech, a definition and example sentences. A word keeps only the senses David is learning, not every sense the dictionary lists.
-_Avoid_: Meaning, definition (for the whole sense)
-
 **Short definition**:
-A plain-words definition of a word, stored as `words.short_definition`. It may be written in an agent's own words, unlike a sense, which is copied from a real dictionary.
-_Avoid_: Summary, gloss
+Brief, plain-words definitions of the senses of a word David cares about, separated by semicolons when there is more than one. Stored as `words.short_definition`; it may be written in an agent's own words. Full dictionary entries are kept apart from it.
+_Avoid_: Summary, gloss, sense
 
 ## Notes on this glossary
 

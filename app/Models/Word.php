@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Casts\Senses;
 use Database\Factories\WordFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,35 +10,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * A word David is learning, with the dictionary senses he is learning it in.
- *
- * senses holds only that curated list (see the Senses cast). A raw dictionary
- * response, when lookup arrives, belongs in a column of its own.
- *
- * @phpstan-import-type Sense from Senses
- *
- * @property list<Sense> $senses
+ * A word David is learning and its short definition: brief, plain-words
+ * definitions of the senses he cares about, separated by semicolons when
+ * there is more than one. Full dictionary entries will live alongside, not
+ * on the word.
  */
 class Word extends Model
 {
     /** @use HasFactory<WordFactory> */
     use HasFactory;
 
-    protected $fillable = ['word', 'senses', 'short_definition'];
-
-    protected $attributes = [
-        'senses' => '[]',
-    ];
-
-    /**
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'senses' => Senses::class,
-        ];
-    }
+    protected $fillable = ['word', 'short_definition'];
 
     /**
      * The word already on the list with this spelling, ignoring case and
