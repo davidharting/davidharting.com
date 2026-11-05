@@ -15,8 +15,12 @@ use Random\Randomizer;
  * (https://github.com/open-spaced-repetition/py-fsrs), tested against that
  * project's own expectations. Stateless apart from its settings, so one
  * instance can schedule every card. Parameter optimisation is not ported.
+ *
+ * Two deliberate differences from py-fsrs: steps are whole seconds, so a Hard
+ * on the first of two steps waits their mean rounded to the second; and review
+ * times in any time zone are converted to UTC rather than refused.
  */
-final class Scheduler
+final readonly class Scheduler
 {
     /**
      * The 21 FSRS-6 model weights py-fsrs ships as `DEFAULT_PARAMETERS`.
@@ -55,9 +59,9 @@ final class Scheduler
 
     private const SECONDS_PER_DAY = 86400;
 
-    private readonly float $decay;
+    private float $decay;
 
-    private readonly float $factor;
+    private float $factor;
 
     /**
      * @param  list<float>  $parameters  The 21 FSRS-6 model weights.
@@ -68,15 +72,26 @@ final class Scheduler
      * @param  bool  $enableFuzzing  Whether to nudge review intervals by a random day or few, so cards learned together drift apart.
      */
     public function __construct(
-        public readonly array $parameters = self::DEFAULT_PARAMETERS,
-        public readonly float $desiredRetention = 0.9,
-        public readonly array $learningSteps = [60, 600],
-        public readonly array $relearningSteps = [600],
-        public readonly int $maximumInterval = 36500,
-        public readonly bool $enableFuzzing = true,
-        private readonly Randomizer $randomizer = new Randomizer,
+        public array $parameters = self::DEFAULT_PARAMETERS,
+        public float $desiredRetention = 0.9,
+        public array $learningSteps = [60, 600],
+        public array $relearningSteps = [600],
+        public int $maximumInterval = 36500,
+        public bool $enableFuzzing = true,
+        private Randomizer $randomizer = new Randomizer,
     ) {
         self::validateParameters($parameters);
+
+        if (! ($desiredRetention > 0 && $desiredRetention < 1)) {
+            throw new InvalidArgumentException("Desired retention must be between 0 and 1 exclusive, got {$desiredRetention}.");
+        }
+
+        self::validateSteps($learningSteps, 'Learning');
+        self::validateSteps($relearningSteps, 'Relearning');
+
+        if ($maximumInterval < 1) {
+            throw new InvalidArgumentException("The maximum interval must be at least 1 day, got {$maximumInterval}.");
+        }
 
         $this->decay = -$parameters[20];
         $this->factor = 0.9 ** (1 / $this->decay) - 1;
@@ -102,8 +117,8 @@ final class Scheduler
         }
 
         [$state, $step, $intervalSeconds] = match ($card->state) {
-            CardState::Learning => $this->stepThrough($this->learningSteps, $card->step ?? 0, CardState::Learning, $rating, $stability),
-            CardState::Relearning => $this->stepThrough($this->relearningSteps, $card->step ?? 0, CardState::Relearning, $rating, $stability),
+            CardState::Learning => $this->stepThrough($this->learningSteps, $card->step, CardState::Learning, $rating, $stability),
+            CardState::Relearning => $this->stepThrough($this->relearningSteps, $card->step, CardState::Relearning, $rating, $stability),
             CardState::Review => $this->fromReview($rating, $stability),
         };
 
@@ -141,20 +156,20 @@ final class Scheduler
     /**
      * The next state, step and interval in whole seconds for a card moving
      * through learning or relearning steps. Leaves for Review once the last
-     * step is passed, or straight away on Easy.
+     * step is passed, or straight away on Easy. A card can sit on a step
+     * past the end of the list if it was scheduled with more steps than this
+     * scheduler has: anything but Again graduates it.
      *
      * @param  list<int>  $steps
      * @return array{CardState, ?int, int}
      */
     private function stepThrough(array $steps, int $step, CardState $stepState, Rating $rating, float $stability): array
     {
-        $graduate = [CardState::Review, null, $this->nextIntervalDays($stability) * self::SECONDS_PER_DAY];
+        $graduate = fn (): array => [CardState::Review, null, $this->nextIntervalDays($stability) * self::SECONDS_PER_DAY];
         $stepCount = count($steps);
 
-        // A card can sit on a step past the end of the list if it was scheduled
-        // with more steps than this scheduler has.
         if ($stepCount === 0 || ($step >= $stepCount && $rating !== Rating::Again)) {
-            return $graduate;
+            return $graduate();
         }
 
         return match ($rating) {
@@ -165,9 +180,9 @@ final class Scheduler
                 default => $steps[$step],
             }],
             Rating::Good => $step + 1 === $stepCount
-                ? $graduate
+                ? $graduate()
                 : [$stepState, $step + 1, $steps[$step + 1]],
-            Rating::Easy => $graduate,
+            Rating::Easy => $graduate(),
         };
     }
 
@@ -201,7 +216,7 @@ final class Scheduler
     {
         $interval = ($stability / $this->factor) * ($this->desiredRetention ** (1 / $this->decay) - 1);
 
-        return min(max(self::roundHalfEven($interval), 1), $this->maximumInterval);
+        return self::roundHalfEven(min(max($interval, 1), $this->maximumInterval));
     }
 
     private function shortTermStability(float $stability, Rating $rating): float
@@ -216,12 +231,15 @@ final class Scheduler
         return $this->clampStability($stability * $increase);
     }
 
+    /**
+     * Nudge difficulty up or down by the rating, damped as it nears 10, then
+     * revert it a little towards the initial difficulty of an Easy card.
+     */
     private function nextDifficulty(float $difficulty, Rating $rating): float
     {
         $deltaDifficulty = -($this->parameters[6] * ($rating->value - 3));
         $dampedDifficulty = $difficulty + (10.0 - $difficulty) * $deltaDifficulty / 9.0;
 
-        // Mean reversion towards the initial difficulty of an Easy card.
         $next = $this->parameters[7] * $this->initialDifficulty(Rating::Easy)
             + (1 - $this->parameters[7]) * $dampedDifficulty;
 
@@ -278,7 +296,7 @@ final class Scheduler
         [$minDays, $maxDays] = $this->fuzzRange($intervalDays);
         $fuzzed = $this->randomizer->nextFloat() * ($maxDays - $minDays + 1) + $minDays;
 
-        return min(self::roundHalfEven($fuzzed), $this->maximumInterval);
+        return self::roundHalfEven(min($fuzzed, $this->maximumInterval));
     }
 
     /**
@@ -310,7 +328,8 @@ final class Scheduler
     }
 
     /**
-     * Python's `round()`, which py-fsrs relies on: halves go to the even neighbour.
+     * Python's `round()`, which py-fsrs relies on: halves go to the even
+     * neighbour. Callers clamp first, so the cast to int cannot overflow.
      */
     private static function roundHalfEven(float $value): int
     {
@@ -331,19 +350,36 @@ final class Scheduler
      */
     private static function validateParameters(array $parameters): void
     {
-        if (count($parameters) !== count(self::LOWER_BOUNDS)) {
+        if (! array_is_list($parameters) || count($parameters) !== count(self::LOWER_BOUNDS)) {
             throw new InvalidArgumentException(sprintf('Expected %d FSRS parameters, got %d.', count(self::LOWER_BOUNDS), count($parameters)));
         }
 
         $errors = [];
-        foreach (array_values($parameters) as $index => $parameter) {
-            if ($parameter < self::LOWER_BOUNDS[$index] || $parameter > self::UPPER_BOUNDS[$index]) {
+        foreach ($parameters as $index => $parameter) {
+            // Written this way round so NAN, which fails every comparison, is refused.
+            if (! ($parameter >= self::LOWER_BOUNDS[$index] && $parameter <= self::UPPER_BOUNDS[$index])) {
                 $errors[] = sprintf('parameters[%d] = %s is out of bounds: (%s, %s)', $index, $parameter, self::LOWER_BOUNDS[$index], self::UPPER_BOUNDS[$index]);
             }
         }
 
         if ($errors !== []) {
             throw new InvalidArgumentException("One or more FSRS parameters are out of bounds:\n".implode("\n", $errors));
+        }
+    }
+
+    /**
+     * @param  array<int, int>  $steps
+     */
+    private static function validateSteps(array $steps, string $name): void
+    {
+        foreach ($steps as $step) {
+            if (! is_int($step) || $step < 1) {
+                throw new InvalidArgumentException("{$name} steps must be whole numbers of seconds, at least 1.");
+            }
+        }
+
+        if (! array_is_list($steps)) {
+            throw new InvalidArgumentException("{$name} steps must be a list.");
         }
     }
 }
