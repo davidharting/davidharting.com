@@ -2,7 +2,11 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Laravel\Passport\ClientRepository;
+use Laravel\Passport\Passport;
+use Laravel\Passport\RefreshToken;
+use Laravel\Passport\Token;
 use Tests\TestCase;
 
 /*
@@ -72,4 +76,39 @@ function accessTokenFor(User $user, array $scopes = []): string
     app(ClientRepository::class)->createPersonalAccessGrantClient('Test Personal Access Client');
 
     return $user->createToken('test-token', $scopes)->accessToken;
+}
+
+/**
+ * Issue a real bearer token for an admin with a refresh token row beside it,
+ * the shape an authorization code flow (Claude.ai's connector) leaves behind.
+ * Personal access tokens never get a refresh token, so one is added by hand.
+ *
+ * @return array{bearer: string, token: Token, refreshToken: RefreshToken}
+ */
+function adminTokenWithRefreshToken(?User $admin = null): array
+{
+    $admin ??= User::factory()->create(['is_admin' => true]);
+
+    app(ClientRepository::class)->createPersonalAccessGrantClient('Test Personal Access Client');
+    $result = $admin->createToken('test-token', ['mcp:use']);
+
+    $refreshToken = Passport::refreshToken()->forceCreate([
+        'id' => Str::random(80),
+        'access_token_id' => $result->token->getKey(),
+        'revoked' => false,
+        'expires_at' => now()->addMonth(),
+    ]);
+
+    return ['bearer' => $result->accessToken, 'token' => $result->token, 'refreshToken' => $refreshToken];
+}
+
+/**
+ * A JSON-RPC tools/list call, the cheapest request that proves a bearer token
+ * still gets through to /mcp/admin.
+ *
+ * @return array<string, mixed>
+ */
+function mcpToolsListRequest(): array
+{
+    return ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'];
 }
