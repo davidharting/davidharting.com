@@ -81,8 +81,9 @@ describe('review()', function () {
         $scheduler = new Scheduler(enableFuzzing: false);
         $card = unreviewedSchedule();
 
+        // As in py-fsrs's test: ten reviews a microsecond apart, all the same day.
         for ($i = 0; $i < 10; $i++) {
-            $card = $scheduler->review($card, Rating::Easy, $card->due->modify("+{$i} microseconds"));
+            $card = $scheduler->review($card, Rating::Easy, $card->lastReview?->modify('+1 microsecond') ?? $card->due);
         }
 
         expect($card->difficulty)->toBe(1.0);
@@ -218,6 +219,23 @@ describe('review() of a card being learned', function () {
 });
 
 describe('review() of a learned card', function () {
+    test('stretches stability and the next gap least on Hard and most on Easy', function () {
+        $scheduler = new Scheduler(enableFuzzing: false);
+        $learned = reviewScheduleOnTime($scheduler, unreviewedSchedule(), Rating::Good, Rating::Good);
+
+        [$hard, $good, $easy] = array_map(
+            fn (Rating $rating) => reviewScheduleOnTime($scheduler, $learned, $rating),
+            [Rating::Hard, Rating::Good, Rating::Easy],
+        );
+
+        expect($hard->stability)->toBeGreaterThan($learned->stability)->toBeLessThan($good->stability)
+            ->and($easy->stability)->toBeGreaterThan($good->stability)
+            ->and(scheduleDaysUntilDue($hard))->toBeLessThan(scheduleDaysUntilDue($good))
+            ->and(scheduleDaysUntilDue($easy))->toBeGreaterThan(scheduleDaysUntilDue($good))
+            ->and($hard->difficulty)->toBeGreaterThan($good->difficulty)
+            ->and($easy->difficulty)->toBeLessThan($good->difficulty);
+    });
+
     test('sends it to relearning, 10 minutes out, on Again', function () {
         $scheduler = new Scheduler(enableFuzzing: false);
 
@@ -327,4 +345,12 @@ describe('__construct()', function () {
     test('refuses a learning step shorter than a second', function () {
         new Scheduler(learningSteps: [60, 0]);
     })->throws(InvalidArgumentException::class, 'Learning steps must be whole numbers of seconds');
+
+    test('refuses a relearning step shorter than a second', function () {
+        new Scheduler(relearningSteps: [0]);
+    })->throws(InvalidArgumentException::class, 'Relearning steps must be whole numbers of seconds');
+
+    test('refuses a maximum interval shorter than a day', function () {
+        new Scheduler(maximumInterval: 0);
+    })->throws(InvalidArgumentException::class, 'The maximum interval must be at least 1 day');
 });
