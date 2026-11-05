@@ -4,7 +4,7 @@ Bootstrap a fresh development environment to run tests. This guide is designed f
 
 ## Prerequisites
 
-- PHP 8.2 or higher
+- PHP 8.5 or higher
 - Composer
 - Node.js 26 (24 still works), and npm
 - PostgreSQL 15 or higher
@@ -27,7 +27,7 @@ composer install
 npm install
 ```
 
-In a Claude Code cloud sandbox, the environment's setup script runs `bash /home/user/davidharting.com/scripts/sandbox/setup.sh` instead. It installs PHP 8.4, Node 26, libvips and exiftool, unpacks a prebuilt `vendor/` from the newest `dev-sandbox-vendor` Actions artifact on main, runs both installs, then does steps 2 and 3 below. The sandbox's GitHub proxy blocks Composer's zip downloads for other repositories, so without the bundle Composer clones every package and takes minutes.
+In a Claude Code cloud sandbox, the environment's setup script runs `bash /home/user/davidharting.com/scripts/sandbox/setup.sh` instead. It installs PHP 8.5, Node 26, libvips and exiftool, unpacks a prebuilt `vendor/` from the newest `dev-sandbox-vendor` Actions artifact on main, runs both installs, then does steps 2 and 3 below. The sandbox's GitHub proxy blocks Composer's zip downloads for other repositories, so without the bundle Composer clones every package and takes minutes.
 
 ### 2. Environment Configuration
 
@@ -111,7 +111,7 @@ Pest's Test Impact Analysis (TIA) is opt-in with `--tia`. TIA needs a coverage d
 
 Herd Lite's Linux binary is static musl and cannot load extensions, and static-php-cli can only build PCOV as a loadable extension, so no Herd Lite build will ever include it. That is why the cloud sandbox installs PHP from apt instead:
 
-- **Claude Code cloud sandboxes (Ubuntu):** `scripts/sandbox/setup.sh` installs `php8.4-*` and `php8.4-pcov` from the [ondrej/php PPA](https://launchpad.net/~ondrej/+archive/ubuntu/php).
+- **Claude Code cloud sandboxes (Ubuntu):** `scripts/sandbox/setup.sh` installs `php8.5-*` and `php8.5-pcov` from the [ondrej/php PPA](https://launchpad.net/~ondrej/+archive/ubuntu/php).
 - **macOS and Amp orbs:** not set up yet. They still use Herd Lite, so `--tia` is skipped and runs the full suite.
 - **CI:** no driver needed. CI doesn't pass `--tia`, so it runs the whole suite.
 
