@@ -46,4 +46,4 @@ Use `gh pr create` with the properly formatted title and body.
 
 ## After creating the PR
 
-Run the subagent reviews in the "Pull request reviews" section of `CLAUDE.md` before asking David to review, and follow its pre-merge steps when merging.
+Run the subagent reviews in the "Pull request reviews" section of `CLAUDE.md` before asking David to review.
