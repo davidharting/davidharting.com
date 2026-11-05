@@ -6,7 +6,7 @@ Bootstrap a fresh development environment to run tests. This guide is designed f
 
 - PHP 8.2 or higher
 - Composer
-- Node.js 24 or higher, and npm
+- Node.js 26 (24 still works), and npm
 - PostgreSQL 15 or higher
 - libvips (`vipsthumbnail`, `vipsheader`) with HEIC support, and exiftool
 
@@ -27,7 +27,7 @@ composer install
 npm install
 ```
 
-In a Claude Code cloud sandbox, the environment's setup script runs `bash /home/user/davidharting.com/scripts/sandbox/setup.sh` instead. It installs PHP 8.4, Node 24, libvips and exiftool, unpacks a prebuilt `vendor/` from the newest `dev-sandbox-vendor` Actions artifact on main, runs both installs, then does steps 2 and 3 below. The sandbox's GitHub proxy blocks Composer's zip downloads for other repositories, so without the bundle Composer clones every package and takes minutes.
+In a Claude Code cloud sandbox, the environment's setup script runs `bash /home/user/davidharting.com/scripts/sandbox/setup.sh` instead. It installs PHP 8.4, Node 26, libvips and exiftool, unpacks a prebuilt `vendor/` from the newest `dev-sandbox-vendor` Actions artifact on main, runs both installs, then does steps 2 and 3 below. The sandbox's GitHub proxy blocks Composer's zip downloads for other repositories, so without the bundle Composer clones every package and takes minutes.
 
 ### 2. Environment Configuration
 

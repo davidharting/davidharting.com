@@ -9,7 +9,7 @@ Quick check: if `php artisan test` fails with autoload errors, run the setup.
 ### Environments
 
 - **Local macOS**: dev runs through mise + pitchfork. Use `mise run setup` once, then `mise run dev` to bring up the stack (postgres, octane, queue, vite). See the macOS section of [docs/development-setup.md](docs/development-setup.md).
-- **Claude Code cloud sandboxes**: the environment's setup script runs `scripts/sandbox/setup.sh`, which apt-installs PHP 8.4 with PCOV from the ondrej/php PPA, puts Node 24 in `~/.local/bin`, apt-installs libvips and exiftool for photo processing, installs `vendor/` and `node_modules/`, builds the Vite assets, and sets up `.env` and PostgreSQL so `php artisan test --parallel` works with no exports. If `php -v` shows 8.3, `php -m` lacks `pcov`, or `vendor/` is missing, the setup script didn't run: run `bash scripts/sandbox/setup.sh` yourself, then the Linux rules below apply.
+- **Claude Code cloud sandboxes**: the environment's setup script runs `scripts/sandbox/setup.sh`, which apt-installs PHP 8.4 with PCOV from the ondrej/php PPA, puts Node 26 in `~/.local/bin`, apt-installs libvips and exiftool for photo processing, installs `vendor/` and `node_modules/`, builds the Vite assets, and sets up `.env` and PostgreSQL so `php artisan test --parallel` works with no exports. If `php -v` shows 8.3, `php -m` lacks `pcov`, or `vendor/` is missing, the setup script didn't run: run `bash scripts/sandbox/setup.sh` yourself, then the Linux rules below apply.
 - **Remote / CI / preconfigured Linux containers** (e.g. a cloud coding agent): tools are already installed — **do not install mise or run pitchfork**. Run `php artisan`, `vendor/bin/pint`, and `npm` directly, and follow the Linux/sandboxed section of [docs/development-setup.md](docs/development-setup.md). `mise run <task>` is a local convenience, not a requirement; the underlying commands work without it.
 - **Amp orbs**: `.agents/setup` installs PHP 8.4 (Herd-lite), Composer, PostgreSQL 17 (systemd), libvips and exiftool, installs dependencies, builds assets, and migrates and seeds the dev database. Run `amp orb services ensure` to start the dev stack from `.amp/services.yaml`: the Vite dev server is the portal (HMR included) and proxies every non-asset request to `php artisan serve`, plus a queue worker. The seeded admin login is `admin@example.com` / `password`.
 
@@ -140,6 +140,24 @@ TIA is opt-in: pass `--tia`. Use it in your dev loop. After each change, run `ve
 
 - Write tests for all changes
 - Focus on feature tests to get more leverage
+
+### Pull request reviews
+
+Subagent reviews: after opening a PR (and before asking David to review), run fresh-context subagent reviews, one per lens, for each lens relevant to the change. Address the findings (fix, or note in the thread why not), then summarize what each review found. Lenses:
+
+- Laravel best practices (any PHP/Laravel change).
+- Livewire best practices (any Livewire component or its Blade view).
+- Frontend expertise / UX (any UI, Blade, CSS, or JS change; mobile first, Katie is phone-only).
+- Test clarity (any test change): plain-English test names, clear value and behavior, setup clear and abstracted where it hurts readability.
+- General correctness (always): bugs, edge cases, races, migrations.
+- Security (any change touching auth, policies, routes, uploads, storage, user input, secrets, or infra): authorization gaps, data leaks between viewers (e.g. revealing a memory early), injection, signed URL and upload safety.
+- Abstractions (always): are the code abstractions clear, and are we missing chances to solve something with a standard algorithm, data structure, or framework feature?
+
+We control the map and its tickets, so they are not a fixed spec. Reviewers (especially correctness) often read tickets too literally. Treat "doesn't match the ticket" findings with judgement: if the code is the better call, keep it and say so; if it's unclear, ask David rather than mechanically conforming to the ticket.
+
+Before merging (only once David has told you to merge, per the rule above): have a fresh-context subagent review the tests only (plain-English test names, clear value and behavior, test setup that is clear and abstracted where it hurts readability). Then squash merge with the PR description as the commit body. Refresh the description first if it's stale.
+
+These lens reviews are in addition to `/code-review`, which should also be run. Post the review summaries as a PR comment, so they're on the PR whichever tool opened it. If you can't spawn subagents, do each lens as a separate review pass of your own and say so in the summary. Remove the `preview` label before squash merging (see PR preview environments above).
 
 ## Agent skills
 
@@ -392,8 +410,8 @@ TextInput::make('title')
 ->required()
 ->live(onBlur: true)
 ->afterStateUpdated(fn (Set $set, ?string $state) => $set(
-        'slug',
-        Str::slug($state ?? ''),
+'slug',
+Str::slug($state ?? ''),
 )),
 
 TextInput::make('slug')
@@ -493,9 +511,9 @@ use function Pest\Livewire\livewire;
 
 livewire(ListUsers::class)
 ->assertCanSeeTableRecords($users)
-    ->searchTable($users->first()->name)
+->searchTable($users->first()->name)
 ->assertCanSeeTableRecords($users->take(1))
-    ->assertCanNotSeeTableRecords($users->skip(1));
+->assertCanNotSeeTableRecords($users->skip(1));
 
 </code-snippet>
 
