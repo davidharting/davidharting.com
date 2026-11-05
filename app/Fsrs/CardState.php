@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\Fsrs;
+namespace App\Fsrs;
 
 /**
  * Where a card is in its FSRS life cycle. The integer values match py-fsrs,

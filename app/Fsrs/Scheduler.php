@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Support\Fsrs;
+namespace App\Fsrs;
 
-use Carbon\CarbonImmutable;
+use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use Random\Randomizer;
@@ -19,6 +19,9 @@ use Random\Randomizer;
  * Two deliberate differences from py-fsrs: steps are whole seconds, so a Hard
  * on the first of two steps waits their mean rounded to the second; and review
  * times in any time zone are converted to UTC rather than refused.
+ *
+ * App\Fsrs depends on nothing but PHP itself, not Laravel or Carbon, so it
+ * can move into its own Composer package unchanged.
  */
 final readonly class Scheduler
 {
@@ -102,7 +105,7 @@ final readonly class Scheduler
      */
     public function review(CardSchedule $card, Rating $rating, DateTimeInterface $reviewedAt): CardSchedule
     {
-        $reviewedAt = CarbonImmutable::instance($reviewedAt)->utc();
+        $reviewedAt = CardSchedule::inUtc($reviewedAt);
         $daysSinceLastReview = $card->lastReview === null ? null : self::wholeDaysBetween($card->lastReview, $reviewedAt);
         $reviewedSameDay = $daysSinceLastReview !== null && $daysSinceLastReview < 1;
 
@@ -131,7 +134,7 @@ final readonly class Scheduler
             step: $step,
             stability: $stability,
             difficulty: $difficulty,
-            due: $reviewedAt->addSeconds($intervalSeconds),
+            due: $reviewedAt->modify("+{$intervalSeconds} seconds"),
             lastReview: $reviewedAt,
         );
     }
@@ -142,7 +145,7 @@ final readonly class Scheduler
      */
     public function retrievability(CardSchedule $card, DateTimeInterface $at): float
     {
-        $at = CarbonImmutable::instance($at);
+        $at = CardSchedule::inUtc($at);
 
         if ($card->lastReview === null || $card->stability === null) {
             return 0.0;
@@ -340,9 +343,12 @@ final readonly class Scheduler
      * Whole days from one moment to a later one, rounded down, as Python's
      * `timedelta.days` does.
      */
-    private static function wholeDaysBetween(CarbonImmutable $from, CarbonImmutable $to): int
+    private static function wholeDaysBetween(DateTimeImmutable $from, DateTimeImmutable $to): int
     {
-        return (int) floor($from->diffInSeconds($to) / self::SECONDS_PER_DAY);
+        $seconds = ((int) $to->format('U') - (int) $from->format('U'))
+            + ((int) $to->format('u') - (int) $from->format('u')) / 1_000_000;
+
+        return (int) floor($seconds / self::SECONDS_PER_DAY);
     }
 
     /**

@@ -6,17 +6,17 @@
  * port has drifted from FSRS-6 as py-fsrs implements it.
  */
 
-use App\Support\Fsrs\CardSchedule;
-use App\Support\Fsrs\CardState;
-use App\Support\Fsrs\Rating;
-use App\Support\Fsrs\Scheduler;
-use Carbon\CarbonImmutable;
+use App\Fsrs\CardSchedule;
+use App\Fsrs\CardState;
+use App\Fsrs\Rating;
+use App\Fsrs\Scheduler;
+
 use Random\Engine\Mt19937;
 use Random\Randomizer;
 
 function unreviewedSchedule(): CardSchedule
 {
-    return CardSchedule::unreviewed(CarbonImmutable::parse('2022-11-29 12:30:00', 'UTC'));
+    return CardSchedule::unreviewed(new DateTimeImmutable('2022-11-29 12:30:00', new DateTimeZone('UTC')));
 }
 
 /**
@@ -33,12 +33,12 @@ function reviewScheduleOnTime(Scheduler $scheduler, CardSchedule $card, Rating .
 
 function scheduleMinutesUntilDue(CardSchedule $card): float
 {
-    return $card->lastReview->diffInMinutes($card->due);
+    return ($card->due->getTimestamp() - $card->lastReview->getTimestamp()) / 60;
 }
 
 function scheduleDaysUntilDue(CardSchedule $card): int
 {
-    return (int) floor($card->lastReview->diffInDays($card->due));
+    return intdiv($card->due->getTimestamp() - $card->lastReview->getTimestamp(), 86400);
 }
 
 describe('review()', function () {
@@ -70,7 +70,7 @@ describe('review()', function () {
         ];
 
         foreach ($reviews as [$rating, $daysLater]) {
-            $reviewedAt = $reviewedAt->addDays($daysLater);
+            $reviewedAt = $reviewedAt->modify("+{$daysLater} days");
             $card = $scheduler->review($card, $rating, $reviewedAt);
         }
 
@@ -83,7 +83,7 @@ describe('review()', function () {
         $card = unreviewedSchedule();
 
         for ($i = 0; $i < 10; $i++) {
-            $card = $scheduler->review($card, Rating::Easy, $card->due->addMicroseconds($i));
+            $card = $scheduler->review($card, Rating::Easy, $card->due->modify("+{$i} microseconds"));
         }
 
         expect($card->difficulty)->toBe(1.0);
@@ -95,7 +95,7 @@ describe('review()', function () {
 
         $lowestStability = INF;
         for ($i = 0; $i < 100; $i++) {
-            $card = $scheduler->review($card, Rating::Again, $card->due->addDay());
+            $card = $scheduler->review($card, Rating::Again, $card->due->modify('+1 day'));
             $lowestStability = min($lowestStability, $card->stability);
         }
 
@@ -104,10 +104,10 @@ describe('review()', function () {
 
     test('does not lower stability when a card is rated Hard again the same day', function () {
         $scheduler = new Scheduler(learningSteps: []);
-        $reviewedAt = CarbonImmutable::parse('2026-01-01', 'UTC');
+        $reviewedAt = new DateTimeImmutable('2026-01-01', new DateTimeZone('UTC'));
         $card = $scheduler->review(unreviewedSchedule(), Rating::Good, $reviewedAt);
 
-        $reviewedAgain = $scheduler->review($card, Rating::Hard, $reviewedAt->addMinute());
+        $reviewedAgain = $scheduler->review($card, Rating::Hard, $reviewedAt->modify('+1 minute'));
 
         expect($reviewedAgain->stability)->toBeGreaterThanOrEqual($card->stability);
     });
@@ -115,10 +115,10 @@ describe('review()', function () {
     test('records the review time in UTC whatever time zone it arrives in', function () {
         $scheduler = new Scheduler;
 
-        $card = $scheduler->review(unreviewedSchedule(), Rating::Good, CarbonImmutable::parse('2026-01-01 09:00', 'America/New_York'));
+        $card = $scheduler->review(unreviewedSchedule(), Rating::Good, new DateTimeImmutable('2026-01-01 09:00', new DateTimeZone('America/New_York')));
 
-        expect($card->lastReview->toIso8601String())->toBe('2026-01-01T14:00:00+00:00')
-            ->and($card->due->tzName)->toBe('UTC');
+        expect($card->lastReview->format(DATE_ATOM))->toBe('2026-01-01T14:00:00+00:00')
+            ->and($card->due->getTimezone()->getName())->toBe('UTC');
     });
 
     test('never schedules a card further ahead than the maximum interval', function () {
@@ -268,7 +268,7 @@ describe('review() of a forgotten card', function () {
         $scheduler = new Scheduler;
         $forgotten = reviewScheduleOnTime($scheduler, unreviewedSchedule(), Rating::Easy, Rating::Again);
 
-        $card = $scheduler->review($forgotten, Rating::Good, $forgotten->due->addDay());
+        $card = $scheduler->review($forgotten, Rating::Good, $forgotten->due->modify('+1 day'));
 
         expect($card->state)->toBe(CardState::Review);
     });
@@ -278,14 +278,14 @@ describe('retrievability()', function () {
     test('is zero for a card that has never been reviewed', function () {
         $schedule = unreviewedSchedule();
 
-        expect((new Scheduler)->retrievability($schedule, $schedule->due->addDay()))->toBe(0.0);
+        expect((new Scheduler)->retrievability($schedule, $schedule->due->modify('+1 day')))->toBe(0.0);
     });
 
     test("is 90% once as many days have passed as the card's stability", function () {
-        $reviewedAt = CarbonImmutable::parse('2026-01-01', 'UTC');
-        $schedule = new CardSchedule(CardState::Review, null, 10.0, 5.0, $reviewedAt->addDays(10), $reviewedAt);
+        $reviewedAt = new DateTimeImmutable('2026-01-01', new DateTimeZone('UTC'));
+        $schedule = new CardSchedule(CardState::Review, null, 10.0, 5.0, $reviewedAt->modify('+10 days'), $reviewedAt);
 
-        expect((new Scheduler)->retrievability($schedule, $reviewedAt->addDays(10)))->toEqualWithDelta(0.9, 1e-12);
+        expect((new Scheduler)->retrievability($schedule, $reviewedAt->modify('+10 days')))->toEqualWithDelta(0.9, 1e-12);
     });
 
     test('starts at one and falls as days pass without a review', function () {
@@ -293,8 +293,8 @@ describe('retrievability()', function () {
         $card = reviewScheduleOnTime($scheduler, unreviewedSchedule(), Rating::Good, Rating::Good);
 
         $justReviewed = $scheduler->retrievability($card, $card->lastReview);
-        $aWeekLater = $scheduler->retrievability($card, $card->lastReview->addWeek());
-        $aYearLater = $scheduler->retrievability($card, $card->lastReview->addYear());
+        $aWeekLater = $scheduler->retrievability($card, $card->lastReview->modify('+1 week'));
+        $aYearLater = $scheduler->retrievability($card, $card->lastReview->modify('+1 year'));
 
         expect($justReviewed)->toEqual(1.0)
             ->and($aWeekLater)->toBeLessThan($justReviewed)->toBeGreaterThan($aYearLater)

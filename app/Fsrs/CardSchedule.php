@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Support\Fsrs;
+namespace App\Fsrs;
 
-use Carbon\CarbonImmutable;
+use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use InvalidArgumentException;
 
 /**
@@ -15,10 +16,10 @@ use InvalidArgumentException;
 final readonly class CardSchedule
 {
     /** When the card is next due, in UTC. */
-    public CarbonImmutable $due;
+    public DateTimeImmutable $due;
 
     /** When the card was last reviewed, in UTC; null before the first review. */
-    public ?CarbonImmutable $lastReview;
+    public ?DateTimeImmutable $lastReview;
 
     /**
      * @param  int|null  $step  The current learning or relearning step, or null in the Review state.
@@ -49,8 +50,8 @@ final readonly class CardSchedule
             throw new InvalidArgumentException('A card that has never been reviewed is in the Learning state.');
         }
 
-        $this->due = CarbonImmutable::instance($due)->utc();
-        $this->lastReview = $lastReview === null ? null : CarbonImmutable::instance($lastReview)->utc();
+        $this->due = self::inUtc($due);
+        $this->lastReview = $lastReview === null ? null : self::inUtc($lastReview);
     }
 
     /**
@@ -66,5 +67,13 @@ final readonly class CardSchedule
             due: $due,
             lastReview: null,
         );
+    }
+
+    /**
+     * The same moment as an immutable date in UTC.
+     */
+    public static function inUtc(DateTimeInterface $moment): DateTimeImmutable
+    {
+        return DateTimeImmutable::createFromInterface($moment)->setTimezone(new DateTimeZone('UTC'));
     }
 }

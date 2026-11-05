@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\Fsrs;
+namespace App\Fsrs;
 
 /**
  * How well David recalled a card when it was reviewed. The integer values
