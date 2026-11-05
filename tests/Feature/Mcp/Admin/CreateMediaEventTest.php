@@ -279,6 +279,7 @@ describe('annotations', function () {
         // idempotentHint is omitted rather than false: laravel/mcp only emits
         // the annotations a tool declares, and the spec's default is false.
         expect($tool['annotations'])->toBe([
+            'title' => 'Create Media Event',
             'destructiveHint' => false,
         ]);
     });
