@@ -16,7 +16,7 @@ test('lists tokens with their client and user', function () {
     Livewire::actingAs($admin)
         ->test(ListOAuthTokens::class)
         ->assertCanSeeTableRecords([$token])
-        ->assertTableColumnStateSet('client.name', 'Test Personal Access Client', $token)
+        ->assertTableColumnStateSet('client.name', $token->client->name, $token)
         ->assertTableColumnStateSet('user_email', $admin->email, $token)
         ->assertTableColumnStateSet('status', OAuthTokenStatus::Active, $token);
 });
