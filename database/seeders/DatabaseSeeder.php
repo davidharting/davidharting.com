@@ -13,6 +13,7 @@ use App\Models\Note;
 use App\Models\Page;
 use App\Models\Upclick;
 use App\Models\User;
+use App\Models\Word;
 use Exception;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -62,6 +63,8 @@ class DatabaseSeeder extends Seeder
         Note::factory(25)->leadOnly()->create();
         Note::factory(15)->noLead()->create();
         Note::factory(5)->contentOnly()->create();
+
+        Word::factory(10)->create();
 
         // Pages for development
         Page::create([

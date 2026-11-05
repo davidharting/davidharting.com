@@ -86,6 +86,20 @@ _Avoid_: Reveal notification
 An emoji one person leaves on the other's revealed memory. Any emoji, up to five per person per memory.
 _Avoid_: Like, heart, vote
 
+### Vocabulary
+
+**Word**:
+A word David is learning, private to him. Recorded with the dictionary senses he is learning it in and, optionally, a short definition. One word per spelling, matched case-insensitively.
+_Avoid_: Term, entry, vocab item, flashcard
+
+**Sense**:
+One meaning of a word as a dictionary gives it: a part of speech, a definition and example sentences. A word keeps only the senses David is learning, not every sense the dictionary lists.
+_Avoid_: Meaning, definition (for the whole sense)
+
+**Short definition**:
+A plain-words definition of a word, stored as `words.short_definition`. It may be written in an agent's own words, unlike a sense, which is copied from a real dictionary.
+_Avoid_: Summary, gloss
+
 ## Notes on this glossary
 
 **Note, remark and comment are three different things**, and the distinction is load-bearing: a note is public writing, a remark belongs to a piece of media, a comment belongs to a moment.
