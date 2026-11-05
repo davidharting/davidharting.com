@@ -2,7 +2,6 @@
 
 namespace App\Mcp\Tools\Admin;
 
-use App\Mcp\Tools\Admin\Concerns\DescribesWords;
 use App\Models\Word;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -20,19 +19,18 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
  *
  * Omitting a field leaves it untouched, as in edit-media: the caller is a
  * language model, and reading omission as "clear" would let one fixing a
- * typo wipe the senses. Senses are replaced as a whole list, since a sense
- * has no identity of its own to edit by.
+ * typo wipe the definition.
  */
 #[IsIdempotent]
 #[IsDestructive]
 #[Description(<<<'TEXT'
-    Correct a word on David Harting's private vocabulary list: its spelling,
-    its short definition, or the dictionary senses he is learning it in. Get
-    the word_id from add-word, which returns an existing word unchanged.
+    Correct a word on David Harting's private vocabulary list: its spelling or
+    its short definition. Get the word_id from add-word, which returns an
+    existing word unchanged.
 
-    Only the fields you pass are changed. senses replaces the whole list, so
-    pass every sense that should remain. To clear the short definition pass
-    null.
+    Only the fields you pass are changed. The short definition is replaced
+    as a whole, so include every sense that should remain, separated by
+    semicolons.
 
     Words are compared case-insensitively. Respelling a word onto another word
     already on the list is refused and names that word's id; nothing is
@@ -40,8 +38,6 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
     TEXT)]
 class EditWord extends Tool
 {
-    use DescribesWords;
-
     /**
      * Whether the caller is entitled to the admin surface at all. Failing this
      * hides the tool from tools/list and makes tools/call answer "Tool not
@@ -60,8 +56,7 @@ class EditWord extends Tool
         $validated = $request->validate([
             'word_id' => ['required', 'integer', Rule::exists(Word::class, 'id')],
             'word' => ['sometimes', 'string', 'filled', 'max:255'],
-            'short_definition' => ['sometimes', 'nullable', 'string'],
-            ...$this->sensesRules(),
+            'short_definition' => ['sometimes', 'string', 'filled'],
         ]);
 
         $word = Word::findOrFail($validated['word_id']);
@@ -71,7 +66,7 @@ class EditWord extends Tool
         }
 
         if (array_keys($validated) === ['word_id']) {
-            return Response::error('Nothing to change: pass at least one field to edit alongside word_id.');
+            return Response::error('Nothing to change: pass word or short_definition alongside word_id.');
         }
 
         $conflict = isset($validated['word']) ? Word::spelledAs($validated['word'], $word) : null;
@@ -87,7 +82,11 @@ class EditWord extends Tool
             return $this->conflictError(Word::spelledAs($validated['word'], $word));
         }
 
-        return Response::structured($this->wordResult($word));
+        return Response::structured([
+            'word_id' => $word->id,
+            'word' => $word->word,
+            'short_definition' => $word->short_definition,
+        ]);
     }
 
     private function conflictError(Word $conflict): Response
@@ -113,10 +112,7 @@ class EditWord extends Tool
             'word' => $schema->string()
                 ->description('The corrected spelling, stored as written.'),
             'short_definition' => $schema->string()
-                ->nullable()
-                ->description('A short definition in plain words. Pass null to clear it.'),
-            'senses' => $this->sensesSchema($schema)
-                ->description('The complete list of senses to keep, replacing what is stored.'),
+                ->description('The complete short definition, replacing what is stored.'),
         ];
     }
 
@@ -127,6 +123,10 @@ class EditWord extends Tool
      */
     public function outputSchema(JsonSchema $schema): array
     {
-        return $this->wordOutputSchema($schema);
+        return [
+            'word_id' => $schema->integer()->description('The id of the word.'),
+            'word' => $schema->string()->description('The word as now stored.'),
+            'short_definition' => $schema->string()->description('The short definition as now stored.'),
+        ];
     }
 }

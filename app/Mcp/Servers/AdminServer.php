@@ -61,9 +61,8 @@ class AdminServer extends Server
         correct mistakes.
 
         **Words** are David's private vocabulary list: words he is learning,
-        with the dictionary senses he is learning them in. Use add-word and
-        edit-word to record them. Each tool's description gives the rules for
-        using it.
+        each with a short definition. Use add-word and edit-word to record
+        them. Each tool's description gives the rules for using it.
 
         Drafts, remarks on media items and comments on their events are
         private writing, not on the public website. Never quote or attribute

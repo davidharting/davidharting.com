@@ -62,8 +62,7 @@ describe('handle()', function () {
 
     test('changes only the fields passed', function () {
         /** @var TestCase $this */
-        $senses = [['part_of_speech' => 'adjective', 'definition' => 'lasting a very short time', 'examples' => []]];
-        $word = Word::factory()->create(['word' => 'ephemerel', 'short_definition' => 'brief', 'senses' => $senses]);
+        $word = Word::factory()->create(['word' => 'ephemerel', 'short_definition' => 'lasting a very short time']);
 
         $response = AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(EditWord::class, ['word_id' => $word->id, 'word' => 'ephemeral']);
@@ -72,37 +71,19 @@ describe('handle()', function () {
         $response->assertStructuredContent([
             'word_id' => $word->id,
             'word' => 'ephemeral',
-            'short_definition' => 'brief',
-            'senses' => $senses,
+            'short_definition' => 'lasting a very short time',
         ]);
     });
 
-    test('replaces the whole list of senses', function () {
+    test('replaces the short definition', function () {
         /** @var TestCase $this */
-        $word = Word::factory()->create(['senses' => [
-            ['definition' => 'lasting a very short time'],
-            ['definition' => 'a plant with a short life cycle'],
-        ]]);
-
-        AdminServer::actingAs(User::factory()->admin()->create())->tool(EditWord::class, [
-            'word_id' => $word->id,
-            'senses' => [['definition' => 'lasting only a day']],
-        ])->assertOk();
-
-        expect($word->refresh()->senses)->toBe([
-            ['part_of_speech' => null, 'definition' => 'lasting only a day', 'examples' => []],
-        ]);
-    });
-
-    test('clears the short definition when passed null', function () {
-        /** @var TestCase $this */
-        $word = Word::factory()->create(['short_definition' => 'brief']);
+        $word = Word::factory()->create(['short_definition' => 'lasting a very short time']);
 
         AdminServer::actingAs(User::factory()->admin()->create())
-            ->tool(EditWord::class, ['word_id' => $word->id, 'short_definition' => null])
+            ->tool(EditWord::class, ['word_id' => $word->id, 'short_definition' => 'lasting a very short time; a short-lived plant'])
             ->assertOk();
 
-        expect($word->refresh()->short_definition)->toBeNull();
+        expect($word->refresh()->short_definition)->toBe('lasting a very short time; a short-lived plant');
     });
 
     test('refuses a call with nothing to change', function () {
@@ -111,7 +92,7 @@ describe('handle()', function () {
 
         AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(EditWord::class, ['word_id' => $word->id])
-            ->assertHasErrors(['Nothing to change: pass at least one field to edit alongside word_id.']);
+            ->assertHasErrors(['Nothing to change: pass word or short_definition alongside word_id.']);
     });
 
     test('allows a change of case to its own spelling', function () {
