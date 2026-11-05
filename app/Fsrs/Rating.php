@@ -3,8 +3,9 @@
 namespace App\Fsrs;
 
 /**
- * How well David recalled a card when it was reviewed. The integer values
- * match FSRS and py-fsrs, and the scheduler's formulas use them directly.
+ * How well a card was recalled when it was reviewed. Ports py-fsrs's
+ * `Rating`: the integer values match, and the scheduler's formulas use them
+ * directly. An app may offer fewer choices, such as only Again and Good.
  */
 enum Rating: int
 {

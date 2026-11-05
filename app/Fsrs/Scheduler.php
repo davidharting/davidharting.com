@@ -20,8 +20,12 @@ use Random\Randomizer;
  * on the first of two steps waits their mean rounded to the second; and review
  * times in any time zone are converted to UTC rather than refused.
  *
- * App\Fsrs depends on nothing but PHP itself, not Laravel or Carbon, so it
- * can move into its own Composer package unchanged.
+ * App\Fsrs is meant to stay a pure port: keep its names, behaviour and
+ * defaults matching py-fsrs, and keep anything about this app (Words,
+ * Flashcards, buttons, storage) out of it. When py-fsrs changes, port the
+ * change and its tests here. It depends on nothing but PHP itself, not
+ * Laravel or Carbon (tests/Unit/Fsrs/ArchTest.php enforces this), so it can
+ * move into its own Composer package unchanged.
  */
 final readonly class Scheduler
 {

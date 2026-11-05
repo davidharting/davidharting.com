@@ -12,6 +12,9 @@ use InvalidArgumentException;
  * about it, and everything it changes when the card is reviewed. Immutable:
  * reviewing a card returns a new schedule. Refuses combinations FSRS never
  * produces, so a corrupt stored card fails loudly instead of being scheduled.
+ *
+ * Ports py-fsrs's `Card`, minus its `card_id`: identity belongs to whatever
+ * stores the schedule. Part of the pure port described on Scheduler.
  */
 final readonly class CardSchedule
 {
