@@ -19,6 +19,13 @@ use Laravel\Passport\Token;
  *
  * Passport treats a missing row the same as a revoked one, so revoking and
  * deleting both cut access off. Revoking keeps the record for later reference.
+ *
+ * These are bulk queries, so Passport's AccessTokenRevoked and
+ * RefreshTokenRevoked events don't fire. Nothing in the app listens for them.
+ *
+ * Revoking a single token can lose a race with a refresh that reads its
+ * refresh token just before the revoke commits, leaving a fresh token pair.
+ * Revoking the client has no such gap: a revoked client is refused outright.
  */
 class OAuthRevocation
 {
@@ -38,6 +45,7 @@ class OAuthRevocation
             Passport::refreshToken()->newQuery()->whereIn('access_token_id', $tokenIds)->update(['revoked' => true]);
             Passport::token()->newQuery()->where('client_id', $client->getKey())->update(['revoked' => true]);
             Passport::authCode()->newQuery()->where('client_id', $client->getKey())->update(['revoked' => true]);
+            Passport::deviceCode()->newQuery()->where('client_id', $client->getKey())->update(['revoked' => true]);
 
             $client->forceFill(['revoked' => true])->save();
         });

@@ -3,6 +3,8 @@
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Laravel\Passport\AuthCode;
+use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use Laravel\Passport\RefreshToken;
@@ -79,27 +81,79 @@ function accessTokenFor(User $user, array $scopes = []): string
 }
 
 /**
- * Issue a real bearer token for an admin with a refresh token row beside it,
+ * Issue a real bearer token for the user with a refresh token row beside it,
  * the shape an authorization code flow (Claude.ai's connector) leaves behind.
  * Personal access tokens never get a refresh token, so one is added by hand.
  *
+ * Every token comes from the same personal access client, created on first
+ * use. Use oauthClientWithToken() when a test needs a second client.
+ *
  * @return array{bearer: string, token: Token, refreshToken: RefreshToken}
  */
-function adminTokenWithRefreshToken(?User $admin = null): array
+function bearerTokenWithRefreshToken(User $user): array
 {
-    $admin ??= User::factory()->create(['is_admin' => true]);
+    $hasPersonalAccessClient = Passport::client()->newQuery()->get()
+        ->contains(fn (Client $client): bool => $client->hasGrantType('personal_access'));
 
-    app(ClientRepository::class)->createPersonalAccessGrantClient('Test Personal Access Client');
-    $result = $admin->createToken('test-token', ['mcp:use']);
+    if (! $hasPersonalAccessClient) {
+        app(ClientRepository::class)->createPersonalAccessGrantClient('Test Personal Access Client');
+    }
 
-    $refreshToken = Passport::refreshToken()->forceCreate([
+    $result = $user->createToken('test-token', ['mcp:use']);
+
+    return [
+        'bearer' => $result->accessToken,
+        'token' => $result->token,
+        'refreshToken' => refreshTokenFor($result->token),
+    ];
+}
+
+/**
+ * A separate client with a token and refresh token of its own. The token is
+ * a bare row, not a usable bearer: tests use it to check it is left alone.
+ *
+ * @return array{client: Client, token: Token, refreshToken: RefreshToken}
+ */
+function oauthClientWithToken(User $user): array
+{
+    $client = Client::factory()->create();
+
+    $token = Passport::token()->forceCreate([
         'id' => Str::random(80),
-        'access_token_id' => $result->token->getKey(),
+        'user_id' => $user->getKey(),
+        'client_id' => $client->getKey(),
+        'scopes' => ['mcp:use'],
         'revoked' => false,
-        'expires_at' => now()->addMonth(),
+        'expires_at' => now()->addYear(),
     ]);
 
-    return ['bearer' => $result->accessToken, 'token' => $result->token, 'refreshToken' => $refreshToken];
+    return ['client' => $client, 'token' => $token, 'refreshToken' => refreshTokenFor($token)];
+}
+
+function refreshTokenFor(Token $token): RefreshToken
+{
+    return Passport::refreshToken()->forceCreate([
+        'id' => Str::random(80),
+        'access_token_id' => $token->getKey(),
+        'revoked' => false,
+        'expires_at' => now()->addYear(),
+    ]);
+}
+
+/**
+ * A pending authorization code for the client: a dependent row that belongs
+ * to the client rather than to any token.
+ */
+function oauthAuthCodeFor(Client $client, User $user): AuthCode
+{
+    return Passport::authCode()->forceCreate([
+        'id' => Str::random(80),
+        'user_id' => $user->getKey(),
+        'client_id' => $client->getKey(),
+        'scopes' => '["mcp:use"]',
+        'revoked' => false,
+        'expires_at' => now()->addMinutes(10),
+    ]);
 }
 
 /**

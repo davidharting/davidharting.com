@@ -1,5 +1,6 @@
 <?php
 
+use App\Enum\OAuthTokenStatus;
 use App\Filament\Resources\OAuthTokens\Pages\ListOAuthTokens;
 use App\Models\User;
 use Filament\Actions\DeleteAction;
@@ -10,21 +11,22 @@ use Tests\TestCase;
 test('lists tokens with their client and user', function () {
     /** @var TestCase $this */
     $admin = User::factory()->create(['is_admin' => true]);
-    ['token' => $token] = adminTokenWithRefreshToken($admin);
+    ['token' => $token] = bearerTokenWithRefreshToken($admin);
 
     Livewire::actingAs($admin)
         ->test(ListOAuthTokens::class)
         ->assertCanSeeTableRecords([$token])
-        ->assertSeeText($admin->email)
-        ->assertSeeText('Active');
+        ->assertTableColumnStateSet('client.name', 'Test Personal Access Client', $token)
+        ->assertTableColumnStateSet('user_email', $admin->email, $token)
+        ->assertTableColumnStateSet('status', OAuthTokenStatus::Active, $token);
 });
 
 test('finds tokens by user email', function () {
     /** @var TestCase $this */
     $admin = User::factory()->create(['is_admin' => true, 'email' => 'david@example.com']);
     $other = User::factory()->create(['is_admin' => true, 'email' => 'someone@example.com']);
-    ['token' => $davidsToken] = adminTokenWithRefreshToken($admin);
-    ['token' => $othersToken] = adminTokenWithRefreshToken($other);
+    ['token' => $davidsToken] = bearerTokenWithRefreshToken($admin);
+    ['token' => $othersToken] = bearerTokenWithRefreshToken($other);
 
     Livewire::actingAs($admin)
         ->test(ListOAuthTokens::class)
@@ -36,9 +38,9 @@ test('finds tokens by user email', function () {
 test('filters tokens by status', function () {
     /** @var TestCase $this */
     $admin = User::factory()->create(['is_admin' => true]);
-    ['token' => $active] = adminTokenWithRefreshToken($admin);
-    ['token' => $revoked] = adminTokenWithRefreshToken($admin);
-    ['token' => $expired] = adminTokenWithRefreshToken($admin);
+    ['token' => $active] = bearerTokenWithRefreshToken($admin);
+    ['token' => $revoked] = bearerTokenWithRefreshToken($admin);
+    ['token' => $expired] = bearerTokenWithRefreshToken($admin);
     $revoked->revoke();
     $expired->forceFill(['expires_at' => now()->subDay()])->save();
 
@@ -61,7 +63,7 @@ describe('revoke', function () {
     test('cuts the token off and revokes its refresh token, keeping both records', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
-        ['bearer' => $bearer, 'token' => $token, 'refreshToken' => $refreshToken] = adminTokenWithRefreshToken($admin);
+        ['bearer' => $bearer, 'token' => $token, 'refreshToken' => $refreshToken] = bearerTokenWithRefreshToken($admin);
 
         Livewire::actingAs($admin)
             ->test(ListOAuthTokens::class)
@@ -77,7 +79,7 @@ describe('revoke', function () {
     test('is not offered for a token that is already revoked', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
-        ['token' => $token] = adminTokenWithRefreshToken($admin);
+        ['token' => $token] = bearerTokenWithRefreshToken($admin);
         $token->revoke();
 
         Livewire::actingAs($admin)
@@ -88,8 +90,8 @@ describe('revoke', function () {
     test('in bulk revokes only the selected tokens', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
-        ['token' => $selected, 'refreshToken' => $selectedRefresh] = adminTokenWithRefreshToken($admin);
-        ['token' => $untouched, 'refreshToken' => $untouchedRefresh] = adminTokenWithRefreshToken($admin);
+        ['token' => $selected, 'refreshToken' => $selectedRefresh] = bearerTokenWithRefreshToken($admin);
+        ['token' => $untouched, 'refreshToken' => $untouchedRefresh] = bearerTokenWithRefreshToken($admin);
 
         Livewire::actingAs($admin)
             ->test(ListOAuthTokens::class)
@@ -107,7 +109,7 @@ describe('delete', function () {
     test('cuts the token off and deletes it with its refresh token', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
-        ['bearer' => $bearer, 'token' => $token, 'refreshToken' => $refreshToken] = adminTokenWithRefreshToken($admin);
+        ['bearer' => $bearer, 'token' => $token, 'refreshToken' => $refreshToken] = bearerTokenWithRefreshToken($admin);
 
         Livewire::actingAs($admin)
             ->test(ListOAuthTokens::class)
@@ -123,8 +125,8 @@ describe('delete', function () {
     test('in bulk deletes only the selected tokens', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
-        ['token' => $selected, 'refreshToken' => $selectedRefresh] = adminTokenWithRefreshToken($admin);
-        ['token' => $untouched, 'refreshToken' => $untouchedRefresh] = adminTokenWithRefreshToken($admin);
+        ['token' => $selected, 'refreshToken' => $selectedRefresh] = bearerTokenWithRefreshToken($admin);
+        ['token' => $untouched, 'refreshToken' => $untouchedRefresh] = bearerTokenWithRefreshToken($admin);
 
         Livewire::actingAs($admin)
             ->test(ListOAuthTokens::class)

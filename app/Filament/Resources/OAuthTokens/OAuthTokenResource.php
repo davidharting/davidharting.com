@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\OAuthTokens;
 
+use App\Enum\OAuthTokenStatus;
 use App\Filament\Resources\OAuthTokens\Pages\ListOAuthTokens;
 use App\Models\User;
 use App\Support\LikePattern;
@@ -35,6 +36,8 @@ class OAuthTokenResource extends Resource
 
     protected static ?string $modelLabel = 'OAuth token';
 
+    protected static ?string $navigationLabel = 'Tokens';
+
     protected static ?string $slug = 'oauth-tokens';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTicket;
@@ -49,37 +52,35 @@ class OAuthTokenResource extends Resource
             // pick a user provider, so it breaks on the blank model Filament
             // builds relation queries from. Select the email directly instead.
             ->modifyQueryUsing(fn (Builder $query): Builder => $query
-                ->select('oauth_access_tokens.*')
+                ->select($query->qualifyColumn('*'))
                 ->addSelect(['user_email' => User::query()
                     ->select('email')
-                    ->whereColumn('users.id', 'oauth_access_tokens.user_id'),
+                    ->whereColumn('users.id', $query->qualifyColumn('user_id')),
                 ]))
             ->columns([
                 TextColumn::make('client.name')
                     ->label('Client')
+                    // Below md the Issued column is hidden, so say when the
+                    // token was issued here to tell rows apart on a phone.
+                    ->description(fn (Token $record): string => 'Issued '.$record->created_at->diffForHumans())
                     ->searchable(),
+                TextColumn::make('status')
+                    ->state(fn (Token $record): OAuthTokenStatus => OAuthTokenStatus::of($record))
+                    ->badge(),
+                TextColumn::make('created_at')
+                    ->label('Issued')
+                    ->dateTime()
+                    ->sortable()
+                    ->visibleFrom('md'),
                 TextColumn::make('user_email')
                     ->label('User')
                     ->visibleFrom('md')
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereIn(
                         'user_id',
-                        User::query()->select('id')->where('email', 'ilike', '%'.LikePattern::escape($search).'%'),
+                        User::query()->select('id')->whereLike('email', '%'.LikePattern::escape($search).'%'),
                     )),
                 TextColumn::make('scopes')
                     ->badge()
-                    ->visibleFrom('lg'),
-                TextColumn::make('status')
-                    ->state(fn (Token $record): string => self::status($record))
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'Active' => 'success',
-                        'Expired' => 'gray',
-                        'Revoked' => 'danger',
-                    }),
-                TextColumn::make('created_at')
-                    ->label('Issued')
-                    ->dateTime()
-                    ->sortable()
                     ->visibleFrom('lg'),
                 TextColumn::make('expires_at')
                     ->label('Expires')
@@ -89,18 +90,10 @@ class OAuthTokenResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->options([
-                        'active' => 'Active',
-                        'expired' => 'Expired',
-                        'revoked' => 'Revoked',
-                    ])
-                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
-                        'active' => $query->where('revoked', false)
-                            ->where(fn (Builder $unexpired) => $unexpired->whereNull('expires_at')->orWhere('expires_at', '>', now())),
-                        'expired' => $query->where('revoked', false)->where('expires_at', '<=', now()),
-                        'revoked' => $query->where('revoked', true),
-                        default => $query,
-                    }),
+                    ->options(OAuthTokenStatus::class)
+                    ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
+                        ? OAuthTokenStatus::from($data['value'])->scope($query)
+                        : $query),
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -109,13 +102,15 @@ class OAuthTokenResource extends Resource
                         ->color('warning')
                         ->requiresConfirmation()
                         ->modalHeading('Revoke token')
-                        ->modalDescription('The token and its refresh token stop working at once. The record stays, marked revoked.')
+                        ->modalDescription('The token and its refresh token stop working at once. The record stays, marked revoked. To cut off a whole connector, revoke its client instead.')
                         ->hidden(fn (Token $record): bool => $record->revoked)
-                        ->action(fn (Token $record) => OAuthRevocation::revokeToken($record))
+                        ->action(function (Token $record): void {
+                            OAuthRevocation::revokeToken($record);
+                        })
                         ->successNotificationTitle('Token revoked'),
                     DeleteAction::make()
                         ->modalDescription('The token and its refresh token are deleted for good, and stop working at once.')
-                        ->using(fn (Token $record) => OAuthRevocation::deleteToken($record)),
+                        ->using(fn (Token $record): bool => OAuthRevocation::deleteToken($record)),
                 ]),
             ])
             ->toolbarActions([
@@ -126,12 +121,20 @@ class OAuthTokenResource extends Resource
                         ->requiresConfirmation()
                         ->modalHeading('Revoke selected tokens')
                         ->modalDescription('Each token and its refresh token stop working at once. The records stay, marked revoked.')
-                        ->action(fn (Collection $records) => $records->each(OAuthRevocation::revokeToken(...)))
+                        ->action(function (Collection $records): void {
+                            foreach ($records as $token) {
+                                OAuthRevocation::revokeToken($token);
+                            }
+                        })
                         ->deselectRecordsAfterCompletion()
                         ->successNotificationTitle('Tokens revoked'),
                     DeleteBulkAction::make()
                         ->modalDescription('The tokens and their refresh tokens are deleted for good, and stop working at once.')
-                        ->using(fn (Collection $records) => $records->each(OAuthRevocation::deleteToken(...))),
+                        ->using(function (DeleteBulkAction $action, Collection $records): void {
+                            foreach ($records as $token) {
+                                OAuthRevocation::deleteToken($token) || $action->reportBulkProcessingFailure();
+                            }
+                        }),
                 ]),
             ]);
     }
@@ -141,14 +144,5 @@ class OAuthTokenResource extends Resource
         return [
             'index' => ListOAuthTokens::route('/'),
         ];
-    }
-
-    private static function status(Token $token): string
-    {
-        return match (true) {
-            $token->revoked => 'Revoked',
-            $token->expires_at?->isPast() ?? false => 'Expired',
-            default => 'Active',
-        };
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\OAuthClients;
 
+use App\Enum\OAuthTokenStatus;
 use App\Filament\Resources\OAuthClients\Pages\ListOAuthClients;
 use App\Support\OAuthRevocation;
 use BackedEnum;
@@ -16,6 +17,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Laravel\Passport\Client;
 use UnitEnum;
@@ -33,6 +35,10 @@ class OAuthClientResource extends Resource
 
     protected static ?string $modelLabel = 'OAuth client';
 
+    protected static ?string $navigationLabel = 'Clients';
+
+    protected static ?string $recordTitleAttribute = 'name';
+
     protected static ?string $slug = 'oauth-clients';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
@@ -43,9 +49,8 @@ class OAuthClientResource extends Resource
     {
         return $table
             ->defaultSort('created_at', 'desc')
-            ->modifyQueryUsing(fn ($query) => $query->withCount(['tokens as active_tokens_count' => fn ($tokens) => $tokens
-                ->where('revoked', false)
-                ->where(fn ($unexpired) => $unexpired->whereNull('expires_at')->orWhere('expires_at', '>', now())),
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->withCount([
+                'tokens as active_tokens_count' => fn (Builder $tokens): Builder => OAuthTokenStatus::Active->scope($tokens),
             ]))
             ->columns([
                 TextColumn::make('name')
@@ -75,7 +80,10 @@ class OAuthClientResource extends Resource
                     ->visibleFrom('lg'),
             ])
             ->filters([
-                TernaryFilter::make('revoked'),
+                TernaryFilter::make('revoked')
+                    ->label('Status')
+                    ->trueLabel('Revoked')
+                    ->falseLabel('Active'),
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -86,11 +94,13 @@ class OAuthClientResource extends Resource
                         ->modalHeading('Revoke client')
                         ->modalDescription('The client and every token it holds stop working at once. The records stay, marked revoked.')
                         ->hidden(fn (Client $record): bool => $record->revoked)
-                        ->action(fn (Client $record) => OAuthRevocation::revokeClient($record))
+                        ->action(function (Client $record): void {
+                            OAuthRevocation::revokeClient($record);
+                        })
                         ->successNotificationTitle('Client revoked'),
                     DeleteAction::make()
                         ->modalDescription('The client and all of its tokens are deleted for good. Anything using them stops working at once.')
-                        ->using(fn (Client $record) => OAuthRevocation::deleteClient($record)),
+                        ->using(fn (Client $record): bool => OAuthRevocation::deleteClient($record)),
                 ]),
             ])
             ->toolbarActions([
@@ -101,12 +111,20 @@ class OAuthClientResource extends Resource
                         ->requiresConfirmation()
                         ->modalHeading('Revoke selected clients')
                         ->modalDescription('Each client and every token it holds stop working at once. The records stay, marked revoked.')
-                        ->action(fn (Collection $records) => $records->each(OAuthRevocation::revokeClient(...)))
+                        ->action(function (Collection $records): void {
+                            foreach ($records as $client) {
+                                OAuthRevocation::revokeClient($client);
+                            }
+                        })
                         ->deselectRecordsAfterCompletion()
                         ->successNotificationTitle('Clients revoked'),
                     DeleteBulkAction::make()
                         ->modalDescription('The clients and all of their tokens are deleted for good. Anything using them stops working at once.')
-                        ->using(fn (Collection $records) => $records->each(OAuthRevocation::deleteClient(...))),
+                        ->using(function (DeleteBulkAction $action, Collection $records): void {
+                            foreach ($records as $client) {
+                                OAuthRevocation::deleteClient($client) || $action->reportBulkProcessingFailure();
+                            }
+                        }),
                 ]),
             ]);
     }
