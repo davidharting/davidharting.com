@@ -9,7 +9,7 @@ use Laravel\Passport\Client;
 use Livewire\Livewire;
 use Tests\TestCase;
 
-test('lists clients with how many active tokens each holds', function () {
+test('lists each client with its count of active tokens', function () {
     /** @var TestCase $this */
     $admin = User::factory()->create(['is_admin' => true]);
     ['token' => $active] = bearerTokenWithRefreshToken($admin);
@@ -18,11 +18,13 @@ test('lists clients with how many active tokens each holds', function () {
     $revoked->revoke();
     $expired->forceFill(['expires_at' => now()->subDay()])->save();
     $client = $active->client;
+    ['client' => $otherClient] = oauthClientWithToken($admin);
 
     Livewire::actingAs($admin)
         ->test(ListOAuthClients::class)
-        ->assertCanSeeTableRecords([$client])
-        ->assertTableColumnStateSet('active_tokens_count', 1, $client);
+        ->assertCanSeeTableRecords([$client, $otherClient])
+        ->assertTableColumnStateSet('active_tokens_count', 1, $client)
+        ->assertTableColumnStateSet('active_tokens_count', 1, $otherClient);
 });
 
 describe('revoke', function () {
@@ -42,22 +44,6 @@ describe('revoke', function () {
             ->and($token->fresh()->revoked)->toBeTrue()
             ->and($refreshToken->fresh()->revoked)->toBeTrue()
             ->and($authCode->fresh()->revoked)->toBeTrue();
-
-        $this->withToken($bearer)->postJson('/mcp/admin', mcpToolsListRequest())->assertUnauthorized();
-    });
-
-    test('relies on the revoked client alone to refuse its tokens', function () {
-        /** @var TestCase $this */
-        $admin = User::factory()->create(['is_admin' => true]);
-        ['bearer' => $bearer, 'token' => $token] = bearerTokenWithRefreshToken($admin);
-        $token->client->forceFill(['revoked' => true])->save();
-
-        expect($token->fresh()->revoked)->toBeFalse();
-
-        // Passport memoizes client lookups with once(). Issuing the token above
-        // cached the client as active, and Octane flushes that cache between
-        // requests, so flush it here as the next real request would see it.
-        Once::flush();
 
         $this->withToken($bearer)->postJson('/mcp/admin', mcpToolsListRequest())->assertUnauthorized();
     });
@@ -91,7 +77,7 @@ describe('revoke', function () {
         /** @var TestCase $this */
         $admin = User::factory()->create(['is_admin' => true]);
         ['token' => $selectedToken] = bearerTokenWithRefreshToken($admin);
-        ['client' => $untouchedClient, 'token' => $untouchedToken] = oauthClientWithToken($admin);
+        ['client' => $untouchedClient, 'token' => $untouchedToken, 'refreshToken' => $untouchedRefresh] = oauthClientWithToken($admin);
 
         Livewire::actingAs($admin)
             ->test(ListOAuthClients::class)
@@ -103,6 +89,22 @@ describe('revoke', function () {
             ->and($untouchedClient->fresh()->revoked)->toBeFalse()
             ->and($untouchedToken->fresh()->revoked)->toBeFalse();
     });
+});
+
+test('refuses a token whose client is revoked, even when the token itself is not', function () {
+    /** @var TestCase $this */
+    $admin = User::factory()->create(['is_admin' => true]);
+    ['bearer' => $bearer, 'token' => $token] = bearerTokenWithRefreshToken($admin);
+    $token->client->forceFill(['revoked' => true])->save();
+
+    expect($token->fresh()->revoked)->toBeFalse();
+
+    // Passport memoizes client lookups with once(). Issuing the token above
+    // cached the client as active, and Octane flushes that cache between
+    // requests, so flush it here as the next real request would see it.
+    Once::flush();
+
+    $this->withToken($bearer)->postJson('/mcp/admin', mcpToolsListRequest())->assertUnauthorized();
 });
 
 describe('delete', function () {

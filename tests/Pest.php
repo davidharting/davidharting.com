@@ -150,7 +150,8 @@ function oauthAuthCodeFor(Client $client, User $user): AuthCode
         'id' => Str::random(80),
         'user_id' => $user->getKey(),
         'client_id' => $client->getKey(),
-        'scopes' => '["mcp:use"]',
+        // AuthCode has no array cast on scopes, unlike Token, so store the JSON.
+        'scopes' => json_encode(['mcp:use']),
         'revoked' => false,
         'expires_at' => now()->addMinutes(10),
     ]);
