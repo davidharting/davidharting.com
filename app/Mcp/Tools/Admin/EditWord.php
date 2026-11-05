@@ -5,6 +5,7 @@ namespace App\Mcp\Tools\Admin;
 use App\Mcp\Tools\Admin\Concerns\DescribesWords;
 use App\Models\Word;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -73,21 +74,29 @@ class EditWord extends Tool
             return Response::error('Nothing to change: pass at least one field to edit alongside word_id.');
         }
 
-        if (isset($validated['word'])) {
-            $conflict = Word::query()->named($validated['word'])->whereKeyNot($word->id)->first();
+        $conflict = isset($validated['word']) ? Word::spelledAs($validated['word'], $word) : null;
 
-            if ($conflict !== null) {
-                return Response::error(sprintf(
-                    'Refused: "%s" is already on the list as word_id %d. Nothing was changed.',
-                    $conflict->word,
-                    $conflict->id,
-                ));
-            }
+        if ($conflict !== null) {
+            return $this->conflictError($conflict);
         }
 
-        $word->update($validated);
+        try {
+            $word->update($validated);
+        } catch (UniqueConstraintViolationException) {
+            // A concurrent call took the spelling after the check above.
+            return $this->conflictError(Word::spelledAs($validated['word'], $word));
+        }
 
         return Response::structured($this->wordResult($word));
+    }
+
+    private function conflictError(Word $conflict): Response
+    {
+        return Response::error(sprintf(
+            'Refused: "%s" is already on the list as word_id %d. Nothing was changed.',
+            $conflict->word,
+            $conflict->id,
+        ));
     }
 
     /**

@@ -19,7 +19,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class WordResource extends Resource
 {
@@ -36,13 +36,11 @@ class WordResource extends Resource
                 TextInput::make('word')
                     ->required()
                     ->maxLength(255)
+                    ->autocapitalize('none')
+                    ->autocomplete(false)
+                    ->extraInputAttributes(['autocorrect' => 'off', 'spellcheck' => 'false'])
                     ->rule(fn (?Word $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record): void {
-                        $taken = Word::query()
-                            ->named($value)
-                            ->when($record, fn (Builder $query) => $query->whereKeyNot($record->id))
-                            ->exists();
-
-                        if ($taken) {
+                        if (is_string($value) && Word::spelledAs($value, $record) !== null) {
                             $fail('That word is already on the list.');
                         }
                     }),
@@ -50,16 +48,24 @@ class WordResource extends Resource
                     ->helperText('A plain-words definition to quiz against.')
                     ->columnSpanFull(),
                 Repeater::make('senses')
-                    ->helperText('The dictionary senses you are learning this word in.')
+                    ->hint('The dictionary senses you are learning this word in.')
                     ->schema([
                         TextInput::make('part_of_speech')
+                            ->datalist(['noun', 'verb', 'adjective', 'adverb'])
                             ->maxLength(50),
                         Textarea::make('definition')
                             ->required(),
                         Repeater::make('examples')
                             ->simple(Textarea::make('example')->required())
+                            ->addActionLabel('Add example')
                             ->defaultItems(0),
                     ])
+                    ->itemLabel(fn (array $state): string => Str::limit(
+                        collect([$state['part_of_speech'] ?? null, $state['definition'] ?? null])->filter()->implode(': '),
+                        50,
+                    ))
+                    ->collapsible()
+                    ->addActionLabel('Add sense')
                     ->defaultItems(0)
                     ->columnSpanFull(),
             ]);
@@ -72,7 +78,7 @@ class WordResource extends Resource
             ->defaultPaginationPageOption(50)
             ->columns([
                 TextColumn::make('word')
-                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereRaw('word ilike ?', ['%'.$search.'%']))
+                    ->searchable()
                     ->sortable(),
                 TextColumn::make('short_definition')
                     ->lineClamp(2)
@@ -80,7 +86,8 @@ class WordResource extends Resource
                 TextColumn::make('created_at')
                     ->label('Added')
                     ->date()
-                    ->sortable(),
+                    ->sortable()
+                    ->visibleFrom('sm'),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()

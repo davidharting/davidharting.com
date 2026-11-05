@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\Senses;
 use Database\Factories\WordFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,11 +13,12 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * A word David is learning, with the dictionary senses he is learning it in.
  *
- * Each sense is stored as {part_of_speech, definition, examples}, the shape a
- * dictionary entry breaks down into. Every write is normalised to that shape,
- * so readers never have to guess which keys a sense has.
+ * senses holds only that curated list (see the Senses cast). A raw dictionary
+ * response, when lookup arrives, belongs in a column of its own.
  *
- * @property list<array{part_of_speech: ?string, definition: string, examples: list<string>}> $senses
+ * @phpstan-import-type Sense from Senses
+ *
+ * @property list<Sense> $senses
  */
 class Word extends Model
 {
@@ -30,6 +32,28 @@ class Word extends Model
     ];
 
     /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'senses' => Senses::class,
+        ];
+    }
+
+    /**
+     * The word already on the list with this spelling, ignoring case and
+     * surrounding whitespace, other than $except.
+     */
+    public static function spelledAs(string $word, ?Word $except = null): ?Word
+    {
+        return static::query()
+            ->named($word)
+            ->when($except?->exists, fn (Builder $query) => $query->whereKeyNot($except->id))
+            ->first();
+    }
+
+    /**
      * Match a word case-insensitively, so "ephemeral" finds "Ephemeral".
      *
      * @param  Builder<Word>  $query
@@ -37,38 +61,19 @@ class Word extends Model
     #[Scope]
     protected function named(Builder $query, string $word): void
     {
-        $query->whereRaw('lower(word) = lower(?)', [$word]);
+        $query->whereRaw('lower(word) = lower(?)', [trim($word)]);
     }
 
     /**
-     * @return Attribute<list<array{part_of_speech: ?string, definition: string, examples: list<string>}>, list<array<string, mixed>>>
+     * Stored trimmed, so a stray space cannot slip past the one-row-per-word
+     * index on lower(word).
+     *
+     * @return Attribute<string, string>
      */
-    protected function senses(): Attribute
+    protected function word(): Attribute
     {
-        // Postgres reorders jsonb keys, so senses are normalised on the way
-        // out as well as on the way in.
         return Attribute::make(
-            get: fn (?string $value): array => self::normaliseSenses(json_decode($value ?? '[]', true)),
-            set: fn (?array $value): string => json_encode(self::normaliseSenses($value ?? [])),
-        );
-    }
-
-    /**
-     * @param  array<array-key, array<string, mixed>>  $senses
-     * @return list<array{part_of_speech: ?string, definition: string, examples: list<string>}>
-     */
-    private static function normaliseSenses(array $senses): array
-    {
-        return array_map(
-            fn (array $sense): array => [
-                'part_of_speech' => filled($sense['part_of_speech'] ?? null) ? $sense['part_of_speech'] : null,
-                'definition' => $sense['definition'],
-                'examples' => array_values(array_filter(
-                    $sense['examples'] ?? [],
-                    fn (?string $example): bool => filled($example),
-                )),
-            ],
-            array_values($senses),
+            set: fn (string $value): string => trim($value),
         );
     }
 }

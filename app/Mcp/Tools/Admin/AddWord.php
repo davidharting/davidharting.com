@@ -5,6 +5,7 @@ namespace App\Mcp\Tools\Admin;
 use App\Mcp\Tools\Admin\Concerns\DescribesWords;
 use App\Models\Word;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
@@ -65,8 +66,12 @@ class AddWord extends Tool
             ...$this->sensesRules(),
         ]);
 
-        $word = Word::query()->named($validated['word'])->first()
-            ?? Word::create($validated);
+        try {
+            $word = Word::spelledAs($validated['word']) ?? Word::create($validated);
+        } catch (UniqueConstraintViolationException) {
+            // A concurrent call added it between the lookup and the insert.
+            $word = Word::spelledAs($validated['word']);
+        }
 
         return Response::structured([
             ...$this->wordResult($word),

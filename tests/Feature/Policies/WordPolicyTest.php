@@ -14,6 +14,7 @@ dataset('abilities', [
 ]);
 
 test('guests may not', function (array $ability) {
+    /** @var TestCase $this */
     expect(Gate::allows(...$ability))->toBeFalse();
 })->with('abilities');
 

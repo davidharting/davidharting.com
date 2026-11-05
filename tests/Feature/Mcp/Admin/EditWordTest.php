@@ -46,7 +46,7 @@ describe('handle()', function () {
             ->and($word->refresh()->word)->toBe('ephemerel');
     });
 
-    test('asks WordPolicy about this particular word', function () {
+    test('refuses a caller who may not update this word', function () {
         /** @var TestCase $this */
         // Every ability is admin-only today, so the refusal is forced here to
         // prove handle() asks WordPolicy::update about this word.
@@ -79,15 +79,18 @@ describe('handle()', function () {
 
     test('replaces the whole list of senses', function () {
         /** @var TestCase $this */
-        $word = Word::factory()->create();
+        $word = Word::factory()->create(['senses' => [
+            ['definition' => 'lasting a very short time'],
+            ['definition' => 'a plant with a short life cycle'],
+        ]]);
 
         AdminServer::actingAs(User::factory()->admin()->create())->tool(EditWord::class, [
             'word_id' => $word->id,
-            'senses' => [['definition' => 'lasting a very short time']],
+            'senses' => [['definition' => 'lasting only a day']],
         ])->assertOk();
 
         expect($word->refresh()->senses)->toBe([
-            ['part_of_speech' => null, 'definition' => 'lasting a very short time', 'examples' => []],
+            ['part_of_speech' => null, 'definition' => 'lasting only a day', 'examples' => []],
         ]);
     });
 

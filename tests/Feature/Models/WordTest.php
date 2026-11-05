@@ -28,6 +28,22 @@ describe('senses', function () {
     });
 });
 
+describe('word', function () {
+    test('is stored without surrounding whitespace', function () {
+        /** @var TestCase $this */
+        expect(Word::factory()->create(['word' => "  ephemeral\n"])->refresh()->word)->toBe('ephemeral');
+    });
+});
+
+test('saving a word whose senses have not changed does not rewrite them', function () {
+    /** @var TestCase $this */
+    $word = Word::factory()->create()->refresh();
+
+    $word->senses = $word->senses;
+
+    expect($word->isDirty('senses'))->toBeFalse();
+});
+
 test('the same word cannot be recorded twice in different case', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'ephemeral']);

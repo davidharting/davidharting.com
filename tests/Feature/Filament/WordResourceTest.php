@@ -6,7 +6,6 @@ use App\Filament\Resources\Words\Pages\ListWords;
 use App\Filament\Resources\Words\WordResource;
 use App\Models\User;
 use App\Models\Word;
-use Filament\Forms\Components\Repeater;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -34,9 +33,6 @@ test('searching the list matches words case-insensitively', function () {
 
 test('records a word with its senses and a short definition', function () {
     /** @var TestCase $this */
-    // Lets the form be filled with plain lists rather than UUID-keyed items.
-    $undoRepeaterFake = Repeater::fake();
-
     Livewire::actingAs(User::factory()->admin()->create())
         ->test(CreateWord::class)
         ->fillForm([
@@ -55,8 +51,6 @@ test('records a word with its senses and a short definition', function () {
         ->and($word->senses)->toBe([
             ['part_of_speech' => 'adjective', 'definition' => 'lasting a very short time', 'examples' => ['an ephemeral fashion']],
         ]);
-
-    $undoRepeaterFake();
 });
 
 test('refuses a word already on the list in another case', function () {
@@ -87,6 +81,20 @@ test('edits a word, keeping its own spelling available to it and its senses inta
         ->word->toBe('Ephemeral')
         ->short_definition->toBe('here today, gone tomorrow')
         ->senses->toBe($senses);
+});
+
+test('refuses respelling a word onto another word on the list', function () {
+    /** @var TestCase $this */
+    Word::factory()->create(['word' => 'ephemeral']);
+    $word = Word::factory()->create(['word' => 'ephemerel']);
+
+    Livewire::actingAs(User::factory()->admin()->create())
+        ->test(EditWord::class, ['record' => $word->id])
+        ->fillForm(['word' => 'EPHEMERAL'])
+        ->call('save')
+        ->assertHasFormErrors(['word']);
+
+    expect($word->refresh()->word)->toBe('ephemerel');
 });
 
 test('a non-admin cannot open the word list', function () {

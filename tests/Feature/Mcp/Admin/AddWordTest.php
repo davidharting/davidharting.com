@@ -100,6 +100,17 @@ describe('handle()', function () {
             ->and($existing->refresh()->short_definition)->toBe('brief');
     });
 
+    test('ignores whitespace around the word, so it still finds the stored one', function () {
+        /** @var TestCase $this */
+        $existing = Word::factory()->create(['word' => 'ephemeral']);
+
+        $response = AdminServer::actingAs(User::factory()->admin()->create())
+            ->tool(AddWord::class, ['word' => " Ephemeral\n"]);
+
+        $response->assertStructuredContent(fn ($json) => $json->where('word_id', $existing->id)->where('word_created', false)->etc());
+        expect(Word::count())->toBe(1);
+    });
+
     test('refuses a sense with no definition', function () {
         /** @var TestCase $this */
         $admin = User::factory()->admin()->create();
@@ -109,7 +120,7 @@ describe('handle()', function () {
             'senses' => [['part_of_speech' => 'adjective']],
         ]);
 
-        $response->assertHasErrors();
+        $response->assertHasErrors(['The senses.0.definition field is required.']);
         expect(Word::count())->toBe(0);
     });
 });
