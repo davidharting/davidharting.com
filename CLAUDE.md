@@ -141,6 +141,22 @@ TIA is opt-in: pass `--tia`. Use it in your dev loop. After each change, run `ve
 - Write tests for all changes
 - Focus on feature tests to get more leverage
 
+### Pull request reviews
+
+Subagent reviews: after opening a PR (and before asking David to review), run fresh-context subagent reviews, one per lens, for each lens relevant to the change. Address the findings (fix, or note in the thread why not), then summarize what each review found. Lenses:
+
+- Laravel best practices (any PHP/Laravel change).
+- Livewire best practices (any Livewire component or its Blade view).
+- Frontend expertise / UX (any UI, Blade, CSS, or JS change; mobile first, Katie is phone-only).
+- Test clarity (any test change): plain-English test names, clear value and behavior, setup clear and abstracted where it hurts readability.
+- General correctness (always): bugs, edge cases, races, migrations.
+- Security (any change touching auth, policies, routes, uploads, storage, user input, secrets, or infra): authorization gaps, data leaks between viewers (e.g. revealing a memory early), injection, signed URL and upload safety.
+- Abstractions (always): are the code abstractions clear, and are we missing chances to solve something with a standard algorithm, data structure, or framework feature?
+
+We control the map and its tickets, so they are not a fixed spec. Reviewers (especially correctness) often read tickets too literally. Treat "doesn't match the ticket" findings with judgement: if the code is the better call, keep it and say so; if it's unclear, ask David rather than mechanically conforming to the ticket.
+
+Before merging (only once David has told you to merge, per the rule above): have a fresh-context subagent review the tests only (plain-English test names, clear value and behavior, test setup that is clear and abstracted where it hurts readability). Then squash merge with the PR description as the commit body. Refresh the description first if it's stale.
+
 ## Agent skills
 
 ### Issue tracker
