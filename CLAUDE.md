@@ -9,9 +9,9 @@ Quick check: if `php artisan test` fails with autoload errors, run the setup.
 ### Environments
 
 - **Local macOS**: dev runs through mise + pitchfork. Use `mise run setup` once, then `mise run dev` to bring up the stack (postgres, octane, queue, vite). See the macOS section of [docs/development-setup.md](docs/development-setup.md).
-- **Claude Code cloud sandboxes**: the environment's setup script runs `scripts/sandbox/setup.sh`, which apt-installs PHP 8.4 with PCOV from the ondrej/php PPA, puts Node 26 in `~/.local/bin`, apt-installs libvips and exiftool for photo processing, installs `vendor/` and `node_modules/`, builds the Vite assets, and sets up `.env` and PostgreSQL so `php artisan test --parallel` works with no exports. If `php -v` shows 8.3, `php -m` lacks `pcov`, or `vendor/` is missing, the setup script didn't run: run `bash scripts/sandbox/setup.sh` yourself, then the Linux rules below apply.
+- **Claude Code cloud sandboxes**: the environment's setup script runs `scripts/sandbox/setup.sh`, which apt-installs PHP 8.5 with PCOV from the ondrej/php PPA, puts Node 26 in `~/.local/bin`, apt-installs libvips and exiftool for photo processing, installs `vendor/` and `node_modules/`, builds the Vite assets, and sets up `.env` and PostgreSQL so `php artisan test --parallel` works with no exports. If `php -v` shows 8.3, `php -m` lacks `pcov`, or `vendor/` is missing, the setup script didn't run: run `bash scripts/sandbox/setup.sh` yourself, then the Linux rules below apply.
 - **Remote / CI / preconfigured Linux containers** (e.g. a cloud coding agent): tools are already installed — **do not install mise or run pitchfork**. Run `php artisan`, `vendor/bin/pint`, and `npm` directly, and follow the Linux/sandboxed section of [docs/development-setup.md](docs/development-setup.md). `mise run <task>` is a local convenience, not a requirement; the underlying commands work without it.
-- **Amp orbs**: `.agents/setup` installs PHP 8.4 (Herd-lite), Composer, PostgreSQL 17 (systemd), libvips and exiftool, installs dependencies, builds assets, and migrates and seeds the dev database. Run `amp orb services ensure` to start the dev stack from `.amp/services.yaml`: the Vite dev server is the portal (HMR included) and proxies every non-asset request to `php artisan serve`, plus a queue worker. The seeded admin login is `admin@example.com` / `password`.
+- **Amp orbs**: `.agents/setup` installs PHP 8.5 (Herd-lite), Composer, PostgreSQL 17 (systemd), libvips and exiftool, installs dependencies, builds assets, and migrates and seeds the dev database. Run `amp orb services ensure` to start the dev stack from `.amp/services.yaml`: the Vite dev server is the portal (HMR included) and proxies every non-asset request to `php artisan serve`, plus a queue worker. The seeded admin login is `admin@example.com` / `password`.
 
 ## Architecture overview
 
@@ -143,6 +143,8 @@ TIA is opt-in: pass `--tia`. Use it in your dev loop. After each change, run `ve
 
 ### Pull request reviews
 
+PR size: prefer reviewable PR stacks. Ideally each PR establishes one cohesive thing. A good rule of thumb is <=10 non-generated files and <=500 lines. Previews usually make sense on the tip of the stack instead of each layer (see PR preview environments above for how to preview a stack).
+
 Subagent reviews: after opening a PR (and before asking David to review), run fresh-context subagent reviews, one per lens, for each lens relevant to the change. Address the findings (fix, or note in the thread why not), then summarize what each review found. Lenses:
 
 - Laravel best practices (any PHP/Laravel change).
@@ -184,7 +186,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 ## Foundational Context
 
-This application is a Laravel application running on PHP 8.4. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
+This application is a Laravel application running on PHP 8.5. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
 
 Before relying on a package's API, confirm its installed version:
 
