@@ -25,7 +25,7 @@ enum OAuthTokenStatus: string implements HasColor, HasLabel
     {
         return match (true) {
             $token->revoked => self::Revoked,
-            $token->expires_at?->isPast() ?? false => self::Expired,
+            $token->expires_at?->lte(now()) ?? false => self::Expired,
             default => self::Active,
         };
     }

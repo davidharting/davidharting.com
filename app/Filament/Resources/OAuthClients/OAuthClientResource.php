@@ -20,6 +20,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Laravel\Passport\Client;
+use Throwable;
 use UnitEnum;
 
 /**
@@ -37,7 +38,13 @@ class OAuthClientResource extends Resource
 
     protected static ?string $navigationLabel = 'Clients';
 
+    /**
+     * Names the client in the delete modal. The resource has no view page, so
+     * global search would find clients it can't link to.
+     */
     protected static ?string $recordTitleAttribute = 'name';
+
+    protected static bool $isGloballySearchable = false;
 
     protected static ?string $slug = 'oauth-clients';
 
@@ -122,7 +129,12 @@ class OAuthClientResource extends Resource
                         ->modalDescription('The clients and all of their tokens are deleted for good. Anything using them stops working at once.')
                         ->using(function (DeleteBulkAction $action, Collection $records): void {
                             foreach ($records as $client) {
-                                OAuthRevocation::deleteClient($client) || $action->reportBulkProcessingFailure();
+                                try {
+                                    OAuthRevocation::deleteClient($client) || $action->reportBulkProcessingFailure();
+                                } catch (Throwable $exception) {
+                                    $action->reportBulkProcessingFailure();
+                                    report($exception);
+                                }
                             }
                         }),
                 ]),

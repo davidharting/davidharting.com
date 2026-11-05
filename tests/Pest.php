@@ -92,7 +92,7 @@ function accessTokenFor(User $user, array $scopes = []): string
  */
 function bearerTokenWithRefreshToken(User $user): array
 {
-    $hasPersonalAccessClient = Passport::client()->newQuery()->get()
+    $hasPersonalAccessClient = Passport::client()->newQuery()->where('revoked', false)->get()
         ->contains(fn (Client $client): bool => $client->hasGrantType('personal_access'));
 
     if (! $hasPersonalAccessClient) {

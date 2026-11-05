@@ -22,6 +22,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Laravel\Passport\Token;
+use Throwable;
 use UnitEnum;
 
 /**
@@ -29,6 +30,13 @@ use UnitEnum;
  * alongside it and never shown on its own.
  *
  * Read-only apart from revoking and deleting.
+ *
+ * The user's email is selected with a subquery, not through Token::user().
+ * That relation reads the token's own client to pick a user provider, so it
+ * breaks on the blank model Filament builds relation queries from.
+ *
+ * Below md the Issued column is hidden, so the client column also says when
+ * the token was issued, to tell rows apart on a phone.
  */
 class OAuthTokenResource extends Resource
 {
@@ -48,9 +56,6 @@ class OAuthTokenResource extends Resource
     {
         return $table
             ->defaultSort('created_at', 'desc')
-            // Passport's Token::user() relation reads the token's own client to
-            // pick a user provider, so it breaks on the blank model Filament
-            // builds relation queries from. Select the email directly instead.
             ->modifyQueryUsing(fn (Builder $query): Builder => $query
                 ->select($query->qualifyColumn('*'))
                 ->addSelect(['user_email' => User::query()
@@ -60,8 +65,6 @@ class OAuthTokenResource extends Resource
             ->columns([
                 TextColumn::make('client.name')
                     ->label('Client')
-                    // Below md the Issued column is hidden, so say when the
-                    // token was issued here to tell rows apart on a phone.
                     ->description(fn (Token $record): string => 'Issued '.$record->created_at->diffForHumans())
                     ->searchable(),
                 TextColumn::make('status')
@@ -132,7 +135,12 @@ class OAuthTokenResource extends Resource
                         ->modalDescription('The tokens and their refresh tokens are deleted for good, and stop working at once.')
                         ->using(function (DeleteBulkAction $action, Collection $records): void {
                             foreach ($records as $token) {
-                                OAuthRevocation::deleteToken($token) || $action->reportBulkProcessingFailure();
+                                try {
+                                    OAuthRevocation::deleteToken($token) || $action->reportBulkProcessingFailure();
+                                } catch (Throwable $exception) {
+                                    $action->reportBulkProcessingFailure();
+                                    report($exception);
+                                }
                             }
                         }),
                 ]),

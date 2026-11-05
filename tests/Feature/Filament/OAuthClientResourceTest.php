@@ -4,6 +4,7 @@ use App\Filament\Resources\OAuthClients\Pages\ListOAuthClients;
 use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\Testing\TestAction;
+use Illuminate\Support\Once;
 use Laravel\Passport\Client;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -41,6 +42,22 @@ describe('revoke', function () {
             ->and($token->fresh()->revoked)->toBeTrue()
             ->and($refreshToken->fresh()->revoked)->toBeTrue()
             ->and($authCode->fresh()->revoked)->toBeTrue();
+
+        $this->withToken($bearer)->postJson('/mcp/admin', mcpToolsListRequest())->assertUnauthorized();
+    });
+
+    test('relies on the revoked client alone to refuse its tokens', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->create(['is_admin' => true]);
+        ['bearer' => $bearer, 'token' => $token] = bearerTokenWithRefreshToken($admin);
+        $token->client->forceFill(['revoked' => true])->save();
+
+        expect($token->fresh()->revoked)->toBeFalse();
+
+        // Passport memoizes client lookups with once(). Issuing the token above
+        // cached the client as active, and Octane flushes that cache between
+        // requests, so flush it here as the next real request would see it.
+        Once::flush();
 
         $this->withToken($bearer)->postJson('/mcp/admin', mcpToolsListRequest())->assertUnauthorized();
     });
