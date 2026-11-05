@@ -157,7 +157,7 @@ We control the map and its tickets, so they are not a fixed spec. Reviewers (esp
 
 Before merging (only once David has told you to merge, per the rule above): have a fresh-context subagent review the tests only (plain-English test names, clear value and behavior, test setup that is clear and abstracted where it hurts readability). Then squash merge with the PR description as the commit body. Refresh the description first if it's stale.
 
-Post the review summaries as a PR comment, so they're on the PR whichever tool opened it. If you can't spawn subagents, do each lens as a separate review pass of your own and say so in the summary. Remove the `preview` label before squash merging (see PR preview environments above).
+These lens reviews are in addition to `/code-review`, which should also be run. Post the review summaries as a PR comment, so they're on the PR whichever tool opened it. If you can't spawn subagents, do each lens as a separate review pass of your own and say so in the summary. Remove the `preview` label before squash merging (see PR preview environments above).
 
 ## Agent skills
 
