@@ -70,7 +70,11 @@ class Flashcard extends Model
     #[Scope]
     protected function dueAt(Builder $query, DateTimeInterface $moment): void
     {
-        $query->where('due', '<=', $moment)->orderBy('due')->orderBy('id');
+        // Bound as an exact UTC string: the query grammar would otherwise drop
+        // the microseconds and the offset, missing a card due this instant.
+        $query->where('due', '<=', CardSchedule::inUtc($moment)->format('Y-m-d H:i:s.uP'))
+            ->orderBy('due')
+            ->orderBy('id');
     }
 
     /**
@@ -82,7 +86,7 @@ class Flashcard extends Model
     {
         $reviewedAt ??= now();
 
-        return DB::transaction(function () use ($rating, $reviewedAt, $reviewDurationMs): Review {
+        [$review, $attributes] = DB::transaction(function () use ($rating, $reviewedAt, $reviewDurationMs): array {
             $locked = static::query()->lockForUpdate()->findOrFail($this->getKey());
             $before = $locked->schedule;
 
@@ -91,19 +95,22 @@ class Flashcard extends Model
 
             $review = $locked->reviews()->create([
                 'rating' => $rating,
-                'reviewed_at' => $reviewedAt,
+                'reviewed_at' => CardSchedule::inUtc($reviewedAt),
                 'review_duration_ms' => $reviewDurationMs,
                 'schedule_before' => CardScheduleCast::columns($before),
                 'schedule_after' => CardScheduleCast::columns($locked->schedule),
             ]);
 
-            // Two steps on purpose: setRawAttributes(sync: true) syncs before it
-            // clears the cast cache, so a schedule read earlier would be
-            // written back over the new one.
-            $this->setRawAttributes($locked->getAttributes());
-            $this->syncOriginal();
-
-            return $review;
+            return [$review, $locked->getAttributes()];
         });
+
+        // Only once committed, so a rolled-back grade leaves this instance as
+        // it was. Two steps on purpose: setRawAttributes(sync: true) syncs
+        // before it clears the cast cache, so a schedule read earlier would
+        // be written back over the new one.
+        $this->setRawAttributes($attributes);
+        $this->syncOriginal();
+
+        return $review;
     }
 }

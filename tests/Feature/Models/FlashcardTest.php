@@ -45,6 +45,7 @@ describe('grade()', function () {
         /** @var TestCase $this */
         $flashcard = Word::factory()->create()->flashcard;
         $reviewedAt = Carbon::parse('2026-01-01 09:00:00.123456', 'UTC');
+        $flashcard->schedule; // Read before grading, as a practice screen would.
 
         $flashcard->grade(Rating::Good, $reviewedAt);
         $reloaded = $flashcard->fresh()->schedule;
@@ -67,6 +68,16 @@ describe('grade()', function () {
             ->review_duration_ms->toBe(4200)
             ->schedule_before->stability->toBeNull()
             ->schedule_after->stability->toBe($flashcard->schedule->stability);
+    });
+
+    test('logs the review at the exact moment it was graded', function () {
+        /** @var TestCase $this */
+        $flashcard = Word::factory()->create()->flashcard;
+
+        $review = $flashcard->grade(Rating::Good, Carbon::parse('2026-01-01 09:00:00.123456', 'America/New_York'));
+
+        expect($review->fresh()->reviewed_at->format('Y-m-d H:i:s.u P'))->toBe('2026-01-01 14:00:00.123456 +00:00')
+            ->and($flashcard->schedule->lastReview->format('Y-m-d H:i:s.u'))->toBe('2026-01-01 14:00:00.123456');
     });
 
     test('builds each review on the schedule the previous one left', function () {
@@ -95,6 +106,15 @@ describe('dueAt()', function () {
         $due = Flashcard::query()->dueAt(now())->get();
 
         expect($due->modelKeys())->toBe([$older->id, $newer->id]);
+    });
+
+    test('includes a flashcard due this very instant, whatever time zone the moment is in', function () {
+        /** @var TestCase $this */
+        $this->freezeTime();
+        Word::factory()->create();
+
+        expect(Flashcard::query()->dueAt(now())->count())->toBe(1)
+            ->and(Flashcard::query()->dueAt(now()->setTimezone('America/New_York'))->count())->toBe(1);
     });
 });
 
