@@ -2,10 +2,12 @@
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Tools\Admin\AddWord;
 use App\Mcp\Tools\Admin\CreateMedia;
 use App\Mcp\Tools\Admin\CreateMediaEvent;
 use App\Mcp\Tools\Admin\EditMedia;
 use App\Mcp\Tools\Admin\EditMediaEvent;
+use App\Mcp\Tools\Admin\EditWord;
 use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
@@ -56,7 +58,12 @@ class AdminServer extends Server
         finished or abandoned), when it got there, and what he wrote about it.
         Use query-media to find items, create-media and create-media-event to
         log them, and edit-media, edit-media-event and update-creator to
-        correct mistakes. Each tool's description gives the rules for using it.
+        correct mistakes.
+
+        **Words** are David's private vocabulary list: words he is learning,
+        with the dictionary senses he is learning them in. Use add-word and
+        edit-word to record them. Each tool's description gives the rules for
+        using it.
 
         Drafts, remarks on media items and comments on their events are
         private writing, not on the public website. Never quote or attribute
@@ -73,6 +80,8 @@ class AdminServer extends Server
         EditMedia::class,
         EditMediaEvent::class,
         UpdateCreator::class,
+        AddWord::class,
+        EditWord::class,
     ];
 
     protected array $resources = [
