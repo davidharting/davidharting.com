@@ -12,8 +12,7 @@ return new class extends Migration
         Schema::create('words', function (Blueprint $table) {
             $table->id();
             $table->string('word');
-            $table->jsonb('senses')->default('[]');
-            $table->text('short_definition')->nullable();
+            $table->text('short_definition');
             $table->timestamps();
         });
 

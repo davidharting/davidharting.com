@@ -19,13 +19,6 @@ class WordFactory extends Factory
     {
         return [
             'word' => $this->faker->unique()->word(),
-            'senses' => [
-                [
-                    'part_of_speech' => 'adjective',
-                    'definition' => $this->faker->sentence(),
-                    'examples' => [$this->faker->sentence()],
-                ],
-            ],
             'short_definition' => $this->faker->sentence(),
         ];
     }
