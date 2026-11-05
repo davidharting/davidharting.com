@@ -540,6 +540,7 @@ describe('annotations', function () {
 
         // Not idempotent, because append_to_remark accumulates.
         expect($tool['annotations'])->toBe([
+            'title' => 'Edit Media',
             'destructiveHint' => true,
         ]);
     });
