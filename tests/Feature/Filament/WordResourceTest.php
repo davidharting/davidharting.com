@@ -31,20 +31,22 @@ test('searching the list matches words case-insensitively', function () {
         ->assertCanNotSeeTableRecords([$laconic]);
 });
 
-test('records a word with its short definition', function () {
+test('records a word with its short and full definitions', function () {
     /** @var TestCase $this */
     Livewire::actingAs(User::factory()->admin()->create())
         ->test(CreateWord::class)
         ->fillForm([
             'word' => 'ephemeral',
             'short_definition' => 'lasting a very short time; a short-lived plant',
+            'full_definition' => "**adjective**\n\n1. lasting a very short time\n   - _ephemeral pleasures_",
         ])
         ->call('create')
         ->assertHasNoFormErrors();
 
     expect(Word::sole())
         ->word->toBe('ephemeral')
-        ->short_definition->toBe('lasting a very short time; a short-lived plant');
+        ->short_definition->toBe('lasting a very short time; a short-lived plant')
+        ->full_definition->toBe("**adjective**\n\n1. lasting a very short time\n   - _ephemeral pleasures_");
 });
 
 test('requires a short definition', function () {

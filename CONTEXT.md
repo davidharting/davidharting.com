@@ -93,8 +93,12 @@ A word David is learning, private to him, with its short definition. One word pe
 _Avoid_: Term, entry, vocab item, flashcard
 
 **Short definition**:
-Brief, plain-words definitions of the senses of a word David cares about, separated by semicolons when there is more than one. Stored as `words.short_definition`; it may be written in an agent's own words. Full dictionary entries are kept apart from it.
+Brief, plain-words definitions of the senses of a word David cares about, separated by semicolons when there is more than one. Stored as `words.short_definition`; it may be written in an agent's own words. It is what a flashcard shows by default.
 _Avoid_: Summary, gloss, sense
+
+**Full definition**:
+The whole dictionary entry for a word as markdown: every sense with its part of speech and example uses. Optional, stored as `words.full_definition`, and shown on request rather than by default.
+_Avoid_: Long definition, entry, details
 
 ## Notes on this glossary
 
