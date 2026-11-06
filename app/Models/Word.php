@@ -10,17 +10,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * A word David is learning and its short definition: brief, plain-words
- * definitions of the senses he cares about, separated by semicolons when
- * there is more than one. Full dictionary entries will live alongside, not
- * on the word.
+ * A word David is learning. The short definition is what he practises
+ * against: brief, plain-words definitions of the senses he cares about,
+ * separated by semicolons. The optional full definition is markdown with
+ * every sense and example, for when he wants the whole entry.
  */
 class Word extends Model
 {
     /** @use HasFactory<WordFactory> */
     use HasFactory;
 
-    protected $fillable = ['word', 'short_definition'];
+    protected $fillable = ['word', 'short_definition', 'full_definition'];
 
     /**
      * The word already on the list with this spelling, ignoring case and

@@ -13,6 +13,7 @@ return new class extends Migration
             $table->id();
             $table->string('word');
             $table->text('short_definition');
+            $table->text('full_definition')->nullable();
             $table->timestamps();
         });
 
