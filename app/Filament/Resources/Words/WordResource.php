@@ -11,6 +11,7 @@ use Closure;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
@@ -45,6 +46,10 @@ class WordResource extends Resource
                 Textarea::make('short_definition')
                     ->required()
                     ->helperText('Brief definitions of the senses you care about, separated by semicolons.')
+                    ->columnSpanFull(),
+                MarkdownEditor::make('full_definition')
+                    ->helperText('Optional: the whole entry, with every sense and example.')
+                    ->toolbarButtons(['bold', 'italic', 'bulletList', 'orderedList'])
                     ->columnSpanFull(),
             ]);
     }
