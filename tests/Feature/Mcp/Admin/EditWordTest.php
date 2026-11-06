@@ -62,7 +62,7 @@ describe('handle()', function () {
 
     test('changes only the fields passed', function () {
         /** @var TestCase $this */
-        $word = Word::factory()->create(['word' => 'ephemerel', 'short_definition' => 'lasting a very short time']);
+        $word = Word::factory()->create(['word' => 'ephemerel', 'short_definition' => 'lasting a very short time', 'full_definition' => '**adjective**']);
 
         $response = AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(EditWord::class, ['word_id' => $word->id, 'word' => 'ephemeral']);
@@ -72,7 +72,19 @@ describe('handle()', function () {
             'word_id' => $word->id,
             'word' => 'ephemeral',
             'short_definition' => 'lasting a very short time',
+            'full_definition' => '**adjective**',
         ]);
+    });
+
+    test('clears the full definition when passed null', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->create(['full_definition' => '**adjective**']);
+
+        AdminServer::actingAs(User::factory()->admin()->create())
+            ->tool(EditWord::class, ['word_id' => $word->id, 'full_definition' => null])
+            ->assertOk();
+
+        expect($word->refresh()->full_definition)->toBeNull();
     });
 
     test('replaces the short definition', function () {
@@ -92,7 +104,7 @@ describe('handle()', function () {
 
         AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(EditWord::class, ['word_id' => $word->id])
-            ->assertHasErrors(['Nothing to change: pass word or short_definition alongside word_id.']);
+            ->assertHasErrors(['Nothing to change: pass word, short_definition or full_definition alongside word_id.']);
     });
 
     test('allows a change of case to its own spelling', function () {

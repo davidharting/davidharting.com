@@ -33,6 +33,10 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
     time; a plant that lives only a short time". Base it on a real
     dictionary rather than guessing.
 
+    full_definition is optional markdown holding the whole dictionary entry:
+    every sense with its part of speech and example uses. David can expand
+    it while practising.
+
     Words are matched case-insensitively. When the word is already on the list
     nothing is changed: the response says word_created=false and returns the
     word as stored. Use edit-word with its word_id to change it.
@@ -61,6 +65,7 @@ class AddWord extends Tool
         $validated = $request->validate([
             'word' => ['required', 'string', 'filled', 'max:255'],
             'short_definition' => ['required', 'string', 'filled'],
+            'full_definition' => ['sometimes', 'nullable', 'string'],
         ]);
 
         try {
@@ -74,6 +79,7 @@ class AddWord extends Tool
             'word_id' => $word->id,
             'word' => $word->word,
             'short_definition' => $word->short_definition,
+            'full_definition' => $word->full_definition,
             'word_created' => $word->wasRecentlyCreated,
         ]);
     }
@@ -92,6 +98,8 @@ class AddWord extends Tool
             'short_definition' => $schema->string()
                 ->required()
                 ->description('Brief plain-words definitions of the senses David cares about, separated by semicolons.'),
+            'full_definition' => $schema->string()
+                ->description('Optional markdown with the whole dictionary entry: every sense, its part of speech and example uses.'),
         ];
     }
 
@@ -106,6 +114,7 @@ class AddWord extends Tool
             'word_id' => $schema->integer()->description('The internal id of the word, for edit-word.'),
             'word' => $schema->string()->description('The word as stored.'),
             'short_definition' => $schema->string()->description('The short definition as stored.'),
+            'full_definition' => $schema->string()->nullable()->description('The markdown full definition as stored, if any.'),
             'word_created' => $schema->boolean()->description('True when this call added the word; false when it was already on the list and nothing was changed.'),
         ];
     }

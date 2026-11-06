@@ -24,13 +24,13 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 #[IsIdempotent]
 #[IsDestructive]
 #[Description(<<<'TEXT'
-    Correct a word on David Harting's private vocabulary list: its spelling or
-    its short definition. Get the word_id from add-word, which returns an
+    Correct a word on David Harting's private vocabulary list: its spelling,
+    its short definition or its full definition. Get the word_id from add-word, which returns an
     existing word unchanged.
 
     Only the fields you pass are changed. The short definition is replaced
     as a whole, so include every sense that should remain, separated by
-    semicolons.
+    semicolons. Pass full_definition as null to clear it.
 
     Words are compared case-insensitively. Respelling a word onto another word
     already on the list is refused and names that word's id; nothing is
@@ -57,6 +57,7 @@ class EditWord extends Tool
             'word_id' => ['required', 'integer', Rule::exists(Word::class, 'id')],
             'word' => ['sometimes', 'string', 'filled', 'max:255'],
             'short_definition' => ['sometimes', 'string', 'filled'],
+            'full_definition' => ['sometimes', 'nullable', 'string'],
         ]);
 
         $word = Word::findOrFail($validated['word_id']);
@@ -66,7 +67,7 @@ class EditWord extends Tool
         }
 
         if (array_keys($validated) === ['word_id']) {
-            return Response::error('Nothing to change: pass word or short_definition alongside word_id.');
+            return Response::error('Nothing to change: pass word, short_definition or full_definition alongside word_id.');
         }
 
         $conflict = isset($validated['word']) ? Word::spelledAs($validated['word'], $word) : null;
@@ -86,6 +87,7 @@ class EditWord extends Tool
             'word_id' => $word->id,
             'word' => $word->word,
             'short_definition' => $word->short_definition,
+            'full_definition' => $word->full_definition,
         ]);
     }
 
@@ -113,6 +115,9 @@ class EditWord extends Tool
                 ->description('The corrected spelling, stored as written.'),
             'short_definition' => $schema->string()
                 ->description('The complete short definition, replacing what is stored.'),
+            'full_definition' => $schema->string()
+                ->nullable()
+                ->description('The complete markdown full definition, replacing what is stored. Pass null to clear it.'),
         ];
     }
 
@@ -127,6 +132,7 @@ class EditWord extends Tool
             'word_id' => $schema->integer()->description('The id of the word.'),
             'word' => $schema->string()->description('The word as now stored.'),
             'short_definition' => $schema->string()->description('The short definition as now stored.'),
+            'full_definition' => $schema->string()->nullable()->description('The markdown full definition as now stored, if any.'),
         ];
     }
 }

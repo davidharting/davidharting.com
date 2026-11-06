@@ -41,13 +41,14 @@ describe('handle()', function () {
             ->and(Word::count())->toBe(0);
     });
 
-    test('adds a word with its short definition', function () {
+    test('adds a word with its short and full definitions', function () {
         /** @var TestCase $this */
         $admin = User::factory()->admin()->create();
 
         $response = AdminServer::actingAs($admin)->tool(AddWord::class, [
             'word' => 'ephemeral',
             'short_definition' => 'lasting a very short time; a short-lived plant',
+            'full_definition' => "**adjective**\n\n1. lasting a very short time",
         ]);
 
         $word = Word::sole();
@@ -56,6 +57,7 @@ describe('handle()', function () {
             'word_id' => $word->id,
             'word' => 'ephemeral',
             'short_definition' => 'lasting a very short time; a short-lived plant',
+            'full_definition' => "**adjective**\n\n1. lasting a very short time",
             'word_created' => true,
         ]);
     });
