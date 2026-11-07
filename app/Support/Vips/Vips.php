@@ -24,7 +24,7 @@ final class Vips
      *
      * @return array{width: int, height: int}
      *
-     * @throws VipsFailed when libvips can't read the image, write the copy, or finish in time.
+     * @throws VipsFailed when libvips can't read the image, write the copy, strip its metadata, or finish in time.
      */
     public static function resize(string $input, string $output, int $maxEdge, int $quality, bool $allFrames = false): array
     {
@@ -43,7 +43,25 @@ final class Vips
             throw new VipsFailed('vipsthumbnail failed: '.trim($resize->errorOutput()));
         }
 
+        self::ensureStripped($output);
+
         return self::size($output);
+    }
+
+    /**
+     * Refuse a copy that still carries EXIF or XMP metadata. libvips 8.14,
+     * which Debian bookworm ships, ignores `strip` when saving WebP, so this
+     * checks the copy itself rather than trusting the option.
+     *
+     * @throws VipsFailed when the copy kept EXIF or XMP metadata.
+     */
+    private static function ensureStripped(string $path): void
+    {
+        foreach (['exif-data', 'xmp-data'] as $field) {
+            if (Process::timeout(10)->run(['vipsheader', '-f', $field, $path])->successful()) {
+                throw new VipsFailed("libvips kept {$field} in the copy despite strip.");
+            }
+        }
     }
 
     /**
