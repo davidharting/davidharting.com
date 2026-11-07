@@ -52,6 +52,8 @@ class OAuthTokenResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'OAuth';
 
+    protected static ?int $navigationSort = 2;
+
     public static function table(Table $table): Table
     {
         return $table

@@ -3,7 +3,7 @@
 use App\Models\User;
 use Tests\TestCase;
 
-test('groups the sidebar into Writing, Media Library and OAuth', function () {
+test('groups the sidebar into Writing, Media Library and OAuth, in that order', function () {
     /** @var TestCase $this */
     $admin = User::factory()->create(['is_admin' => true]);
 
