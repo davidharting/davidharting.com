@@ -15,7 +15,8 @@ final class Vips
      * keeping its proportions and never enlarging it. The copy's format
      * follows `$output`'s extension, such as `.jpg` or `.webp`. The copy is
      * turned upright and converted to sRGB, and `strip` drops its EXIF, GPS
-     * and XMP metadata. libvips decodes HEIC through libheif.
+     * and XMP metadata. libvips decodes HEIC through libheif. Loaders libvips
+     * marks as untrusted, such as ImageMagick and PDF, are blocked.
      *
      * @return array{width: int, height: int}
      *
@@ -24,7 +25,7 @@ final class Vips
     public static function resize(string $input, string $output, int $maxEdge, int $quality): array
     {
         try {
-            $resize = Process::timeout(90)->run([
+            $resize = Process::timeout(90)->env(['VIPS_BLOCK_UNTRUSTED' => '1'])->run([
                 'vipsthumbnail', $input,
                 '--size', "{$maxEdge}x{$maxEdge}>",
                 '-e', 'srgb',

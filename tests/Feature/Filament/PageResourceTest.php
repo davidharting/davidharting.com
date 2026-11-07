@@ -5,7 +5,6 @@ use App\Filament\Resources\Pages\Pages\EditPage;
 use App\Filament\Resources\Pages\Pages\ListPages;
 use App\Models\Page;
 use App\Models\User;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\Support\PhotoInspector;
@@ -145,22 +144,21 @@ test('markdown editor uses date-based directory for file attachments on new page
     expect($editor->getFileAttachmentsDirectory())->toBe('pages/'.now()->toDateString());
 });
 
-test('a photo pasted into the markdown editor is saved as a WebP in the page directory', function () {
+test('saves a photo pasted into the markdown editor as a WebP in the page\'s folder and keeps no original', function () {
     /** @var TestCase $this */
     Storage::fake('public');
     Storage::fake('tmp-for-tests');
 
     $admin = User::factory()->create(['is_admin' => true]);
     $page = Page::factory()->create(['slug' => 'about']);
-    $photo = UploadedFile::fake()->createWithContent('iphone.jpg', file_get_contents(PhotoInspector::fixture('iphone.jpg')));
 
-    $form = Livewire::actingAs($admin)
-        ->test(EditPage::class, ['record' => $page->slug])
-        ->set('componentFileAttachments.data.markdown_content', $photo);
-    $editor = $form->instance()->getSchema('form')->getComponentByStatePath('markdown_content');
-    $form->instance()->callSchemaComponentMethod($editor->getKey(), 'saveUploadedFileAttachmentAndGetUrl');
-
-    expect(Storage::disk('public')->allFiles())->sequence(
-        fn ($path) => $path->toStartWith('pages/about/')->toEndWith('.webp'),
+    $url = pasteIntoMarkdownEditor(
+        Livewire::actingAs($admin)->test(EditPage::class, ['record' => $page->slug]),
+        PhotoInspector::upload('iphone.jpg'),
     );
+
+    [$path] = Storage::disk('public')->allFiles();
+    expect($path)->toStartWith('pages/about/')->toEndWith('.webp')
+        ->and($url)->toBe(Storage::disk('public')->url($path))
+        ->and(Storage::disk('tmp-for-tests')->allFiles())->toBeEmpty();
 });

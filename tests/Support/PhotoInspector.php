@@ -2,6 +2,7 @@
 
 namespace Tests\Support;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Process;
 
 /**
@@ -19,6 +20,14 @@ class PhotoInspector
     public static function fixture(string $name): string
     {
         return base_path("tests/Fixtures/photos/{$name}");
+    }
+
+    /**
+     * One of the photo fixtures as a browser upload.
+     */
+    public static function upload(string $name): UploadedFile
+    {
+        return UploadedFile::fake()->createWithContent($name, file_get_contents(self::fixture($name)));
     }
 
     /**

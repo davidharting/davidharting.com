@@ -4,6 +4,8 @@ namespace App\Support;
 
 use App\Support\Vips\Vips;
 use App\Support\Vips\VipsFailed;
+use Filament\Forms\Components\MarkdownEditor;
+use Illuminate\Http\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
@@ -47,6 +49,28 @@ final class StoreWebImage
     public const int QUALITY = 80;
 
     /**
+     * Make a markdown editor take only images this class can read, and save
+     * each one as a web copy on the editor's attachments disk and directory.
+     */
+    public static function attachTo(MarkdownEditor $editor): MarkdownEditor
+    {
+        return $editor
+            ->fileAttachmentsAcceptedFileTypes(self::MIME_TYPES)
+            ->fileAttachmentsMaxSize(self::MAX_KILOBYTES)
+            ->saveUploadedFileAttachmentUsing(fn (TemporaryUploadedFile $file, MarkdownEditor $component, self $storeWebImage): ?string => $storeWebImage->handle(
+                $file,
+                $component->getFileAttachmentsDiskName(),
+                $component->getFileAttachmentsDirectory(),
+            ))
+            // Filament's default asks the disk whether the file exists, which
+            // throws on the null a failed save returns instead of letting the
+            // editor show its upload error.
+            ->getFileAttachmentUrlUsing(fn (?string $file, MarkdownEditor $component): ?string => $file === null
+                ? null
+                : Storage::disk($component->getFileAttachmentsDiskName())->url($file));
+    }
+
+    /**
      * Store a web copy of the upload in `$directory` on `$disk`, then delete
      * the upload whether or not that worked.
      *
@@ -70,13 +94,10 @@ final class StoreWebImage
                 return null;
             }
 
-            $path = ltrim(($directory ?? '').'/'.Str::ulid()->toBase32().'.webp', '/');
-            $stream = fopen($copy, 'r');
-            $stored = Storage::disk($disk)->put($path, $stream, ['visibility' => 'public', 'mimetype' => 'image/webp']);
-            fclose($stream);
+            $path = Storage::disk($disk)->putFileAs($directory ?? '', new File($copy), Str::ulid()->toBase32().'.webp', ['visibility' => 'public', 'mimetype' => 'image/webp']);
 
-            if (! $stored) {
-                throw new RuntimeException("Couldn't store {$path}.");
+            if ($path === false) {
+                throw new RuntimeException("Couldn't store the web copy in {$directory}.");
             }
 
             return $path;
@@ -92,7 +113,7 @@ final class StoreWebImage
      */
     private function deleteUpload(TemporaryUploadedFile $upload): void
     {
-        $path = FileUploadConfiguration::path($upload->getFilename());
+        $path = FileUploadConfiguration::path($upload->getFilename(), withS3Root: false);
 
         rescue(fn () => Storage::disk(FileUploadConfiguration::disk())->delete([$path, "{$path}.json"]));
     }

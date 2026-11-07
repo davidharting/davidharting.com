@@ -17,7 +17,7 @@ beforeEach(function () {
  * editor. Tests keep uploads on the `tmp-for-tests` disk; production keeps
  * them on the private disk.
  */
-function pendingUpload(string $contents, string $extension = 'jpg'): TemporaryUploadedFile
+function livewireTemporaryUpload(string $contents, string $extension = 'jpg'): TemporaryUploadedFile
 {
     $name = uniqid().'.'.$extension;
     Storage::disk('tmp-for-tests')->put("livewire-tmp/{$name}", $contents);
@@ -29,7 +29,7 @@ function pendingUpload(string $contents, string $extension = 'jpg'): TemporaryUp
 describe('handle()', function () {
     test('stores an upright, sRGB, metadata-free WebP of :dataset on the public disk', function (string $fixture) {
         /** @var TestCase $this */
-        $upload = pendingUpload(file_get_contents(PhotoInspector::fixture($fixture)), pathinfo($fixture, PATHINFO_EXTENSION));
+        $upload = livewireTemporaryUpload(file_get_contents(PhotoInspector::fixture($fixture)), pathinfo($fixture, PATHINFO_EXTENSION));
 
         $path = (new StoreWebImage)->handle($upload, 'public', 'notes/my-note');
 
@@ -40,9 +40,9 @@ describe('handle()', function () {
             ->and(PhotoInspector::near($copy['bottom'], [40, 90, 210]))->toBeTrue('blue is at the bottom, in sRGB');
     })->with(['a JPEG' => 'iphone.jpg', 'a HEIC' => 'iphone.heic']);
 
-    test('deletes the original upload and its details once the copy is stored', function () {
+    test('deletes the original upload and the JSON file Livewire keeps beside it once the copy is stored', function () {
         /** @var TestCase $this */
-        $upload = pendingUpload(file_get_contents(PhotoInspector::fixture('iphone.jpg')));
+        $upload = livewireTemporaryUpload(file_get_contents(PhotoInspector::fixture('iphone.jpg')));
 
         (new StoreWebImage)->handle($upload, 'public', 'notes/my-note');
 
@@ -52,7 +52,7 @@ describe('handle()', function () {
 
     test('stores nothing and deletes the upload when it is not an image libvips can read', function () {
         /** @var TestCase $this */
-        $upload = pendingUpload('not really a jpeg');
+        $upload = livewireTemporaryUpload('not really a jpeg');
 
         $path = (new StoreWebImage)->handle($upload, 'public', 'notes/my-note');
 

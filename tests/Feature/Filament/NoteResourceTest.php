@@ -104,24 +104,41 @@ test('markdown editor uses date-based directory for file attachments on new note
     expect($editor->getFileAttachmentsDirectory())->toBe('notes/'.now()->toDateString());
 });
 
-test('a photo pasted into the markdown editor is saved as a resized WebP on the public disk, and the original is not kept', function () {
-    /** @var TestCase $this */
-    Storage::fake('public');
-    Storage::fake('tmp-for-tests');
+describe('pasting a photo into the markdown editor', function () {
+    beforeEach(function () {
+        Storage::fake('public');
+        Storage::fake('tmp-for-tests');
+    });
 
-    $admin = User::factory()->create(['is_admin' => true]);
-    $note = Note::factory()->create(['slug' => 'my-note']);
-    $photo = UploadedFile::fake()->createWithContent('iphone.jpg', file_get_contents(PhotoInspector::fixture('iphone.jpg')));
+    test('saves it as a WebP in the note\'s folder and keeps no original', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->create(['is_admin' => true]);
+        $note = Note::factory()->create(['slug' => 'my-note']);
 
-    $page = Livewire::actingAs($admin)
-        ->test(EditNote::class, ['record' => $note->slug])
-        ->set('componentFileAttachments.data.markdown_content', $photo);
-    $editor = $page->instance()->getSchema('form')->getComponentByStatePath('markdown_content');
-    $url = $page->instance()->callSchemaComponentMethod($editor->getKey(), 'saveUploadedFileAttachmentAndGetUrl');
+        $url = pasteIntoMarkdownEditor(
+            Livewire::actingAs($admin)->test(EditNote::class, ['record' => $note->slug]),
+            PhotoInspector::upload('iphone.jpg'),
+        );
 
-    [$path] = Storage::disk('public')->allFiles();
-    expect($path)->toStartWith('notes/my-note/')->toEndWith('.webp')
-        ->and($url)->toBe(Storage::disk('public')->url($path))
-        ->and(PhotoInspector::inspect(Storage::disk('public')->path($path)))->toMatchArray(['width' => 1536, 'height' => 2048, 'exif_tags' => 0])
-        ->and(Storage::disk('tmp-for-tests')->allFiles())->toBeEmpty();
+        [$path] = Storage::disk('public')->allFiles();
+        expect($path)->toStartWith('notes/my-note/')->toEndWith('.webp')
+            ->and($url)->toBe(Storage::disk('public')->url($path))
+            ->and(Storage::disk('tmp-for-tests')->allFiles())->toBeEmpty();
+    });
+
+    test('gives the editor no URL, so it shows its upload error, when the file is not a readable image', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->create(['is_admin' => true]);
+        $note = Note::factory()->create();
+        $broken = UploadedFile::fake()->createWithContent('broken.jpg', "\xFF\xD8\xFF\xE0 not really the rest of a jpeg");
+
+        $url = pasteIntoMarkdownEditor(
+            Livewire::actingAs($admin)->test(EditNote::class, ['record' => $note->slug]),
+            $broken,
+        );
+
+        expect($url)->toBeNull()
+            ->and(Storage::disk('public')->allFiles())->toBeEmpty()
+            ->and(Storage::disk('tmp-for-tests')->allFiles())->toBeEmpty();
+    });
 });
