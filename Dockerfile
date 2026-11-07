@@ -1,4 +1,6 @@
-FROM dunglas/frankenphp:1.13.3-php8.5.12-bookworm
+# Debian trixie, not bookworm: bookworm's libvips (8.14) ignores `strip` when
+# saving WebP, so pasted images kept their EXIF. Trixie ships libvips 8.16.
+FROM dunglas/frankenphp:1.13.3-php8.5.12-trixie
 
 
 RUN apt-get update \

@@ -49,9 +49,10 @@ final class Vips
     }
 
     /**
-     * Refuse a copy that still carries EXIF or XMP metadata. libvips 8.14,
-     * which Debian bookworm ships, ignores `strip` when saving WebP, so this
-     * checks the copy itself rather than trusting the option.
+     * Refuse a copy that still carries EXIF or XMP metadata. libvips 8.14
+     * (Debian bookworm, our base image until November 2026) ignored `strip`
+     * when saving WebP, so this checks the copy itself rather than trusting
+     * the option.
      *
      * @throws VipsFailed when the copy kept EXIF or XMP metadata.
      */
