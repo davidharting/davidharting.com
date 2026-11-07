@@ -1,5 +1,6 @@
 # Debian trixie, not bookworm: bookworm's libvips (8.14) ignores `strip` when
 # saving WebP, so pasted images kept their EXIF. Trixie ships libvips 8.16.
+# The PGDG repo line below names the same release (trixie-pgdg); keep them in step.
 FROM dunglas/frankenphp:1.13.3-php8.5.12-trixie
 
 
@@ -7,7 +8,7 @@ RUN apt-get update \
     && apt-get install -y curl ca-certificates gnupg2 \
     && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql-keyring.gpg \
     && curl -fsSL https://deb.nodesource.com/setup_26.x | bash - \
-    && echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] https://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] https://apt.postgresql.org/pub/repos/apt trixie-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y unzip libnss3-tools procps postgresql-client-17 nodejs libcap2-bin libvips-tools \
