@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Process;
  * The fixtures are stored landscape (left half orange, right half blue) with EXIF Orientation 6,
  * GPS tags and a Display P3 profile. The intended sRGB colours are orange (200,100,50) and blue (40,90,210).
  * An upright copy is portrait with orange on top; a correctly colour-managed copy reads back near those sRGB values.
+ * animated.gif is a 2400x1200 GIF of three frames (orange, blue, orange) with a comment and XMP metadata.
  */
 class PhotoInspector
 {
@@ -31,7 +32,7 @@ class PhotoInspector
     }
 
     /**
-     * @return array{width: int, height: int, top: array<int, int>, bottom: array<int, int>, exif_tags: int, has_gps: bool, mime: string}
+     * @return array{width: int, height: int, frames: int, top: array<int, int>, bottom: array<int, int>, exif_tags: int, has_gps: bool, has_xmp: bool, mime: string}
      */
     public static function inspect(string $path): array
     {
@@ -40,14 +41,17 @@ class PhotoInspector
 
         $width = (int) Process::run(['vipsheader', '-f', 'width', $path])->output();
         $height = (int) Process::run(['vipsheader', '-f', 'height', $path])->output();
+        $frames = (int) Process::run(['vipsheader', '-f', 'n-pages', $path])->output() ?: 1;
 
         return [
             'width' => $width,
             'height' => $height,
+            'frames' => $frames,
             'top' => self::pixel($path, intdiv($width, 2), intdiv($height, 8)),
             'bottom' => self::pixel($path, intdiv($width, 2), $height - intdiv($height, 8)),
             'exif_tags' => $exifTags->count(),
             'has_gps' => $exifTags->contains(fn (string $key): bool => str_starts_with($key, 'GPS:')),
+            'has_xmp' => collect($exif)->keys()->contains(fn (string $key): bool => str_starts_with($key, 'XMP')),
             'mime' => $exif['File:MIMEType'] ?? 'unknown',
         ];
     }

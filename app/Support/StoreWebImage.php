@@ -21,17 +21,25 @@ use Spatie\TemporaryDirectory\TemporaryDirectory;
  * so the original never reaches the public disk. The copy is a WebP no
  * larger than {@see self::MAX_EDGE} pixels on its longest edge, turned
  * upright, converted to sRGB, and stripped of EXIF, GPS and XMP metadata.
+ * An animated GIF or WebP keeps every frame.
  */
 final class StoreWebImage
 {
     /**
      * The kinds of image the editors take: what phones, cameras and
-     * screenshots save, and what libvips can read. GIFs are left out,
-     * because resizing would keep only the first frame of an animation.
+     * screenshots save, and what libvips can read.
      *
      * @var list<string>
      */
-    public const array MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+    public const array MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+
+    /**
+     * The kinds of image that can be animated. Every frame of these is
+     * kept, so an animated GIF or WebP becomes an animated WebP.
+     *
+     * @var list<string>
+     */
+    public const array ANIMATABLE_MIME_TYPES = ['image/gif', 'image/webp'];
 
     /**
      * The largest upload the editors take, in kilobytes.
@@ -87,7 +95,8 @@ final class StoreWebImage
             $copy = $workspace->path('web.webp');
 
             try {
-                Vips::resize($source, $copy, self::MAX_EDGE, self::QUALITY);
+                $allFrames = in_array(mime_content_type($source), self::ANIMATABLE_MIME_TYPES, true);
+                Vips::resize($source, $copy, self::MAX_EDGE, self::QUALITY, $allFrames);
             } catch (VipsFailed $exception) {
                 report($exception);
 

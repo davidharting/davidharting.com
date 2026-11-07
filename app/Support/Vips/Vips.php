@@ -18,15 +18,19 @@ final class Vips
      * and XMP metadata. libvips decodes HEIC through libheif. Loaders libvips
      * marks as untrusted, such as ImageMagick and PDF, are blocked.
      *
+     * With `$allFrames`, every frame of an animated GIF or WebP is resized
+     * and kept, so the copy stays animated. Only the GIF and WebP loaders
+     * take this option, so pass it only for those formats.
+     *
      * @return array{width: int, height: int}
      *
      * @throws VipsFailed when libvips can't read the image, write the copy, or finish in time.
      */
-    public static function resize(string $input, string $output, int $maxEdge, int $quality): array
+    public static function resize(string $input, string $output, int $maxEdge, int $quality, bool $allFrames = false): array
     {
         try {
             $resize = Process::timeout(90)->env(['VIPS_BLOCK_UNTRUSTED' => '1'])->run([
-                'vipsthumbnail', $input,
+                'vipsthumbnail', $allFrames ? "{$input}[n=-1]" : $input,
                 '--size', "{$maxEdge}x{$maxEdge}>",
                 '-e', 'srgb',
                 '-o', "{$output}[Q={$quality},strip]",

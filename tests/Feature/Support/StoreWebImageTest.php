@@ -40,6 +40,18 @@ describe('handle()', function () {
             ->and(PhotoInspector::near($copy['bottom'], [40, 90, 210]))->toBeTrue('blue is at the bottom, in sRGB');
     })->with(['a JPEG' => 'iphone.jpg', 'a HEIC' => 'iphone.heic']);
 
+    test('keeps every frame of an animated GIF and strips its comment and XMP', function () {
+        /** @var TestCase $this */
+        $upload = livewireTemporaryUpload(file_get_contents(PhotoInspector::fixture('animated.gif')), 'gif');
+
+        $path = (new StoreWebImage)->handle($upload, 'public', 'notes/my-note');
+
+        $copy = PhotoInspector::inspect(Storage::disk('public')->path($path));
+        expect($path)->toEndWith('.webp')
+            ->and($copy)->toMatchArray(['mime' => 'image/webp', 'width' => 2048, 'height' => 1024, 'frames' => 3, 'has_xmp' => false])
+            ->and(Storage::disk('public')->get($path))->not->toContain('123 Main St');
+    });
+
     test('deletes the original upload and the JSON file Livewire keeps beside it once the copy is stored', function () {
         /** @var TestCase $this */
         $upload = livewireTemporaryUpload(file_get_contents(PhotoInspector::fixture('iphone.jpg')));
