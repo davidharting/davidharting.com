@@ -32,6 +32,11 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Emerald,
             ])
+            ->navigationGroups([
+                'Writing',
+                'Media Library',
+                'OAuth',
+            ])
             ->navigationItems([
                 NavigationItem::make('davidharting.com')
                     ->url(fn () => route('home'))
