@@ -11,8 +11,9 @@ use Illuminate\Support\Facades\Process;
 final class Vips
 {
     /**
-     * Write a JPEG copy of an image that fits in a square of `$maxEdge`
-     * pixels, keeping its proportions and never enlarging it. The copy is
+     * Write a copy of an image that fits in a square of `$maxEdge` pixels,
+     * keeping its proportions and never enlarging it. The copy's format
+     * follows `$output`'s extension, such as `.jpg` or `.webp`. The copy is
      * turned upright and converted to sRGB, and `strip` drops its EXIF, GPS
      * and XMP metadata. libvips decodes HEIC through libheif.
      *

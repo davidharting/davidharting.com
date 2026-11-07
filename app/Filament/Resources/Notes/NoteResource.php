@@ -6,6 +6,7 @@ use App\Filament\Resources\Notes\Pages\CreateNote;
 use App\Filament\Resources\Notes\Pages\EditNote;
 use App\Filament\Resources\Notes\Pages\ListNotes;
 use App\Models\Note;
+use App\Support\StoreWebImage;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
@@ -21,6 +22,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class NoteResource extends Resource
 {
@@ -45,7 +47,14 @@ class NoteResource extends Resource
                     ->fileAttachmentsDirectory(fn ($record) => $record
                         ? 'notes/'.$record->slug
                         : 'notes/'.now()->toDateString()
-                    ),
+                    )
+                    ->fileAttachmentsAcceptedFileTypes(StoreWebImage::MIME_TYPES)
+                    ->fileAttachmentsMaxSize(StoreWebImage::MAX_KILOBYTES)
+                    ->saveUploadedFileAttachmentUsing(fn (TemporaryUploadedFile $file, MarkdownEditor $component): ?string => app(StoreWebImage::class)->handle(
+                        $file,
+                        $component->getFileAttachmentsDiskName(),
+                        $component->getFileAttachmentsDirectory(),
+                    )),
                 Toggle::make('visible')->default(true)
                     ->required(),
             ]);
