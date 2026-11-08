@@ -1,0 +1,142 @@
+<?php
+
+use App\Mcp\Servers\AdminServer;
+use App\Mcp\Tools\Admin\EditWord;
+use App\Models\User;
+use App\Models\Word;
+use Illuminate\Support\Facades\Gate;
+use Laravel\Mcp\Request;
+use Tests\TestCase;
+
+describe('shouldRegister()', function () {
+    test('an anonymous caller cannot reach the tool at all', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->create(['word' => 'ephemerel']);
+
+        $response = AdminServer::tool(EditWord::class, ['word_id' => $word->id, 'word' => 'ephemeral']);
+
+        $response->assertHasErrors(['Tool [edit-word] not found']);
+        expect($word->refresh()->word)->toBe('ephemerel');
+    });
+
+    test('a non-admin cannot reach the tool at all', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->create(['word' => 'ephemerel']);
+        $user = User::factory()->create(['is_admin' => false]);
+
+        $response = AdminServer::actingAs($user)->tool(EditWord::class, ['word_id' => $word->id, 'word' => 'ephemeral']);
+
+        $response->assertHasErrors(['Tool [edit-word] not found']);
+        expect($word->refresh()->word)->toBe('ephemerel');
+    });
+});
+
+describe('handle()', function () {
+    test('refuses a non-admin, even if it is reached', function () {
+        /** @var TestCase $this */
+        // Called directly, since going through the server would only prove
+        // shouldRegister works. handle() must refuse on its own too.
+        $word = Word::factory()->create(['word' => 'ephemerel']);
+        $this->actingAs(User::factory()->create(['is_admin' => false]));
+
+        $response = (new EditWord)->handle(new Request(['word_id' => $word->id, 'word' => 'ephemeral']));
+
+        expect($response->isError())->toBeTrue()
+            ->and((string) $response->content())->toBe('You are not authorized to edit this word.')
+            ->and($word->refresh()->word)->toBe('ephemerel');
+    });
+
+    test('refuses a caller who may not update this word', function () {
+        /** @var TestCase $this */
+        // Every ability is admin-only today, so the refusal is forced here to
+        // prove handle() asks WordPolicy::update about this word.
+        $word = Word::factory()->create(['word' => 'ephemerel']);
+        Gate::before(function (User $user, string $ability, array $arguments) use ($word): ?bool {
+            $isUpdatingThisWord = $ability === 'update'
+                && ($arguments[0] ?? null) instanceof Word
+                && $arguments[0]->is($word);
+
+            return $isUpdatingThisWord ? false : null;
+        });
+
+        $response = AdminServer::actingAs(User::factory()->admin()->create())
+            ->tool(EditWord::class, ['word_id' => $word->id, 'word' => 'ephemeral']);
+
+        $response->assertHasErrors(['You are not authorized to edit this word.']);
+        expect($word->refresh()->word)->toBe('ephemerel');
+    });
+
+    test('changes only the fields passed', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->create(['word' => 'ephemerel', 'short_definition' => 'lasting a very short time', 'full_definition' => '**adjective**']);
+
+        $response = AdminServer::actingAs(User::factory()->admin()->create())
+            ->tool(EditWord::class, ['word_id' => $word->id, 'word' => 'ephemeral']);
+
+        $response->assertOk();
+        $response->assertStructuredContent([
+            'word_id' => $word->id,
+            'word' => 'ephemeral',
+            'short_definition' => 'lasting a very short time',
+            'full_definition' => '**adjective**',
+        ]);
+        expect($word->refresh())
+            ->word->toBe('ephemeral')
+            ->short_definition->toBe('lasting a very short time')
+            ->full_definition->toBe('**adjective**');
+    });
+
+    test('clears the full definition when passed null', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->create(['full_definition' => '**adjective**']);
+
+        AdminServer::actingAs(User::factory()->admin()->create())
+            ->tool(EditWord::class, ['word_id' => $word->id, 'full_definition' => null])
+            ->assertOk();
+
+        expect($word->refresh()->full_definition)->toBeNull();
+    });
+
+    test('replaces the short definition', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->create(['short_definition' => 'lasting a very short time']);
+
+        AdminServer::actingAs(User::factory()->admin()->create())
+            ->tool(EditWord::class, ['word_id' => $word->id, 'short_definition' => 'lasting a very short time; a short-lived plant'])
+            ->assertOk();
+
+        expect($word->refresh()->short_definition)->toBe('lasting a very short time; a short-lived plant');
+    });
+
+    test('refuses a call with nothing to change', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->create();
+
+        AdminServer::actingAs(User::factory()->admin()->create())
+            ->tool(EditWord::class, ['word_id' => $word->id])
+            ->assertHasErrors(['Nothing to change: pass word, short_definition or full_definition alongside word_id.']);
+    });
+
+    test('allows a change of case to its own spelling', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->create(['word' => 'ephemeral']);
+
+        AdminServer::actingAs(User::factory()->admin()->create())
+            ->tool(EditWord::class, ['word_id' => $word->id, 'word' => 'Ephemeral'])
+            ->assertOk();
+
+        expect($word->refresh()->word)->toBe('Ephemeral');
+    });
+
+    test('refuses a respelling onto another word on the list, and names it', function () {
+        /** @var TestCase $this */
+        $existing = Word::factory()->create(['word' => 'ephemeral']);
+        $word = Word::factory()->create(['word' => 'ephemerel']);
+
+        AdminServer::actingAs(User::factory()->admin()->create())
+            ->tool(EditWord::class, ['word_id' => $word->id, 'word' => 'EPHEMERAL'])
+            ->assertHasErrors([sprintf('Refused: "ephemeral" is already on the list as word_id %d. Nothing was changed.', $existing->id)]);
+
+        expect($word->refresh()->word)->toBe('ephemerel');
+    });
+});

@@ -81,6 +81,8 @@ test('an admin can list the tools', function () {
         'edit-media',
         'edit-media-event',
         'update-creator',
+        'add-word',
+        'edit-word',
     ]);
 });
 
