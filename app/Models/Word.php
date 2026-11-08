@@ -11,9 +11,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
- * A word David is learning. The short definition is what he practises
- * against: brief, plain-words definitions of the senses he cares about,
- * separated by semicolons. The optional full definition is markdown with
+ * A word David wants to remember: often one he came across while reading,
+ * sometimes one he is drilling with flashcards. The short definition is
+ * what a flashcard shows by default: brief, plain-words definitions of the
+ * senses he cares about, separated by semicolons. The optional full definition is markdown with
  * every sense and example, for when he wants the whole entry.
  */
 class Word extends Model
