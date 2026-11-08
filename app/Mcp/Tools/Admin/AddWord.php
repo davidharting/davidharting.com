@@ -14,7 +14,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 
 /**
- * Record a word David is learning, registered only on AdminServer.
+ * Record a word David wants to remember, registered only on AdminServer.
  *
  * Like create-media, it finds before it creates: a word already recorded in
  * any case is returned untouched, so a retried call never duplicates one and
@@ -25,7 +25,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 #[IsDestructive(false)]
 #[Description(<<<'TEXT'
     Add a word to David Harting's private vocabulary list, with a short
-    definition to practise against.
+    definition to remember it by.
 
     The short definition is brief and in plain words, and may be your own.
     When David cares about more than one sense of the word, give a brief
@@ -34,8 +34,8 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
     dictionary rather than guessing.
 
     full_definition is optional markdown holding the whole dictionary entry:
-    every sense with its part of speech and example uses. David can expand
-    it while practising.
+    every sense with its part of speech and example uses. David sees it when
+    he asks for the whole entry.
 
     Words are matched case-insensitively. When the word is already on the list
     nothing is changed: the response says word_created=false and returns the

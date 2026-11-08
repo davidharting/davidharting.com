@@ -60,8 +60,9 @@ class AdminServer extends Server
         log them, and edit-media, edit-media-event and update-creator to
         correct mistakes.
 
-        **Words** are David's private vocabulary list: words he is learning,
-        each with a short definition. Use add-word and edit-word to record
+        **Words** are David's private vocabulary list: words he wants to
+        remember, often ones he came across while reading, each with a short
+        definition. Use add-word and edit-word to record
         them. Each tool's description gives the rules for using it.
 
         Drafts, remarks on media items and comments on their events are
