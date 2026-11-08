@@ -70,7 +70,7 @@ class EditWord extends Tool
             return Response::error('Nothing to change: pass word, short_definition or full_definition alongside word_id.');
         }
 
-        $conflict = isset($validated['word']) ? Word::spelledAs($validated['word'], $word) : null;
+        $conflict = isset($validated['word']) ? Word::findDuplicate($validated['word'], ignoring: $word) : null;
 
         if ($conflict !== null) {
             return $this->conflictError($conflict);
@@ -80,7 +80,7 @@ class EditWord extends Tool
             $word->update($validated);
         } catch (UniqueConstraintViolationException) {
             // A concurrent call took the spelling after the check above.
-            return $this->conflictError(Word::spelledAs($validated['word'], $word));
+            return $this->conflictError(Word::findDuplicate($validated['word'], ignoring: $word));
         }
 
         return Response::structured([

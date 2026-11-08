@@ -69,10 +69,10 @@ class AddWord extends Tool
         ]);
 
         try {
-            $word = Word::spelledAs($validated['word']) ?? Word::create($validated);
+            $word = Word::findDuplicate($validated['word']) ?? Word::create($validated);
         } catch (UniqueConstraintViolationException) {
             // A concurrent call added it between the lookup and the insert.
-            $word = Word::spelledAs($validated['word']);
+            $word = Word::findDuplicate($validated['word']);
         }
 
         return Response::structured([
