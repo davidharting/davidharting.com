@@ -26,10 +26,18 @@ function livewireTemporaryUpload(string $contents, string $extension = 'jpg'): T
     return TemporaryUploadedFile::createFromLivewire($name);
 }
 
+/**
+ * The upload Livewire would hand the editor for one of the photo fixtures.
+ */
+function livewireTemporaryUploadOf(string $fixture): TemporaryUploadedFile
+{
+    return livewireTemporaryUpload(file_get_contents(PhotoInspector::fixture($fixture)), pathinfo($fixture, PATHINFO_EXTENSION));
+}
+
 describe('handle()', function () {
     test('stores an upright, sRGB, metadata-free WebP of :dataset on the public disk', function (string $fixture) {
         /** @var TestCase $this */
-        $upload = livewireTemporaryUpload(file_get_contents(PhotoInspector::fixture($fixture)), pathinfo($fixture, PATHINFO_EXTENSION));
+        $upload = livewireTemporaryUploadOf($fixture);
 
         $path = (new StoreWebImage)->handle($upload, 'public', 'notes/my-note');
 
@@ -42,7 +50,7 @@ describe('handle()', function () {
 
     test('keeps every frame of an animated GIF and strips its comment and XMP', function () {
         /** @var TestCase $this */
-        $upload = livewireTemporaryUpload(file_get_contents(PhotoInspector::fixture('animated.gif')), 'gif');
+        $upload = livewireTemporaryUploadOf('animated.gif');
 
         $path = (new StoreWebImage)->handle($upload, 'public', 'notes/my-note');
 
@@ -54,7 +62,7 @@ describe('handle()', function () {
 
     test('deletes the original upload and the JSON file Livewire keeps beside it once the copy is stored', function () {
         /** @var TestCase $this */
-        $upload = livewireTemporaryUpload(file_get_contents(PhotoInspector::fixture('iphone.jpg')));
+        $upload = livewireTemporaryUploadOf('iphone.jpg');
 
         (new StoreWebImage)->handle($upload, 'public', 'notes/my-note');
 

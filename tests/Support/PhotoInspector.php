@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Process;
  * The fixtures are stored landscape (left half orange, right half blue) with EXIF Orientation 6,
  * GPS tags and a Display P3 profile. The intended sRGB colours are orange (200,100,50) and blue (40,90,210).
  * An upright copy is portrait with orange on top; a correctly colour-managed copy reads back near those sRGB values.
- * animated.gif is a 2400x1200 GIF of three frames (orange, blue, orange) with a comment and XMP metadata.
+ * animated.gif is a 2400x1200 GIF of three frames (orange, blue, orange) with a comment and XMP metadata that both say "Taken at 123 Main St".
  */
 class PhotoInspector
 {

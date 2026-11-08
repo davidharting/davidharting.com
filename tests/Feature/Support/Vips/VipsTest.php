@@ -35,16 +35,17 @@ describe('resize()', function () {
         expect($size)->toBe(['width' => 3024, 'height' => 4032]);
     });
 
-    test('throws when the copy still carries EXIF, as libvips 8.14 leaves it in WebP', function () {
+    test('throws when the copy still carries :dataset, as libvips 8.14 leaves it in WebP', function (string $field) {
         /** @var TestCase $this */
         Process::fake([
             'vipsthumbnail*' => Process::result(),
-            '*exif-data*' => Process::result('RXhpZgAATU0AKg=='),
+            "*{$field}*" => Process::result('bGVmdCBiZWhpbmQ='),
+            'vipsheader*' => Process::result(exitCode: 1),
         ]);
 
         expect(fn () => Vips::resize(PhotoInspector::fixture('iphone.jpg'), $this->workspace->path('copy.webp'), 512, 80))
-            ->toThrow(VipsFailed::class, 'libvips kept exif-data in the copy');
-    });
+            ->toThrow(VipsFailed::class, "libvips kept {$field} in the copy");
+    })->with(['EXIF' => 'exif-data', 'XMP' => 'xmp-data']);
 
     test('throws when the input is not an image', function () {
         /** @var TestCase $this */
