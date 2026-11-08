@@ -10,19 +10,19 @@ describe('word', function () {
         /** @var TestCase $this */
         expect(Word::factory()->create(['word' => "  ephemeral\n"])->refresh()->word)->toBe('ephemeral');
     });
+
+    test('cannot be recorded twice in different case', function () {
+        /** @var TestCase $this */
+        Word::factory()->create(['word' => 'ephemeral']);
+
+        Word::factory()->create(['word' => 'Ephemeral']);
+    })->throws(UniqueConstraintViolationException::class);
+
+    test('longer than 255 characters is refused by the database', function () {
+        /** @var TestCase $this */
+        Word::factory()->create(['word' => str_repeat('a', 256)]);
+    })->throws(QueryException::class, 'words_word_length_check');
 });
-
-test('the same word cannot be recorded twice in different case', function () {
-    /** @var TestCase $this */
-    Word::factory()->create(['word' => 'ephemeral']);
-
-    Word::factory()->create(['word' => 'Ephemeral']);
-})->throws(UniqueConstraintViolationException::class);
-
-test('a word longer than 255 characters is refused by the database', function () {
-    /** @var TestCase $this */
-    Word::factory()->create(['word' => str_repeat('a', 256)]);
-})->throws(QueryException::class, 'words_word_length_check');
 
 describe('findDuplicate()', function () {
     test('finds the recorded word whatever the case or surrounding whitespace', function () {
