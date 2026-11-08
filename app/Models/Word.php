@@ -28,14 +28,14 @@ class Word extends Model
      * spellings count as the same word when they differ only in case or
      * surrounding whitespace.
      *
-     * When editing, pass the word being edited as $except so it is not
+     * When editing, pass the word being edited as $ignoring so it is not
      * reported as a duplicate of itself.
      */
-    public static function spelledAs(string $word, ?Word $except = null): ?Word
+    public static function findDuplicate(string $word, ?Word $ignoring = null): ?Word
     {
         return static::query()
             ->named($word)
-            ->when($except?->exists, fn (Builder $query) => $query->whereKeyNot($except->id))
+            ->when($ignoring?->exists, fn (Builder $query) => $query->whereKeyNot($ignoring->id))
             ->first();
     }
 
