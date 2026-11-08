@@ -7,6 +7,7 @@ use App\Models\Note;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Vite;
 use Livewire\Livewire;
 use Tests\Support\PhotoInspector;
 use Tests\TestCase;
@@ -140,5 +141,16 @@ describe('pasting a photo into the markdown editor', function () {
         expect($url)->toBeNull()
             ->and(Storage::disk('public')->allFiles())->toBeEmpty()
             ->and(Storage::disk('tmp-for-tests')->allFiles())->toBeEmpty();
+    });
+
+    test('loads the script that lets the photo button upload from iPhone Safari', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->create(['is_admin' => true]);
+        $note = Note::factory()->create();
+
+        $this->actingAs($admin)
+            ->get(EditNote::getUrl(['record' => $note->slug]))
+            ->assertOk()
+            ->assertSee(Vite::asset('resources/js/markdown-editor-attachments.js'));
     });
 });
