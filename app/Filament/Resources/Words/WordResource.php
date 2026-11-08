@@ -39,7 +39,7 @@ class WordResource extends Resource
                     ->autocomplete(false)
                     ->extraInputAttributes(['autocorrect' => 'off', 'spellcheck' => 'false'])
                     ->rule(fn (?Word $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record): void {
-                        if (is_string($value) && Word::spelledAs($value, $record) !== null) {
+                        if (is_string($value) && Word::findDuplicate($value, ignoring: $record) !== null) {
                             $fail('That word is already on the list.');
                         }
                     }),
