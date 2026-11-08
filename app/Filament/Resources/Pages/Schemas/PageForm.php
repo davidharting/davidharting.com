@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Pages\Schemas;
 
+use App\Support\StoreWebImage;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -19,15 +20,17 @@ class PageForm
                     ->columnSpanFull(),
                 Toggle::make('is_published')
                     ->default(false),
-                MarkdownEditor::make('markdown_content')
-                    ->label('Content')
-                    ->required()
-                    ->columnSpanFull()
-                    ->fileAttachmentsDisk('public')
-                    ->fileAttachmentsDirectory(fn ($record) => $record
-                        ? 'pages/'.$record->slug
-                        : 'pages/'.now()->toDateString()
-                    ),
+                StoreWebImage::attachTo(
+                    MarkdownEditor::make('markdown_content')
+                        ->label('Content')
+                        ->required()
+                        ->columnSpanFull()
+                        ->fileAttachmentsDisk('public')
+                        ->fileAttachmentsDirectory(fn ($record) => $record
+                            ? 'pages/'.$record->slug
+                            : 'pages/'.now()->toDateString()
+                        ),
+                ),
             ]);
     }
 }

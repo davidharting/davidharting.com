@@ -2,12 +2,15 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
+use Laravel\Passport\AuthCode;
 use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use Laravel\Passport\RefreshToken;
 use Laravel\Passport\Token;
+use Livewire\Features\SupportTesting\Testable;
 use Tests\TestCase;
 
 /*
@@ -85,7 +88,7 @@ function accessTokenFor(User $user, array $scopes = []): string
  * Personal access tokens never get a refresh token, so one is added by hand.
  *
  * Every token comes from the same personal access client, created on first
- * use.
+ * use. Use oauthClientWithToken() when a test needs a second client.
  *
  * @return array{bearer: string, token: Token, refreshToken: RefreshToken}
  */
@@ -107,6 +110,28 @@ function bearerTokenWithRefreshToken(User $user): array
     ];
 }
 
+/**
+ * A separate client with a token and refresh token of its own. The token is
+ * a bare row, not a usable bearer: tests use it to check it is left alone.
+ *
+ * @return array{client: Client, token: Token, refreshToken: RefreshToken}
+ */
+function oauthClientWithToken(User $user): array
+{
+    $client = Client::factory()->create();
+
+    $token = Passport::token()->forceCreate([
+        'id' => Str::random(80),
+        'user_id' => $user->getKey(),
+        'client_id' => $client->getKey(),
+        'scopes' => ['mcp:use'],
+        'revoked' => false,
+        'expires_at' => now()->addYear(),
+    ]);
+
+    return ['client' => $client, 'token' => $token, 'refreshToken' => refreshTokenFor($token)];
+}
+
 function refreshTokenFor(Token $token): RefreshToken
 {
     return Passport::refreshToken()->forceCreate([
@@ -114,6 +139,23 @@ function refreshTokenFor(Token $token): RefreshToken
         'access_token_id' => $token->getKey(),
         'revoked' => false,
         'expires_at' => now()->addYear(),
+    ]);
+}
+
+/**
+ * A pending authorization code for the client: a dependent row that belongs
+ * to the client rather than to any token.
+ */
+function oauthAuthCodeFor(Client $client, User $user): AuthCode
+{
+    return Passport::authCode()->forceCreate([
+        'id' => Str::random(80),
+        'user_id' => $user->getKey(),
+        'client_id' => $client->getKey(),
+        // AuthCode has no array cast on scopes, unlike Token, so store the JSON.
+        'scopes' => json_encode(['mcp:use']),
+        'revoked' => false,
+        'expires_at' => now()->addMinutes(10),
     ]);
 }
 
@@ -126,4 +168,18 @@ function refreshTokenFor(Token $token): RefreshToken
 function mcpToolsListRequest(): array
 {
     return ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'];
+}
+
+/**
+ * Paste a file into a Filament form's markdown editor the way the browser
+ * does: upload it to Livewire, then ask the editor to save it.
+ *
+ * @return string|null The URL the editor would insert into the markdown, or null when the save failed.
+ */
+function pasteIntoMarkdownEditor(Testable $form, UploadedFile $file, string $field = 'markdown_content'): ?string
+{
+    $form->set("componentFileAttachments.data.{$field}", $file);
+    $editor = $form->instance()->getSchema('form')->getComponentByStatePath($field);
+
+    return $form->instance()->callSchemaComponentMethod($editor->getKey(), 'saveUploadedFileAttachmentAndGetUrl');
 }
