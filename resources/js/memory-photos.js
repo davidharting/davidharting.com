@@ -1,10 +1,12 @@
+import { copyIntoMemory } from "./copy-into-memory";
+
 /**
  * The photos part of the memory editor: picking photos, uploading them one
  * at a time, the caption sheet and the toast. The server renders the photos
  * that have landed; this keeps the ones still on their way.
  *
- * Picked files are copied into memory before uploading, because iPhone
- * Safari otherwise sends 0 bytes for photos picked from the library.
+ * Picked files are copied into memory before uploading (see
+ * copy-into-memory.js).
  *
  * Livewire tells nobody when one of its upload requests is lost, so an
  * upload that goes quiet for too long is given up on and offered again.
@@ -63,9 +65,7 @@ document.addEventListener("alpine:init", () => {
                 let copy;
 
                 try {
-                    copy = new File([await file.arrayBuffer()], file.name, {
-                        type: file.type,
-                    });
+                    copy = await copyIntoMemory(file);
                 } catch {
                     this.say(
                         `${file.name} couldn't be read, so it was skipped.`,

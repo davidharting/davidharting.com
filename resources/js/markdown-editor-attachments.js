@@ -1,11 +1,12 @@
+import { copyIntoMemory } from "./copy-into-memory";
+
 /**
  * Makes the photo button in Filament's markdown editors work on iPhone.
  *
  * iPhone Safari sends 0 bytes for photos picked from the library or taken
- * with the camera when the picked file goes straight into an upload, so the
- * server gets an empty file and the editor quietly gives up. (The memory
- * editor works around the same thing in memory-photos.js.) Copying each
- * picked file into memory first gives Safari real bytes to send.
+ * with the camera unless they're copied into memory first (see
+ * copy-into-memory.js), so the server got an empty file and the editor
+ * quietly gave up.
  *
  * This catches the editor's file input changing before the editor sees it,
  * swaps in the copies, and hands the change back to the editor. Pasted and
@@ -37,12 +38,7 @@ document.addEventListener(
 
         for (const file of Array.from(input.files)) {
             try {
-                copies.items.add(
-                    new File([await file.arrayBuffer()], file.name, {
-                        type: file.type,
-                        lastModified: file.lastModified,
-                    }),
-                );
+                copies.items.add(await copyIntoMemory(file));
             } catch {
                 copies.items.add(file);
             }
