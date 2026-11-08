@@ -62,7 +62,7 @@ updates:
           - "*"
 
   # The FrankenPHP base image tag pins both FrankenPHP and PHP
-  # (e.g. 1.13.3-php8.5.12-bookworm).
+  # (e.g. 1.13.3-php8.5.12-trixie).
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
