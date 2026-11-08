@@ -27,15 +27,15 @@ test('non-admins may not', function (array $ability) {
 
 test('admins may', function (array $ability) {
     /** @var TestCase $this */
-    $this->actingAs(User::factory()->create(['is_admin' => true]));
+    $this->actingAs(User::factory()->admin()->create());
 
     expect(Gate::allows(...$ability))->toBeTrue();
 })->with('abilities');
 
-test('follows the administrate gate, not the admin flag directly', function () {
+test('follows the administrate gate, not the admin flag directly', function (array $ability) {
     /** @var TestCase $this */
     Gate::define('administrate', fn (User $user) => false);
-    $this->actingAs(User::factory()->create(['is_admin' => true]));
+    $this->actingAs(User::factory()->admin()->create());
 
-    expect(Gate::allows('viewAny', Word::class))->toBeFalse();
-});
+    expect(Gate::allows(...$ability))->toBeFalse();
+})->with('abilities');
