@@ -89,7 +89,7 @@ _Avoid_: Like, heart, vote
 ### Vocabulary
 
 **Word**:
-A word David is learning, private to him, with its short definition. One word per spelling, matched case-insensitively.
+A word David wants to remember, often one he came across while reading and sometimes one he is drilling with flashcards. Private to him, with its short definition. One word per spelling, matched case-insensitively.
 _Avoid_: Term, entry, vocab item, flashcard
 
 **Short definition**:
