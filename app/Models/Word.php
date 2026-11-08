@@ -48,8 +48,13 @@ class Word extends Model
     }
 
     /**
-     * The word already on the list with this spelling, ignoring case and
-     * surrounding whitespace, other than $except.
+     * Find the word that recording $word would duplicate, so a caller can
+     * refuse it before saving rather than hit the unique index. Two
+     * spellings count as the same word when they differ only in case or
+     * surrounding whitespace.
+     *
+     * When editing, pass the word being edited as $except so it is not
+     * reported as a duplicate of itself.
      */
     public static function spelledAs(string $word, ?Word $except = null): ?Word
     {

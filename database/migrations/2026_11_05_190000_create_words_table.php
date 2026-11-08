@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('words', function (Blueprint $table) {
             $table->id();
-            $table->string('word');
+            $table->text('word');
             $table->text('short_definition');
             $table->text('full_definition')->nullable();
             $table->timestamps();
