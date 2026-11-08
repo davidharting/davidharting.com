@@ -51,7 +51,13 @@ describe('handle()', function () {
         // Every ability is admin-only today, so the refusal is forced here to
         // prove handle() asks WordPolicy::update about this word.
         $word = Word::factory()->create(['word' => 'ephemerel']);
-        Gate::before(fn (User $user, string $ability, array $arguments) => $ability === 'update' && ($arguments[0] ?? null)?->is($word) ? false : null);
+        Gate::before(function (User $user, string $ability, array $arguments) use ($word): ?bool {
+            $isUpdatingThisWord = $ability === 'update'
+                && ($arguments[0] ?? null) instanceof Word
+                && $arguments[0]->is($word);
+
+            return $isUpdatingThisWord ? false : null;
+        });
 
         $response = AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(EditWord::class, ['word_id' => $word->id, 'word' => 'ephemeral']);
@@ -74,6 +80,10 @@ describe('handle()', function () {
             'short_definition' => 'lasting a very short time',
             'full_definition' => '**adjective**',
         ]);
+        expect($word->refresh())
+            ->word->toBe('ephemeral')
+            ->short_definition->toBe('lasting a very short time')
+            ->full_definition->toBe('**adjective**');
     });
 
     test('clears the full definition when passed null', function () {

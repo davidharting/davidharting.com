@@ -60,6 +60,9 @@ describe('handle()', function () {
             'full_definition' => "**adjective**\n\n1. lasting a very short time",
             'word_created' => true,
         ]);
+        expect($word)
+            ->short_definition->toBe('lasting a very short time; a short-lived plant')
+            ->full_definition->toBe("**adjective**\n\n1. lasting a very short time");
     });
 
     test('returns a word already on the list unchanged, matching case-insensitively', function () {
