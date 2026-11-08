@@ -7,6 +7,7 @@ use App\Models\Page;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use Tests\Support\PhotoInspector;
 use Tests\TestCase;
 
 test('admin can list pages', function () {
@@ -141,4 +142,23 @@ test('markdown editor uses date-based directory for file attachments on new page
 
     expect($editor->getFileAttachmentsDiskName())->toBe('public');
     expect($editor->getFileAttachmentsDirectory())->toBe('pages/'.now()->toDateString());
+});
+
+test('saves a photo pasted into the markdown editor as a WebP in the page\'s folder and keeps no original', function () {
+    /** @var TestCase $this */
+    Storage::fake('public');
+    Storage::fake('tmp-for-tests');
+
+    $admin = User::factory()->create(['is_admin' => true]);
+    $page = Page::factory()->create(['slug' => 'about']);
+
+    $url = pasteIntoMarkdownEditor(
+        Livewire::actingAs($admin)->test(EditPage::class, ['record' => $page->slug]),
+        PhotoInspector::upload('iphone.jpg'),
+    );
+
+    [$path] = Storage::disk('public')->allFiles();
+    expect($path)->toStartWith('pages/about/')->toEndWith('.webp')
+        ->and($url)->toBe(Storage::disk('public')->url($path))
+        ->and(Storage::disk('tmp-for-tests')->allFiles())->toBeEmpty();
 });

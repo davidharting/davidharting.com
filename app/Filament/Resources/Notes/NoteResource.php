@@ -6,6 +6,7 @@ use App\Filament\Resources\Notes\Pages\CreateNote;
 use App\Filament\Resources\Notes\Pages\EditNote;
 use App\Filament\Resources\Notes\Pages\ListNotes;
 use App\Models\Note;
+use App\Support\StoreWebImage;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
@@ -21,12 +22,17 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class NoteResource extends Resource
 {
     protected static ?string $model = Note::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Writing';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
     {
@@ -38,14 +44,16 @@ class NoteResource extends Resource
                     ->columnSpanFull(),
                 Textarea::make('lead')
                     ->columnSpanFull(),
-                MarkdownEditor::make('markdown_content')
-                    ->label('Content')
-                    ->columnSpanFull()
-                    ->fileAttachmentsDisk('public')
-                    ->fileAttachmentsDirectory(fn ($record) => $record
-                        ? 'notes/'.$record->slug
-                        : 'notes/'.now()->toDateString()
-                    ),
+                StoreWebImage::attachTo(
+                    MarkdownEditor::make('markdown_content')
+                        ->label('Content')
+                        ->columnSpanFull()
+                        ->fileAttachmentsDisk('public')
+                        ->fileAttachmentsDirectory(fn ($record) => $record
+                            ? 'notes/'.$record->slug
+                            : 'notes/'.now()->toDateString()
+                        ),
+                ),
                 Toggle::make('visible')->default(true)
                     ->required(),
             ]);
