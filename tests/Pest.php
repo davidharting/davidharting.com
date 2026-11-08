@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Laravel\Passport\AuthCode;
 use Laravel\Passport\Client;
@@ -9,6 +10,7 @@ use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 use Laravel\Passport\RefreshToken;
 use Laravel\Passport\Token;
+use Livewire\Features\SupportTesting\Testable;
 use Tests\TestCase;
 
 /*
@@ -166,4 +168,18 @@ function oauthAuthCodeFor(Client $client, User $user): AuthCode
 function mcpToolsListRequest(): array
 {
     return ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list'];
+}
+
+/**
+ * Paste a file into a Filament form's markdown editor the way the browser
+ * does: upload it to Livewire, then ask the editor to save it.
+ *
+ * @return string|null The URL the editor would insert into the markdown, or null when the save failed.
+ */
+function pasteIntoMarkdownEditor(Testable $form, UploadedFile $file, string $field = 'markdown_content'): ?string
+{
+    $form->set("componentFileAttachments.data.{$field}", $file);
+    $editor = $form->instance()->getSchema('form')->getComponentByStatePath($field);
+
+    return $form->instance()->callSchemaComponentMethod($editor->getKey(), 'saveUploadedFileAttachmentAndGetUrl');
 }
