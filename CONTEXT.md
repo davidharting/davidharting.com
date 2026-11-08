@@ -86,6 +86,20 @@ _Avoid_: Reveal notification
 An emoji one person leaves on the other's revealed memory. Any emoji, up to five per person per memory.
 _Avoid_: Like, heart, vote
 
+### Vocabulary
+
+**Word**:
+A word David wants to remember, often one he came across while reading and sometimes one he is drilling with flashcards. Private to him, with its short definition. One word per spelling, matched case-insensitively.
+_Avoid_: Term, entry, vocab item, flashcard
+
+**Short definition**:
+Brief, plain-words definitions of the senses of a word David cares about, separated by semicolons when there is more than one. Stored as `words.short_definition`; it may be written in an agent's own words. It is what a flashcard shows by default.
+_Avoid_: Summary, gloss, sense
+
+**Full definition**:
+The whole dictionary entry for a word as markdown: every sense with its part of speech and example uses. Optional, stored as `words.full_definition`, and shown on request rather than by default.
+_Avoid_: Long definition, entry, details
+
 ## Notes on this glossary
 
 **Note, remark and comment are three different things**, and the distinction is load-bearing: a note is public writing, a remark belongs to a piece of media, a comment belongs to a moment.
