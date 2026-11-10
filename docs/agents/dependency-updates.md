@@ -21,7 +21,9 @@ weekly pass below:
 - The PHP version inside the FrankenPHP image tag in `Dockerfile`, and the
   matching `php-version` in CI and `scripts/sandbox/setup.sh`.
 - `node` in `mise.toml` and `node-version` in the GitHub workflows.
-- The `postgres` image in CI and the Postgres version in `render.yaml`.
+- Postgres needs no weekly check. CI's `postgres` image and `render.yaml` pin
+  only the major version, so minor releases arrive on their own, and majors
+  are out of scope (see below).
 
 ## Weekly pass
 
@@ -59,9 +61,16 @@ Do not merge these yourself. Get the PR green, then ask:
 - Changes to authentication, OAuth/Passport, sessions or cookies.
 - Changes to backups, mail, queues, storage (R2/S3) or the Telegram webhook,
   which a preview cannot fully exercise.
-- A PHP minor version bump, a Postgres major, or a FrankenPHP major.
+- A PHP minor version bump or a FrankenPHP major.
 - Anything that needs a data migration or a change in Render or Cloudflare.
 - Any PR where you could not verify the behavior that changed.
+
+### Out of scope
+
+Postgres major upgrades (17 to 18, and so on) are not part of the weekly
+pass. They change the production database on Render and are tracked as their
+own issue, [#401](https://github.com/davidharting/davidharting.com/issues/401).
+Don't open a PR for one or list it as waiting on David.
 
 ### After a merge
 
