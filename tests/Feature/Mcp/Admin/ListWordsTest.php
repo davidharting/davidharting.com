@@ -82,6 +82,7 @@ describe('handle()', function () {
                 'added_at' => '2026-11-01T09:30:00+00:00',
             ]],
             'total' => 1,
+            'total_pages' => 1,
             'page' => 1,
             'per_page' => 25,
             'has_more_pages' => false,
@@ -168,7 +169,7 @@ describe('handle()', function () {
         expect($pages)->toBe([['echo', 'delta'], ['charlie', 'bravo'], ['alpha']]);
     });
 
-    test('reports the total and whether more pages remain', function () {
+    test('reports the total, the page count and whether more pages remain', function () {
         /** @var TestCase $this */
         Word::factory()->count(3)->create();
         $admin = User::factory()->admin()->create();
@@ -178,6 +179,7 @@ describe('handle()', function () {
         $response->assertOk();
         $response->assertStructuredContent(function ($json) {
             $json->where('total', 3)
+                ->where('total_pages', 2)
                 ->where('per_page', 2)
                 ->where('has_more_pages', true)
                 ->has('words', 2)

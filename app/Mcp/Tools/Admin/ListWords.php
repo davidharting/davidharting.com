@@ -34,10 +34,6 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
     TEXT)]
 class ListWords extends Tool
 {
-    /**
-     * Smaller than the notes tools' 250: David chose 25 by default with
-     * room to ask for up to 200 (#379).
-     */
     private const DEFAULT_PER_PAGE = 25;
 
     private const MAX_PER_PAGE = 200;
@@ -72,15 +68,15 @@ class ListWords extends Tool
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:'.self::MAX_PER_PAGE],
         ]);
 
-        $includeFullDefinition = $validated['include_full_definition'] ?? false;
+        $options = $this->options($validated);
 
         $paginator = (new ListWordsQuery(
-            search: $validated['search'] ?? null,
-            sort: isset($validated['sort']) ? WordSort::from($validated['sort']) : WordSort::Recent,
-            includeFullDefinition: $includeFullDefinition,
+            search: $options['search'],
+            sort: $options['sort'],
+            includeFullDefinition: $options['includeFullDefinition'],
         ))->paginate(
-            perPage: $validated['per_page'] ?? self::DEFAULT_PER_PAGE,
-            page: $validated['page'] ?? 1,
+            perPage: $options['perPage'],
+            page: $options['page'],
         );
 
         return Response::structured([
@@ -89,13 +85,32 @@ class ListWords extends Tool
                 'word' => $word->word,
                 'short_definition' => $word->short_definition,
                 'added_at' => $word->created_at->toIso8601String(),
-                ...($includeFullDefinition ? ['full_definition' => $word->full_definition] : []),
+                ...($options['includeFullDefinition'] ? ['full_definition' => $word->full_definition] : []),
             ])->all(),
             'total' => $paginator->total(),
+            'total_pages' => $paginator->lastPage(),
             'page' => $paginator->currentPage(),
             'per_page' => $paginator->perPage(),
             'has_more_pages' => $paginator->hasMorePages(),
         ]);
+    }
+
+    /**
+     * Every listing option with its default filled in, as the query and
+     * the response use it.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array{search: ?string, sort: WordSort, includeFullDefinition: bool, page: int, perPage: int}
+     */
+    private function options(array $validated): array
+    {
+        return [
+            'search' => $validated['search'] ?? null,
+            'sort' => isset($validated['sort']) ? WordSort::from($validated['sort']) : WordSort::Recent,
+            'includeFullDefinition' => (bool) ($validated['include_full_definition'] ?? false),
+            'page' => $validated['page'] ?? 1,
+            'perPage' => $validated['per_page'] ?? self::DEFAULT_PER_PAGE,
+        ];
     }
 
     /**
@@ -145,6 +160,7 @@ class ListWords extends Tool
                 ]))
                 ->description('The words on this page, in the requested order.'),
             'total' => $schema->integer()->description('The total number of matching words across all pages.'),
+            'total_pages' => $schema->integer()->description('The number of pages of matching words at this per_page.'),
             'page' => $schema->integer()->description('The current page number.'),
             'per_page' => $schema->integer()->description('The number of words per page.'),
             'has_more_pages' => $schema->boolean()->description('Whether more pages of words are available.'),
