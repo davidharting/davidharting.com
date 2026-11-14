@@ -106,8 +106,8 @@ describe('grade()', function () {
     });
 });
 
-describe('dueNow()', function () {
-    test('lists flashcards due now, most overdue first', function () {
+describe('nextUp()', function () {
+    test('lists the flashcards due soonest, most overdue first, up to the limit', function () {
         /** @var TestCase $this */
         $this->travelTo('2026-01-01 09:00');
         $older = Word::factory()->create()->flashcard;
@@ -115,17 +115,10 @@ describe('dueNow()', function () {
         $newer = Word::factory()->create()->flashcard;
         $notYetDue = Word::factory()->create()->flashcard;
         $notYetDue->grade(Rating::Good);
+        Word::factory()->create()->flashcard->grade(Rating::Easy);
 
-        $due = Flashcard::query()->dueNow()->get();
+        $nextUp = Flashcard::query()->nextUp(3)->get();
 
-        expect($due->modelKeys())->toBe([$older->id, $newer->id]);
-    });
-
-    test('includes a flashcard that fell due this very instant', function () {
-        /** @var TestCase $this */
-        $this->travelTo(Carbon::parse('2026-01-01 09:00:00.123456'));
-        Word::factory()->create();
-
-        expect(Flashcard::query()->dueNow()->count())->toBe(1);
+        expect($nextUp->modelKeys())->toBe([$older->id, $newer->id, $notYetDue->id]);
     });
 });

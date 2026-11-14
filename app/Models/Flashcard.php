@@ -63,20 +63,15 @@ class Flashcard extends Model
     }
 
     /**
-     * Flashcards due now, most overdue first. "Now" comes from the app's
-     * clock rather than the database's: Postgres's now() is fixed at the
-     * start of the transaction, and the app's clock is the one tests travel.
+     * The next flashcards to practise: those due soonest, most overdue first,
+     * whether or not they are due yet.
      *
      * @param  Builder<Flashcard>  $query
      */
     #[Scope]
-    protected function dueNow(Builder $query): void
+    protected function nextUp(Builder $query, int $limit): void
     {
-        // Bound as an exact UTC string: the query grammar would otherwise drop
-        // the microseconds and the offset, missing a card due this instant.
-        $query->where('due', '<=', CardSchedule::inUtc(now())->format('Y-m-d H:i:s.uP'))
-            ->orderBy('due')
-            ->orderBy('id');
+        $query->orderBy('due')->orderBy('id')->limit($limit);
     }
 
     /**
