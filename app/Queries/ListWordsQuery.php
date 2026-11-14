@@ -63,7 +63,7 @@ class ListWordsQuery
     private function builder(): Builder
     {
         return Word::query()
-            ->when($this->search !== null && trim($this->search) !== '', function (Builder $query): void {
+            ->when(filled($this->search), function (Builder $query): void {
                 $pattern = '%'.LikePattern::escape(trim($this->search)).'%';
 
                 $query->where(function (Builder $query) use ($pattern): void {
@@ -82,7 +82,7 @@ class ListWordsQuery
     {
         match ($this->sort) {
             WordSort::Recent => $query->orderBy('created_at', 'desc')->orderBy('id', 'desc'),
-            WordSort::Alphabetical => $query->orderByRaw('lower(word) asc')->orderBy('id', 'asc'),
+            WordSort::AToZ => $query->orderByRaw('lower(word) asc')->orderBy('id', 'asc'),
         };
     }
 }

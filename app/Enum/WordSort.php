@@ -13,5 +13,5 @@ enum WordSort: string
     case Recent = 'recent';
 
     /** Alphabetical by word, ignoring case. */
-    case Alphabetical = 'a_to_z';
+    case AToZ = 'a_to_z';
 }

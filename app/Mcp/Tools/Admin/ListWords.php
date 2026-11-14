@@ -34,6 +34,10 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
     TEXT)]
 class ListWords extends Tool
 {
+    /**
+     * Smaller than the notes tools' 250: David chose 25 by default with
+     * room to ask for up to 200 (#379).
+     */
     private const DEFAULT_PER_PAGE = 25;
 
     private const MAX_PER_PAGE = 200;
@@ -42,6 +46,9 @@ class ListWords extends Tool
      * Whether the caller is entitled to the admin surface at all. Failing this
      * hides the tool from tools/list and makes tools/call answer "Tool not
      * found": both resolve through the same filtered collection.
+     *
+     * handle() asks the narrower question of whether the caller may see
+     * words. Neither check substitutes for the other.
      */
     public function shouldRegister(Request $request): bool
     {
@@ -69,7 +76,7 @@ class ListWords extends Tool
 
         $paginator = (new ListWordsQuery(
             search: $validated['search'] ?? null,
-            sort: WordSort::from($validated['sort'] ?? WordSort::Recent->value),
+            sort: isset($validated['sort']) ? WordSort::from($validated['sort']) : WordSort::Recent,
             includeFullDefinition: $includeFullDefinition,
         ))->paginate(
             perPage: $validated['per_page'] ?? self::DEFAULT_PER_PAGE,

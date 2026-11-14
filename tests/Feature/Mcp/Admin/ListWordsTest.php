@@ -90,17 +90,20 @@ describe('handle()', function () {
 
     test('includes the full definition when asked', function () {
         /** @var TestCase $this */
-        Word::factory()->create(['full_definition' => '**adjective** lasting a very short time']);
-        Word::factory()->create(['full_definition' => null]);
+        Word::factory()->create(['word' => 'ephemeral', 'full_definition' => '**adjective** lasting a very short time']);
+        Word::factory()->create(['word' => 'liminal', 'full_definition' => null]);
         $admin = User::factory()->admin()->create();
 
-        $response = AdminServer::actingAs($admin)->tool(ListWords::class, ['include_full_definition' => true, 'sort' => 'recent']);
+        $response = AdminServer::actingAs($admin)->tool(ListWords::class, ['include_full_definition' => true]);
 
         $response->assertOk();
         $response->assertStructuredContent(function ($json) {
-            $json->where('words.0.full_definition', null)
-                ->where('words.1.full_definition', '**adjective** lasting a very short time')
-                ->etc();
+            $fullDefinitions = array_column($json->toArray()['words'], 'full_definition', 'word');
+            expect($fullDefinitions)->toBe([
+                'liminal' => null,
+                'ephemeral' => '**adjective** lasting a very short time',
+            ]);
+            $json->etc();
         });
     });
 
@@ -130,6 +133,14 @@ describe('handle()', function () {
         Word::factory()->create(['word' => 'liminal', 'short_definition' => 'at a threshold', 'full_definition' => 'between two states']);
 
         expect(listedWords(['search' => 'ephemeral', 'sort' => 'a_to_z']))->toBe(['Ephemeral', 'evanescent', 'transient']);
+    });
+
+    test('lists every word when the search is blank', function () {
+        /** @var TestCase $this */
+        Word::factory()->create(['word' => 'apricity']);
+        Word::factory()->create(['word' => 'zephyr']);
+
+        expect(listedWords(['search' => '   ', 'sort' => 'a_to_z']))->toBe(['apricity', 'zephyr']);
     });
 
     test('matches percent signs and underscores in the search text literally', function () {
@@ -174,7 +185,7 @@ describe('handle()', function () {
         });
     });
 
-    test('allows up to 200 words per page', function () {
+    test('accepts up to 200 words per page and rejects more', function () {
         /** @var TestCase $this */
         $admin = User::factory()->admin()->create();
 
