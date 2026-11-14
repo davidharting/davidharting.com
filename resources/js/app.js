@@ -2,6 +2,7 @@ import "./bootstrap";
 import "./memory-pages";
 import "./memory-photos";
 import "./memory-reactions";
+import "./word-practice";
 
 // Import only hljs core + specific languages to reduce bundle size
 import hljs from "highlight.js/lib/core";

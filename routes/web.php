@@ -12,6 +12,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Flashcard;
 use App\Models\Month;
 use Illuminate\Support\Facades\Route;
 use Spatie\MarkdownResponse\Middleware\ProvideMarkdownResponse;
@@ -79,6 +80,10 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
     Route::get('/memories/{month}', [MemoriesController::class, 'show'])->name('memories.show')->where('month', '\d{4}-\d{2}')->can('view', 'month');
     Route::get('/memories/{month}/write', MemoryEditorController::class)->name('memories.write')->where('month', '\d{4}-\d{2}')->can('write', 'month');
     Route::get('/memories/photos/{photo}/{variant}', [MemoryPhotoController::class, 'show'])->name('memories.photos.show')->whereNumber('photo')->whereIn('variant', ['web', 'thumbnail'])->can('view', 'photo');
+});
+
+Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
+    Route::view('/words/practice', 'words.practice')->name('words.practice')->withHead(title: 'Practice')->can('viewAny', Flashcard::class);
 });
 
 require __DIR__.'/auth.php';
