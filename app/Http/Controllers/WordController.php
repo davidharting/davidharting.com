@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enum\WordSort;
-use App\Queries\Words\BrowseWordsQuery;
+use App\Queries\ListWordsQuery;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -18,7 +18,9 @@ class WordController extends Controller
         $search = trim($validated['q'] ?? '');
         $sort = $request->enum('sort', WordSort::class) ?? WordSort::Recent;
 
-        $words = (new BrowseWordsQuery($search, $sort))->execute()->withQueryString();
+        $words = (new ListWordsQuery($search, $sort))
+            ->paginate(perPage: 100, page: max(1, $request->integer('page', 1)))
+            ->withQueryString();
 
         return view('words.index', [
             'words' => $words,

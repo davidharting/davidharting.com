@@ -45,7 +45,7 @@ test('lists words A to Z under dictionary letter headings, ignoring case', funct
     Word::factory()->create(['word' => 'ephemeral']);
     Word::factory()->create(['word' => 'lambent']);
 
-    $this->get('/words?sort=az')
+    $this->get('/words?sort=a_to_z')
         ->assertSuccessful()
         ->assertSeeTextInOrder(['E', 'ephemeral', 'L', 'Laconic', 'lambent'], false)
         ->assertSeeHtml('aria-labelledby="letter-1"');
@@ -97,13 +97,13 @@ test('shows 100 words a page, keeping the search and sort in the page links', fu
         Word::factory()->create(['word' => sprintf('word%03d', $number), 'short_definition' => 'a word']);
     }
 
-    $this->get('/words?sort=az&q=word')
+    $this->get('/words?sort=a_to_z&q=word')
         ->assertSeeText('Page 1 of 2')
         ->assertSeeText('word100')
         ->assertDontSeeText('word101')
-        ->assertSee(route('words.index', ['sort' => 'az', 'q' => 'word', 'page' => 2]));
+        ->assertSee(route('words.index', ['sort' => 'a_to_z', 'q' => 'word', 'page' => 2]));
 
-    $this->get('/words?sort=az&q=word&page=2')
+    $this->get('/words?sort=a_to_z&q=word&page=2')
         ->assertSeeText('word101')
         ->assertDontSeeText('word100');
 });

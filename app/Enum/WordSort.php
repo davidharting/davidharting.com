@@ -3,14 +3,15 @@
 namespace App\Enum;
 
 /**
- * Orders for browsing David's word list. Each ends with an id tiebreaker so
- * pages never shuffle words between them.
+ * Sort orders for David's vocabulary list.
+ *
+ * Every sort ends with an id tiebreaker, so pages of results never overlap.
  */
 enum WordSort: string
 {
-    /** Newest first: the words he added most recently. */
+    /** Most recently added first. */
     case Recent = 'recent';
 
-    /** Alphabetical, ignoring case, like a dictionary. */
-    case Alphabetical = 'az';
+    /** Alphabetical by word, ignoring case. */
+    case AToZ = 'a_to_z';
 }

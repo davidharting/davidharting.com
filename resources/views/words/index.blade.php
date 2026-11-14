@@ -8,7 +8,7 @@
     ]));
 
     // Headings like a dictionary's, only when the list is alphabetical.
-    $groups = $sort === WordSort::Alphabetical
+    $groups = $sort === WordSort::AToZ
         ? $words->getCollection()->groupBy(fn ($word) => $word->dictionaryLetter())
         : collect(['' => $words->getCollection()]);
 @endphp
@@ -59,9 +59,9 @@
                     Recent
                 </a>
                 <a
-                    href="{{ $listUrl(["sort" => WordSort::Alphabetical->value]) }}"
-                    class="btn btn-sm join-item {{ $sort === WordSort::Alphabetical ? "btn-active" : "" }}"
-                    @if ($sort === WordSort::Alphabetical) aria-current="true" @endif
+                    href="{{ $listUrl(["sort" => WordSort::AToZ->value]) }}"
+                    class="btn btn-sm join-item {{ $sort === WordSort::AToZ ? "btn-active" : "" }}"
+                    @if ($sort === WordSort::AToZ) aria-current="true" @endif
                 >
                     A to Z
                 </a>
