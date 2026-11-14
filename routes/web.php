@@ -11,6 +11,7 @@ use App\Http\Controllers\MemoryPhotoController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PracticePrototypeController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Month;
 use Illuminate\Support\Facades\Route;
@@ -80,5 +81,8 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
     Route::get('/memories/{month}/write', MemoryEditorController::class)->name('memories.write')->where('month', '\d{4}-\d{2}')->can('write', 'month');
     Route::get('/memories/photos/{photo}/{variant}', [MemoryPhotoController::class, 'show'])->name('memories.photos.show')->whereNumber('photo')->whereIn('variant', ['web', 'thumbnail'])->can('view', 'photo');
 });
+
+// PROTOTYPE, throw me away: in-app vocab practice variants (issue #376).
+Route::get('/prototype/practice', PracticePrototypeController::class)->name('prototype.practice')->middleware('auth')->can('administrate')->withHead(title: 'Practice (prototype)', robots: 'noindex, nofollow');
 
 require __DIR__.'/auth.php';
