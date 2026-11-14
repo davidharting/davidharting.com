@@ -11,17 +11,6 @@ use Illuminate\Database\Eloquent\Builder;
 class ListWordsQuery
 {
     /**
-     * What a listing needs. The full definition is left out unless asked for,
-     * because it is by far the largest column.
-     */
-    private const COLUMNS = [
-        'id',
-        'word',
-        'short_definition',
-        'created_at',
-    ];
-
-    /**
      * This query performs no authorization. The caller is responsible for
      * checking the viewer may see David's words at all.
      *
@@ -48,13 +37,20 @@ class ListWordsQuery
     }
 
     /**
+     * What a listing needs. The full definition is left out unless asked for,
+     * because it is by far the largest column.
+     *
      * @return string[]
      */
     private function columns(): array
     {
-        return $this->includeFullDefinition
-            ? [...self::COLUMNS, 'full_definition']
-            : self::COLUMNS;
+        $columns = ['id', 'word', 'short_definition', 'created_at'];
+
+        if ($this->includeFullDefinition) {
+            $columns[] = 'full_definition';
+        }
+
+        return $columns;
     }
 
     /**
