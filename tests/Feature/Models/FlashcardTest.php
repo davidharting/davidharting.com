@@ -1,5 +1,6 @@
 <?php
 
+use App\Casts\CardScheduleCast;
 use App\Fsrs\CardState;
 use App\Fsrs\Rating;
 use App\Models\Flashcard;
@@ -58,7 +59,7 @@ describe('grade()', function () {
         /** @var TestCase $this */
         $flashcard = Word::factory()->create()->flashcard;
         $reviewedAt = Carbon::parse('2026-01-01 09:00:00.123456', 'UTC');
-        $flashcard->schedule; // Read before grading, as a practice screen would.
+        $scheduleShownOnScreen = $flashcard->schedule; // Read before grading, as a practice screen would.
 
         $flashcard->grade(Rating::Good, $reviewedAt);
         $reloaded = $flashcard->fresh()->schedule;
@@ -73,14 +74,27 @@ describe('grade()', function () {
     test('logs the review with the rating and the schedule either side', function () {
         /** @var TestCase $this */
         $flashcard = Word::factory()->create()->flashcard;
+        $before = $flashcard->schedule;
 
         $review = $flashcard->grade(Rating::Again, reviewDurationMs: 4200);
 
         expect($review->fresh())
             ->rating->toBe(Rating::Again)
             ->review_duration_ms->toBe(4200)
-            ->schedule_before->stability->toBeNull()
-            ->schedule_after->stability->toBe($flashcard->schedule->stability);
+            ->schedule_before->toEqual(CardScheduleCast::columns($before))
+            ->schedule_after->toEqual(CardScheduleCast::columns($flashcard->schedule));
+    });
+
+    test('builds on the latest saved schedule even from an out-of-date copy', function () {
+        /** @var TestCase $this */
+        $flashcard = Word::factory()->create()->flashcard;
+        $staleCopy = Flashcard::find($flashcard->id);
+
+        $first = $flashcard->grade(Rating::Good);
+        $second = $staleCopy->grade(Rating::Good);
+
+        expect($second->schedule_before)->toBe($first->schedule_after)
+            ->and($staleCopy->schedule)->toEqual($flashcard->fresh()->schedule);
     });
 
     test('logs the review at the exact moment it was graded', function () {
