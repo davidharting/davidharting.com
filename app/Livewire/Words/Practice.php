@@ -6,9 +6,7 @@ use App\Fsrs\Rating;
 use App\Models\Flashcard;
 use App\Models\Word;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
 use Illuminate\View\View;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Renderless;
 use Livewire\Component;
 
@@ -16,12 +14,16 @@ use Livewire\Component;
  * The practice page: a stack of word flashcards. The browser holds the stack
  * and moves on the moment a card is swiped, while each grade is saved in the
  * background, so practice never waits on the network. Nothing here
- * re-renders after the first load.
+ * re-renders after the first load: the browser asks for each new round.
+ *
+ * @phpstan-type Card array{id: int, word: string, definition: string}
+ * @phpstan-type Round array{cards: list<Card>, nextDueAt: ?string}
  */
 class Practice extends Component
 {
     /**
-     * How many cards one round deals at most.
+     * How many cards one round deals at most. When it runs out the browser
+     * asks for another, so a big backlog comes in batches.
      */
     public const int ROUND_SIZE = 20;
 
@@ -31,31 +33,26 @@ class Practice extends Component
     }
 
     /**
-     * The first round: the cards due now, most overdue first. Compared to
-     * the microsecond, as due is stored, so a word added a moment ago counts.
+     * The cards due now, most overdue first, and when the next card falls
+     * due, for the caught-up screen when there are none.
      *
-     * @return list<array{id: int, word: string, definition: string}>
+     * @return Round
      */
-    #[Computed]
-    public function dueCards(): array
+    #[Renderless]
+    public function dueRound(): array
     {
-        return $this->deal(Flashcard::query()->where('due', '<=', now()->format('Y-m-d H:i:s.uP')));
-    }
+        $this->authorize('viewAny', Flashcard::class);
 
-    /**
-     * Whether there is anything to practise at all, so the page can tell an
-     * empty word list apart from being caught up.
-     */
-    #[Computed]
-    public function hasWords(): bool
-    {
-        return Flashcard::query()->exists();
+        return [
+            'cards' => $this->deal(Flashcard::query()->dueNow()),
+            'nextDueAt' => Flashcard::query()->nextUp()->first()?->schedule->due->format(DATE_ATOM),
+        ];
     }
 
     /**
      * Another round once caught up: whatever comes up next, due or not.
      *
-     * @return list<array{id: int, word: string, definition: string}>
+     * @return list<Card>
      */
     #[Renderless]
     public function practiseAhead(): array
@@ -66,11 +63,12 @@ class Practice extends Component
     }
 
     /**
-     * Save a grade and reschedule the card. Returns when the next card is
-     * due afterwards, for the caught-up screen.
+     * Save how well David recalled a card and reschedule it. Returns true,
+     * because Livewire resolves a failed call with null rather than
+     * rejecting it, so the browser can tell a saved grade from a lost one.
      */
     #[Renderless]
-    public function grade(int $flashcardId, bool $gotIt): ?string
+    public function grade(int $flashcardId, bool $gotIt): bool
     {
         $flashcard = Flashcard::query()->findOrFail($flashcardId);
 
@@ -78,33 +76,27 @@ class Practice extends Component
 
         $flashcard->grade($gotIt ? Rating::Good : Rating::Again);
 
-        return $this->nextDue();
-    }
-
-    /**
-     * When the next card falls due, e.g. "in 10 minutes", or null when there
-     * are no cards.
-     */
-    #[Computed]
-    public function nextDue(): ?string
-    {
-        $next = Flashcard::query()->nextUp()->first();
-
-        return $next === null ? null : Carbon::instance($next->schedule->due)->diffForHumans();
+        return true;
     }
 
     public function render(): View
     {
-        return view('livewire.words.practice');
+        return view('livewire.words.practice', [
+            'firstRound' => $this->dueRound(),
+            'hasWords' => Flashcard::query()->exists(),
+        ]);
     }
 
     /**
+     * Word flashcards from $query in practice order, as the browser shows them.
+     *
      * @param  Builder<Flashcard>  $query
-     * @return list<array{id: int, word: string, definition: string}>
+     * @return list<Card>
      */
     private function deal(Builder $query): array
     {
         return $query->nextUp()
+            ->where('quizzable_type', (new Word)->getMorphClass())
             ->limit(self::ROUND_SIZE)
             ->with('quizzable')
             ->get()

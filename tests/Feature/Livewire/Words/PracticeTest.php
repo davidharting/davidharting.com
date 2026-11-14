@@ -14,9 +14,10 @@ beforeEach(function () {
 });
 
 /**
- * A word whose flashcard was just graded Got it, so it isn't due for a while.
+ * A word whose flashcard was just graded Got it, so it isn't due again for
+ * ten minutes.
  */
-function practisedWord(string $word): Word
+function practiceTestPractisedWord(string $word): Word
 {
     $practised = Word::factory()->create(['word' => $word]);
     $practised->flashcard->grade(Rating::Good);
@@ -24,31 +25,40 @@ function practisedWord(string $word): Word
     return $practised;
 }
 
+/**
+ * The words dealt in a round, in order.
+ *
+ * @param  list<array{word: string}>  $cards
+ * @return list<string>
+ */
+function practiceTestWords(array $cards): array
+{
+    return array_column($cards, 'word');
+}
+
 describe('the practice page', function () {
-    test('is only for admins', function () {
+    test('sends guests to log in', function () {
         /** @var TestCase $this */
         $this->get(route('words.practice'))->assertRedirect(route('login'));
+    });
 
+    test('is forbidden to anyone who is not an admin', function () {
+        /** @var TestCase $this */
         $this->actingAs(User::factory()->create())
             ->get(route('words.practice'))
             ->assertForbidden();
 
+        Livewire::actingAs(User::factory()->create())
+            ->test(Practice::class)
+            ->assertForbidden();
+    });
+
+    test('opens for an admin', function () {
+        /** @var TestCase $this */
         $this->actingAs($this->admin)
             ->get(route('words.practice'))
             ->assertOk()
             ->assertSeeLivewire(Practice::class);
-    });
-
-    test('deals the due words with their short definitions', function () {
-        /** @var TestCase $this */
-        Word::factory()->create(['word' => 'petrichor', 'short_definition' => 'the smell of rain on dry ground']);
-        practisedWord('quotidian');
-
-        Livewire::actingAs($this->admin)
-            ->test(Practice::class)
-            ->assertSee('petrichor')
-            ->assertSee('the smell of rain on dry ground')
-            ->assertDontSee('quotidian');
     });
 
     test('says there are no words yet when the list is empty', function () {
@@ -58,24 +68,60 @@ describe('the practice page', function () {
             ->assertSeeText('No words yet')
             ->assertDontSeeText('All caught up');
     });
-
-    test('says when the next word is due once everything is practised', function () {
-        /** @var TestCase $this */
-        practisedWord('quotidian');
-
-        Livewire::actingAs($this->admin)
-            ->test(Practice::class)
-            ->assertSeeText('All caught up')
-            ->assertSee('10 minutes from now');
-    });
 });
 
-describe('mount()', function () {
-    test('is forbidden to anyone who is not an admin', function () {
+describe('dueRound()', function () {
+    test('deals only the due words, with their short definitions', function () {
         /** @var TestCase $this */
-        Livewire::actingAs(User::factory()->create())
-            ->test(Practice::class)
-            ->assertForbidden();
+        Word::factory()->create(['word' => 'petrichor', 'short_definition' => 'the smell of rain on dry ground']);
+        practiceTestPractisedWord('quotidian');
+
+        $round = Livewire::actingAs($this->admin)->test(Practice::class)->instance()->dueRound();
+
+        expect($round['cards'])->toHaveCount(1)
+            ->and($round['cards'][0])->toMatchArray(['word' => 'petrichor', 'definition' => 'the smell of rain on dry ground']);
+    });
+
+    test('deals the most overdue word first', function () {
+        /** @var TestCase $this */
+        $this->travel(-2)->days();
+        Word::factory()->create(['word' => 'older']);
+        $this->travelBack();
+        $this->freezeTime();
+        Word::factory()->create(['word' => 'newer']);
+
+        $round = Livewire::actingAs($this->admin)->test(Practice::class)->instance()->dueRound();
+
+        expect(practiceTestWords($round['cards']))->toBe(['older', 'newer']);
+    });
+
+    test('deals a word added a moment ago', function () {
+        /** @var TestCase $this */
+        $this->travelBack();
+        Word::factory()->create(['word' => 'brand-new']);
+
+        $round = Livewire::actingAs($this->admin)->test(Practice::class)->instance()->dueRound();
+
+        expect(practiceTestWords($round['cards']))->toBe(['brand-new']);
+    });
+
+    test('deals at most one round of words at a time', function () {
+        /** @var TestCase $this */
+        Word::factory()->count(Practice::ROUND_SIZE + 1)->create();
+
+        $round = Livewire::actingAs($this->admin)->test(Practice::class)->instance()->dueRound();
+
+        expect($round['cards'])->toHaveCount(Practice::ROUND_SIZE);
+    });
+
+    test('says when the next word is due once nothing is', function () {
+        /** @var TestCase $this */
+        practiceTestPractisedWord('quotidian');
+
+        $round = Livewire::actingAs($this->admin)->test(Practice::class)->instance()->dueRound();
+
+        expect($round['cards'])->toBe([])
+            ->and($round['nextDueAt'])->toBe(now()->addMinutes(10)->utc()->format(DATE_ATOM));
     });
 });
 
@@ -93,27 +139,16 @@ describe('grade()', function () {
         expect($gotIt->reviews()->sole()->rating)->toBe(Rating::Good)
             ->and($missedIt->reviews()->sole()->rating)->toBe(Rating::Again);
     });
-
-    test('returns when the next word is due', function () {
-        /** @var TestCase $this */
-        $flashcard = Word::factory()->create()->flashcard;
-
-        Livewire::actingAs($this->admin)
-            ->test(Practice::class)
-            ->call('grade', $flashcard->id, false)
-            ->assertReturned('1 minute from now');
-    });
-
 });
 
 describe('practiseAhead()', function () {
     test('deals the next words even though none are due', function () {
         /** @var TestCase $this */
-        practisedWord('quotidian');
+        practiceTestPractisedWord('quotidian');
 
         Livewire::actingAs($this->admin)
             ->test(Practice::class)
             ->call('practiseAhead')
-            ->assertReturned(fn (array $cards): bool => array_column($cards, 'word') === ['quotidian']);
+            ->assertReturned(fn (array $cards): bool => practiceTestWords($cards) === ['quotidian']);
     });
 });

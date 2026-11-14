@@ -5,18 +5,32 @@
     its space, so the card is the same size before and after the reveal.
 --}}
 <div
-    x-data="wordPractice(@js($this->dueCards), @js($this->nextDue))"
-    x-on:keydown.window="key($event)"
-    class="bg-base-200 flex h-dvh flex-col px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] font-sans"
+    x-data="wordPractice(@js($firstRound))"
+    x-on:keydown.window="handleKey($event)"
+    class="bg-base-200 flex h-dvh flex-col p-4 font-sans"
 >
     <header class="flex items-center justify-between">
         <a href="{{ route("home") }}" class="btn btn-ghost btn-sm">✕ Done</a>
-        <span class="badge badge-neutral" x-show="! done()" x-text="`${left()} left`"></span>
+        <span class="badge badge-neutral" x-show="! done()" x-text="`${remaining()} left`"></span>
     </header>
 
-    <template x-if="done()">
+    <p class="sr-only" aria-live="polite" x-text="announcement()"></p>
+
+    <template x-if="notice">
+        <div class="toast toast-top toast-center z-10">
+            <div class="alert alert-warning" role="alert" x-text="notice"></div>
+        </div>
+    </template>
+
+    <template x-if="done() && dealing">
+        <div class="flex flex-1 items-center justify-center">
+            <span class="loading loading-dots loading-lg" aria-label="Dealing the next cards"></span>
+        </div>
+    </template>
+
+    <template x-if="done() && ! dealing">
         <div class="mx-auto flex max-w-md flex-1 flex-col items-center justify-center gap-4 text-center">
-            @if ($this->hasWords)
+            @if ($hasWords)
                 <div class="text-5xl" aria-hidden="true">🌿</div>
                 <h1 class="font-serif text-3xl">All caught up</h1>
 
@@ -32,15 +46,10 @@
                     </div>
                 </template>
 
-                <p class="text-base-content/70" x-show="nextDue" x-text="`The next word is due ${nextDue}.`"></p>
+                <p class="text-base-content/70" x-show="nextDue()" x-text="`The next word is due ${nextDue()}.`"></p>
 
                 <div class="flex flex-col items-center gap-2">
-                    <button
-                        type="button"
-                        class="btn btn-outline"
-                        x-on:click="practiseAhead()"
-                        x-bind:disabled="dealing"
-                    >
+                    <button type="button" class="btn btn-outline" x-on:click="practiseAhead()">
                         Practise ahead anyway
                     </button>
                     <a class="link text-sm" href="{{ route("home") }}">Back to the site</a>
@@ -64,40 +73,49 @@
                     <div class="card bg-base-100 absolute inset-x-3 top-3 bottom-3 shadow"></div>
                 </template>
 
-                <div
-                    class="card bg-base-100 absolute inset-x-0 top-0 bottom-6 touch-none overflow-hidden shadow-lg select-none"
-                    x-bind:style="cardStyle()"
-                    x-on:pointerdown="down($event)"
-                    x-on:pointermove.window="move($event)"
-                    x-on:pointerup.window="up()"
-                    x-on:pointercancel.window="cancel()"
-                    x-on:click="reveal()"
-                >
-                    <div class="card-body items-center justify-center overflow-y-auto text-center">
-                        <h1 class="font-serif text-5xl break-words" x-text="current().word"></h1>
-                        <p class="text-base-content/50 mt-6 text-sm" x-show="! revealed">Say the definition, then tap</p>
-                        <p
-                            class="mt-6 font-serif text-2xl leading-snug"
-                            x-show="revealed"
-                            x-text="current().definition"
-                            aria-live="polite"
-                        ></p>
-                    </div>
-
-                    {{-- Each hint lights up once the drag is far enough to grade that way. --}}
+                {{--
+                    Keyed by card, so each card is a fresh element rather than
+                    the last one sliding back. touch-pan-y leaves vertical
+                    scrolling to the browser for long definitions; a scroll
+                    cancels the drag.
+                --}}
+                <template x-for="card in [current()]" x-bind:key="card.id">
                     <div
-                        class="flex justify-between px-4 pb-4"
-                        x-bind:class="revealed || 'invisible'"
-                        aria-hidden="true"
+                        class="card bg-base-100 absolute inset-x-0 top-0 bottom-6 touch-pan-y overflow-hidden shadow-lg select-none"
+                        x-bind:style="cardStyle()"
+                        x-on:pointerdown="startDrag($event)"
+                        x-on:pointermove.window="drag($event)"
+                        x-on:pointerup.window="endDrag($event)"
+                        x-on:pointercancel.window="cancelDrag($event)"
+                        x-on:click="reveal()"
                     >
-                        <span class="badge badge-lg" x-bind:class="dx > 40 ? 'badge-success' : 'badge-ghost'">
-                            Got it →
-                        </span>
-                        <span class="badge badge-lg" x-bind:class="dx < -40 ? 'badge-error' : 'badge-ghost'">
-                            ← Missed it
-                        </span>
+                        <div class="card-body min-h-0 items-center overflow-y-auto text-center">
+                            <h1 class="font-serif text-5xl break-words" x-text="card.word"></h1>
+                            <p class="text-base-content/50 mt-6 text-sm" x-show="! revealed">
+                                Say the definition, then tap
+                            </p>
+                            <p
+                                class="mt-6 font-serif text-2xl leading-snug"
+                                x-show="revealed"
+                                x-text="card.definition"
+                            ></p>
+                        </div>
+
+                        {{-- Each hint lights up once the drag is far enough to grade that way. --}}
+                        <div
+                            class="flex justify-between px-4 pb-4"
+                            x-bind:class="revealed || 'invisible'"
+                            aria-hidden="true"
+                        >
+                            <span class="badge badge-lg" x-bind:class="dx > 40 ? 'badge-success' : 'badge-ghost'">
+                                Got it →
+                            </span>
+                            <span class="badge badge-lg" x-bind:class="dx < -40 ? 'badge-error' : 'badge-ghost'">
+                                ← Missed it
+                            </span>
+                        </div>
                     </div>
-                </div>
+                </template>
             </div>
 
             {{-- Always the same height, so the card never changes size. --}}
