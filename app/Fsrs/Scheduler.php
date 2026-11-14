@@ -368,7 +368,7 @@ final readonly class Scheduler
         foreach ($parameters as $index => $parameter) {
             // Written this way round so NAN, which fails every comparison, is refused.
             if (! ($parameter >= self::LOWER_BOUNDS[$index] && $parameter <= self::UPPER_BOUNDS[$index])) {
-                $errors[] = sprintf('parameters[%d] = %s is out of bounds: (%s, %s)', $index, $parameter, self::LOWER_BOUNDS[$index], self::UPPER_BOUNDS[$index]);
+                $errors[] = sprintf('parameters[%d] = %s is out of bounds: (%s, %s)', $index, var_export($parameter, true), self::LOWER_BOUNDS[$index], self::UPPER_BOUNDS[$index]);
             }
         }
 

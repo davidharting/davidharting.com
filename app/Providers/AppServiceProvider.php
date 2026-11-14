@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Models\Word;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -51,6 +53,13 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)
             ->by($request->user()?->id ?: $request->ip()));
+
+        // Store short aliases, not class names, in polymorphic type columns
+        // such as flashcards.quizzable_type, so renaming a model never
+        // strands its rows.
+        Relation::morphMap([
+            'word' => Word::class,
+        ]);
 
         Gate::define('administrate', function (User $user) {
             return $user->is_admin;

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * A word David wants to remember: often one he came across while reading,
@@ -22,6 +23,32 @@ class Word extends Model
     use HasFactory;
 
     protected $fillable = ['word', 'short_definition', 'full_definition'];
+
+    /**
+     * Every word is practised through exactly one flashcard, made with it and
+     * removed with it. Once that flashcard has been reviewed, the database
+     * refuses to delete it, so deleting the word fails rather than silently
+     * losing its review history. These are model events, so bulk inserts and
+     * query deletes skip them: create and delete words one model at a time.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (Word $word): void {
+            $word->flashcard()->save(Flashcard::newUnreviewed());
+        });
+
+        static::deleting(function (Word $word): void {
+            $word->flashcard()->delete();
+        });
+    }
+
+    /**
+     * @return MorphOne<Flashcard, $this>
+     */
+    public function flashcard(): MorphOne
+    {
+        return $this->morphOne(Flashcard::class, 'quizzable');
+    }
 
     /**
      * Find the word that recording $word would duplicate, so a caller can
