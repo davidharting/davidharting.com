@@ -92,39 +92,48 @@ test('says so when nothing matches a search', function () {
     $this->get('/words?q=zzz')->assertSeeText('No words match “zzz”.', false);
 });
 
-test('shows 100 words a page, keeping the search and sort in the page links', function () {
+test('shows 250 words a page by default', function () {
+    /** @var TestCase $this */
+    // Created directly: the factory's unique fake words run out before 251.
+    foreach (range(1, 251) as $number) {
+        Word::create(['word' => sprintf('word%03d', $number), 'short_definition' => 'a word']);
+    }
+
+    $this->get('/words?sort=a_to_z')
+        ->assertSeeText('Page 1 of 2')
+        ->assertSeeText('word250')
+        ->assertDontSeeText('word251');
+});
+
+test('pages by a chosen page size, keeping the search, sort and size in every link', function () {
     /** @var TestCase $this */
     Word::factory()
-        ->count(101)
-        ->sequence(fn ($sequence) => ['word' => sprintf('word%03d', $sequence->index + 1), 'short_definition' => 'a word'])
+        ->count(3)
+        ->sequence(fn ($sequence) => ['word' => 'word'.($sequence->index + 1)])
         ->create();
+    $state = ['q' => 'word', 'sort' => 'a_to_z', 'per_page' => 2];
 
-    $this->get('/words?sort=a_to_z&q=word')
+    $this->get(route('words.index', $state))
         ->assertSeeText('Page 1 of 2')
-        ->assertSeeText('word100')
-        ->assertDontSeeText('word101')
-        ->assertSee(route('words.index', ['sort' => 'a_to_z', 'q' => 'word', 'page' => 2]));
+        ->assertSeeText('word2')
+        ->assertDontSeeText('word3')
+        ->assertSee(route('words.index', [...$state, 'page' => 2]))
+        ->assertSee(route('words.index', ['q' => 'word', 'per_page' => 2]))
+        ->assertSee('<input type="hidden" name="per_page" value="2" />', false);
 
-    $this->get('/words?sort=a_to_z&q=word&page=2')
-        ->assertSeeText('word101')
-        ->assertDontSeeText('word100');
+    $this->get(route('words.index', [...$state, 'page' => 2]))
+        ->assertSeeText('word3')
+        ->assertDontSeeText('word2');
 });
 
-test('treats an unknown sort as newest first', function () {
+test('refuses a sort it does not know', function (string $query) {
     /** @var TestCase $this */
-    $this->travelTo('2026-11-01');
-    Word::factory()->create(['word' => 'aardvark']);
-    $this->travelTo('2026-11-02');
-    Word::factory()->create(['word' => 'zephyr']);
+    $this->get('/words?'.$query)->assertSessionHasErrors('sort');
+})->with(['an unknown name' => 'sort=nonsense', 'a list' => 'sort[]=a_to_z']);
 
-    $this->get('/words?sort=nonsense')
-        ->assertSuccessful()
-        ->assertSeeTextInOrder(['zephyr', 'aardvark']);
-});
-
-test('refuses a sort given as a list', function () {
+test('refuses a page size above 1000', function () {
     /** @var TestCase $this */
-    $this->get('/words?sort[]=a_to_z')->assertSessionHasErrors('sort');
+    $this->get('/words?per_page=1001')->assertSessionHasErrors('per_page');
 });
 
 test('offers a way back from a page past the end', function () {

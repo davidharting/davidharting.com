@@ -1,13 +1,3 @@
-@use("App\Enum\WordSort")
-
-@php
-    $listUrl = fn (array $overrides) => route('words.index', array_filter([
-        'q' => $search,
-        'sort' => $sort === WordSort::Recent ? null : $sort->value,
-        ...$overrides,
-    ]));
-@endphp
-
 <x-layout.app>
     <div class="mx-auto max-w-2xl">
         <header class="mb-6">
@@ -23,9 +13,9 @@
         </header>
 
         <form method="GET" action="{{ route("words.index") }}" role="search" class="mb-4 flex gap-2">
-            @if ($sort !== WordSort::Recent)
-                <input type="hidden" name="sort" value="{{ $sort->value }}" />
-            @endif
+            @foreach ($searchHiddenFields as $name => $value)
+                <input type="hidden" name="{{ $name }}" value="{{ $value }}" />
+            @endforeach
 
             <label class="input w-full">
                 <span class="sr-only">Search words and definitions</span>
@@ -46,24 +36,19 @@
 
         <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
             <div class="join" role="group" aria-label="Sort">
-                <a
-                    href="{{ $listUrl(["sort" => null]) }}"
-                    class="btn btn-sm join-item tap-target {{ $sort === WordSort::Recent ? "btn-active" : "" }}"
-                    @if ($sort === WordSort::Recent) aria-current="true" @endif
-                >
-                    Recent
-                </a>
-                <a
-                    href="{{ $listUrl(["sort" => WordSort::AToZ->value]) }}"
-                    class="btn btn-sm join-item tap-target {{ $sort === WordSort::AToZ ? "btn-active" : "" }}"
-                    @if ($sort === WordSort::AToZ) aria-current="true" @endif
-                >
-                    A to Z
-                </a>
+                @foreach ($sortLinks as $link)
+                    <a
+                        href="{{ $link["url"] }}"
+                        class="btn btn-sm join-item tap-target {{ $sort === $link["sort"] ? "btn-active" : "" }}"
+                        @if ($sort === $link['sort']) aria-current="true" @endif
+                    >
+                        {{ $link["label"] }}
+                    </a>
+                @endforeach
             </div>
 
             @if ($search !== '')
-                <a href="{{ $listUrl(["q" => null]) }}" class="link link-hover tap-target text-sm">Clear search</a>
+                <a href="{{ $clearSearchUrl }}" class="link link-hover tap-target text-sm">Clear search</a>
             @endif
         </div>
 
@@ -71,7 +56,7 @@
             <p class="text-base-content/70 py-8 text-center">
                 @if ($words->total() > 0)
                     No words on this page.
-                    <a href="{{ $listUrl(["page" => null]) }}" class="link">Back to the first page</a>
+                    <a href="{{ $firstPageUrl }}" class="link">Back to the first page</a>
                 @elseif ($search !== '')
                     No words match “{{ $search }}”.
                 @else
