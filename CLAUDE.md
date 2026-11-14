@@ -141,6 +141,10 @@ TIA is opt-in: pass `--tia`. Use it in your dev loop. After each change, run `ve
 - Write tests for all changes
 - Focus on feature tests to get more leverage
 
+### Database
+
+- Don't cascade deletes by default. Declare foreign keys without `cascadeOnDelete()` (or `nullOnDelete()`), so deleting a parent that still has children fails loudly instead of silently taking data with it. When deleting the children really is part of the operation, do it explicitly in application code, and only reach for a cascade when there's a clear reason, noted in the migration.
+
 ### Pull request reviews
 
 PR size: prefer reviewable PR stacks. Ideally each PR establishes one cohesive thing. A good rule of thumb is <=10 non-generated files and <=500 lines. Previews usually make sense on the tip of the stack instead of each layer (see PR preview environments above for how to preview a stack).
