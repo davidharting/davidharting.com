@@ -5,18 +5,15 @@ namespace App\Models;
 use App\Fsrs\Rating;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use LogicException;
 
 /**
  * One time David was quizzed on a flashcard: how well he recalled it, and the
- * flashcard's schedule either side, so its history can be replayed. The log
- * is append-only: the model refuses to update a review (query-builder updates
- * bypass that, so don't write them). Created through Flashcard::grade().
+ * flashcard's schedule either side, so its history can be replayed. Reviews
+ * are an append-only log: write them through Flashcard::grade() and never
+ * change them afterwards.
  */
 class Review extends Model
 {
-    public const UPDATED_AT = null;
-
     /**
      * Keep microseconds and the offset, so reviewed_at matches the
      * last_review it produced exactly.
@@ -36,13 +33,6 @@ class Review extends Model
             'schedule_before' => 'array',
             'schedule_after' => 'array',
         ];
-    }
-
-    protected static function booted(): void
-    {
-        static::updating(function (): never {
-            throw new LogicException('Reviews are an append-only log and cannot be changed.');
-        });
     }
 
     /**

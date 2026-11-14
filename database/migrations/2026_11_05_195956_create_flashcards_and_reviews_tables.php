@@ -29,14 +29,14 @@ return new class extends Migration
 
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('flashcard_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('flashcard_id')->constrained();
             $table->unsignedTinyInteger('rating');
             $table->timestampTz('reviewed_at', 6);
             $table->unsignedInteger('review_duration_ms')->nullable();
             // The schedule either side of the review, for debugging and replay.
             $table->jsonb('schedule_before');
             $table->jsonb('schedule_after');
-            $table->timestampTz('created_at', 6)->nullable();
+            $table->timestampsTz(6);
 
             $table->index(['flashcard_id', 'reviewed_at']);
         });

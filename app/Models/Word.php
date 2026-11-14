@@ -26,13 +26,15 @@ class Word extends Model
 
     /**
      * Every word is practised through exactly one flashcard, made with it and
-     * removed with it. These are model events, so bulk inserts and query
-     * deletes skip them: create and delete words one model at a time.
+     * removed with it. Once that flashcard has been reviewed, the database
+     * refuses to delete it, so deleting the word fails rather than silently
+     * losing its review history. These are model events, so bulk inserts and
+     * query deletes skip them: create and delete words one model at a time.
      */
     protected static function booted(): void
     {
         static::created(function (Word $word): void {
-            $word->flashcard()->save(Flashcard::unreviewed());
+            $word->flashcard()->save(Flashcard::newUnreviewed());
         });
 
         static::deleting(function (Word $word): void {

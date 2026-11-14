@@ -5,7 +5,9 @@ use App\Fsrs\Rating;
 use App\Models\Flashcard;
 use App\Models\Review;
 use App\Models\Word;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 describe('a word', function () {
@@ -28,15 +30,26 @@ describe('a word', function () {
         $this->assertDatabaseHas('flashcards', ['quizzable_type' => 'word', 'quizzable_id' => $word->id]);
     });
 
-    test('takes its flashcard and that flashcard\'s reviews with it when deleted', function () {
+    test('takes its flashcard with it when deleted before any review', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->create();
+
+        $word->delete();
+
+        expect(Word::count())->toBe(0)
+            ->and(Flashcard::count())->toBe(0);
+    });
+
+    test('cannot be deleted once its flashcard has been reviewed', function () {
         /** @var TestCase $this */
         $word = Word::factory()->create();
         $word->flashcard->grade(Rating::Good);
 
-        $word->delete();
-
-        expect(Flashcard::count())->toBe(0)
-            ->and(Review::count())->toBe(0);
+        // In a savepoint, so the failed delete doesn't abort the test's transaction.
+        expect(fn () => DB::transaction(fn () => $word->delete()))->toThrow(QueryException::class);
+        expect(Word::count())->toBe(1)
+            ->and(Flashcard::count())->toBe(1)
+            ->and(Review::count())->toBe(1);
     });
 });
 
@@ -93,8 +106,8 @@ describe('grade()', function () {
     });
 });
 
-describe('dueAt()', function () {
-    test('lists flashcards due by the moment, most overdue first', function () {
+describe('dueNow()', function () {
+    test('lists flashcards due now, most overdue first', function () {
         /** @var TestCase $this */
         $this->travelTo('2026-01-01 09:00');
         $older = Word::factory()->create()->flashcard;
@@ -103,24 +116,16 @@ describe('dueAt()', function () {
         $notYetDue = Word::factory()->create()->flashcard;
         $notYetDue->grade(Rating::Good);
 
-        $due = Flashcard::query()->dueAt(now())->get();
+        $due = Flashcard::query()->dueNow()->get();
 
         expect($due->modelKeys())->toBe([$older->id, $newer->id]);
     });
 
-    test('includes a flashcard due this very instant, whatever time zone the moment is in', function () {
+    test('includes a flashcard that fell due this very instant', function () {
         /** @var TestCase $this */
-        $this->freezeTime();
+        $this->travelTo(Carbon::parse('2026-01-01 09:00:00.123456'));
         Word::factory()->create();
 
-        expect(Flashcard::query()->dueAt(now())->count())->toBe(1)
-            ->and(Flashcard::query()->dueAt(now()->setTimezone('America/New_York'))->count())->toBe(1);
+        expect(Flashcard::query()->dueNow()->count())->toBe(1);
     });
 });
-
-test('a review cannot be changed once written', function () {
-    /** @var TestCase $this */
-    $review = Word::factory()->create()->flashcard->grade(Rating::Good);
-
-    $review->update(['rating' => Rating::Easy]);
-})->throws(LogicException::class, 'append-only');
