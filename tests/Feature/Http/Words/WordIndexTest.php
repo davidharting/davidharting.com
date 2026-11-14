@@ -45,17 +45,17 @@ test('lists words A to Z under dictionary letter headings, ignoring case', funct
     Word::factory()->create(['word' => 'ephemeral']);
     Word::factory()->create(['word' => 'lambent']);
 
-    $this->get('/words?sort=a_to_z')
-        ->assertSuccessful()
-        ->assertSeeTextInOrder(['E', 'ephemeral', 'L', 'Laconic', 'lambent'], false)
-        ->assertSeeHtml('aria-labelledby="letter-1"');
+    $html = $this->get('/words?sort=a_to_z')->assertSuccessful()->getContent();
+
+    expect(preg_replace('/\s+/', ' ', $html))
+        ->toMatch('#id="letter-0"[^>]*> E </h2>.*ephemeral.*id="letter-1"[^>]*> L </h2>.*Laconic.*lambent#');
 });
 
 test('shows no letter headings when listing the newest first', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'ephemeral']);
 
-    $this->get('/words')->assertDontSee('aria-labelledby="letter-', false);
+    $this->get('/words')->assertDontSee('id="letter-', false);
 });
 
 test('searches the word and both definitions, ignoring case', function () {
@@ -80,6 +80,7 @@ test('matches a percent sign in a search literally', function () {
     Word::factory()->create(['word' => 'laconic', 'short_definition' => 'using few words']);
 
     $this->get('/words?q='.urlencode('%'))
+        ->assertSeeText('1 match for')
         ->assertSeeText('percentile')
         ->assertDontSeeText('laconic');
 });
@@ -93,9 +94,10 @@ test('says so when nothing matches a search', function () {
 
 test('shows 100 words a page, keeping the search and sort in the page links', function () {
     /** @var TestCase $this */
-    foreach (range(1, 101) as $number) {
-        Word::factory()->create(['word' => sprintf('word%03d', $number), 'short_definition' => 'a word']);
-    }
+    Word::factory()
+        ->count(101)
+        ->sequence(fn ($sequence) => ['word' => sprintf('word%03d', $sequence->index + 1), 'short_definition' => 'a word'])
+        ->create();
 
     $this->get('/words?sort=a_to_z&q=word')
         ->assertSeeText('Page 1 of 2')
@@ -110,5 +112,34 @@ test('shows 100 words a page, keeping the search and sort in the page links', fu
 
 test('treats an unknown sort as newest first', function () {
     /** @var TestCase $this */
-    $this->get('/words?sort=nonsense')->assertSuccessful();
+    $this->travelTo('2026-11-01');
+    Word::factory()->create(['word' => 'aardvark']);
+    $this->travelTo('2026-11-02');
+    Word::factory()->create(['word' => 'zephyr']);
+
+    $this->get('/words?sort=nonsense')
+        ->assertSuccessful()
+        ->assertSeeTextInOrder(['zephyr', 'aardvark']);
+});
+
+test('refuses a sort given as a list', function () {
+    /** @var TestCase $this */
+    $this->get('/words?sort[]=a_to_z')->assertSessionHasErrors('sort');
+});
+
+test('offers a way back from a page past the end', function () {
+    /** @var TestCase $this */
+    Word::factory()->create(['word' => 'ephemeral']);
+
+    $this->get('/words?page=5')
+        ->assertSuccessful()
+        ->assertSeeText('No words on this page.')
+        ->assertSee(route('words.index'));
+});
+
+test('refuses a page number too large to count to', function () {
+    /** @var TestCase $this */
+    Word::factory()->create(['word' => 'ephemeral']);
+
+    $this->get('/words?page=99999999999999999999999')->assertSessionHasErrors('page');
 });

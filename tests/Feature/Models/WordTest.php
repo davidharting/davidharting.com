@@ -57,8 +57,8 @@ describe('dictionaryLetter()', function () {
         'accented' => ['éclat', 'E'],
     ]);
 
-    test('files a word that starts with a digit or symbol under #', function () {
+    test('files a word that starts with a digit or symbol under #', function (string $word) {
         /** @var TestCase $this */
-        expect(Word::factory()->make(['word' => '24/7'])->dictionaryLetter())->toBe('#');
-    });
+        expect(Word::factory()->make(['word' => $word])->dictionaryLetter())->toBe('#');
+    })->with(['a digit' => '24/7', 'a symbol' => '-ism']);
 });
