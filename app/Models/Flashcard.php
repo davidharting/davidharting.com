@@ -63,15 +63,16 @@ class Flashcard extends Model
     }
 
     /**
-     * The next flashcards to practise: those due soonest, most overdue first,
-     * whether or not they are due yet.
+     * Flashcards in the order to practise them: due soonest first, so the most
+     * overdue lead, whether or not they are due yet. Callers take as many as
+     * they want, e.g. nextUp()->limit(5).
      *
      * @param  Builder<Flashcard>  $query
      */
     #[Scope]
-    protected function nextUp(Builder $query, int $limit): void
+    protected function nextUp(Builder $query): void
     {
-        $query->orderBy('due')->orderBy('id')->limit($limit);
+        $query->orderBy('due')->orderBy('id');
     }
 
     /**

@@ -107,7 +107,7 @@ describe('grade()', function () {
 });
 
 describe('nextUp()', function () {
-    test('lists the flashcards due soonest, most overdue first, up to the limit', function () {
+    test('orders flashcards by when they are due, most overdue first', function () {
         /** @var TestCase $this */
         $this->travelTo('2026-01-01 09:00');
         $older = Word::factory()->create()->flashcard;
@@ -117,7 +117,7 @@ describe('nextUp()', function () {
         $notYetDue->grade(Rating::Good);
         Word::factory()->create()->flashcard->grade(Rating::Easy);
 
-        $nextUp = Flashcard::query()->nextUp(3)->get();
+        $nextUp = Flashcard::query()->nextUp()->limit(3)->get();
 
         expect($nextUp->modelKeys())->toBe([$older->id, $newer->id, $notYetDue->id]);
     });
