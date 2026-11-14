@@ -11,6 +11,10 @@
             <x-nav-link :href="route('login')">Login</x-nav-link>
         @endguest
 
+        @can('viewAny', App\Models\Word::class)
+            <x-nav-link :href="route('words.index')">Words</x-nav-link>
+        @endcan
+
         @can('viewAny', App\Models\Month::class)
             <x-nav-link :href="route('memories.index')">Memories</x-nav-link>
         @endcan

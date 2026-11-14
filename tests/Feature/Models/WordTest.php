@@ -46,3 +46,19 @@ describe('findDuplicate()', function () {
         expect(Word::findDuplicate('Ephemeral', ignoring: $ephemeral))->toBeNull();
     });
 });
+
+describe('dictionaryLetter()', function () {
+    test('files a word under its first letter, capitalised and without accents', function (string $word, string $letter) {
+        /** @var TestCase $this */
+        expect(Word::factory()->make(['word' => $word])->dictionaryLetter())->toBe($letter);
+    })->with([
+        'lowercase' => ['ephemeral', 'E'],
+        'capitalised' => ['Laconic', 'L'],
+        'accented' => ['éclat', 'E'],
+    ]);
+
+    test('files a word that starts with a digit or symbol under #', function () {
+        /** @var TestCase $this */
+        expect(Word::factory()->make(['word' => '24/7'])->dictionaryLetter())->toBe('#');
+    });
+});
