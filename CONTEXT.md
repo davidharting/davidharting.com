@@ -100,6 +100,14 @@ _Avoid_: Summary, gloss, sense
 The whole dictionary entry for a word as markdown: every sense with its part of speech and example uses. Optional, stored as `words.full_definition`, and shown on request rather than by default.
 _Avoid_: Long definition, entry, details
 
+**Flashcard**:
+Something David is quizzed on, plus its spaced-repetition schedule: a word on the front, its short definition on the back. Every word gets exactly one, due as soon as the word is recorded. The FSRS engine in `App\Fsrs` keeps its own term, card, for the schedule it computes.
+_Avoid_: Card, item, quiz
+
+**Review**:
+One grading of a flashcard, kept in an append-only log with the schedule before and after. David grades with "Got it" or "Missed it", which the engine records as the FSRS ratings Good and Again.
+_Avoid_: Attempt, answer, quiz result
+
 ## Notes on this glossary
 
 **Note, remark and comment are three different things**, and the distinction is load-bearing: a note is public writing, a remark belongs to a piece of media, a comment belongs to a moment.
