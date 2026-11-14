@@ -144,6 +144,7 @@ TIA is opt-in: pass `--tia`. Use it in your dev loop. After each change, run `ve
 ### Database
 
 - Don't cascade deletes by default. Declare foreign keys without `cascadeOnDelete()` (or `nullOnDelete()`), so deleting a parent that still has children fails loudly instead of silently taking data with it. When deleting the children really is part of the operation, do it explicitly in application code, and only reach for a cascade when there's a clear reason, noted in the migration.
+- Write sort directions explicitly, `orderBy('due', 'asc')` rather than relying on the default.
 
 ### Pull request reviews
 

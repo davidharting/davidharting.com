@@ -72,7 +72,7 @@ class Flashcard extends Model
     #[Scope]
     protected function nextUp(Builder $query): void
     {
-        $query->orderBy('due')->orderBy('id');
+        $query->orderBy('due', 'asc')->orderBy('id', 'asc');
     }
 
     /**
