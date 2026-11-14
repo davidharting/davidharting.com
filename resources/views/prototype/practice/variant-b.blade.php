@@ -86,14 +86,18 @@
                         <template x-if="revealed">
                             <div>
                                 <p class="mt-6 font-serif text-2xl leading-snug" x-text="current().short"></p>
-                                <p class="text-base-content/50 mt-8 text-sm">← Missed it · Got it →</p>
+                                <div class="text-base-content/50 mt-8 flex w-full justify-between text-sm">
+                                    <span>Got it →</span>
+                                    <span>← Missed it</span>
+                                </div>
                             </div>
                         </template>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-4 flex justify-center gap-8" x-show="revealed">
+            {{-- Always takes up its space, so the card stays one size when the buttons appear. --}}
+            <div class="mt-4 flex justify-center gap-8" :class="revealed || 'invisible'">
                 <button
                     type="button"
                     class="btn btn-circle btn-lg btn-error btn-outline"
