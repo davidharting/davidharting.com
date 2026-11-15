@@ -3,7 +3,6 @@
 namespace App\Mcp\Tools\Admin;
 
 use App\Support\PreviewLoginLink;
-use Carbon\CarbonImmutable;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use InvalidArgumentException;
 use Laravel\Mcp\Request;
@@ -12,14 +11,13 @@ use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
-use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 use RuntimeException;
 
 /**
  * Mints a signed one-tap login link for a PR preview, registered only on
- * AdminServer. It changes nothing: the link is checked by the preview itself.
+ * AdminServer. It stores nothing, but it isn't marked read-only: the link it
+ * hands out logs into a preview, so clients shouldn't auto-approve it.
  */
-#[IsReadOnly]
 #[IsDestructive(false)]
 #[Description(<<<'TEXT'
     Make a link that logs David into a davidharting.com PR preview as a
@@ -74,8 +72,8 @@ class MintPreviewLoginLink extends Tool
         }
 
         return Response::structured([
-            'url' => $link,
-            'expires_at' => CarbonImmutable::now()->addHours(PreviewLoginLink::LIFETIME_HOURS)->toIso8601String(),
+            'url' => $link->url,
+            'expires_at' => $link->expiresAt->toIso8601String(),
         ]);
     }
 

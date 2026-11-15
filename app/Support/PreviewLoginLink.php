@@ -17,7 +17,7 @@ use RuntimeException;
  * expiry, so a link can't be edited, reused on another PR's preview, or used
  * after it expires.
  */
-final class PreviewLoginLink
+final readonly class PreviewLoginLink
 {
     public const string DEFAULT_EMAIL = 'admin@example.com';
 
@@ -28,16 +28,25 @@ final class PreviewLoginLink
      */
     private const string SEEDED_EMAIL_DOMAIN = '@example.com';
 
+    private function __construct(
+        public string $url,
+        public CarbonImmutable $expiresAt,
+    ) {}
+
     /**
      * Mint a link that logs into the given PR's preview as $email and opens
      * $to, or the user's landing page when $to is empty.
      *
-     * @throws InvalidArgumentException when $email isn't a seeded user or $to isn't a path on the site
+     * @throws InvalidArgumentException when $pullRequest isn't a PR number, $email isn't a seeded user or $to isn't a path on the site
      * @throws RuntimeException when PREVIEW_LOGIN_KEY isn't set
      */
-    public static function mint(int $pullRequest, string $email = self::DEFAULT_EMAIL, string $to = ''): string
+    public static function mint(int $pullRequest, string $email = self::DEFAULT_EMAIL, string $to = ''): self
     {
         $email = strtolower($email);
+
+        if ($pullRequest < 1) {
+            throw new InvalidArgumentException("[{$pullRequest}] is not a pull request number.");
+        }
 
         if (! self::isSeededEmail($email)) {
             throw new InvalidArgumentException("Only seeded @example.com users can be logged in as, not [{$email}].");
@@ -48,7 +57,8 @@ final class PreviewLoginLink
         }
 
         $key = self::key() ?? throw new RuntimeException('PREVIEW_LOGIN_KEY is not set, so preview login links cannot be signed.');
-        $expires = CarbonImmutable::now()->addHours(self::LIFETIME_HOURS)->getTimestamp();
+        $expiresAt = CarbonImmutable::now()->addHours(self::LIFETIME_HOURS)->startOfSecond();
+        $expires = $expiresAt->getTimestamp();
 
         $query = array_filter([
             'as' => $email,
@@ -57,7 +67,10 @@ final class PreviewLoginLink
             'signature' => self::sign($key, $pullRequest, $email, $to, $expires),
         ], fn (string|int $value): bool => $value !== '');
 
-        return self::previewUrl($pullRequest).'/preview-login?'.http_build_query($query, encoding_type: PHP_QUERY_RFC3986);
+        return new self(
+            self::previewUrl($pullRequest).'/preview-login?'.http_build_query($query, encoding_type: PHP_QUERY_RFC3986),
+            $expiresAt,
+        );
     }
 
     /**
@@ -78,7 +91,7 @@ final class PreviewLoginLink
      * The address of a PR's preview web service. Render names every preview
      * after its parent service with a `-pr-<number>` suffix.
      */
-    public static function previewUrl(int $pullRequest): string
+    private static function previewUrl(int $pullRequest): string
     {
         return "https://davidhartingdotcom-web-pr-{$pullRequest}.onrender.com";
     }
@@ -92,7 +105,8 @@ final class PreviewLoginLink
      * Empty (meaning the user's landing page) or a path on this site.
      *
      * `//evil.test` and `/\evil.test` are read by browsers as links to another
-     * host, so they are refused along with absolute URLs and control characters.
+     * host, so they are refused along with absolute URLs. Whitespace and
+     * control characters are refused too: a path should arrive percent-encoded.
      */
     private static function isSafeDestination(string $to): bool
     {
@@ -103,7 +117,7 @@ final class PreviewLoginLink
         return str_starts_with($to, '/')
             && ! str_starts_with($to, '//')
             && ! str_contains($to, '\\')
-            && preg_match('/[\x00-\x1F\x7F]/', $to) !== 1;
+            && preg_match('/[\x00-\x20\x7F]/', $to) !== 1;
     }
 
     private static function sign(string $key, int $pullRequest, string $email, string $to, int $expires): string

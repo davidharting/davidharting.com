@@ -53,7 +53,7 @@ class LoginLink extends Command
             return self::FAILURE;
         }
 
-        $this->line($link);
+        $this->line($link->url);
 
         return self::SUCCESS;
     }

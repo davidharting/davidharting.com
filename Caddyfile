@@ -20,6 +20,8 @@
 			fields {
 				uri query {
 					replace authorization REDACTED
+					# ...and the signature on one-tap PR preview login links.
+					replace signature REDACTED
 				}
 			}
 		}

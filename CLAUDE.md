@@ -68,7 +68,8 @@ https://davidhartingdotcom-web-pr-<PR_NUMBER>.onrender.com/preview-login?as=<ema
 
 - `as` is a seeded `@example.com` user and defaults to the admin, `admin@example.com`. Other seeded users: `frodo@example.com` (a plain non-admin), and `david@example.com` (admin) and `katie@example.com` (non-admin), who are the memories participants.
 - `to` is a path on the preview starting with `/`. Leave it off to land on the user's usual landing page.
-- A link is HMAC-signed with `PREVIEW_LOGIN_KEY` (`App\Support\PreviewLoginLink`) for one PR, and expires after 24 hours. Production holds the key to mint links and previews hold it to check them; both get it from their Render secret file.
+- A link is HMAC-signed with `PREVIEW_LOGIN_KEY` (`App\Support\PreviewLoginLink`) for one PR, and expires after 24 hours. Production holds the key to mint links and previews hold it to check them; both get it from their Render secret file (`secrets.env` and `staging.secrets.env`), as the same value from `openssl rand -hex 32`.
+- A link logs anyone who has it in until it expires, and the repo is public, so send links only in the project thread, never in a GitHub comment or PR description.
 - The login route only exists in PR previews (`routes/preview.php`, loaded when `DeploymentInfo::isPreview()`), so it 404s in production.
 
 ### MCP server

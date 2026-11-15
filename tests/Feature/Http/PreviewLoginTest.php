@@ -11,11 +11,14 @@ use Tests\TestCase;
  * preview these tests pretend to be, and requested by path and query only.
  */
 
-const PREVIEW_PR = 259;
+const PREVIEW_LOGIN_TEST_PR = 259;
 
-function pathOf(string $link): string
+/**
+ * The path and query of a minted link, to request against the test app.
+ */
+function previewLoginPath(PreviewLoginLink $link): string
 {
-    return parse_url($link, PHP_URL_PATH).'?'.parse_url($link, PHP_URL_QUERY);
+    return parse_url($link->url, PHP_URL_PATH).'?'.parse_url($link->url, PHP_URL_QUERY);
 }
 
 afterEach(fn () => ProcessEnvironment::restore());
@@ -27,7 +30,7 @@ describe('outside a PR preview', function () {
         config(['services.preview_login.key' => 'test-preview-key']);
         User::factory()->admin()->create(['email' => 'admin@example.com']);
 
-        $this->get(pathOf(PreviewLoginLink::mint(PREVIEW_PR)))->assertNotFound();
+        $this->get(previewLoginPath(PreviewLoginLink::mint(PREVIEW_LOGIN_TEST_PR)))->assertNotFound();
 
         $this->assertGuest();
     })->with([
@@ -41,7 +44,7 @@ describe('in a PR preview', function () {
         /** @var TestCase $this */
         $this->rebootWithEnvironment([
             'IS_PULL_REQUEST' => 'true',
-            'RENDER_SERVICE_NAME' => 'davidhartingdotcom-web-pr-'.PREVIEW_PR,
+            'RENDER_SERVICE_NAME' => 'davidhartingdotcom-web-pr-'.PREVIEW_LOGIN_TEST_PR,
         ]);
         config(['services.preview_login.key' => 'test-preview-key']);
     });
@@ -50,7 +53,7 @@ describe('in a PR preview', function () {
         /** @var TestCase $this */
         $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
 
-        $this->get(pathOf(PreviewLoginLink::mint(PREVIEW_PR)))->assertRedirect('/profile');
+        $this->get(previewLoginPath(PreviewLoginLink::mint(PREVIEW_LOGIN_TEST_PR)))->assertRedirect('/profile');
 
         $this->assertAuthenticatedAs($admin);
     });
@@ -59,7 +62,7 @@ describe('in a PR preview', function () {
         /** @var TestCase $this */
         $frodo = User::factory()->create(['email' => 'frodo@example.com']);
 
-        $this->get(pathOf(PreviewLoginLink::mint(PREVIEW_PR, 'frodo@example.com', '/media?type=book')))
+        $this->get(previewLoginPath(PreviewLoginLink::mint(PREVIEW_LOGIN_TEST_PR, 'frodo@example.com', '/media?type=book')))
             ->assertRedirect('/media?type=book');
 
         $this->assertAuthenticatedAs($frodo);
@@ -67,9 +70,9 @@ describe('in a PR preview', function () {
 
     test('refuses a link that has been edited', function (string $parameter, string $value) {
         /** @var TestCase $this */
-        User::factory()->admin()->create(['email' => 'admin@example.com']);
+        User::factory()->create(['email' => 'frodo@example.com']);
         User::factory()->admin()->create(['email' => 'david@example.com']);
-        parse_str(parse_url(PreviewLoginLink::mint(PREVIEW_PR, 'frodo@example.com', '/media'), PHP_URL_QUERY), $query);
+        parse_str(parse_url(PreviewLoginLink::mint(PREVIEW_LOGIN_TEST_PR, 'frodo@example.com', '/media')->url, PHP_URL_QUERY), $query);
 
         $query[$parameter] = $value;
 
@@ -95,7 +98,7 @@ describe('in a PR preview', function () {
         /** @var TestCase $this */
         User::factory()->admin()->create(['email' => 'admin@example.com']);
 
-        $this->get(pathOf(PreviewLoginLink::mint(PREVIEW_PR + 1)))->assertForbidden();
+        $this->get(previewLoginPath(PreviewLoginLink::mint(PREVIEW_LOGIN_TEST_PR + 1)))->assertForbidden();
 
         $this->assertGuest();
     });
@@ -103,40 +106,40 @@ describe('in a PR preview', function () {
     test('refuses a link once it has expired', function () {
         /** @var TestCase $this */
         User::factory()->admin()->create(['email' => 'admin@example.com']);
-        $link = PreviewLoginLink::mint(PREVIEW_PR);
+        $link = PreviewLoginLink::mint(PREVIEW_LOGIN_TEST_PR);
 
         $this->travel(PreviewLoginLink::LIFETIME_HOURS)->hours();
         $this->travel(1)->second();
 
-        $this->get(pathOf($link))->assertForbidden();
+        $this->get(previewLoginPath($link))->assertForbidden();
         $this->assertGuest();
     });
 
     test('refuses a link signed with a different key', function () {
         /** @var TestCase $this */
         User::factory()->admin()->create(['email' => 'admin@example.com']);
-        $link = PreviewLoginLink::mint(PREVIEW_PR);
+        $link = PreviewLoginLink::mint(PREVIEW_LOGIN_TEST_PR);
 
         config(['services.preview_login.key' => 'a-different-key']);
 
-        $this->get(pathOf($link))->assertForbidden();
+        $this->get(previewLoginPath($link))->assertForbidden();
         $this->assertGuest();
     });
 
     test('refuses every link when the preview has no key', function () {
         /** @var TestCase $this */
         User::factory()->admin()->create(['email' => 'admin@example.com']);
-        $link = PreviewLoginLink::mint(PREVIEW_PR);
+        $link = PreviewLoginLink::mint(PREVIEW_LOGIN_TEST_PR);
 
         config(['services.preview_login.key' => null]);
 
-        $this->get(pathOf($link))->assertForbidden();
+        $this->get(previewLoginPath($link))->assertForbidden();
         $this->assertGuest();
     });
 
     test('refuses a validly signed link for a seeded user who does not exist', function () {
         /** @var TestCase $this */
-        $this->get(pathOf(PreviewLoginLink::mint(PREVIEW_PR, 'nobody@example.com')))->assertNotFound();
+        $this->get(previewLoginPath(PreviewLoginLink::mint(PREVIEW_LOGIN_TEST_PR, 'nobody@example.com')))->assertNotFound();
 
         $this->assertGuest();
     });
