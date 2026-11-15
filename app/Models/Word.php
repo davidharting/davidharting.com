@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Str;
 
 /**
  * A word David wants to remember: often one he came across while reading,
@@ -76,6 +77,17 @@ class Word extends Model
     protected function named(Builder $query, string $word): void
     {
         $query->whereRaw('lower(word) = lower(?)', [trim($word)]);
+    }
+
+    /**
+     * The letter this word is filed under in an alphabetical list: its first
+     * letter without accents, or "#" when it starts with something else.
+     */
+    public function dictionaryLetter(): string
+    {
+        $first = Str::upper(Str::substr(Str::ascii($this->word), 0, 1));
+
+        return preg_match('/^[A-Z]$/', $first) === 1 ? $first : '#';
     }
 
     /**
