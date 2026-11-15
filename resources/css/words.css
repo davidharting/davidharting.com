@@ -1,8 +1,18 @@
 /*
-  Words pages: a tapped word grows into the detail page's headword. The
-  pages opt into cross-document view transitions through the app layout;
-  each word's headword carries a view-transition-name unique to that word.
+  Words pages: moving between the list and a word. Both pages opt into
+  cross-document view transitions through the app layout, which also puts
+  the chosen animation on <html> as data-transition, and the direction as
+  data-transition-direction: "forward" on a word's page, "back" on the list
+  when coming back from a word. The new page's CSS runs the animation.
+
+  While David tries them on the preview, there are three:
+  - headword: the tapped word grows into the page's headword.
+  - page-turn: the list turns away like a book page, hinged on its left edge.
+  - index-card: the word's page slides up over the list like a card pulled
+    from a card catalogue drawer.
 */
+
+/* --- headword --- */
 ::view-transition-group(*.headword) {
     animation-duration: 350ms;
     animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
@@ -13,4 +23,123 @@
 ::view-transition-new(*.headword) {
     width: auto;
     height: 100%;
+}
+
+/* The other animations move the whole page, so the headword stays put in it. */
+html:not([data-transition="headword"]) .headword-name {
+    view-transition-name: none !important;
+}
+
+/* --- page-turn --- */
+html[data-transition="page-turn"]::view-transition-group(root) {
+    animation-duration: 550ms;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+html[data-transition="page-turn"][data-transition-direction="forward"]::view-transition-old(
+        root
+    ) {
+    z-index: 1;
+    transform-origin: left center;
+    animation: 550ms cubic-bezier(0.45, 0, 0.2, 1) both page-turn-away;
+}
+html[data-transition="page-turn"][data-transition-direction="forward"]::view-transition-new(
+        root
+    ) {
+    animation: 550ms ease-out both page-uncover;
+}
+
+html[data-transition="page-turn"][data-transition-direction="back"]::view-transition-new(
+        root
+    ) {
+    z-index: 1;
+    transform-origin: left center;
+    animation: 550ms cubic-bezier(0.45, 0, 0.2, 1) both page-turn-back;
+}
+html[data-transition="page-turn"][data-transition-direction="back"]::view-transition-old(
+        root
+    ) {
+    animation: 550ms ease-in both page-cover;
+}
+
+@keyframes page-turn-away {
+    from {
+        transform: perspective(1800px) rotateY(0deg);
+        filter: brightness(1);
+    }
+    to {
+        transform: perspective(1800px) rotateY(-95deg);
+        filter: brightness(0.7);
+    }
+}
+@keyframes page-turn-back {
+    from {
+        transform: perspective(1800px) rotateY(-95deg);
+        filter: brightness(0.7);
+    }
+    to {
+        transform: perspective(1800px) rotateY(0deg);
+        filter: brightness(1);
+    }
+}
+/* The page underneath starts in the turning page's shadow. */
+@keyframes page-uncover {
+    from {
+        filter: brightness(0.8);
+    }
+}
+@keyframes page-cover {
+    to {
+        filter: brightness(0.8);
+    }
+}
+
+/* --- index-card --- */
+html[data-transition="index-card"][data-transition-direction="forward"]::view-transition-new(
+        root
+    ) {
+    z-index: 1;
+    box-shadow: 0 -8px 32px rgb(0 0 0 / 0.2);
+    animation: 450ms cubic-bezier(0.2, 0, 0, 1) both card-pull-up;
+}
+html[data-transition="index-card"][data-transition-direction="forward"]::view-transition-old(
+        root
+    ) {
+    animation: 450ms cubic-bezier(0.2, 0, 0, 1) both drawer-recede;
+}
+
+html[data-transition="index-card"][data-transition-direction="back"]::view-transition-old(
+        root
+    ) {
+    z-index: 1;
+    box-shadow: 0 -8px 32px rgb(0 0 0 / 0.2);
+    animation: 400ms cubic-bezier(0.4, 0, 1, 1) both card-file-away;
+}
+html[data-transition="index-card"][data-transition-direction="back"]::view-transition-new(
+        root
+    ) {
+    animation: 400ms cubic-bezier(0.2, 0, 0, 1) both drawer-return;
+}
+
+@keyframes card-pull-up {
+    from {
+        transform: translateY(100%);
+    }
+}
+@keyframes card-file-away {
+    to {
+        transform: translateY(100%);
+    }
+}
+@keyframes drawer-recede {
+    to {
+        transform: scale(0.94);
+        filter: brightness(0.85);
+    }
+}
+@keyframes drawer-return {
+    from {
+        transform: scale(0.94);
+        filter: brightness(0.85);
+    }
 }

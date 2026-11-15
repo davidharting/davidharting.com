@@ -1,4 +1,4 @@
-<x-layout.app cross-document-transitions>
+<x-layout.app cross-document-transitions :transition-style="$transition" transition-direction="forward">
     <article class="mx-auto mb-12 max-w-2xl">
         <a href="{{ $backUrl }}" class="link link-hover text-base-content/70 tap-target text-sm">← Words</a>
 

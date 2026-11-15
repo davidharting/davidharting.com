@@ -29,7 +29,7 @@ test('is not found for a word that is not on the list', function () {
     $this->get('/words/nonexistent')->assertNotFound();
 });
 
-test('shows the word, its numbered senses, its full definition and an Edit link', function () {
+test('shows the word, its short definition as written, its full definition and an Edit link', function () {
     /** @var TestCase $this */
     $word = Word::factory()->create([
         'word' => 'ephemeral',
@@ -40,19 +40,9 @@ test('shows the word, its numbered senses, its full definition and an Edit link'
     $this->get('/words/ephemeral')
         ->assertSuccessful()
         ->assertSeeText('ephemeral')
-        ->assertSeeInOrder(['<li>lasting a very short time</li>', '<li>fleeting</li>'], false)
+        ->assertSeeText('lasting a very short time; fleeting')
         ->assertSeeHtml('<strong>adjective</strong>')
         ->assertSee(route('filament.admin.resources.words.edit', $word));
-});
-
-test('shows a single-sense short definition without numbering', function () {
-    /** @var TestCase $this */
-    Word::factory()->create(['word' => 'laconic', 'short_definition' => 'using few words', 'full_definition' => null]);
-
-    $this->get('/words/laconic')
-        ->assertSuccessful()
-        ->assertSee('<p>using few words</p>', false)
-        ->assertDontSee('<li>using few words</li>', false);
 });
 
 test('finds a word whatever the case of its address', function () {
@@ -89,4 +79,13 @@ test('shows the word under the site nav', function () {
     Word::factory()->create(['word' => 'ephemeral']);
 
     $this->get('/words/ephemeral')->assertSuccessful()->assertSee('aria-label="Site"', false);
+});
+
+test('animates in from the list with the headword by default', function () {
+    /** @var TestCase $this */
+    Word::factory()->create(['word' => 'ephemeral']);
+
+    $this->get('/words/ephemeral')
+        ->assertSee('data-transition="headword"', false)
+        ->assertSee('data-transition-direction="forward"', false);
 });

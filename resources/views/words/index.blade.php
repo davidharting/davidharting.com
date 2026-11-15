@@ -1,4 +1,4 @@
-<x-layout.app cross-document-transitions>
+<x-layout.app cross-document-transitions :transition-style="$transition" :transition-direction="$transitionDirection">
     <div class="mx-auto max-w-2xl">
         <header class="mb-6">
             <x-type.page-title>Words</x-type.page-title>
@@ -50,6 +50,22 @@
             @if ($search !== '')
                 <a href="{{ $clearSearchUrl }}" class="link link-hover tap-target text-sm">Clear search</a>
             @endif
+        </div>
+
+        {{-- Preview only: lets David try each list-to-detail animation, then the one he keeps stays. --}}
+        <div class="mb-6 flex flex-wrap items-center gap-2 text-sm">
+            <span class="text-base-content/70">Opening a word</span>
+            <div class="join" role="group" aria-label="Transition">
+                @foreach ($transitionLinks as $link)
+                    <a
+                        href="{{ $link["url"] }}"
+                        class="btn btn-sm join-item tap-target {{ $transition === $link["transition"] ? "btn-active" : "" }}"
+                        @if ($transition === $link['transition']) aria-current="true" @endif
+                    >
+                        {{ $link["label"] }}
+                    </a>
+                @endforeach
+            </div>
         </div>
 
         @if ($words->isEmpty())

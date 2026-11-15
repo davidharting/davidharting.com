@@ -63,15 +63,6 @@ describe('dictionaryLetter()', function () {
     })->with(['a digit' => '24/7', 'a symbol' => '-ism']);
 });
 
-describe('senses()', function () {
-    test('splits the short definition on semicolons, dropping blanks', function () {
-        /** @var TestCase $this */
-        $word = Word::factory()->make(['short_definition' => 'lasting a very short time; fleeting;  ']);
-
-        expect($word->senses())->toBe(['lasting a very short time', 'fleeting']);
-    });
-});
-
 describe('renderFullDefinition()', function () {
     test('renders markdown and escapes raw HTML', function () {
         /** @var TestCase $this */

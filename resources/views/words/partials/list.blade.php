@@ -25,7 +25,7 @@
         <li class="list-row p-0">
             <a href="{{ route("words.show", $word) }}" class="block px-1 py-3">
                 <span
-                    class="inline-block max-w-full text-xl font-semibold wrap-anywhere"
+                    class="headword-name inline-block max-w-full text-xl font-semibold wrap-anywhere"
                     style="view-transition-name: headword-{{ $word->id }}; view-transition-class: headword"
                 >
                     {{ $word->word }}
