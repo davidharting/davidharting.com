@@ -1,11 +1,10 @@
 @php
-    $senses = $word->senses();
     $fullDefinition = $word->renderFullDefinition();
 @endphp
 
 <header class="border-base-300 border-b pb-4">
     <h1
-        class="w-fit max-w-full text-4xl font-bold wrap-anywhere sm:text-5xl"
+        class="headword-name w-fit max-w-full text-4xl font-bold wrap-anywhere sm:text-5xl"
         style="view-transition-name: headword-{{ $word->id }}; view-transition-class: headword"
     >
         {{ $word->word }}
@@ -13,17 +12,7 @@
     <p class="text-base-content/70 mt-2 text-sm">Added {{ $word->created_at->format("j F Y") }}</p>
 </header>
 
-<section aria-label="Short definition" class="mt-6 text-lg">
-    @if (count($senses) > 1)
-        <ol class="list-decimal space-y-2 pl-6">
-            @foreach ($senses as $sense)
-                <li>{{ $sense }}</li>
-            @endforeach
-        </ol>
-    @else
-        <p>{{ $senses[0] ?? $word->short_definition }}</p>
-    @endif
-</section>
+<p class="mt-6 text-lg">{{ $word->short_definition }}</p>
 
 @if ($fullDefinition)
     <section aria-labelledby="full-entry" class="mt-8">

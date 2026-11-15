@@ -173,3 +173,24 @@ test('refuses a page number too large to count to', function () {
 
     $this->get('/words?page=99999999999999999999999')->assertSessionHasErrors('page');
 });
+
+test('remembers the chosen list-to-detail animation for the word pages', function () {
+    /** @var TestCase $this */
+    $word = Word::factory()->create(['word' => 'ephemeral']);
+
+    $this->get('/words?transition=page-turn')->assertSee('data-transition="page-turn"', false);
+    $this->get(route('words.show', $word))->assertSee('data-transition="page-turn"', false);
+});
+
+test('plays the animation in reverse when coming back from a word', function () {
+    /** @var TestCase $this */
+    $word = Word::factory()->create(['word' => 'ephemeral']);
+
+    $this->from(route('words.show', $word))->get('/words')->assertSee('data-transition-direction="back"', false);
+    $this->from(route('words.index', ['sort' => 'a_to_z']))->get('/words')->assertDontSee('data-transition-direction', false);
+});
+
+test('refuses an animation it does not know', function () {
+    /** @var TestCase $this */
+    $this->get('/words?transition=cartwheel')->assertSessionHasErrors('transition');
+});

@@ -107,21 +107,6 @@ class Word extends Model
     }
 
     /**
-     * The senses in the short definition, split on its semicolons.
-     *
-     * @return list<string>
-     */
-    public function senses(): array
-    {
-        return Str::of($this->short_definition)
-            ->explode(';')
-            ->map(fn (string $sense): string => trim($sense))
-            ->filter()
-            ->values()
-            ->all();
-    }
-
-    /**
      * The full definition as HTML. Raw HTML in the markdown is escaped, so
      * only markdown formatting comes through.
      */
