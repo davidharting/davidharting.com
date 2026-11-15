@@ -5,58 +5,39 @@ use Tests\Support\ProcessEnvironment;
 use Tests\TestCase;
 
 /*
- * Routes are registered when the app boots, so each test sets the environment
- * and then boots a fresh app to get the routes that environment would get.
+ * The login route is registered when the app boots, so each test reboots the
+ * app in the environment it describes.
  */
 
 afterEach(fn () => ProcessEnvironment::restore());
 
 describe('outside a PR preview', function () {
-    test('the login link does not exist in production', function () {
+    test('the login link does not exist', function (array $environment) {
         /** @var TestCase $this */
-        ProcessEnvironment::set([
-            'IS_PULL_REQUEST' => 'false',
-            'RENDER_SERVICE_NAME' => 'davidhartingdotcom-web',
-        ]);
-        $this->refreshApplication();
-        $this->beginDatabaseTransaction();
-        User::factory()->create(['email' => 'admin@example.com', 'is_admin' => true]);
+        $this->rebootWithEnvironment($environment);
+        User::factory()->admin()->create(['email' => 'admin@example.com']);
 
         $this->get('/preview-login')->assertNotFound();
 
         $this->assertGuest();
-    });
-
-    test('the login link does not exist when only the pull request flag is set', function () {
-        /** @var TestCase $this */
-        ProcessEnvironment::set([
-            'IS_PULL_REQUEST' => 'true',
-            'RENDER_SERVICE_NAME' => 'davidhartingdotcom-web',
-        ]);
-        $this->refreshApplication();
-        $this->beginDatabaseTransaction();
-        User::factory()->create(['email' => 'admin@example.com', 'is_admin' => true]);
-
-        $this->get('/preview-login')->assertNotFound();
-
-        $this->assertGuest();
-    });
+    })->with([
+        'production' => [['IS_PULL_REQUEST' => 'false', 'RENDER_SERVICE_NAME' => 'davidhartingdotcom-web']],
+        'only the pull request flag set' => [['IS_PULL_REQUEST' => 'true', 'RENDER_SERVICE_NAME' => 'davidhartingdotcom-web']],
+    ]);
 });
 
 describe('in a PR preview', function () {
     beforeEach(function () {
         /** @var TestCase $this */
-        ProcessEnvironment::set([
+        $this->rebootWithEnvironment([
             'IS_PULL_REQUEST' => 'true',
             'RENDER_SERVICE_NAME' => 'davidhartingdotcom-web-pr-259',
         ]);
-        $this->refreshApplication();
-        $this->beginDatabaseTransaction();
     });
 
     test('logs in as the seeded admin and lands on their landing page by default', function () {
         /** @var TestCase $this */
-        $admin = User::factory()->create(['email' => 'admin@example.com', 'is_admin' => true]);
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
 
         $this->get('/preview-login')->assertRedirect('/profile');
 
@@ -71,6 +52,15 @@ describe('in a PR preview', function () {
             ->assertRedirect('/media?type=book');
 
         $this->assertAuthenticatedAs($frodo);
+    });
+
+    test('matches the email whatever its case', function () {
+        /** @var TestCase $this */
+        $david = User::factory()->create(['email' => 'david@example.com']);
+
+        $this->get('/preview-login?as=David@Example.com')->assertRedirect();
+
+        $this->assertAuthenticatedAs($david);
     });
 
     test('refuses to log in as a user outside the seeded example.com domain', function () {
@@ -89,9 +79,9 @@ describe('in a PR preview', function () {
         $this->assertGuest();
     });
 
-    test('ignores a destination on another site and lands on the user landing page', function (string $to) {
+    test('ignores an unsafe destination and lands on the user landing page', function (string $to) {
         /** @var TestCase $this */
-        User::factory()->create(['email' => 'admin@example.com', 'is_admin' => true]);
+        User::factory()->admin()->create(['email' => 'admin@example.com']);
 
         $this->get('/preview-login?to='.urlencode($to))->assertRedirect('/profile');
     })->with([

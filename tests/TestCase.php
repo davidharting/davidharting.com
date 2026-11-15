@@ -4,6 +4,7 @@ namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Testing\TestResponse;
+use Tests\Support\ProcessEnvironment;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -46,5 +47,30 @@ abstract class TestCase extends BaseTestCase
         } finally {
             $this->app->forgetScopedInstances();
         }
+    }
+
+    /**
+     * Set process environment variables, then boot a fresh application so
+     * code that runs at boot, such as route registration, sees them.
+     *
+     * The fresh app re-reads config, so it would lose the per-process test
+     * database `--parallel` switched to; that database is carried over. The
+     * new app's connection also starts outside RefreshDatabase's transaction,
+     * so a new one is opened for it and rolled back at teardown like the first.
+     *
+     * Call ProcessEnvironment::restore() in afterEach.
+     *
+     * @param  array<string, string>  $variables
+     */
+    public function rebootWithEnvironment(array $variables): void
+    {
+        $connection = config('database.default');
+        $database = config("database.connections.{$connection}.database");
+
+        ProcessEnvironment::set($variables);
+        $this->refreshApplication();
+
+        config(["database.connections.{$connection}.database" => $database]);
+        $this->beginDatabaseTransaction();
     }
 }

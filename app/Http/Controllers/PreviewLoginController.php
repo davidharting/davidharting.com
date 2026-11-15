@@ -29,11 +29,13 @@ class PreviewLoginController extends Controller
 
     public function __invoke(Request $request): RedirectResponse
     {
-        $email = $request->query('as', self::DEFAULT_EMAIL);
+        $as = $request->query('as') ?: self::DEFAULT_EMAIL;
+        abort_unless(is_string($as), 404);
 
-        abort_unless(is_string($email) && Str::endsWith(Str::lower($email), self::SEEDED_EMAIL_DOMAIN), 404);
+        $email = Str::lower($as);
+        abort_unless(Str::endsWith($email, self::SEEDED_EMAIL_DOMAIN), 404);
 
-        $user = User::query()->where('email', Str::lower($email))->firstOrFail();
+        $user = User::query()->where('email', $email)->firstOrFail();
 
         Auth::login($user);
         $request->session()->regenerate();

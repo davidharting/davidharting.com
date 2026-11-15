@@ -64,7 +64,7 @@ When a message asks David to look at a preview, link him to the page to check wi
 https://davidhartingdotcom-web-pr-<PR_NUMBER>.onrender.com/preview-login?as=<email>&to=<path>
 ```
 
-- `as` is a seeded `@example.com` user and defaults to the admin, `admin@example.com`. Use `frodo@example.com` or another seeded user to show what a non-admin sees.
+- `as` is a seeded `@example.com` user and defaults to the admin, `admin@example.com`. Other seeded users: `frodo@example.com` (a plain non-admin), and `david@example.com` (admin) and `katie@example.com` (non-admin), who are the memories participants.
 - `to` is a path on the preview, starting with `/`, and URL-encoded when it has its own query string (`to=%2Fmedia%3Ftype%3Dbook`). Leave it off to land on the user's usual landing page.
 - No secret is needed. The route only exists in PR previews (`routes/preview.php`, loaded when `DeploymentInfo::isPreview()`), so it 404s in production, and it only logs in as `@example.com` users.
 
