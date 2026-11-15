@@ -4,62 +4,39 @@ namespace App\Http\Controllers;
 
 use App\Http\LandingPage;
 use App\Models\User;
+use App\Support\DeploymentInfo;
+use App\Support\PreviewLoginLink;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 /**
  * Logs a reviewer into a PR preview as a seeded user and sends them to a page,
- * all from one link an agent can build without any secret.
+ * from a signed link minted by PreviewLoginLink.
  *
- * The route is only registered in PR previews (see routes/preview.php), whose
- * database holds nothing but seed data. The seeded `admin@example.com` /
- * `password` login is already public, so this link grants nothing a visitor
- * to a preview couldn't already get by typing it.
+ * The route is only registered in PR previews (see routes/preview.php).
  */
 class PreviewLoginController extends Controller
 {
-    /**
-     * Only seeded users can be logged in as. Real accounts never use this domain.
-     */
-    private const string SEEDED_EMAIL_DOMAIN = '@example.com';
-
-    private const string DEFAULT_EMAIL = 'admin@example.com';
-
     public function __invoke(Request $request): RedirectResponse
     {
-        $as = $request->query('as') ?: self::DEFAULT_EMAIL;
-        abort_unless(is_string($as), 404);
+        $email = $request->query('as');
+        $to = $request->query('to', '');
+        $expires = $request->query('expires');
+        $signature = $request->query('signature');
 
-        $email = Str::lower($as);
-        abort_unless(Str::endsWith($email, self::SEEDED_EMAIL_DOMAIN), 404);
+        abort_unless(
+            is_string($email) && is_string($to) && is_string($expires) && ctype_digit($expires) && is_string($signature)
+                && PreviewLoginLink::isValid((int) DeploymentInfo::pullRequestNumber(), $email, $to, (int) $expires, $signature),
+            403,
+            'This preview login link is invalid or has expired. Ask for a new one.',
+        );
 
         $user = User::query()->where('email', $email)->firstOrFail();
 
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->to($this->destination($request->query('to'), $user));
-    }
-
-    /**
-     * A path on this site to land on, falling back to the user's landing page.
-     *
-     * Only site-relative paths are followed, so the link can't bounce the
-     * reviewer to another host: `//evil.test` and `/\evil.test` are treated by
-     * browsers as protocol-relative URLs and are refused.
-     */
-    private function destination(mixed $to, User $user): string
-    {
-        if (! is_string($to)
-            || ! Str::startsWith($to, '/')
-            || Str::startsWith($to, '//')
-            || Str::contains($to, '\\')
-            || preg_match('/[\x00-\x1F\x7F]/', $to) === 1) {
-            return LandingPage::for($user);
-        }
-
-        return $to;
+        return redirect()->to($to !== '' ? $to : LandingPage::for($user));
     }
 }

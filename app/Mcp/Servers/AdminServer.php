@@ -10,6 +10,7 @@ use App\Mcp\Tools\Admin\EditMediaEvent;
 use App\Mcp\Tools\Admin\EditWord;
 use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
+use App\Mcp\Tools\Admin\MintPreviewLoginLink;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
 use App\Mcp\Tools\Admin\SearchNotes as AdminSearchNotes;
 use App\Mcp\Tools\Admin\UpdateCreator;
@@ -82,6 +83,7 @@ class AdminServer extends Server
         UpdateCreator::class,
         AddWord::class,
         EditWord::class,
+        MintPreviewLoginLink::class,
     ];
 
     protected array $resources = [

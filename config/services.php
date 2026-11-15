@@ -31,4 +31,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+     * Signs one-tap login links for PR previews. Production holds the key to
+     * mint links (preview:login-link, the mint-preview-login-link MCP tool)
+     * and previews hold the same key to check them. See App\Support\PreviewLoginLink.
+     */
+    'preview_login' => [
+        'key' => env('PREVIEW_LOGIN_KEY'),
+    ],
+
 ];

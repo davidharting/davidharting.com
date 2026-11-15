@@ -58,15 +58,18 @@ e.g. PR #155 -> `https://davidhartingdotcom-web-pr-155.onrender.com`. Preview en
 
 #### One-tap login links
 
-When a message asks David to look at a preview, link him to the page to check with a preview login link instead of the bare preview URL. One tap logs him in as a seeded user and lands on that page:
+When a message asks David to look at a preview, send him a signed preview login link to the page to check instead of the bare preview URL. One tap logs him in as a seeded user and lands on that page.
+
+Mint the link with the `mint-preview-login-link` tool on the admin MCP server (`pull_request`, optional `as` and `to`), or `php artisan preview:login-link <PR> --as=<email> --to=<path>` wherever `PREVIEW_LOGIN_KEY` is set. Links look like:
 
 ```
-https://davidhartingdotcom-web-pr-<PR_NUMBER>.onrender.com/preview-login?as=<email>&to=<path>
+https://davidhartingdotcom-web-pr-<PR_NUMBER>.onrender.com/preview-login?as=<email>&to=<path>&expires=<unix time>&signature=<hmac>
 ```
 
 - `as` is a seeded `@example.com` user and defaults to the admin, `admin@example.com`. Other seeded users: `frodo@example.com` (a plain non-admin), and `david@example.com` (admin) and `katie@example.com` (non-admin), who are the memories participants.
-- `to` is a path on the preview, starting with `/`, and URL-encoded when it has its own query string (`to=%2Fmedia%3Ftype%3Dbook`). Leave it off to land on the user's usual landing page.
-- No secret is needed. The route only exists in PR previews (`routes/preview.php`, loaded when `DeploymentInfo::isPreview()`), so it 404s in production, and it only logs in as `@example.com` users.
+- `to` is a path on the preview starting with `/`. Leave it off to land on the user's usual landing page.
+- A link is HMAC-signed with `PREVIEW_LOGIN_KEY` (`App\Support\PreviewLoginLink`) for one PR, and expires after 24 hours. Production holds the key to mint links and previews hold it to check them; both get it from their Render secret file.
+- The login route only exists in PR previews (`routes/preview.php`, loaded when `DeploymentInfo::isPreview()`), so it 404s in production.
 
 ### MCP server
 
