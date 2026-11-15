@@ -3,12 +3,7 @@
 @endphp
 
 <header class="border-base-300 border-b pb-4">
-    <h1
-        class="headword-name w-fit max-w-full text-4xl font-bold wrap-anywhere sm:text-5xl"
-        style="view-transition-name: headword-{{ $word->id }}; view-transition-class: headword"
-    >
-        {{ $word->word }}
-    </h1>
+    <h1 class="text-4xl font-bold wrap-anywhere sm:text-5xl">{{ $word->word }}</h1>
     <p class="text-base-content/70 mt-2 text-sm">Added {{ $word->created_at->format("j F Y") }}</p>
 </header>
 

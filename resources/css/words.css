@@ -1,64 +1,34 @@
 /*
-  Words pages: moving between the list and a word. Both pages opt into
-  cross-document view transitions through the app layout, which also puts
-  the chosen animation on <html> as data-transition, and the direction as
-  data-transition-direction: "forward" on a word's page, "back" on the list
-  when coming back from a word. The new page's CSS runs the animation.
+  Words pages: moving between the list and a word turns a book page. Both
+  pages opt into cross-document view transitions through the app layout,
+  which puts the direction on <html> as data-transition-direction:
+  "forward" on a word's page, "back" on the list when coming back from a
+  word. The new page's CSS runs the animation.
 
-  While David tries them on the preview, there are three:
-  - headword: the tapped word grows into the page's headword.
-  - page-turn: the list turns away like a book page, hinged on its left edge.
-  - index-card: the word's page slides up over the list like a card pulled
-    from a card catalogue drawer.
+  Forward, the list turns away, hinged on its left edge, uncovering the
+  word's page. Back, the list turns back over the word's page.
 */
 
-/* --- headword --- */
-::view-transition-group(*.headword) {
-    animation-duration: 350ms;
-    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
-}
-
-/* Scale the headword's text evenly instead of stretching it to the box. */
-::view-transition-old(*.headword),
-::view-transition-new(*.headword) {
-    width: auto;
-    height: 100%;
-}
-
-/* The other animations move the whole page, so the headword stays put in it. */
-html:not([data-transition="headword"]) .headword-name {
-    view-transition-name: none !important;
-}
-
-/* --- page-turn --- */
-html[data-transition="page-turn"]::view-transition-group(root) {
+html[data-transition-direction]::view-transition-group(root) {
     animation-duration: 550ms;
     animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
 }
 
-html[data-transition="page-turn"][data-transition-direction="forward"]::view-transition-old(
-        root
-    ) {
+html[data-transition-direction="forward"]::view-transition-old(root) {
     z-index: 1;
     transform-origin: left center;
     animation: 550ms cubic-bezier(0.45, 0, 0.2, 1) both page-turn-away;
 }
-html[data-transition="page-turn"][data-transition-direction="forward"]::view-transition-new(
-        root
-    ) {
+html[data-transition-direction="forward"]::view-transition-new(root) {
     animation: 550ms ease-out both page-uncover;
 }
 
-html[data-transition="page-turn"][data-transition-direction="back"]::view-transition-new(
-        root
-    ) {
+html[data-transition-direction="back"]::view-transition-new(root) {
     z-index: 1;
     transform-origin: left center;
     animation: 550ms cubic-bezier(0.45, 0, 0.2, 1) both page-turn-back;
 }
-html[data-transition="page-turn"][data-transition-direction="back"]::view-transition-old(
-        root
-    ) {
+html[data-transition-direction="back"]::view-transition-old(root) {
     animation: 550ms ease-in both page-cover;
 }
 
@@ -91,55 +61,5 @@ html[data-transition="page-turn"][data-transition-direction="back"]::view-transi
 @keyframes page-cover {
     to {
         filter: brightness(0.8);
-    }
-}
-
-/* --- index-card --- */
-html[data-transition="index-card"][data-transition-direction="forward"]::view-transition-new(
-        root
-    ) {
-    z-index: 1;
-    box-shadow: 0 -8px 32px rgb(0 0 0 / 0.2);
-    animation: 450ms cubic-bezier(0.2, 0, 0, 1) both card-pull-up;
-}
-html[data-transition="index-card"][data-transition-direction="forward"]::view-transition-old(
-        root
-    ) {
-    animation: 450ms cubic-bezier(0.2, 0, 0, 1) both drawer-recede;
-}
-
-html[data-transition="index-card"][data-transition-direction="back"]::view-transition-old(
-        root
-    ) {
-    z-index: 1;
-    box-shadow: 0 -8px 32px rgb(0 0 0 / 0.2);
-    animation: 400ms cubic-bezier(0.4, 0, 1, 1) both card-file-away;
-}
-html[data-transition="index-card"][data-transition-direction="back"]::view-transition-new(
-        root
-    ) {
-    animation: 400ms cubic-bezier(0.2, 0, 0, 1) both drawer-return;
-}
-
-@keyframes card-pull-up {
-    from {
-        transform: translateY(100%);
-    }
-}
-@keyframes card-file-away {
-    to {
-        transform: translateY(100%);
-    }
-}
-@keyframes drawer-recede {
-    to {
-        transform: scale(0.94);
-        filter: brightness(0.85);
-    }
-}
-@keyframes drawer-return {
-    from {
-        transform: scale(0.94);
-        filter: brightness(0.85);
     }
 }

@@ -81,11 +81,9 @@ test('shows the word under the site nav', function () {
     $this->get('/words/ephemeral')->assertSuccessful()->assertSee('aria-label="Site"', false);
 });
 
-test('animates in from the list with the headword by default', function () {
+test('turns the page forward when opened', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'ephemeral']);
 
-    $this->get('/words/ephemeral')
-        ->assertSee('data-transition="headword"', false)
-        ->assertSee('data-transition-direction="forward"', false);
+    $this->get('/words/ephemeral')->assertSee('data-transition-direction="forward"', false);
 });

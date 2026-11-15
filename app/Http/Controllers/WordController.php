@@ -16,13 +16,6 @@ class WordController extends Controller
 {
     private const int DEFAULT_PER_PAGE = 250;
 
-    /**
-     * List-to-detail animations David is choosing between on the preview,
-     * picked on the list and remembered for the session. Whichever he keeps
-     * becomes the only one, and this goes away.
-     */
-    private const array TRANSITIONS = ['headword', 'page-turn', 'index-card'];
-
     public function index(Request $request): View
     {
         $validated = $request->validate([
@@ -32,12 +25,7 @@ class WordController extends Controller
             // Far past any real list, and low enough that the page's offset
             // can't overflow an integer.
             'page' => ['nullable', 'integer', 'min:1', 'max:100000'],
-            'transition' => ['nullable', Rule::in(self::TRANSITIONS)],
         ]);
-
-        if (isset($validated['transition'])) {
-            $request->session()->put('words.transition', $validated['transition']);
-        }
 
         $search = trim($validated['q'] ?? '');
         $sort = WordSort::tryFrom($validated['sort'] ?? '') ?? WordSort::Recent;
@@ -68,35 +56,23 @@ class WordController extends Controller
             'firstPageUrl' => $this->listUrl($listState, []),
             // Headings like a dictionary's only make sense in an A to Z list.
             'showsLetterHeadings' => $sort === WordSort::AToZ,
-            'transition' => $this->transition($request),
             'transitionDirection' => $this->cameFromAWord() ? 'back' : null,
-            'transitionLinks' => [
-                ['label' => 'Headword', 'transition' => 'headword', 'url' => $this->listUrl($listState, ['transition' => 'headword'])],
-                ['label' => 'Page turn', 'transition' => 'page-turn', 'url' => $this->listUrl($listState, ['transition' => 'page-turn'])],
-                ['label' => 'Index card', 'transition' => 'index-card', 'url' => $this->listUrl($listState, ['transition' => 'index-card'])],
-            ],
         ]);
     }
 
-    public function show(Request $request, Word $word): View
+    public function show(Word $word): View
     {
         Head::title($word->word)->description($word->short_definition);
 
         return view('words.show', [
             'word' => $word,
             'backUrl' => $this->backUrl(),
-            'transition' => $this->transition($request),
         ]);
-    }
-
-    private function transition(Request $request): string
-    {
-        return $request->session()->get('words.transition', 'headword');
     }
 
     /**
      * Whether David is coming back to the list from a word's page, so the
-     * list can play the transition in reverse.
+     * list can turn the page back instead of forward.
      */
     private function cameFromAWord(): bool
     {

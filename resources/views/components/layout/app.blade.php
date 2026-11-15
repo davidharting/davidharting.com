@@ -2,13 +2,12 @@
     hideNav drops the site nav and page container, for full-screen pages like the memory editor.
     transitionsBetweenPages lets wire:navigate links swap the page inside a view transition.
     crossDocumentTransitions animates ordinary link navigations between pages that also opt in.
-    transitionStyle and transitionDirection land on <html> as data attributes, for CSS to pick an animation.
+    transitionDirection lands on <html> as data-transition-direction, for CSS to pick which way to animate.
 --}}
 @props([
     'hideNav' => false,
     'transitionsBetweenPages' => false,
     'crossDocumentTransitions' => false,
-    'transitionStyle' => null,
     'transitionDirection' => null,
 ])
 
@@ -16,7 +15,6 @@
 <html
     lang="{{ str_replace("_", "-", app()->getLocale()) }}"
     @if ($transitionsBetweenPages) wire:transition.navigate @endif
-    @if ($transitionStyle) data-transition="{{ $transitionStyle }}" @endif
     @if ($transitionDirection) data-transition-direction="{{ $transitionDirection }}" @endif
 >
 <head>
