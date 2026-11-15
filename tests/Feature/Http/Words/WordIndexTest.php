@@ -55,7 +55,7 @@ test('shows no letter headings when listing the newest first', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'ephemeral']);
 
-    $this->get('/words')->assertDontSee('<h2', false);
+    $this->get('/words')->assertDontSee('>E</h2>', false);
 });
 
 test('searches the word and both definitions, ignoring case', function () {
@@ -105,7 +105,24 @@ test('shows 250 words a page by default', function () {
         ->assertDontSeeText('word251');
 });
 
-test('pages by a chosen page size, keeping the search, sort and size in every link', function () {
+test('pages by a chosen page size', function () {
+    /** @var TestCase $this */
+    Word::factory()
+        ->count(3)
+        ->sequence(fn ($sequence) => ['word' => 'word'.($sequence->index + 1)])
+        ->create();
+
+    $this->get('/words?sort=a_to_z&per_page=2')
+        ->assertSeeText('Page 1 of 2')
+        ->assertSeeText('word2')
+        ->assertDontSeeText('word3');
+
+    $this->get('/words?sort=a_to_z&per_page=2&page=2')
+        ->assertSeeText('word3')
+        ->assertDontSeeText('word2');
+});
+
+test('keeps the search, sort and page size in the page, sort and search links', function () {
     /** @var TestCase $this */
     Word::factory()
         ->count(3)
@@ -113,23 +130,26 @@ test('pages by a chosen page size, keeping the search, sort and size in every li
         ->create();
     $state = ['q' => 'word', 'sort' => 'a_to_z', 'per_page' => 2];
 
-    $this->get(route('words.index', $state))
-        ->assertSeeText('Page 1 of 2')
-        ->assertSeeText('word2')
-        ->assertDontSeeText('word3')
-        ->assertSee(route('words.index', [...$state, 'page' => 2]))
-        ->assertSee(route('words.index', ['q' => 'word', 'per_page' => 2]))
-        ->assertSee('<input type="hidden" name="per_page" value="2" />', false);
+    $response = $this->get(route('words.index', $state));
 
-    $this->get(route('words.index', [...$state, 'page' => 2]))
-        ->assertSeeText('word3')
-        ->assertDontSeeText('word2');
+    // The Next page link.
+    $response->assertSee(route('words.index', [...$state, 'page' => 2]));
+    // The Recent sort link, which drops only the sort.
+    $response->assertSee(route('words.index', ['q' => 'word', 'per_page' => 2]));
+    // The search box, which carries the sort and page size as hidden fields.
+    $response->assertSee('name="sort" value="a_to_z"', false);
+    $response->assertSee('name="per_page" value="2"', false);
 });
 
 test('refuses a sort it does not know', function (string $query) {
     /** @var TestCase $this */
     $this->get('/words?'.$query)->assertSessionHasErrors('sort');
 })->with(['an unknown name' => 'sort=nonsense', 'a list' => 'sort[]=a_to_z']);
+
+test('accepts a page size up to 1000', function () {
+    /** @var TestCase $this */
+    $this->get('/words?per_page=1000')->assertSuccessful();
+});
 
 test('refuses a page size above 1000', function () {
     /** @var TestCase $this */
@@ -143,7 +163,7 @@ test('offers a way back from a page past the end', function () {
     $this->get('/words?page=5')
         ->assertSuccessful()
         ->assertSeeText('No words on this page.')
-        ->assertSee(route('words.index'));
+        ->assertSeeText('Back to the first page');
 });
 
 test('refuses a page number too large to count to', function () {
