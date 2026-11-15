@@ -10,7 +10,7 @@
     class="bg-base-200 flex h-dvh flex-col p-4 font-sans"
 >
     <header class="flex items-center justify-between">
-        <a href="{{ route("home") }}" class="btn btn-ghost btn-sm">✕ Done</a>
+        <a href="{{ route("words.index") }}" class="btn btn-ghost btn-sm">✕ Done</a>
         <span class="badge badge-neutral" x-show="! done()" x-text="`${remaining()} left`"></span>
     </header>
 
@@ -52,7 +52,7 @@
                     <button type="button" class="btn btn-outline" x-on:click="practiseAhead()">
                         Practise ahead anyway
                     </button>
-                    <a class="link text-sm" href="{{ route("home") }}">Back to the site</a>
+                    <a class="link text-sm" href="{{ route("words.index") }}">Back to Words</a>
                 </div>
             @else
                 <h1 class="font-serif text-3xl">No words yet</h1>
