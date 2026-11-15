@@ -83,6 +83,7 @@ test('an admin can list the tools', function () {
         'update-creator',
         'add-word',
         'edit-word',
+        'list-words',
     ]);
 });
 
