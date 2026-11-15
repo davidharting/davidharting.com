@@ -1,4 +1,4 @@
-<x-layout.app>
+<x-layout.app cross-document-transitions>
     <div class="mx-auto max-w-2xl">
         <header class="mb-6">
             <x-type.page-title>Words</x-type.page-title>

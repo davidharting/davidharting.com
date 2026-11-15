@@ -1,4 +1,11 @@
-{{-- In an A to Z list, a letter heading starts each run of words filed under the same letter, like a dictionary's. --}}
+{{--
+    In an A to Z list, a letter heading starts each run of words filed under the same letter, like a dictionary's.
+
+    Every row's word carries a view-transition name so it grows into the detail
+    page's headword and shrinks back into its row. Naming only the tapped row
+    would need pagereveal to run before first paint, which Vite's deferred
+    scripts can't promise, so every row is named; small text snapshots are cheap.
+--}}
 @php
     $currentLetter = null;
 @endphp
@@ -16,10 +23,15 @@
         @endif
 
         <li class="list-row p-0">
-            <div class="px-1 py-3">
-                <span class="block text-xl font-semibold">{{ $word->word }}</span>
+            <a href="{{ route("words.show", $word) }}" class="block px-1 py-3">
+                <span
+                    class="inline-block max-w-full text-xl font-semibold wrap-anywhere"
+                    style="view-transition-name: headword-{{ $word->id }}; view-transition-class: headword"
+                >
+                    {{ $word->word }}
+                </span>
                 <span class="text-base-content/70 line-clamp-2 block">{{ $word->short_definition }}</span>
-            </div>
+            </a>
         </li>
     @endforeach
 </ul>

@@ -85,6 +85,7 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
 
 Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
     Route::get('/words', [WordController::class, 'index'])->name('words.index')->withHead(title: 'Words')->can('viewAny', Word::class);
+    Route::get('/words/{word:word}', [WordController::class, 'show'])->name('words.show')->where('word', '.+')->can('view', 'word');
 });
 
 require __DIR__.'/auth.php';
