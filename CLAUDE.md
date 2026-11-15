@@ -56,6 +56,18 @@ https://davidhartingdotcom-web-pr-<PR_NUMBER>.onrender.com
 
 e.g. PR #155 -> `https://davidhartingdotcom-web-pr-155.onrender.com`. Preview environments set `IS_PULL_REQUEST=true` and `RUN_DEV_SEEDER=true`, and use the staging secrets/env group rather than production.
 
+#### One-tap login links
+
+When a message asks David to look at a preview, link him to the page to check with a preview login link instead of the bare preview URL. One tap logs him in as a seeded user and lands on that page:
+
+```
+https://davidhartingdotcom-web-pr-<PR_NUMBER>.onrender.com/preview-login?as=<email>&to=<path>
+```
+
+- `as` is a seeded `@example.com` user and defaults to the admin, `admin@example.com`. Use `frodo@example.com` or another seeded user to show what a non-admin sees.
+- `to` is a path on the preview, starting with `/`, and URL-encoded when it has its own query string (`to=%2Fmedia%3Ftype%3Dbook`). Leave it off to land on the user's usual landing page.
+- No secret is needed. The route only exists in PR previews (`routes/preview.php`, loaded when `DeploymentInfo::isPreview()`), so it 404s in production, and it only logs in as `@example.com` users.
+
 ### MCP server
 
 Two MCP servers are registered in `routes/ai.php`; servers and tools live in `app/Mcp/`. Verify manually with `php artisan mcp:inspector mcp`. See `docs/projects/mcp-server.md`.

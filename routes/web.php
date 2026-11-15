@@ -13,6 +13,7 @@ use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Month;
+use App\Support\DeploymentInfo;
 use Illuminate\Support\Facades\Route;
 use Spatie\MarkdownResponse\Middleware\ProvideMarkdownResponse;
 
@@ -82,3 +83,7 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
 });
 
 require __DIR__.'/auth.php';
+
+if (DeploymentInfo::isPreview()) {
+    require __DIR__.'/preview.php';
+}

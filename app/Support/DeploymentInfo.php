@@ -62,6 +62,18 @@ class DeploymentInfo
     }
 
     /**
+     * Whether this deployment is a PR preview environment.
+     *
+     * Requires both the IS_PULL_REQUEST flag and a `-pr-<number>` service
+     * name, which Render only sets on preview services, so a single stray
+     * variable can't turn production into a preview.
+     */
+    public static function isPreview(): bool
+    {
+        return self::pullRequestNumber() !== null;
+    }
+
+    /**
      * The abbreviated commit SHA this deployment was built from, or null when
      * running somewhere Render did not set it (local dev, tests, CI).
      */
