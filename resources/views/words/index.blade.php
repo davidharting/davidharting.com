@@ -64,21 +64,7 @@
                 @endif
             </p>
         @else
-            @if ($letterGroups)
-                @foreach ($letterGroups as $letter => $wordsUnderLetter)
-                    <section aria-labelledby="letter-{{ $loop->index }}">
-                        <h2
-                            id="letter-{{ $loop->index }}"
-                            class="border-base-300 bg-base-100 sticky top-0 z-10 border-b pt-4 pb-1 text-3xl font-bold"
-                        >
-                            {{ $letter }}
-                        </h2>
-                        @include('words.partials.list', ['words' => $wordsUnderLetter])
-                    </section>
-                @endforeach
-            @else
-                @include('words.partials.list', ['words' => $words])
-            @endif
+            @include('words.partials.list', ['words' => $words, 'showsLetterHeadings' => $showsLetterHeadings])
 
             @if ($words->hasPages())
                 <nav aria-label="Pages" class="my-8 flex items-center justify-between gap-2">

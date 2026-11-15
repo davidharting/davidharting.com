@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enum\WordSort;
-use App\Models\Word;
 use App\Queries\ListWordsQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -53,7 +51,8 @@ class WordController extends Controller
             ],
             'clearSearchUrl' => $this->listUrl($listState, ['q' => null]),
             'firstPageUrl' => $this->listUrl($listState, []),
-            'letterGroups' => $this->groupByLetterWhenAlphabetical($words->getCollection(), $sort),
+            // Headings like a dictionary's only make sense in an A to Z list.
+            'showsLetterHeadings' => $sort === WordSort::AToZ,
         ]);
     }
 
@@ -64,21 +63,5 @@ class WordController extends Controller
     private function listUrl(array $listState, array $changes): string
     {
         return route('words.index', array_filter([...$listState, ...$changes]));
-    }
-
-    /**
-     * Files the page's words under dictionary letter headings, but only in
-     * an A to Z list, where headings make sense.
-     *
-     * @param  Collection<int, Word>  $words
-     * @return Collection<string, Collection<int, Word>>|null
-     */
-    private function groupByLetterWhenAlphabetical(Collection $words, WordSort $sort): ?Collection
-    {
-        if ($sort !== WordSort::AToZ) {
-            return null;
-        }
-
-        return $words->groupBy(fn (Word $word): string => $word->dictionaryLetter());
     }
 }

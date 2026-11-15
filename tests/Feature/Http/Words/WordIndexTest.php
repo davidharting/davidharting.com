@@ -48,14 +48,14 @@ test('lists words A to Z under dictionary letter headings, ignoring case', funct
     $html = $this->get('/words?sort=a_to_z')->assertSuccessful()->getContent();
 
     expect(preg_replace('/\s+/', ' ', $html))
-        ->toMatch('#id="letter-0"[^>]*> E </h2>.*ephemeral.*id="letter-1"[^>]*> L </h2>.*Laconic.*lambent#');
+        ->toMatch('#<h2[^>]*>E</h2>.*ephemeral.*<h2[^>]*>L</h2>.*Laconic.*lambent#');
 });
 
 test('shows no letter headings when listing the newest first', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'ephemeral']);
 
-    $this->get('/words')->assertDontSee('id="letter-', false);
+    $this->get('/words')->assertDontSee('<h2', false);
 });
 
 test('searches the word and both definitions, ignoring case', function () {
