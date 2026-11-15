@@ -35,3 +35,14 @@ test('gives memories pages a slim nav of Home, Memories and Account', function (
     'the list' => '/memories',
     'a month' => '/memories/2026-09',
 ]);
+
+test('offers David the Words link', function () {
+    /** @var TestCase $this */
+    $this->actingAs(User::factory()->admin()->create())->get('/')->assertSee(route('words.index'));
+});
+
+test('hides the Words link from guests and other signed-in users', function () {
+    /** @var TestCase $this */
+    $this->get('/')->assertDontSee(route('words.index'));
+    $this->actingAs(User::factory()->create())->get('/')->assertDontSee(route('words.index'));
+});
