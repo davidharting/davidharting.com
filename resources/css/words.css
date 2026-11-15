@@ -1,0 +1,16 @@
+/*
+  Words pages: a tapped word grows into the detail page's headword. The
+  pages opt into cross-document view transitions through the app layout;
+  each word's headword carries a view-transition-name unique to that word.
+*/
+::view-transition-group(*.headword) {
+    animation-duration: 350ms;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Scale the headword's text evenly instead of stretching it to the box. */
+::view-transition-old(*.headword),
+::view-transition-new(*.headword) {
+    width: auto;
+    height: 100%;
+}

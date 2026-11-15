@@ -26,17 +26,18 @@ test('says so when there are no words yet', function () {
     $this->get('/words')->assertSuccessful()->assertSeeText('No words yet');
 });
 
-test('lists the newest words first, each with its short definition', function () {
+test('lists the newest words first, each with its short definition and a link to it', function () {
     /** @var TestCase $this */
     $this->travelTo('2026-11-01');
-    Word::factory()->create(['word' => 'laconic', 'short_definition' => 'using few words']);
+    $older = Word::factory()->create(['word' => 'laconic', 'short_definition' => 'using few words']);
     $this->travelTo('2026-11-02');
     Word::factory()->create(['word' => 'ephemeral', 'short_definition' => 'lasting a very short time']);
 
     $this->get('/words')
         ->assertSuccessful()
         ->assertSeeText('2 words')
-        ->assertSeeTextInOrder(['ephemeral', 'lasting a very short time', 'laconic', 'using few words']);
+        ->assertSeeTextInOrder(['ephemeral', 'lasting a very short time', 'laconic', 'using few words'])
+        ->assertSee(route('words.show', $older));
 });
 
 test('lists words A to Z under dictionary letter headings, ignoring case', function () {

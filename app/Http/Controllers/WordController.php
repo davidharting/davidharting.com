@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enum\WordSort;
+use App\Models\Word;
 use App\Queries\ListWordsQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Laravel\Head\Facades\Head;
 
 class WordController extends Controller
 {
@@ -54,6 +57,27 @@ class WordController extends Controller
             // Headings like a dictionary's only make sense in an A to Z list.
             'showsLetterHeadings' => $sort === WordSort::AToZ,
         ]);
+    }
+
+    public function show(Word $word): View
+    {
+        Head::title($word->word)->description($word->short_definition);
+
+        return view('words.show', [
+            'word' => $word,
+            'backUrl' => $this->backUrl(),
+        ]);
+    }
+
+    /**
+     * The list page David came from, keeping his search, sort and page, or
+     * the plain list when he arrived some other way.
+     */
+    private function backUrl(): string
+    {
+        $previous = url()->previous();
+
+        return Str::before($previous, '?') === route('words.index') ? $previous : route('words.index');
     }
 
     /**
