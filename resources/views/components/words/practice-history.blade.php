@@ -4,7 +4,7 @@
 @props(['reviews'])
 
 @php
-    $misses = $reviews->where('rating', \App\Fsrs\Rating::Again)->count();
+    $misses = $reviews->filter->wasMissed()->count();
 @endphp
 
 <section aria-labelledby="practice-history">
@@ -23,9 +23,7 @@
                     <time datetime="{{ $review->reviewed_at->toIso8601String() }}" class="text-base-content/70">
                         {{ $review->reviewed_at->format("j F Y") }}
                     </time>
-                    <span class="{{ $review->rating === \App\Fsrs\Rating::Again ? "text-error" : "" }}">
-                        {{ $review->outcome() }}
-                    </span>
+                    <span class="{{ $review->wasMissed() ? "text-error" : "" }}"> {{ $review->outcome() }} </span>
                 </li>
             @endforeach
         </ul>

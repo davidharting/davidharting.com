@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Models\Word;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 beforeEach(function () {
@@ -190,6 +191,17 @@ test('does not turn the page when moving within the list', function () {
     $this->get('/words?sort=a_to_z')->assertDontSee('data-transition-direction', false);
 });
 
+/**
+ * Assert the page has a status chip linking to $url, labelled $label with
+ * $count beside it.
+ */
+function assertChip(TestResponse $response, string $label, int $count, string $url): void
+{
+    expect(preg_replace('/\s+/', ' ', $response->getContent()))
+        ->toContain(sprintf('href="%s"', e($url)))
+        ->toMatch(sprintf('#href="%s"[^>]*> %s <span class="badge badge-sm">%d</span>#', preg_quote(e($url), '#'), $label, $count));
+}
+
 describe('learning status chips', function () {
     test('show how many words have each status, and a total', function () {
         /** @var TestCase $this */
@@ -197,9 +209,13 @@ describe('learning status chips', function () {
         Word::factory()->troublesome()->create();
         Word::factory()->count(3)->mastered()->create();
 
-        $this->get('/words')
-            ->assertSuccessful()
-            ->assertSeeTextInOrder(['All', '6', 'New', '2', 'Mastered', '3', 'Troublesome', '1', 'Learning', '0']);
+        $response = $this->get('/words')->assertSuccessful();
+
+        assertChip($response, 'All', 6, route('words.index'));
+        assertChip($response, 'New', 2, route('words.index', ['status' => 'new']));
+        assertChip($response, 'Mastered', 3, route('words.index', ['status' => 'mastered']));
+        assertChip($response, 'Troublesome', 1, route('words.index', ['status' => 'troublesome']));
+        assertChip($response, 'Learning', 0, route('words.index', ['status' => 'learning']));
     });
 
     test('narrow the list to one status when tapped', function () {
@@ -220,9 +236,10 @@ describe('learning status chips', function () {
         Word::factory()->troublesome()->create(['word' => 'liminal']);
         Word::factory()->troublesome()->create(['word' => 'zephyr']);
 
-        $this->get(route('words.index', ['q' => 'liminal']))
-            ->assertSeeTextInOrder(['All', '1', 'New', '0', 'Mastered', '0', 'Troublesome', '1'])
-            ->assertSee(route('words.index', ['q' => 'liminal', 'status' => 'troublesome']));
+        $response = $this->get(route('words.index', ['q' => 'liminal']));
+
+        assertChip($response, 'All', 1, route('words.index', ['q' => 'liminal']));
+        assertChip($response, 'Troublesome', 1, route('words.index', ['q' => 'liminal', 'status' => 'troublesome']));
     });
 
     test('are kept by the search box and the sort links', function () {

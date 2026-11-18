@@ -9,6 +9,9 @@
                 @else
                     {{ trans_choice(':count word|:count words', $words->total(), ['count' => number_format($words->total())]) }}
                 @endif
+                @if ($status)
+                    · {{ $status->label() }}
+                @endif
             </p>
         </header>
 
@@ -34,11 +37,11 @@
             <button type="submit" class="btn">Search</button>
         </form>
 
-        <nav aria-label="Filter by learning status" class="mb-4 flex flex-wrap gap-2">
+        <nav aria-label="Filter by learning status" class="mb-4 flex flex-wrap gap-3">
             @foreach ($statusLinks as $link)
                 <a
                     href="{{ $link["url"] }}"
-                    class="btn btn-sm tap-target rounded-full {{ $link["active"] ? "btn-active btn-neutral" : "btn-outline" }}"
+                    class="btn btn-sm tap-target {{ $link["active"] ? "btn-primary" : "btn-outline" }}"
                     @if ($link['active']) aria-current="true" @endif
                 >
                     {{ $link["label"] }}

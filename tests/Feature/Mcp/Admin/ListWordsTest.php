@@ -33,7 +33,7 @@ function listedWords(array $arguments = []): array
 /**
  * Grade the word's flashcard "Missed it" this many times.
  */
-function missTimes(Word $word, int $times): void
+function missWord(Word $word, int $times): void
 {
     foreach (range(1, $times) as $_) {
         $word->flashcard->grade(Rating::Again);
@@ -141,9 +141,9 @@ describe('handle()', function () {
 
     test('lists the words missed most often first when sorted by most missed, then A to Z', function () {
         /** @var TestCase $this */
-        missTimes(Word::factory()->create(['word' => 'zephyr']), 1);
-        missTimes(Word::factory()->create(['word' => 'liminal']), 3);
-        missTimes(Word::factory()->create(['word' => 'apricity']), 1);
+        missWord(Word::factory()->create(['word' => 'zephyr']), times: 1);
+        missWord(Word::factory()->create(['word' => 'liminal']), times: 3);
+        missWord(Word::factory()->create(['word' => 'apricity']), times: 1);
         Word::factory()->create(['word' => 'ephemeral'])->flashcard->grade(Rating::Good);
 
         expect(listedWords(['sort' => 'most_missed']))->toBe(['liminal', 'apricity', 'zephyr', 'ephemeral']);
@@ -152,7 +152,7 @@ describe('handle()', function () {
     test('reports how many times each word has been missed, not counting the times David got it', function () {
         /** @var TestCase $this */
         $word = Word::factory()->create(['word' => 'liminal']);
-        missTimes($word, 2);
+        missWord($word, times: 2);
         $word->flashcard->grade(Rating::Good);
         $admin = User::factory()->admin()->create();
 

@@ -56,11 +56,11 @@ class WordController extends Controller
             // the list without losing the search.
             'statusLinks' => [
                 ['label' => 'All', 'count' => array_sum($countsByStatus), 'active' => $status === null, 'url' => $this->listUrl($listState, ['status' => null])],
-                ...array_map(fn (LearningStatus $each): array => [
-                    'label' => $each->label(),
-                    'count' => $countsByStatus[$each->value],
-                    'active' => $status === $each,
-                    'url' => $this->listUrl($listState, ['status' => $each->value]),
+                ...array_map(fn (LearningStatus $option): array => [
+                    'label' => $option->label(),
+                    'count' => $countsByStatus[$option->value],
+                    'active' => $status === $option,
+                    'url' => $this->listUrl($listState, ['status' => $option->value]),
                 ], LearningStatus::cases()),
             ],
             // The search box replaces q, and keeps the rest of the list's state.
@@ -84,7 +84,7 @@ class WordController extends Controller
         return view('words.show', [
             'word' => $word,
             'status' => $word->learningStatus(),
-            'reviews' => $word->flashcard->reviews()->orderBy('reviewed_at', 'desc')->orderBy('id', 'desc')->get(),
+            'reviews' => $word->reviews()->orderBy('reviewed_at', 'desc')->orderBy('reviews.id', 'desc')->get(),
             'backUrl' => $this->backUrl($request),
         ]);
     }

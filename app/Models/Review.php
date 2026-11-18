@@ -51,6 +51,14 @@ class Review extends Model
     }
 
     /**
+     * Whether David missed it this time.
+     */
+    public function wasMissed(): bool
+    {
+        return $this->rating === Rating::Again;
+    }
+
+    /**
      * @return BelongsTo<Flashcard, $this>
      */
     public function flashcard(): BelongsTo

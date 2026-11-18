@@ -1,11 +1,13 @@
+@use(App\Enum\LearningStatus)
+
 @props(['status'])
 
 @php
     $tone = match ($status) {
-        \App\Enum\LearningStatus::New => 'badge-ghost',
-        \App\Enum\LearningStatus::Learning => 'badge-info',
-        \App\Enum\LearningStatus::Troublesome => 'badge-warning',
-        \App\Enum\LearningStatus::Mastered => 'badge-success',
+        LearningStatus::New => 'badge-ghost',
+        LearningStatus::Learning => 'badge-info',
+        LearningStatus::Troublesome => 'badge-warning',
+        LearningStatus::Mastered => 'badge-success',
     };
 @endphp
 

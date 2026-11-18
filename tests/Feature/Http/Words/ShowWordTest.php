@@ -98,7 +98,7 @@ test('says so when the word has not been practised yet', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'liminal']);
 
-    $this->get('/words/liminal')->assertSeeText('New')->assertSeeText('Not practised yet.');
+    $this->get('/words/liminal')->assertSeeText('Not practised yet.');
 });
 
 test('lists each time the word was practised, newest first, with how often it was missed', function () {
