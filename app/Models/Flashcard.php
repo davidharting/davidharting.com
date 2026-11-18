@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\CardScheduleCast;
+use App\Enum\LearningStatus;
 use App\Fsrs\CardSchedule;
 use App\Fsrs\Rating;
 use App\Fsrs\Scheduler;
@@ -60,6 +61,14 @@ class Flashcard extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+
+    /**
+     * How well David knows what this flashcard quizzes.
+     */
+    public function learningStatus(): LearningStatus
+    {
+        return LearningStatus::of($this->schedule);
     }
 
     /**

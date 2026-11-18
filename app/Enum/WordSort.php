@@ -14,4 +14,7 @@ enum WordSort: string
 
     /** Alphabetical by word, ignoring case. */
     case AToZ = 'a_to_z';
+
+    /** Missed most often in practice first, then alphabetical. */
+    case MostMissed = 'most_missed';
 }

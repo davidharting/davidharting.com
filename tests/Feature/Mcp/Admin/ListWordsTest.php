@@ -1,5 +1,6 @@
 <?php
 
+use App\Fsrs\Rating;
 use App\Mcp\Servers\AdminServer;
 use App\Mcp\Tools\Admin\ListWords;
 use App\Models\User;
@@ -27,6 +28,16 @@ function listedWords(array $arguments = []): array
         });
 
     return $words;
+}
+
+/**
+ * Grade the word's flashcard "Missed it" this many times.
+ */
+function missTimes(Word $word, int $times): void
+{
+    foreach (range(1, $times) as $_) {
+        $word->flashcard->grade(Rating::Again);
+    }
 }
 
 describe('shouldRegister()', function () {
@@ -61,7 +72,7 @@ describe('handle()', function () {
             ->and((string) $response->content())->toBe('You are not authorized to read David\'s words.');
     });
 
-    test('returns each word with its id, short definition and date added, but not its full definition', function () {
+    test('returns each word with its id, short definition, date added, learning status and misses, but not its full definition', function () {
         /** @var TestCase $this */
         Carbon::setTestNow('2026-11-01 09:30:00');
         $word = Word::factory()->create([
@@ -80,6 +91,8 @@ describe('handle()', function () {
                 'word' => 'ephemeral',
                 'short_definition' => 'lasting a very short time',
                 'added_at' => '2026-11-01T09:30:00+00:00',
+                'status' => 'new',
+                'times_missed' => 0,
             ]],
             'total' => 1,
             'total_pages' => 1,
@@ -124,6 +137,54 @@ describe('handle()', function () {
         Word::factory()->create(['word' => 'liminal']);
 
         expect(listedWords(['sort' => 'a_to_z']))->toBe(['Apricity', 'liminal', 'zephyr']);
+    });
+
+    test('lists the words missed most often first when sorted by most missed, then A to Z', function () {
+        /** @var TestCase $this */
+        missTimes(Word::factory()->create(['word' => 'zephyr']), 1);
+        missTimes(Word::factory()->create(['word' => 'liminal']), 3);
+        missTimes(Word::factory()->create(['word' => 'apricity']), 1);
+        Word::factory()->create(['word' => 'ephemeral'])->flashcard->grade(Rating::Good);
+
+        expect(listedWords(['sort' => 'most_missed']))->toBe(['liminal', 'apricity', 'zephyr', 'ephemeral']);
+    });
+
+    test('reports how many times each word has been missed, not counting the times David got it', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->create(['word' => 'liminal']);
+        missTimes($word, 2);
+        $word->flashcard->grade(Rating::Good);
+        $admin = User::factory()->admin()->create();
+
+        AdminServer::actingAs($admin)->tool(ListWords::class)
+            ->assertOk()
+            ->assertStructuredContent(fn ($json) => $json->where('words.0.times_missed', 2)->etc());
+    });
+
+    test('keeps only words with the requested learning status, and reports each word\'s status', function () {
+        /** @var TestCase $this */
+        Word::factory()->create(['word' => 'apricity']);
+        Word::factory()->mastered()->create(['word' => 'liminal']);
+        Word::factory()->troublesome()->create(['word' => 'zephyr']);
+        Word::factory()->learning()->create(['word' => 'ephemeral']);
+        $admin = User::factory()->admin()->create();
+
+        AdminServer::actingAs($admin)->tool(ListWords::class, ['status' => 'troublesome'])
+            ->assertOk()
+            ->assertStructuredContent(fn ($json) => $json
+                ->where('total', 1)
+                ->where('words.0.word', 'zephyr')
+                ->where('words.0.status', 'troublesome')
+                ->etc());
+    });
+
+    test('rejects an unknown status', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->admin()->create();
+
+        $response = AdminServer::actingAs($admin)->tool(ListWords::class, ['status' => 'forgotten']);
+
+        $response->assertHasErrors();
     });
 
     test('finds words whose spelling or either definition contains the search text, ignoring case', function () {
@@ -199,7 +260,7 @@ describe('handle()', function () {
         /** @var TestCase $this */
         $admin = User::factory()->admin()->create();
 
-        $response = AdminServer::actingAs($admin)->tool(ListWords::class, ['sort' => 'most_missed']);
+        $response = AdminServer::actingAs($admin)->tool(ListWords::class, ['sort' => 'oldest']);
 
         $response->assertHasErrors();
     });

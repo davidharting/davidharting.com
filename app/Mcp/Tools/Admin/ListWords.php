@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools\Admin;
 
+use App\Enum\LearningStatus;
 use App\Enum\WordSort;
 use App\Models\Word;
 use App\Queries\ListWordsQuery;
@@ -22,10 +23,16 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsIdempotent]
 #[Description(<<<'TEXT'
     List the words on David Harting's private vocabulary list, most recently
-    added first. Returns each word's id, the word, its short definition and
-    when it was added. Pass search to keep only words whose spelling or
-    either definition contains that text, ignoring case. Pass sort as a_to_z
-    for alphabetical order.
+    added first. Returns each word's id, the word, its short definition, when
+    it was added, its learning status and how many times David has missed it
+    in practice. Pass search to keep only words whose spelling or either
+    definition contains that text, ignoring case. Pass sort as a_to_z for
+    alphabetical order, or most_missed for the words he misses most first.
+
+    A word's learning status is exactly one of: new (never practised),
+    mastered (he is expected to remember it three weeks or more out),
+    troublesome (not mastered, and hard for him) or learning (anything
+    else). Pass status to keep only words with that status.
 
     The markdown full definition is left out to keep results small; set
     include_full_definition to true to get it.
@@ -63,6 +70,7 @@ class ListWords extends Tool
         $validated = $request->validate([
             'search' => ['sometimes', 'nullable', 'string', 'max:255'],
             'sort' => ['sometimes', 'string', Rule::enum(WordSort::class)],
+            'status' => ['sometimes', 'string', Rule::enum(LearningStatus::class)],
             'include_full_definition' => ['sometimes', 'boolean'],
             'page' => ['sometimes', 'integer', 'min:1'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:'.self::MAX_PER_PAGE],
@@ -73,6 +81,7 @@ class ListWords extends Tool
         $paginator = (new ListWordsQuery(
             search: $options['search'],
             sort: $options['sort'],
+            status: $options['status'],
             includeFullDefinition: $options['includeFullDefinition'],
         ))->paginate(
             perPage: $options['perPage'],
@@ -85,6 +94,8 @@ class ListWords extends Tool
                 'word' => $word->word,
                 'short_definition' => $word->short_definition,
                 'added_at' => $word->created_at->toIso8601String(),
+                'status' => $word->learningStatus()->value,
+                'times_missed' => (int) $word->times_missed,
                 ...($options['includeFullDefinition'] ? ['full_definition' => $word->full_definition] : []),
             ])->all(),
             'total' => $paginator->total(),
@@ -100,13 +111,14 @@ class ListWords extends Tool
      * the response use it.
      *
      * @param  array<string, mixed>  $validated
-     * @return array{search: ?string, sort: WordSort, includeFullDefinition: bool, page: int, perPage: int}
+     * @return array{search: ?string, sort: WordSort, status: ?LearningStatus, includeFullDefinition: bool, page: int, perPage: int}
      */
     private function options(array $validated): array
     {
         return [
             'search' => $validated['search'] ?? null,
             'sort' => isset($validated['sort']) ? WordSort::from($validated['sort']) : WordSort::Recent,
+            'status' => isset($validated['status']) ? LearningStatus::from($validated['status']) : null,
             'includeFullDefinition' => (bool) ($validated['include_full_definition'] ?? false),
             'page' => $validated['page'] ?? 1,
             'perPage' => $validated['per_page'] ?? self::DEFAULT_PER_PAGE,
@@ -125,7 +137,10 @@ class ListWords extends Tool
                 ->description('Text to look for in each word and its short and full definitions, ignoring case.'),
             'sort' => $schema->string()
                 ->enum(array_column(WordSort::cases(), 'value'))
-                ->description('recent (the default) for most recently added first, or a_to_z for alphabetical.'),
+                ->description('recent (the default) for most recently added first, a_to_z for alphabetical, or most_missed for the words missed most often in practice first.'),
+            'status' => $schema->string()
+                ->enum(array_column(LearningStatus::cases(), 'value'))
+                ->description('Keep only words with this learning status: new, mastered, troublesome or learning. Leave it out for every word.'),
             'include_full_definition' => $schema->boolean()
                 ->description('Whether to include each word\'s markdown full definition. Defaults to false.'),
             'page' => $schema->integer()
@@ -156,6 +171,10 @@ class ListWords extends Tool
                     'word' => $schema->string()->description('The word.'),
                     'short_definition' => $schema->string()->description('The short definition: plain-words senses separated by semicolons.'),
                     'added_at' => $schema->string()->description('When the word was added, in ISO 8601 format.'),
+                    'status' => $schema->string()
+                        ->enum(array_column(LearningStatus::cases(), 'value'))
+                        ->description('How well David knows the word: new, mastered, troublesome or learning.'),
+                    'times_missed' => $schema->integer()->description('How many times David has missed the word in practice.'),
                     'full_definition' => $schema->string()->nullable()->description('The markdown full definition, if any. Present only when include_full_definition is true.'),
                 ]))
                 ->description('The words on this page, in the requested order.'),
