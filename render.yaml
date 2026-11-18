@@ -214,3 +214,23 @@ projects:
                 fromDatabase:
                   name: davidhartingdotcom-db
                   property: connectionString
+
+          - name: davidhartingdotcom-practice-nudge
+            type: cron
+            buildSource: davidhartingdotcom-laravel
+            plan: starter
+            region: ohio
+            autoDeployTrigger: checksPass
+            # 20:00 UTC is 3pm America/New_York in standard time and 4pm in
+            # daylight time: an afternoon brain break either way. Sends a
+            # Telegram message only when words are due. The script skips itself
+            # in preview environments.
+            schedule: "0 20 * * *"
+            dockerCommand: bash /app/scripts/render-with-secrets.sh bash /app/scripts/send-practice-nudge.sh
+            envVars:
+              - fromGroup: davidhartingdotcom-shared
+              - fromGroup: davidhartingdotcom-preview-env-secrets
+              - key: DATABASE_URL
+                fromDatabase:
+                  name: davidhartingdotcom-db
+                  property: connectionString

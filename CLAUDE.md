@@ -30,6 +30,7 @@ Supporting services:
 - `davidhartingdotcom-backup-run`: Render cron job that runs database backups.
 - `davidhartingdotcom-backup-clean`: Render cron job that prunes old backups.
 - `davidhartingdotcom-memories-emails`: Render cron job that runs `memories:send-emails` at 14:00 UTC (9am Eastern in winter, 10am in summer).
+- `davidhartingdotcom-practice-nudge`: Render cron job that runs `words:send-practice-nudge` at 20:00 UTC (3pm Eastern in winter, 4pm in summer), a Telegram message to David when vocab words are due.
 - Cloudflare DNS points `davidharting.com` at Render. Cloudflare R2 stores public and private objects.
 
 Operational notes:
