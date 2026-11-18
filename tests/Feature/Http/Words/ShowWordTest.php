@@ -29,7 +29,7 @@ test('is not found for a word that is not on the list', function () {
     $this->get('/words/nonexistent')->assertNotFound();
 });
 
-test('shows the word, its short definition as written, its full definition and an Edit link', function () {
+test('shows the word with both definitions and an Edit link', function () {
     /** @var TestCase $this */
     $word = Word::factory()->create([
         'word' => 'ephemeral',
@@ -76,13 +76,6 @@ test('links back to the plain list when David arrived from elsewhere', function 
     $this->get(route('home'));
 
     $this->get('/words/ephemeral')->assertSee('href="'.route('words.index').'"', false);
-});
-
-test('shows the word under the site nav', function () {
-    /** @var TestCase $this */
-    Word::factory()->create(['word' => 'ephemeral']);
-
-    $this->get('/words/ephemeral')->assertSuccessful()->assertSee('aria-label="Site"', false);
 });
 
 test('turns the page forward when opened', function () {

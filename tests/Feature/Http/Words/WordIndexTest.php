@@ -179,7 +179,13 @@ test('turns the page back when coming back from a word', function () {
     $word = Word::factory()->create(['word' => 'ephemeral']);
 
     $this->get(route('words.show', $word));
+
     $this->get('/words')->assertSee('data-transition-direction="back"', false);
+});
+
+test('does not turn the page when moving within the list', function () {
+    /** @var TestCase $this */
+    $this->get('/words');
 
     $this->get('/words?sort=a_to_z')->assertDontSee('data-transition-direction', false);
 });

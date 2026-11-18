@@ -74,6 +74,13 @@ describe('renderFullDefinition()', function () {
             ->not->toContain('<script>');
     });
 
+    test('drops javascript links', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->make(['full_definition' => '[see also](javascript:alert(1))']);
+
+        expect($word->renderFullDefinition())->not->toContain('javascript:');
+    });
+
     test('is null without a full definition', function () {
         /** @var TestCase $this */
         expect(Word::factory()->make(['full_definition' => null])->renderFullDefinition())->toBeNull();
