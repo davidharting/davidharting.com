@@ -25,8 +25,8 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 #[IsDestructive]
 #[Description(<<<'TEXT'
     Correct a word on David Harting's private vocabulary list: its spelling,
-    its short definition or its full definition. Get the word_id from add-word, which returns an
-    existing word unchanged.
+    its short definition or its full definition. Get the word_id from list-words,
+    or from add-word, which returns an existing word unchanged.
 
     Only the fields you pass are changed. The short definition is replaced
     as a whole, so include every sense that should remain, separated by

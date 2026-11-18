@@ -16,7 +16,7 @@ use Livewire\Component;
  * background, so practice never waits on the network. Nothing here
  * re-renders after the first load: the browser asks for each new round.
  *
- * @phpstan-type Card array{id: int, word: string, definition: string}
+ * @phpstan-type Card array{id: int, word: string, definition: string, due: bool}
  * @phpstan-type Round array{cards: list<Card>, dueCount: int, nextDueAt: ?string}
  */
 class Practice extends Component
@@ -110,6 +110,8 @@ class Practice extends Component
                     'id' => $flashcard->id,
                     'word' => $word->word,
                     'definition' => $word->short_definition,
+                    // False once practice goes beyond what's due, so the page can say so.
+                    'due' => $flashcard->schedule->due <= now(),
                 ];
             })
             ->all();

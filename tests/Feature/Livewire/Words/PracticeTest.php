@@ -79,7 +79,7 @@ describe('dueRound()', function () {
         $round = Livewire::actingAs($this->admin)->test(Practice::class)->instance()->dueRound();
 
         expect($round['cards'])->toHaveCount(1)
-            ->and($round['cards'][0])->toMatchArray(['word' => 'petrichor', 'definition' => 'the smell of rain on dry ground']);
+            ->and($round['cards'][0])->toMatchArray(['word' => 'petrichor', 'definition' => 'the smell of rain on dry ground', 'due' => true]);
     });
 
     test('draws the most overdue word first', function () {
@@ -143,13 +143,13 @@ describe('grade()', function () {
 });
 
 describe('practiseAhead()', function () {
-    test('draws the next words even though none are due', function () {
+    test('draws the next words even though none are due, marked as not due', function () {
         /** @var TestCase $this */
         practiceTestPractisedWord('quotidian');
 
         Livewire::actingAs($this->admin)
             ->test(Practice::class)
             ->call('practiseAhead')
-            ->assertReturned(fn (array $cards): bool => practiceTestWords($cards) === ['quotidian']);
+            ->assertReturned(fn (array $cards): bool => practiceTestWords($cards) === ['quotidian'] && $cards[0]['due'] === false);
     });
 });

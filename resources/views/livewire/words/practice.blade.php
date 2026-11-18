@@ -11,7 +11,10 @@
 >
     <header class="flex items-center justify-between">
         <a href="{{ route("words.index") }}" class="btn btn-ghost btn-sm">✕ Done</a>
-        <span class="badge badge-neutral" x-show="! done()" x-text="`${remaining()} left`"></span>
+        <div class="flex items-center gap-2" x-show="! done()">
+            <span class="badge badge-warning" x-show="current() && ! current().due">Practising ahead</span>
+            <span class="badge badge-neutral" x-text="`${remaining()} left`"></span>
+        </div>
     </header>
 
     <p class="sr-only" aria-live="polite" x-text="announcement()"></p>
@@ -50,11 +53,16 @@
                 <p
                     class="text-base-content/70"
                     x-show="! moreDue() && nextDue()"
-                    x-text="`The next word is due ${nextDue()}. You can still practise ahead.`"
+                    x-text="`The next word is due ${nextDue()}. Anything more is practising ahead.`"
                 ></p>
 
                 <div class="flex flex-col items-center gap-2">
-                    <button type="button" class="btn btn-primary" x-on:click="practiseMore()">Practise 5 more</button>
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        x-on:click="practiseMore()"
+                        x-text="moreDue() ? 'Practise 5 more' : 'Practise 5 ahead'"
+                    ></button>
                     <a class="link text-sm" href="{{ route("words.index") }}">Back to Words</a>
                 </div>
             @else

@@ -62,3 +62,27 @@ describe('dictionaryLetter()', function () {
         expect(Word::factory()->make(['word' => $word])->dictionaryLetter())->toBe('#');
     })->with(['a digit' => '24/7', 'a symbol' => '-ism']);
 });
+
+describe('renderFullDefinition()', function () {
+    test('renders markdown and escapes raw HTML', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->make(['full_definition' => "**adjective**\n\n<script>alert(1)</script>"]);
+
+        expect($word->renderFullDefinition())
+            ->toContain('<strong>adjective</strong>')
+            ->toContain('&lt;script&gt;')
+            ->not->toContain('<script>');
+    });
+
+    test('drops javascript links', function () {
+        /** @var TestCase $this */
+        $word = Word::factory()->make(['full_definition' => '[see also](javascript:alert(1))']);
+
+        expect($word->renderFullDefinition())->not->toContain('javascript:');
+    });
+
+    test('is null without a full definition', function () {
+        /** @var TestCase $this */
+        expect(Word::factory()->make(['full_definition' => null])->renderFullDefinition())->toBeNull();
+    });
+});

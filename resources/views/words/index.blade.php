@@ -1,4 +1,4 @@
-<x-layout.app>
+<x-layout.app cross-document-transitions :transition-direction="$transitionDirection">
     <div class="mx-auto max-w-2xl">
         <header class="mb-6">
             <div class="flex items-center justify-between gap-4">
@@ -7,6 +7,8 @@
                     Practise
                     @if ($dueCount > 0)
                         <span class="badge badge-sm">{{ number_format($dueCount) }} due</span>
+                    @else
+                        <span class="badge badge-sm badge-ghost">caught up</span>
                     @endif
                 </a>
             </div>
@@ -72,7 +74,7 @@
                 @endif
             </p>
         @else
-            @include('words.partials.list', ['words' => $words, 'showsLetterHeadings' => $showsLetterHeadings])
+            <x-words.list :words="$words" :shows-letter-headings="$showsLetterHeadings" />
 
             @if ($words->hasPages())
                 <nav aria-label="Pages" class="my-8 flex items-center justify-between gap-2">
