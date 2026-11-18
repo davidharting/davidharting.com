@@ -17,15 +17,15 @@ use Livewire\Component;
  * re-renders after the first load: the browser asks for each new round.
  *
  * @phpstan-type Card array{id: int, word: string, definition: string}
- * @phpstan-type Round array{cards: list<Card>, nextDueAt: ?string}
+ * @phpstan-type Round array{cards: list<Card>, dueCount: int, nextDueAt: ?string}
  */
 class Practice extends Component
 {
     /**
-     * How many cards one round deals at most. When it runs out the browser
-     * asks for another, so a big backlog comes in batches.
+     * How many cards one round draws. After a round David sees his score
+     * and can keep going while more words are due.
      */
-    public const int ROUND_SIZE = 20;
+    public const int ROUND_SIZE = 5;
 
     public function mount(): void
     {
@@ -33,8 +33,9 @@ class Practice extends Component
     }
 
     /**
-     * The cards due now, most overdue first, and when the next card falls
-     * due, for the caught-up screen when there are none.
+     * The next round of cards due now, most overdue first, with how many are
+     * due in all and when the next card falls due, for the screens between
+     * rounds.
      *
      * @return Round
      */
@@ -44,7 +45,8 @@ class Practice extends Component
         $this->authorize('viewAny', Flashcard::class);
 
         return [
-            'cards' => $this->deal(Flashcard::query()->dueNow()),
+            'cards' => $this->draw(Flashcard::query()->dueNow()),
+            'dueCount' => Flashcard::query()->dueNow()->count(),
             'nextDueAt' => Flashcard::query()->nextUp()->first()?->schedule->due->format(DATE_ATOM),
         ];
     }
@@ -59,7 +61,7 @@ class Practice extends Component
     {
         $this->authorize('viewAny', Flashcard::class);
 
-        return $this->deal(Flashcard::query());
+        return $this->draw(Flashcard::query());
     }
 
     /**
@@ -88,12 +90,12 @@ class Practice extends Component
     }
 
     /**
-     * Word flashcards from $query in practice order, as the browser shows them.
+     * Draw a round of word flashcards from $query in practice order, as the browser shows them.
      *
      * @param  Builder<Flashcard>  $query
      * @return list<Card>
      */
-    private function deal(Builder $query): array
+    private function draw(Builder $query): array
     {
         return $query->nextUp()
             ->where('quizzable_type', (new Word)->getMorphClass())

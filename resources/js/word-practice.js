@@ -5,9 +5,9 @@
  * the grade is saved in the background. A grade that fails to save puts the
  * card back at the bottom of the stack.
  *
- * When a round runs out, the next one is fetched once every grade has
- * saved, so a big backlog comes in batches and the caught-up screen only
- * shows when nothing is due.
+ * A round is five cards (Practice::ROUND_SIZE). When it runs out, the
+ * page shows the score and, once every grade has saved, offers the next
+ * round if more words are due, or says you're caught up.
  */
 const SWIPE_THRESHOLD_PIXELS = 100;
 const FLY_OUT_MILLISECONDS = 200;
@@ -50,11 +50,14 @@ document.addEventListener("alpine:init", () => {
             },
 
             cards: firstRound.cards,
+            // The round after this one, fetched when this one ends. With
+            // nothing due, the first round is empty and is its own "next".
+            upNext: firstRound.cards.length === 0 ? firstRound : null,
             nextDueAt: firstRound.nextDueAt,
             index: 0,
             revealed: false,
             results: [],
-            dealing: false,
+            waiting: false,
             notice: null,
             noticeTimer: null,
 
@@ -84,6 +87,10 @@ document.addEventListener("alpine:init", () => {
                     return "";
                 }
                 return this.revealed ? card.definition : card.word;
+            },
+
+            moreDue() {
+                return this.upNext?.cards.length > 0;
             },
 
             nextDue() {
@@ -162,7 +169,7 @@ document.addEventListener("alpine:init", () => {
                     this.revealed = false;
                     this.index++;
                     if (this.done()) {
-                        this.deal(() => wire.dueRound());
+                        this.finishRound();
                     }
                 }, FLY_OUT_MILLISECONDS);
             },
@@ -176,39 +183,64 @@ document.addEventListener("alpine:init", () => {
                 );
             },
 
-            practiseAhead() {
-                this.results = [];
-                this.deal(async () => ({
-                    cards: await wire.practiseAhead(),
-                    nextDueAt: this.nextDueAt,
-                }));
-            },
-
             /**
-             * Replace the stack with a new round, once every grade has saved so
-             * the round reflects them.
+             * Once every grade has saved, see what is due next, for the
+             * screen between rounds. A failed grade may have put a card back
+             * while we waited, in which case the round isn't over.
              */
-            async deal(fetchRound) {
-                this.dealing = true;
-                try {
-                    await Promise.allSettled(saving);
-                    saving = [];
-                    // A failed grade may have put a card back while we waited.
-                    if (!this.done()) {
-                        return;
-                    }
-                    const round = await fetchRound().catch(() => null);
+            async finishRound() {
+                await this.afterSaving(async () => {
+                    const round = await wire.dueRound().catch(() => null);
                     if (!round) {
                         this.showNotice(
-                            "Couldn't deal more cards. Try again in a moment.",
+                            "Couldn't check what's due next. Try again in a moment.",
                         );
                         return;
                     }
-                    this.cards = round.cards;
+                    this.upNext = round;
                     this.nextDueAt = round.nextDueAt;
-                    this.index = 0;
+                });
+            },
+
+            /**
+             * Another round of five: the due cards already fetched, or once
+             * nothing is due, whichever cards come up soonest.
+             */
+            async practiseMore() {
+                if (this.moreDue()) {
+                    this.startRound(this.upNext.cards);
+                    return;
+                }
+                await this.afterSaving(async () => {
+                    const cards = await wire.practiseAhead().catch(() => null);
+                    if (!cards) {
+                        this.showNotice(
+                            "Couldn't draw more cards. Try again in a moment.",
+                        );
+                        return;
+                    }
+                    this.startRound(cards);
+                });
+            },
+
+            startRound(cards) {
+                this.cards = cards;
+                this.index = 0;
+                this.results = [];
+                this.upNext = null;
+            },
+
+            /** Run `then` once every grade has saved, if the round is still over. */
+            async afterSaving(then) {
+                this.waiting = true;
+                try {
+                    await Promise.allSettled(saving);
+                    saving = [];
+                    if (this.done()) {
+                        await then();
+                    }
                 } finally {
-                    this.dealing = false;
+                    this.waiting = false;
                 }
             },
 

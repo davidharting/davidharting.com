@@ -22,17 +22,17 @@
         </div>
     </template>
 
-    <template x-if="done() && dealing">
+    <template x-if="done() && waiting">
         <div class="flex flex-1 items-center justify-center">
-            <span class="loading loading-dots loading-lg" aria-label="Dealing the next cards"></span>
+            <span class="loading loading-dots loading-lg" aria-label="Saving your grades"></span>
         </div>
     </template>
 
-    <template x-if="done() && ! dealing">
+    <template x-if="done() && ! waiting">
         <div class="mx-auto flex max-w-md flex-1 flex-col items-center justify-center gap-4 text-center">
             @if ($hasWords)
-                <div class="text-5xl" aria-hidden="true">🌿</div>
-                <h1 class="font-serif text-3xl">All caught up</h1>
+                <div class="text-5xl" aria-hidden="true" x-text="moreDue() ? '👏' : '🌿'"></div>
+                <h1 class="font-serif text-3xl" x-text="moreDue() ? 'Round done' : 'All caught up'"></h1>
 
                 <template x-if="results.length > 0">
                     <div class="flex flex-col gap-2">
@@ -46,12 +46,15 @@
                     </div>
                 </template>
 
-                <p class="text-base-content/70" x-show="nextDue()" x-text="`The next word is due ${nextDue()}.`"></p>
+                <p class="text-base-content/70" x-show="moreDue()" x-text="`${upNext?.dueCount} more due.`"></p>
+                <p
+                    class="text-base-content/70"
+                    x-show="! moreDue() && nextDue()"
+                    x-text="`The next word is due ${nextDue()}. You can still practise ahead.`"
+                ></p>
 
                 <div class="flex flex-col items-center gap-2">
-                    <button type="button" class="btn btn-outline" x-on:click="practiseAhead()">
-                        Practise ahead anyway
-                    </button>
+                    <button type="button" class="btn btn-primary" x-on:click="practiseMore()">Practise 5 more</button>
                     <a class="link text-sm" href="{{ route("words.index") }}">Back to Words</a>
                 </div>
             @else

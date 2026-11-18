@@ -26,7 +26,7 @@ function practiceTestPractisedWord(string $word): Word
 }
 
 /**
- * The words dealt in a round, in order.
+ * The words drawn in a round, in order.
  *
  * @param  list<array{word: string}>  $cards
  * @return list<string>
@@ -71,7 +71,7 @@ describe('the practice page', function () {
 });
 
 describe('dueRound()', function () {
-    test('deals only the due words, with their short definitions', function () {
+    test('draws only the due words, with their short definitions', function () {
         /** @var TestCase $this */
         Word::factory()->create(['word' => 'petrichor', 'short_definition' => 'the smell of rain on dry ground']);
         practiceTestPractisedWord('quotidian');
@@ -82,7 +82,7 @@ describe('dueRound()', function () {
             ->and($round['cards'][0])->toMatchArray(['word' => 'petrichor', 'definition' => 'the smell of rain on dry ground']);
     });
 
-    test('deals the most overdue word first', function () {
+    test('draws the most overdue word first', function () {
         /** @var TestCase $this */
         $this->travel(-2)->days();
         Word::factory()->create(['word' => 'older']);
@@ -95,7 +95,7 @@ describe('dueRound()', function () {
         expect(practiceTestWords($round['cards']))->toBe(['older', 'newer']);
     });
 
-    test('deals a word added a moment ago', function () {
+    test('draws a word added a moment ago', function () {
         /** @var TestCase $this */
         $this->travelBack();
         Word::factory()->create(['word' => 'brand-new']);
@@ -105,13 +105,14 @@ describe('dueRound()', function () {
         expect(practiceTestWords($round['cards']))->toBe(['brand-new']);
     });
 
-    test('deals at most one round of words at a time', function () {
+    test('draws five words a round, and counts every word due', function () {
         /** @var TestCase $this */
-        Word::factory()->count(Practice::ROUND_SIZE + 1)->create();
+        Word::factory()->count(7)->create();
 
         $round = Livewire::actingAs($this->admin)->test(Practice::class)->instance()->dueRound();
 
-        expect($round['cards'])->toHaveCount(Practice::ROUND_SIZE);
+        expect($round['cards'])->toHaveCount(5)
+            ->and($round['dueCount'])->toBe(7);
     });
 
     test('says when the next word is due once nothing is', function () {
@@ -142,7 +143,7 @@ describe('grade()', function () {
 });
 
 describe('practiseAhead()', function () {
-    test('deals the next words even though none are due', function () {
+    test('draws the next words even though none are due', function () {
         /** @var TestCase $this */
         practiceTestPractisedWord('quotidian');
 
