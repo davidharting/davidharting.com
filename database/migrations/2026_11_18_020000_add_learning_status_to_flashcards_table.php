@@ -16,7 +16,13 @@ return new class extends Migration
      * - learning: anything else.
      *
      * The 21 and 7 are starting guesses. To retune them, add a migration that
-     * drops this column and adds it back with the new expression.
+     * runs ALTER TABLE flashcards ALTER COLUMN learning_status SET EXPRESSION
+     * AS (...) (Postgres 17+).
+     *
+     * STORED because virtual generated columns arrive in Postgres 18. Once
+     * production is on 18, a migration can drop this index and column and add
+     * the column back as VIRTUAL: Postgres can't switch one in place, and 18
+     * can't index a virtual column.
      */
     public function up(): void
     {
