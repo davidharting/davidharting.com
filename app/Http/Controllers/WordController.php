@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enum\LearningStatus;
 use App\Enum\WordSort;
 use App\Models\Word;
 use App\Queries\ListWordsQuery;
@@ -20,6 +21,7 @@ class WordController extends Controller
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:255'],
             'sort' => ['nullable', Rule::enum(WordSort::class)],
+            'status' => ['nullable', Rule::enum(LearningStatus::class)],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:1000'],
             // Far past any real list, and low enough that the page's offset
             // can't overflow an integer.
@@ -28,15 +30,19 @@ class WordController extends Controller
 
         $search = trim($validated['q'] ?? '');
         $sort = WordSort::tryFrom($validated['sort'] ?? '') ?? WordSort::Recent;
+        $status = LearningStatus::tryFrom($validated['status'] ?? '');
         $perPage = (int) ($validated['per_page'] ?? self::DEFAULT_PER_PAGE);
 
-        $words = (new ListWordsQuery($search, $sort))
+        $query = new ListWordsQuery($search, $sort, $status);
+        $words = $query
             ->paginate(perPage: $perPage, page: (int) ($validated['page'] ?? 1))
             ->withQueryString();
+        $countsByStatus = $query->countsByStatus();
 
-        // The list's search, sort and page size, without defaults so URLs stay short.
+        // The list's search, status, sort and page size, without defaults so URLs stay short.
         $listState = array_filter([
             'q' => $search,
+            'status' => $status?->value,
             'sort' => $sort === WordSort::Recent ? null : $sort->value,
             'per_page' => $perPage === self::DEFAULT_PER_PAGE ? null : $perPage,
         ]);
@@ -45,6 +51,18 @@ class WordController extends Controller
             'words' => $words,
             'search' => $search,
             'sort' => $sort,
+            'status' => $status,
+            // Every word the search finds, then each status, so a tap narrows
+            // the list without losing the search.
+            'statusLinks' => [
+                ['label' => 'All', 'count' => array_sum($countsByStatus), 'active' => $status === null, 'url' => $this->listUrl($listState, ['status' => null])],
+                ...array_map(fn (LearningStatus $each): array => [
+                    'label' => $each->label(),
+                    'count' => $countsByStatus[$each->value],
+                    'active' => $status === $each,
+                    'url' => $this->listUrl($listState, ['status' => $each->value]),
+                ], LearningStatus::cases()),
+            ],
             // The search box replaces q, and keeps the rest of the list's state.
             'searchHiddenFields' => Arr::except($listState, 'q'),
             'sortLinks' => [
@@ -65,6 +83,8 @@ class WordController extends Controller
 
         return view('words.show', [
             'word' => $word,
+            'status' => $word->learningStatus(),
+            'reviews' => $word->flashcard->reviews()->orderBy('reviewed_at', 'desc')->orderBy('id', 'desc')->get(),
             'backUrl' => $this->backUrl($request),
         ]);
     }

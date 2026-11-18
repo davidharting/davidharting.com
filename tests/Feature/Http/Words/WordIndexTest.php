@@ -189,3 +189,59 @@ test('does not turn the page when moving within the list', function () {
 
     $this->get('/words?sort=a_to_z')->assertDontSee('data-transition-direction', false);
 });
+
+describe('learning status chips', function () {
+    test('show how many words have each status, and a total', function () {
+        /** @var TestCase $this */
+        Word::factory()->count(2)->create();
+        Word::factory()->troublesome()->create();
+        Word::factory()->count(3)->mastered()->create();
+
+        $this->get('/words')
+            ->assertSuccessful()
+            ->assertSeeTextInOrder(['All', '6', 'New', '2', 'Mastered', '3', 'Troublesome', '1', 'Learning', '0']);
+    });
+
+    test('narrow the list to one status when tapped', function () {
+        /** @var TestCase $this */
+        Word::factory()->create(['word' => 'apricity']);
+        Word::factory()->troublesome()->create(['word' => 'liminal']);
+
+        $this->get(route('words.index'))->assertSee(route('words.index', ['status' => 'troublesome']));
+
+        $this->get(route('words.index', ['status' => 'troublesome']))
+            ->assertSuccessful()
+            ->assertSeeText('liminal')
+            ->assertDontSeeText('apricity');
+    });
+
+    test('count only the words a search finds, and keep the search when tapped', function () {
+        /** @var TestCase $this */
+        Word::factory()->troublesome()->create(['word' => 'liminal']);
+        Word::factory()->troublesome()->create(['word' => 'zephyr']);
+
+        $this->get(route('words.index', ['q' => 'liminal']))
+            ->assertSeeTextInOrder(['All', '1', 'New', '0', 'Mastered', '0', 'Troublesome', '1'])
+            ->assertSee(route('words.index', ['q' => 'liminal', 'status' => 'troublesome']));
+    });
+
+    test('are kept by the search box and the sort links', function () {
+        /** @var TestCase $this */
+        $response = $this->get(route('words.index', ['status' => 'mastered']));
+
+        $response->assertSee('name="status" value="mastered"', false);
+        $response->assertSee(route('words.index', ['status' => 'mastered', 'sort' => 'a_to_z']));
+    });
+
+    test('say so when no word has the chosen status', function () {
+        /** @var TestCase $this */
+        Word::factory()->create();
+
+        $this->get('/words?status=mastered')->assertSeeText('No mastered words yet.');
+    });
+
+    test('refuse a status they do not know', function () {
+        /** @var TestCase $this */
+        $this->get('/words?status=forgotten')->assertSessionHasErrors('status');
+    });
+});

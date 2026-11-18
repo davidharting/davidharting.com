@@ -36,6 +36,21 @@ class Review extends Model
     }
 
     /**
+     * How David graded himself, as the practice buttons put it. Got it and
+     * Missed it are the only grades practice gives; the others are FSRS's
+     * names, in case a review arrives some other way.
+     */
+    public function outcome(): string
+    {
+        return match ($this->rating) {
+            Rating::Again => 'Missed it',
+            Rating::Hard => 'Hard',
+            Rating::Good => 'Got it',
+            Rating::Easy => 'Easy',
+        };
+    }
+
+    /**
      * @return BelongsTo<Flashcard, $this>
      */
     public function flashcard(): BelongsTo

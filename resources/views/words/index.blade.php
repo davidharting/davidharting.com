@@ -34,6 +34,19 @@
             <button type="submit" class="btn">Search</button>
         </form>
 
+        <nav aria-label="Filter by learning status" class="mb-4 flex flex-wrap gap-2">
+            @foreach ($statusLinks as $link)
+                <a
+                    href="{{ $link["url"] }}"
+                    class="btn btn-sm tap-target rounded-full {{ $link["active"] ? "btn-active btn-neutral" : "btn-outline" }}"
+                    @if ($link['active']) aria-current="true" @endif
+                >
+                    {{ $link["label"] }}
+                    <span class="badge badge-sm">{{ number_format($link["count"]) }}</span>
+                </a>
+            @endforeach
+        </nav>
+
         <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
             <div class="join" role="group" aria-label="Sort">
                 @foreach ($sortLinks as $link)
@@ -57,8 +70,12 @@
                 @if ($words->total() > 0)
                     No words on this page.
                     <a href="{{ $firstPageUrl }}" class="link">Back to the first page</a>
+                @elseif ($search !== '' && $status)
+                    No {{ Str::lower($status->label()) }} words match “{{ $search }}”.
                 @elseif ($search !== '')
                     No words match “{{ $search }}”.
+                @elseif ($status)
+                    No {{ Str::lower($status->label()) }} words yet.
                 @else
                     No words yet.
                 @endif
