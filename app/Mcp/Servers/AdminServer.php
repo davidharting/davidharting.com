@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Resources\FlashcardApp;
 use App\Mcp\Tools\Admin\AddWord;
 use App\Mcp\Tools\Admin\CreateMedia;
 use App\Mcp\Tools\Admin\CreateMediaEvent;
@@ -16,6 +17,7 @@ use App\Mcp\Tools\Admin\NextFlashcard;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
 use App\Mcp\Tools\Admin\RevealFlashcard;
 use App\Mcp\Tools\Admin\SearchNotes as AdminSearchNotes;
+use App\Mcp\Tools\Admin\ShowFlashcard;
 use App\Mcp\Tools\Admin\UpdateCreator;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Name;
@@ -32,14 +34,17 @@ use Laravel\Mcp\Server\Attributes\Version;
 class AdminServer extends Server
 {
     /**
-     * Only tools: the package default also advertises resources and prompts,
-     * which this server does not have, so clients would ask for lists that
-     * are always empty.
+     * Tools, and resources for the flashcard app's HTML. The package default
+     * also advertises prompts, which this server does not have, so clients
+     * would ask for a list that is always empty.
      *
      * @var array<string, array<string, bool>>
      */
     protected array $capabilities = [
         self::CAPABILITY_TOOLS => [
+            'listChanged' => false,
+        ],
+        self::CAPABILITY_RESOURCES => [
             'listChanged' => false,
         ],
     ];
@@ -68,13 +73,21 @@ class AdminServer extends Server
         remember, often ones he came across while reading, each with a short
         definition. Use list-words to browse them, and add-word and
         edit-word to record them. To quiz David on them with spaced
-        repetition, start with next-flashcard. Each tool's description gives
+        repetition, start with next-flashcard, or show-flashcard for a card
+        he flips and grades himself. Each tool's description gives
         the rules for using it.
 
         Drafts, remarks on media items and comments on their events are
         private writing, not on the public website. Never quote or attribute
         them as something David has said in public.
         MARKDOWN;
+
+    /**
+     * The package lists 15 per page by default, and this server now has
+     * more tools than that. One page keeps every tool visible to a client
+     * that doesn't follow nextCursor.
+     */
+    public int $defaultPaginationLength = 50;
 
     protected array $tools = [
         AdminListNotes::class,
@@ -92,10 +105,11 @@ class AdminServer extends Server
         NextFlashcard::class,
         RevealFlashcard::class,
         GradeFlashcard::class,
+        ShowFlashcard::class,
     ];
 
     protected array $resources = [
-        //
+        FlashcardApp::class,
     ];
 
     protected array $prompts = [

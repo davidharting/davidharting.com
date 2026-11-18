@@ -87,6 +87,7 @@ test('an admin can list the tools', function () {
         'next-flashcard',
         'reveal-flashcard',
         'grade-flashcard',
+        'show-flashcard',
     ]);
 });
 
