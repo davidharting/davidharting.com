@@ -38,12 +38,11 @@ class SendPracticeNudge extends Command
         $davidUserId = config('nutgram.owner_user_id');
 
         if (blank($davidUserId)) {
-            $this->components->error('TELEGRAM_DAVID_ID is not set, so there is no one to nudge.');
+            $this->components->error('nutgram.owner_user_id (TELEGRAM_DAVID_ID) is not set, so there is no one to nudge.');
 
             return self::FAILURE;
         }
 
-        // The same count as the Practise button on Words.
         $dueCount = Flashcard::query()->dueNow()->count();
 
         if ($dueCount === 0) {
@@ -52,13 +51,15 @@ class SendPracticeNudge extends Command
             return self::SUCCESS;
         }
 
+        $dueWords = str('word')->plural($dueCount, prependCount: true);
+
         $bot->sendMessage(
-            text: $dueCount.' '.str('word')->plural($dueCount).' due'."\n".route('words.practice'),
+            text: "{$dueWords} due\n".route('words.practice'),
             chat_id: $davidUserId,
             link_preview_options: LinkPreviewOptions::make(is_disabled: true),
         );
 
-        $this->components->info("Nudged David about {$dueCount} ".str('word')->plural($dueCount).'.');
+        $this->components->info("Nudged David about {$dueWords}.");
 
         return self::SUCCESS;
     }
