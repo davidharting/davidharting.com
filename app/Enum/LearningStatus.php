@@ -55,21 +55,19 @@ enum LearningStatus: string
     /**
      * The same rule as of(), as a SQL expression over a row of the
      * flashcards table, evaluating to a status's value.
-     *
-     * @param  string  $table  The name or alias the flashcards table goes by in the query.
      */
-    public static function sql(string $table = 'flashcards'): string
+    public static function sql(): string
     {
         return sprintf(
             "case when %1\$s.last_review is null then '%2\$s'"
             ." when %1\$s.stability >= %3\$s then '%4\$s'"
             ." when %1\$s.difficulty >= %5\$s then '%6\$s'"
             ." else '%7\$s' end",
-            $table,
+            'flashcards',
             self::New->value,
-            self::MASTERED_STABILITY_DAYS,
+            var_export(self::MASTERED_STABILITY_DAYS, true),
             self::Mastered->value,
-            self::TROUBLESOME_DIFFICULTY,
+            var_export(self::TROUBLESOME_DIFFICULTY, true),
             self::Troublesome->value,
             self::Learning->value,
         );

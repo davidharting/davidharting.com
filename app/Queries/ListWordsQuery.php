@@ -5,7 +5,6 @@ namespace App\Queries;
 use App\Enum\LearningStatus;
 use App\Enum\WordSort;
 use App\Fsrs\Rating;
-use App\Models\Review;
 use App\Models\Word;
 use App\Support\LikePattern;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -41,10 +40,10 @@ class ListWordsQuery
         return $this->searched()
             ->when($this->status, fn (Builder $query, LearningStatus $status) => $query->whereHas(
                 'flashcard',
-                fn (Builder $flashcard) => $flashcard->whereRaw(LearningStatus::sql().' = ?', [$status->value]),
+                fn (Builder $flashcard) => $flashcard->withLearningStatus($status),
             ))
             ->select($this->columns())
-            ->addSelect(['times_missed' => $this->timesMissed()])
+            ->withCount(['reviews as times_missed' => fn (Builder $reviews) => $reviews->where('rating', Rating::Again)])
             ->with('flashcard')
             ->tap(fn (Builder $query) => $this->applySort($query))
             ->paginate(perPage: $perPage, page: $page);
@@ -52,7 +51,8 @@ class ListWordsQuery
 
     /**
      * How many words the search finds with each learning status, whatever
-     * status this query keeps, so each one can be offered as a filter.
+     * status this query keeps, so each one can be offered as a filter. An
+     * inner join is safe because every word has a flashcard (see Word::booted).
      *
      * @return array<value-of<LearningStatus>, int> Every status, in the enum's order.
      */
@@ -65,7 +65,7 @@ class ListWordsQuery
             })
             ->toBase()
             ->selectRaw(LearningStatus::sql().' as status, count(*) as total')
-            ->groupBy('status')
+            ->groupByRaw(LearningStatus::sql())
             ->pluck('total', 'status');
 
         return collect(LearningStatus::cases())
@@ -107,21 +107,6 @@ class ListWordsQuery
                         ->orWhereLike('words.full_definition', $pattern);
                 });
             });
-    }
-
-    /**
-     * How many times each word's flashcard was graded "Missed it".
-     *
-     * @return Builder<Review>
-     */
-    private function timesMissed(): Builder
-    {
-        return Review::query()
-            ->selectRaw('count(*)')
-            ->join('flashcards', 'flashcards.id', '=', 'reviews.flashcard_id')
-            ->whereColumn('flashcards.quizzable_id', 'words.id')
-            ->where('flashcards.quizzable_type', (new Word)->getMorphClass())
-            ->where('reviews.rating', Rating::Again);
     }
 
     /**
