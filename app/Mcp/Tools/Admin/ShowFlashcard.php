@@ -17,6 +17,9 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
  * Put an interactive flashcard in the chat, registered only on AdminServer.
  * The card itself fetches the word, flips to the definition and records
  * David's grade, so the model never sees the answer and never grades.
+ *
+ * Read-only and idempotent as a tool: it only counts what is due. The
+ * grades are written by grade-flashcard, which the card calls.
  */
 #[IsReadOnly]
 #[IsIdempotent]

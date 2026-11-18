@@ -85,7 +85,8 @@ class AdminServer extends Server
     /**
      * The package lists 15 per page by default, and this server now has
      * more tools than that. One page keeps every tool visible to a client
-     * that doesn't follow nextCursor.
+     * that doesn't follow nextCursor. 50 is also the package's maximum
+     * ($maxPaginationLength), so past 50 tools paging returns.
      */
     public int $defaultPaginationLength = 50;
 

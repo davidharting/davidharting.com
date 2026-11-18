@@ -1,5 +1,6 @@
 <?php
 
+use App\Fsrs\Rating;
 use App\Mcp\Resources\FlashcardApp;
 use App\Mcp\Servers\AdminServer;
 use App\Mcp\Tools\Admin\ShowFlashcard;
@@ -62,5 +63,17 @@ describe('handle()', function () {
         $response->assertSee('Showing David a flashcard to flip and grade himself. 2 words are due now.');
         $response->assertDontSee('ephemeral');
         $response->assertDontSee('lasting a very short time');
+    });
+
+    test('counts only words that are due, in the singular for one', function () {
+        /** @var TestCase $this */
+        Word::factory()->create(['word' => 'ephemeral']);
+        // A "Got it" on a new word brings it back in ten minutes, so it is not due.
+        Word::factory()->create(['word' => 'laconic'])->flashcard->grade(Rating::Good);
+
+        $response = AdminServer::actingAs(User::factory()->admin()->create())->tool(ShowFlashcard::class);
+
+        $response->assertOk();
+        $response->assertSee('Showing David a flashcard to flip and grade himself. 1 word is due now.');
     });
 });

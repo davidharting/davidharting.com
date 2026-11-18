@@ -7,19 +7,29 @@ use App\Models\Word;
 use Tests\TestCase;
 
 describe('shouldRegister()', function () {
-    test('an anonymous caller cannot read the app', function () {
+    test('is not listed for an anonymous caller', function () {
         /** @var TestCase $this */
         AdminServer::resources()->assertNotRegistered(FlashcardApp::class);
     });
 
-    test('a non-admin cannot read the app', function () {
+    test('is not listed for a non-admin', function () {
         /** @var TestCase $this */
         $user = User::factory()->create(['is_admin' => false]);
 
         AdminServer::actingAs($user)->resources()->assertNotRegistered(FlashcardApp::class);
     });
 
-    test('an admin can list the app', function () {
+    test('cannot be read by a non-admin', function () {
+        /** @var TestCase $this */
+        $user = User::factory()->create(['is_admin' => false]);
+
+        $response = AdminServer::actingAs($user)->resource(FlashcardApp::class);
+
+        $response->assertHasErrors();
+        $response->assertDontSee('createMcpApp');
+    });
+
+    test('is listed for an admin', function () {
         /** @var TestCase $this */
         AdminServer::actingAs(User::factory()->admin()->create())->resources()->assertRegistered(FlashcardApp::class);
     });
