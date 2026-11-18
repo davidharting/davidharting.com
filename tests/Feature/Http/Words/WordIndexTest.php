@@ -189,7 +189,7 @@ test('says practice is caught up when nothing is due', function () {
     /** @var TestCase $this */
     Word::factory()->create()->flashcard->grade(Rating::Good);
 
-    $this->get('/words')->assertSeeText('caught up');
+    $this->get('/words')->assertSeeText('caught up')->assertDontSeeText('due');
 });
 
 test('turns the page back when coming back from a word', function () {

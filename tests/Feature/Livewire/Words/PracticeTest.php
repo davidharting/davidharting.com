@@ -14,8 +14,7 @@ beforeEach(function () {
 });
 
 /**
- * A word whose flashcard was just graded Got it, so it isn't due again for
- * ten minutes.
+ * A word whose flashcard was just graded Got it, so it isn't due for a while.
  */
 function practiceTestPractisedWord(string $word): Word
 {
@@ -84,19 +83,19 @@ describe('dueRound()', function () {
 
     test('draws the most overdue word first', function () {
         /** @var TestCase $this */
-        $this->travel(-2)->days();
-        Word::factory()->create(['word' => 'older']);
-        $this->travelBack();
-        $this->freezeTime();
+        // Made second, so ordering by id alone would put it last.
         Word::factory()->create(['word' => 'newer']);
+        $this->travel(-2)->days(fn () => Word::factory()->create(['word' => 'older']));
 
         $round = Livewire::actingAs($this->admin)->test(Practice::class)->instance()->dueRound();
 
         expect(practiceTestWords($round['cards']))->toBe(['older', 'newer']);
     });
 
-    test('draws a word added a moment ago', function () {
+    test('draws a word added within the same second', function () {
         /** @var TestCase $this */
+        // Let the clock run, so the word falls due a fraction of a second
+        // after the whole second the query would otherwise compare against.
         $this->travelBack();
         Word::factory()->create(['word' => 'brand-new']);
 
@@ -117,12 +116,12 @@ describe('dueRound()', function () {
 
     test('says when the next word is due once nothing is', function () {
         /** @var TestCase $this */
-        practiceTestPractisedWord('quotidian');
+        $word = practiceTestPractisedWord('quotidian');
 
         $round = Livewire::actingAs($this->admin)->test(Practice::class)->instance()->dueRound();
 
         expect($round['cards'])->toBe([])
-            ->and($round['nextDueAt'])->toBe(now()->addMinutes(10)->utc()->format(DATE_ATOM));
+            ->and($round['nextDueAt'])->toBe($word->flashcard->fresh()->schedule->due->format(DATE_ATOM));
     });
 });
 
@@ -135,6 +134,7 @@ describe('grade()', function () {
         Livewire::actingAs($this->admin)
             ->test(Practice::class)
             ->call('grade', $gotIt->id, true)
+            ->assertReturned(true)
             ->call('grade', $missedIt->id, false);
 
         expect($gotIt->reviews()->sole()->rating)->toBe(Rating::Good)
@@ -147,9 +147,9 @@ describe('practiseAhead()', function () {
         /** @var TestCase $this */
         practiceTestPractisedWord('quotidian');
 
-        Livewire::actingAs($this->admin)
-            ->test(Practice::class)
-            ->call('practiseAhead')
-            ->assertReturned(fn (array $cards): bool => practiceTestWords($cards) === ['quotidian'] && $cards[0]['due'] === false);
+        $cards = Livewire::actingAs($this->admin)->test(Practice::class)->instance()->practiseAhead();
+
+        expect(practiceTestWords($cards))->toBe(['quotidian'])
+            ->and($cards[0]['due'])->toBeFalse();
     });
 });
