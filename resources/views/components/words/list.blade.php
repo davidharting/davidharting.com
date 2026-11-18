@@ -1,4 +1,8 @@
-{{-- In an A to Z list, a letter heading starts each run of words filed under the same letter, like a dictionary's. --}}
+{{--
+    In an A to Z list, a letter heading starts each run of words filed under the same letter, like a dictionary's.
+--}}
+@props(['words', 'showsLetterHeadings' => false])
+
 @php
     $currentLetter = null;
 @endphp
@@ -16,10 +20,10 @@
         @endif
 
         <li class="list-row p-0">
-            <div class="px-1 py-3">
-                <span class="block text-xl font-semibold">{{ $word->word }}</span>
+            <a href="{{ route("words.show", $word) }}" class="block px-1 py-3">
+                <span class="block text-xl font-semibold wrap-anywhere">{{ $word->word }}</span>
                 <span class="text-base-content/70 line-clamp-2 block">{{ $word->short_definition }}</span>
-            </div>
+            </a>
         </li>
     @endforeach
 </ul>

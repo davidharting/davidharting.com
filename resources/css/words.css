@@ -1,0 +1,65 @@
+/*
+  Words pages: moving between the list and a word turns a book page. Both
+  pages opt into cross-document view transitions through the app layout,
+  which puts the direction on <html> as data-transition-direction:
+  "forward" on a word's page, "back" on the list when coming back from a
+  word. The new page's CSS runs the animation.
+
+  Forward, the list turns away, hinged on its left edge, uncovering the
+  word's page. Back, the list turns back over the word's page.
+*/
+
+html[data-transition-direction]::view-transition-group(root) {
+    animation-duration: 550ms;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+html[data-transition-direction="forward"]::view-transition-old(root) {
+    z-index: 1;
+    transform-origin: left center;
+    animation: 550ms cubic-bezier(0.45, 0, 0.2, 1) both page-turn-away;
+}
+html[data-transition-direction="forward"]::view-transition-new(root) {
+    animation: 550ms ease-out both page-uncover;
+}
+
+html[data-transition-direction="back"]::view-transition-new(root) {
+    z-index: 1;
+    transform-origin: left center;
+    animation: 550ms cubic-bezier(0.45, 0, 0.2, 1) both page-turn-back;
+}
+html[data-transition-direction="back"]::view-transition-old(root) {
+    animation: 550ms ease-in both page-cover;
+}
+
+@keyframes page-turn-away {
+    from {
+        transform: perspective(1800px) rotateY(0deg);
+        filter: brightness(1);
+    }
+    to {
+        transform: perspective(1800px) rotateY(-95deg);
+        filter: brightness(0.7);
+    }
+}
+@keyframes page-turn-back {
+    from {
+        transform: perspective(1800px) rotateY(-95deg);
+        filter: brightness(0.7);
+    }
+    to {
+        transform: perspective(1800px) rotateY(0deg);
+        filter: brightness(1);
+    }
+}
+/* The page underneath starts in the turning page's shadow. */
+@keyframes page-uncover {
+    from {
+        filter: brightness(0.8);
+    }
+}
+@keyframes page-cover {
+    to {
+        filter: brightness(0.8);
+    }
+}

@@ -26,17 +26,18 @@ test('says so when there are no words yet', function () {
     $this->get('/words')->assertSuccessful()->assertSeeText('No words yet');
 });
 
-test('lists the newest words first, each with its short definition', function () {
+test('lists the newest words first, each with its short definition and a link to it', function () {
     /** @var TestCase $this */
     $this->travelTo('2026-11-01');
-    Word::factory()->create(['word' => 'laconic', 'short_definition' => 'using few words']);
+    $older = Word::factory()->create(['word' => 'laconic', 'short_definition' => 'using few words']);
     $this->travelTo('2026-11-02');
     Word::factory()->create(['word' => 'ephemeral', 'short_definition' => 'lasting a very short time']);
 
     $this->get('/words')
         ->assertSuccessful()
         ->assertSeeText('2 words')
-        ->assertSeeTextInOrder(['ephemeral', 'lasting a very short time', 'laconic', 'using few words']);
+        ->assertSeeTextInOrder(['ephemeral', 'lasting a very short time', 'laconic', 'using few words'])
+        ->assertSee(route('words.show', $older));
 });
 
 test('lists words A to Z under dictionary letter headings, ignoring case', function () {
@@ -171,4 +172,20 @@ test('refuses a page number too large to count to', function () {
     Word::factory()->create(['word' => 'ephemeral']);
 
     $this->get('/words?page=99999999999999999999999')->assertSessionHasErrors('page');
+});
+
+test('turns the page back when coming back from a word', function () {
+    /** @var TestCase $this */
+    $word = Word::factory()->create(['word' => 'ephemeral']);
+
+    $this->get(route('words.show', $word));
+
+    $this->get('/words')->assertSee('data-transition-direction="back"', false);
+});
+
+test('does not turn the page when moving within the list', function () {
+    /** @var TestCase $this */
+    $this->get('/words');
+
+    $this->get('/words?sort=a_to_z')->assertDontSee('data-transition-direction', false);
 });

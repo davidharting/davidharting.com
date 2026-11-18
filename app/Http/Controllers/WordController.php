@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enum\WordSort;
+use App\Models\Word;
 use App\Queries\ListWordsQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Laravel\Head\Facades\Head;
 
 class WordController extends Controller
 {
@@ -53,7 +55,38 @@ class WordController extends Controller
             'firstPageUrl' => $this->listUrl($listState, []),
             // Headings like a dictionary's only make sense in an A to Z list.
             'showsLetterHeadings' => $sort === WordSort::AToZ,
+            'transitionDirection' => $this->cameFromAWord($request) ? 'back' : null,
         ]);
+    }
+
+    public function show(Request $request, Word $word): View
+    {
+        Head::title($word->word)->description($word->short_definition);
+
+        return view('words.show', [
+            'word' => $word,
+            'backUrl' => $this->backUrl($request),
+        ]);
+    }
+
+    /**
+     * Whether David is coming back to the list from a word's page, so the
+     * list can turn the page back instead of forward.
+     */
+    private function cameFromAWord(Request $request): bool
+    {
+        return $request->session()->previousRoute() === 'words.show';
+    }
+
+    /**
+     * The list page David came from, keeping his search, sort and page, or
+     * the plain list when he arrived some other way.
+     */
+    private function backUrl(Request $request): string
+    {
+        $session = $request->session();
+
+        return $session->previousRoute() === 'words.index' ? $session->previousUrl() : route('words.index');
     }
 
     /**

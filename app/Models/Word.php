@@ -52,6 +52,22 @@ class Word extends Model
     }
 
     /**
+     * Find a word by its spelling ignoring case, so /words/Ephemeral and
+     * /words/ephemeral both open the same page. Other fields bind as usual.
+     *
+     * @param  mixed  $value
+     * @param  string|null  $field
+     */
+    public function resolveRouteBinding($value, $field = null): ?Word
+    {
+        if ($field === 'word') {
+            return static::query()->named($value)->first();
+        }
+
+        return parent::resolveRouteBinding($value, $field);
+    }
+
+    /**
      * Find the word that recording $word would duplicate, so a caller can
      * refuse it before saving rather than hit the unique index. Two
      * spellings count as the same word when they differ only in case or
@@ -88,6 +104,22 @@ class Word extends Model
         $first = Str::upper(Str::substr(Str::ascii($this->word), 0, 1));
 
         return preg_match('/^[A-Z]$/', $first) === 1 ? $first : '#';
+    }
+
+    /**
+     * The full definition as HTML. Raw HTML in the markdown is escaped, so
+     * only markdown formatting comes through.
+     */
+    public function renderFullDefinition(): ?string
+    {
+        if (blank($this->full_definition)) {
+            return null;
+        }
+
+        return Str::markdown($this->full_definition, [
+            'html_input' => 'escape',
+            'allow_unsafe_links' => false,
+        ]);
     }
 
     /**

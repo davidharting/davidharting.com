@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./memories.css";
+@import "./words.css";
 
 @plugin '@tailwindcss/typography';
 @plugin "daisyui";
