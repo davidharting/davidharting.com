@@ -1,7 +1,17 @@
 <x-layout.app cross-document-transitions :transition-direction="$transitionDirection">
     <div class="mx-auto max-w-2xl">
         <header class="mb-6">
-            <x-type.page-title>Words</x-type.page-title>
+            <div class="flex items-center justify-between gap-4">
+                <x-type.page-title>Words</x-type.page-title>
+                <a href="{{ route("words.practice") }}" class="btn btn-primary btn-sm">
+                    Practise
+                    @if ($dueCount > 0)
+                        <span class="badge badge-sm">{{ number_format($dueCount) }} due</span>
+                    @else
+                        <span class="badge badge-sm badge-ghost">caught up</span>
+                    @endif
+                </a>
+            </div>
             <p class="text-base-content/70 mt-2 text-sm">
                 @if ($search !== '')
                     {{ trans_choice(':count match|:count matches', $words->total(), ['count' => number_format($words->total())]) }}

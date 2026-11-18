@@ -76,6 +76,19 @@ class Flashcard extends Model
     }
 
     /**
+     * Flashcards due by now. Compared to the microsecond, as due is stored:
+     * Laravel binds a date to the second, which would leave out a card made
+     * a moment ago.
+     *
+     * @param  Builder<Flashcard>  $query
+     */
+    #[Scope]
+    protected function dueNow(Builder $query): void
+    {
+        $query->where('due', '<=', CardSchedule::inUtc(now())->format('Y-m-d H:i:s.uP'));
+    }
+
+    /**
      * Record how well David recalled this flashcard and reschedule it. Locks
      * the row first, so two grades arriving at once are applied in turn
      * rather than one overwriting the other.

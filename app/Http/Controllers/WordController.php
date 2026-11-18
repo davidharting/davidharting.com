@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enum\WordSort;
+use App\Models\Flashcard;
 use App\Models\Word;
 use App\Queries\ListWordsQuery;
 use Illuminate\Http\Request;
@@ -43,6 +44,7 @@ class WordController extends Controller
 
         return view('words.index', [
             'words' => $words,
+            'dueCount' => Flashcard::query()->dueNow()->count(),
             'search' => $search,
             'sort' => $sort,
             // The search box replaces q, and keeps the rest of the list's state.

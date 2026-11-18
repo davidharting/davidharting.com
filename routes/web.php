@@ -13,6 +13,8 @@ use App\Http\Controllers\NotesIndexController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WordController;
+// Above any /words/{word} route, which would otherwise take "practice" for a word.
+use App\Models\Flashcard;
 use App\Models\Month;
 use App\Models\Word;
 use Illuminate\Support\Facades\Route;
@@ -85,6 +87,8 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
 
 Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
     Route::get('/words', [WordController::class, 'index'])->name('words.index')->withHead(title: 'Words')->can('viewAny', Word::class);
+    // Above any /words/{word} route, which would otherwise take "practice" for a word.
+    Route::view('/words/practice', 'words.practice')->name('words.practice')->withHead(title: 'Practice')->can('viewAny', Flashcard::class);
     Route::get('/words/{word:word}', [WordController::class, 'show'])->name('words.show')->where('word', '.+')->can('view', 'word');
 });
 
