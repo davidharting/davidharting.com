@@ -9,9 +9,12 @@ use App\Mcp\Tools\Admin\EditMedia;
 use App\Mcp\Tools\Admin\EditMediaEvent;
 use App\Mcp\Tools\Admin\EditWord;
 use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
+use App\Mcp\Tools\Admin\GradeFlashcard;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
 use App\Mcp\Tools\Admin\ListWords;
+use App\Mcp\Tools\Admin\NextFlashcard;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
+use App\Mcp\Tools\Admin\RevealFlashcard;
 use App\Mcp\Tools\Admin\SearchNotes as AdminSearchNotes;
 use App\Mcp\Tools\Admin\UpdateCreator;
 use Laravel\Mcp\Server;
@@ -64,7 +67,9 @@ class AdminServer extends Server
         **Words** are David's private vocabulary list: words he wants to
         remember, often ones he came across while reading, each with a short
         definition. Use list-words to browse them, and add-word and
-        edit-word to record them. Each tool's description gives the rules for using it.
+        edit-word to record them. To quiz David on them with spaced
+        repetition, start with next-flashcard. Each tool's description gives
+        the rules for using it.
 
         Drafts, remarks on media items and comments on their events are
         private writing, not on the public website. Never quote or attribute
@@ -84,6 +89,9 @@ class AdminServer extends Server
         AddWord::class,
         EditWord::class,
         ListWords::class,
+        NextFlashcard::class,
+        RevealFlashcard::class,
+        GradeFlashcard::class,
     ];
 
     protected array $resources = [
