@@ -1,3 +1,5 @@
+@props(['word'])
+
 @php
     $fullDefinition = $word->renderFullDefinition();
 @endphp

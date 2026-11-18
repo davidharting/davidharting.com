@@ -64,7 +64,7 @@
                 @endif
             </p>
         @else
-            @include('words.partials.list', ['words' => $words, 'showsLetterHeadings' => $showsLetterHeadings])
+            <x-words.list :words="$words" :shows-letter-headings="$showsLetterHeadings" />
 
             @if ($words->hasPages())
                 <nav aria-label="Pages" class="my-8 flex items-center justify-between gap-2">

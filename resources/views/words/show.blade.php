@@ -3,7 +3,7 @@
         <a href="{{ $backUrl }}" class="link link-hover text-base-content/70 tap-target text-sm">← Words</a>
 
         <div class="mt-6">
-            @include('words.partials.entry', ['word' => $word])
+            <x-words.entry :word="$word" />
         </div>
     </article>
 </x-layout.app>

@@ -12,3 +12,7 @@ When editing Blade templates, use [Daisy UI v5](https://daisyui.com/) components
 - Limit custom Tailwind classes to controlling spacing (margin, padding, gap)
 - Prefer semantic Daisy component classes over raw Tailwind utilities
 - Check Daisy UI docs for available components before writing custom styles
+
+## Components, not partials
+
+Use Blade components (`resources/views/components/`, rendered as `<x-...>`) for reusable view pieces. Don't use `@include` partials: components declare their inputs with `@props`, which keeps what a piece of view needs explicit.

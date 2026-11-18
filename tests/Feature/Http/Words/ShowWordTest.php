@@ -62,16 +62,20 @@ test('finds words with spaces and slashes in them', function (string $spelling) 
 test('links back to the list David came from, keeping its search and page', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'ephemeral']);
-    $list = route('words.index', ['q' => 'eph', 'page' => 2]);
+    $list = route('words.index', ['page' => 2, 'q' => 'eph']);
 
-    $this->from($list)->get('/words/ephemeral')->assertSee('href="'.e($list).'"', false);
+    $this->get($list);
+
+    $this->get('/words/ephemeral')->assertSee('href="'.e($list).'"', false);
 });
 
 test('links back to the plain list when David arrived from elsewhere', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'ephemeral']);
 
-    $this->from(route('home'))->get('/words/ephemeral')->assertSee('href="'.route('words.index').'"', false);
+    $this->get(route('home'));
+
+    $this->get('/words/ephemeral')->assertSee('href="'.route('words.index').'"', false);
 });
 
 test('shows the word under the site nav', function () {

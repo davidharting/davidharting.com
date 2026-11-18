@@ -178,6 +178,8 @@ test('turns the page back when coming back from a word', function () {
     /** @var TestCase $this */
     $word = Word::factory()->create(['word' => 'ephemeral']);
 
-    $this->from(route('words.show', $word))->get('/words')->assertSee('data-transition-direction="back"', false);
-    $this->from(route('words.index', ['sort' => 'a_to_z']))->get('/words')->assertDontSee('data-transition-direction', false);
+    $this->get(route('words.show', $word));
+    $this->get('/words')->assertSee('data-transition-direction="back"', false);
+
+    $this->get('/words?sort=a_to_z')->assertDontSee('data-transition-direction', false);
 });

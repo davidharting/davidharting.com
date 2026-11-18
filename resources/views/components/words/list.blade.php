@@ -1,6 +1,8 @@
 {{--
     In an A to Z list, a letter heading starts each run of words filed under the same letter, like a dictionary's.
 --}}
+@props(['words', 'showsLetterHeadings' => false])
+
 @php
     $currentLetter = null;
 @endphp
