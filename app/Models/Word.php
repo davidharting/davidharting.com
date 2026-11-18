@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Str;
 
@@ -50,6 +51,17 @@ class Word extends Model
     public function flashcard(): MorphOne
     {
         return $this->morphOne(Flashcard::class, 'quizzable');
+    }
+
+    /**
+     * Every review of this word's flashcard.
+     *
+     * @return HasManyThrough<Review, Flashcard, $this>
+     */
+    public function reviews(): HasManyThrough
+    {
+        return $this->hasManyThrough(Review::class, Flashcard::class, 'quizzable_id', 'flashcard_id')
+            ->where('flashcards.quizzable_type', $this->getMorphClass());
     }
 
     /**

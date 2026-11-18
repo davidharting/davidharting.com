@@ -95,7 +95,7 @@ class ListWords extends Tool
                 'short_definition' => $word->short_definition,
                 'added_at' => $word->created_at->toIso8601String(),
                 'status' => $word->learningStatus()->value,
-                'times_missed' => (int) $word->times_missed,
+                'times_missed' => $word->times_missed,
                 ...($options['includeFullDefinition'] ? ['full_definition' => $word->full_definition] : []),
             ])->all(),
             'total' => $paginator->total(),

@@ -72,6 +72,17 @@ class Flashcard extends Model
     }
 
     /**
+     * Flashcards with this learning status.
+     *
+     * @param  Builder<Flashcard>  $query
+     */
+    #[Scope]
+    protected function withLearningStatus(Builder $query, LearningStatus $status): void
+    {
+        $query->whereRaw(LearningStatus::sql().' = ?', [$status->value]);
+    }
+
+    /**
      * Flashcards in the order to practise them: due soonest first, so the most
      * overdue lead, whether or not they are due yet. Callers take as many as
      * they want, e.g. nextUp()->limit(5).
