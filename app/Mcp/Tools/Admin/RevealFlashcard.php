@@ -5,7 +5,6 @@ namespace App\Mcp\Tools\Admin;
 use App\Models\Flashcard;
 use App\Models\Word;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
@@ -47,14 +46,24 @@ class RevealFlashcard extends Tool
      */
     public function handle(Request $request): Response|ResponseFactory
     {
+        // Authorized before the id is looked up, so a refused caller cannot
+        // tell which flashcards exist.
+        if ($request->user()?->cannot('viewAny', Flashcard::class) ?? true) {
+            return Response::error('You are not authorized to see this flashcard.');
+        }
+
         $validated = $request->validate([
-            'flashcard_id' => ['required', 'integer', Rule::exists(Flashcard::class, 'id')],
+            'flashcard_id' => ['required', 'integer'],
             'include_full_definition' => ['sometimes', 'boolean'],
         ]);
 
-        $flashcard = Flashcard::query()->with('quizzable')->findOrFail($validated['flashcard_id']);
+        $flashcard = Flashcard::query()->forWords()->with('quizzable')->find($validated['flashcard_id']);
 
-        if ($request->user()?->cannot('view', $flashcard) ?? true) {
+        if ($flashcard === null) {
+            return Response::error(sprintf('There is no word flashcard with flashcard_id %d.', $validated['flashcard_id']));
+        }
+
+        if ($request->user()->cannot('view', $flashcard)) {
             return Response::error('You are not authorized to see this flashcard.');
         }
 

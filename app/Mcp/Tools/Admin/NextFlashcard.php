@@ -5,6 +5,7 @@ namespace App\Mcp\Tools\Admin;
 use App\Models\Flashcard;
 use App\Models\Word;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Database\Eloquent\Builder;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
@@ -61,22 +62,26 @@ class NextFlashcard extends Tool
             'include_not_due' => ['sometimes', 'boolean'],
         ]);
 
-        $wordFlashcards = fn () => Flashcard::query()->where('quizzable_type', (new Word)->getMorphClass());
+        $includeNotDue = (bool) ($validated['include_not_due'] ?? false);
 
-        $flashcard = $wordFlashcards()
-            ->unless($validated['include_not_due'] ?? false, fn ($query) => $query->dueNow())
+        $flashcard = Flashcard::query()
+            ->forWords()
+            ->unless($includeNotDue, fn (Builder $query) => $query->dueNow())
             ->nextUp()
             ->with('quizzable')
             ->first();
 
+        /** @var Word|null $word */
+        $word = $flashcard?->quizzable;
+
         return Response::structured([
             'flashcard' => $flashcard === null ? null : [
                 'flashcard_id' => $flashcard->id,
-                'word' => $flashcard->quizzable->word,
+                'word' => $word->word,
                 'is_due' => $flashcard->schedule->due <= now(),
             ],
-            'due_count' => $wordFlashcards()->dueNow()->count(),
-            'next_due_at' => $wordFlashcards()->nextUp()->first()?->schedule->due->format(DATE_ATOM),
+            'due_count' => Flashcard::query()->forWords()->dueNow()->count(),
+            'next_due_at' => Flashcard::query()->forWords()->nextUp()->first()?->schedule->due->format(DATE_ATOM),
         ]);
     }
 
@@ -106,7 +111,7 @@ class NextFlashcard extends Tool
                 'word' => $schema->string()->description('The word to show David.'),
                 'is_due' => $schema->boolean()->description('Whether the flashcard is due now. False only when include_not_due is true.'),
             ])->nullable()->description('The next flashcard to practise, or null when nothing is due.'),
-            'due_count' => $schema->integer()->description('How many flashcards are due now, including this one.'),
+            'due_count' => $schema->integer()->description('How many word flashcards are due now.'),
             'next_due_at' => $schema->string()->nullable()->description('When the soonest flashcard is or was due, in ISO 8601 format; null when there are no words.'),
         ];
     }

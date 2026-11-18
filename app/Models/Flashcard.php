@@ -76,6 +76,17 @@ class Flashcard extends Model
     }
 
     /**
+     * Flashcards that quiz words, the only kind there is today.
+     *
+     * @param  Builder<Flashcard>  $query
+     */
+    #[Scope]
+    protected function forWords(Builder $query): void
+    {
+        $query->where('quizzable_type', (new Word)->getMorphClass());
+    }
+
+    /**
      * Flashcards due by now. Compared to the microsecond, as due is stored:
      * Laravel binds a date to the second, which would leave out a card made
      * a moment ago.

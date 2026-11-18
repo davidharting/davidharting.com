@@ -3,6 +3,7 @@
 use App\Fsrs\Rating;
 use App\Mcp\Servers\AdminServer;
 use App\Mcp\Tools\Admin\NextFlashcard;
+use App\Models\Flashcard;
 use App\Models\User;
 use App\Models\Word;
 use Laravel\Mcp\Request;
@@ -54,6 +55,7 @@ describe('handle()', function () {
 
     test('gives the most overdue word, without its definition', function () {
         /** @var TestCase $this */
+        // A new word's flashcard is due the moment the word is recorded.
         $this->freezeTime();
         $overdue = Word::factory()->create(['word' => 'ephemeral', 'short_definition' => 'lasting a very short time']);
         $this->travel(1)->hours();
@@ -106,6 +108,50 @@ describe('handle()', function () {
             ],
             'due_count' => 0,
             'next_due_at' => $word->flashcard->schedule->due->format(DATE_ATOM),
+        ]);
+    });
+
+    test('still gives a due flashcard first when asked to practise ahead', function () {
+        /** @var TestCase $this */
+        wordNotDueYet('sesquipedalian');
+        $due = Word::factory()->create(['word' => 'ephemeral']);
+
+        $response = AdminServer::actingAs(User::factory()->admin()->create())
+            ->tool(NextFlashcard::class, ['include_not_due' => true]);
+
+        $response->assertOk();
+        $response->assertStructuredContent(fn ($json) => $json
+            ->where('flashcard.flashcard_id', $due->flashcard->id)
+            ->where('flashcard.is_due', true)
+            ->etc());
+    });
+
+    test('counts a word recorded a moment ago as due, without freezing time', function () {
+        /** @var TestCase $this */
+        // due is stored to the microsecond; comparing to the second would
+        // leave out a word recorded within the current second.
+        $word = Word::factory()->create(['word' => 'ephemeral']);
+
+        $response = AdminServer::actingAs(User::factory()->admin()->create())->tool(NextFlashcard::class);
+
+        $response->assertOk();
+        $response->assertStructuredContent(fn ($json) => $json
+            ->where('flashcard.flashcard_id', $word->flashcard->id)
+            ->where('due_count', 1)
+            ->etc());
+    });
+
+    test('leaves out flashcards that do not quiz a word', function () {
+        /** @var TestCase $this */
+        Flashcard::newUnreviewed()->forceFill(['quizzable_type' => 'something_else', 'quizzable_id' => 1])->save();
+
+        $response = AdminServer::actingAs(User::factory()->admin()->create())->tool(NextFlashcard::class);
+
+        $response->assertOk();
+        $response->assertStructuredContent([
+            'flashcard' => null,
+            'due_count' => 0,
+            'next_due_at' => null,
         ]);
     });
 

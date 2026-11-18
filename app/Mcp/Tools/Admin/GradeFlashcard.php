@@ -12,12 +12,14 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 
 /**
  * Record how David did on a flashcard during practice over MCP, registered
  * only on AdminServer. Every call logs a review and reschedules the card,
  * so it is neither idempotent nor undoable.
  */
+#[IsDestructive]
 #[Description(<<<'TEXT'
     Record whether David got a flashcard right, after reveal-flashcard has
     shown him the answer. This logs a review and reschedules the flashcard
@@ -47,14 +49,24 @@ class GradeFlashcard extends Tool
      */
     public function handle(Request $request): Response|ResponseFactory
     {
+        // Authorized before the id is looked up, so a refused caller cannot
+        // tell which flashcards exist.
+        if ($request->user()?->cannot('viewAny', Flashcard::class) ?? true) {
+            return Response::error('You are not authorized to grade this flashcard.');
+        }
+
         $validated = $request->validate([
-            'flashcard_id' => ['required', 'integer', Rule::exists(Flashcard::class, 'id')],
+            'flashcard_id' => ['required', 'integer'],
             'result' => ['required', 'string', Rule::enum(Recall::class)],
         ]);
 
-        $flashcard = Flashcard::query()->with('quizzable')->findOrFail($validated['flashcard_id']);
+        $flashcard = Flashcard::query()->forWords()->with('quizzable')->find($validated['flashcard_id']);
 
-        if ($request->user()?->cannot('practice', $flashcard) ?? true) {
+        if ($flashcard === null) {
+            return Response::error(sprintf('There is no word flashcard with flashcard_id %d. Nothing was recorded.', $validated['flashcard_id']));
+        }
+
+        if ($request->user()->cannot('practice', $flashcard)) {
             return Response::error('You are not authorized to grade this flashcard.');
         }
 

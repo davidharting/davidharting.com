@@ -6,6 +6,7 @@ use App\Models\Flashcard;
 use App\Models\User;
 use App\Models\Word;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Mcp\Request;
 use Tests\TestCase;
 
 describe('shouldRegister()', function () {
@@ -30,6 +31,19 @@ describe('shouldRegister()', function () {
 });
 
 describe('handle()', function () {
+    test('refuses a non-admin, even if it is reached', function () {
+        /** @var TestCase $this */
+        // Called directly, since going through the server would only prove
+        // shouldRegister works. handle() must refuse on its own too.
+        $word = Word::factory()->create(['short_definition' => 'lasting a very short time']);
+        $this->actingAs(User::factory()->create(['is_admin' => false]));
+
+        $response = (new RevealFlashcard)->handle(new Request(['flashcard_id' => $word->flashcard->id]));
+
+        expect($response->isError())->toBeTrue()
+            ->and((string) $response->content())->toBe('You are not authorized to see this flashcard.');
+    });
+
     test('refuses a caller who may not view this flashcard', function () {
         /** @var TestCase $this */
         // Every ability is admin-only today, so the refusal is forced here to
@@ -50,7 +64,7 @@ describe('handle()', function () {
         $response->assertDontSee('lasting a very short time');
     });
 
-    test('gives the short definition', function () {
+    test('gives only the short definition by default', function () {
         /** @var TestCase $this */
         $word = Word::factory()->create([
             'word' => 'ephemeral',
@@ -94,6 +108,6 @@ describe('handle()', function () {
         $response = AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(RevealFlashcard::class, ['flashcard_id' => 999]);
 
-        $response->assertHasErrors(['The selected flashcard id is invalid.']);
+        $response->assertHasErrors(['There is no word flashcard with flashcard_id 999.']);
     });
 });
