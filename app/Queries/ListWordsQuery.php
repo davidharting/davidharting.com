@@ -64,9 +64,9 @@ class ListWordsQuery
                     ->where('flashcards.quizzable_type', (new Word)->getMorphClass());
             })
             ->toBase()
-            ->selectRaw(LearningStatus::sql().' as status, count(*) as total')
-            ->groupByRaw(LearningStatus::sql())
-            ->pluck('total', 'status');
+            ->selectRaw('flashcards.learning_status, count(*) as total')
+            ->groupBy('flashcards.learning_status')
+            ->pluck('total', 'learning_status');
 
         return collect(LearningStatus::cases())
             ->mapWithKeys(fn (LearningStatus $status): array => [$status->value => (int) ($counts[$status->value] ?? 0)])

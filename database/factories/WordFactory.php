@@ -67,6 +67,8 @@ class WordFactory extends Factory
                 lastReview: now()->subDay(),
             );
             $word->flashcard->save();
+            // Read back the learning status Postgres generated from the schedule.
+            $word->flashcard->refresh();
         });
     }
 }
