@@ -27,27 +27,39 @@ class WordFactory extends Factory
     }
 
     /**
-     * Practised until FSRS expects David to remember it for weeks.
+     * Practised until FSRS expects David to remember it for three weeks or
+     * more: stability of 21 days to a year, at any difficulty.
      */
     public function mastered(): static
     {
-        return $this->practised(stability: 30, difficulty: 4);
+        return $this->practised(
+            stability: $this->faker->randomFloat(2, 21, 365),
+            difficulty: $this->faker->randomFloat(2, 1, 10),
+        );
     }
 
     /**
-     * Practised, but hard for David, and not yet mastered.
+     * Practised, not yet mastered, and hard for David: stability under three
+     * weeks and difficulty 7 or more.
      */
     public function troublesome(): static
     {
-        return $this->practised(stability: 3, difficulty: 8);
+        return $this->practised(
+            stability: $this->faker->randomFloat(2, 0.1, 20.9),
+            difficulty: $this->faker->randomFloat(2, 7, 10),
+        );
     }
 
     /**
-     * Practised, neither mastered nor troublesome.
+     * Practised, neither mastered nor troublesome: stability under three
+     * weeks and difficulty under 7.
      */
     public function learning(): static
     {
-        return $this->practised(stability: 3, difficulty: 4);
+        return $this->practised(
+            stability: $this->faker->randomFloat(2, 0.1, 20.9),
+            difficulty: $this->faker->randomFloat(2, 1, 6.9),
+        );
     }
 
     /**

@@ -83,6 +83,7 @@ class ListWords extends Tool
             sort: $options['sort'],
             status: $options['status'],
             includeFullDefinition: $options['includeFullDefinition'],
+            includeTimesMissed: true,
         ))->paginate(
             perPage: $options['perPage'],
             page: $options['page'],
@@ -94,7 +95,7 @@ class ListWords extends Tool
                 'word' => $word->word,
                 'short_definition' => $word->short_definition,
                 'added_at' => $word->created_at->toIso8601String(),
-                'status' => $word->learningStatus()->value,
+                'status' => $word->flashcard->learning_status->value,
                 'times_missed' => $word->times_missed,
                 ...($options['includeFullDefinition'] ? ['full_definition' => $word->full_definition] : []),
             ])->all(),
