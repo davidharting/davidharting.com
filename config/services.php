@@ -31,4 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'merriam_webster' => [
+        'learners_key' => env('MERRIAM_WEBSTER_LEARNERS_KEY'),
+    ],
+
 ];
