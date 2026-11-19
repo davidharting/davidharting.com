@@ -10,15 +10,15 @@ test('a word that has never been practised is new', function () {
     /** @var TestCase $this */
     $word = Word::factory()->create();
 
-    expect($word->learningStatus())->toBe(LearningStatus::New);
+    expect($word->flashcard->learning_status)->toBe(LearningStatus::New);
 });
 
 test('a practised word gets the first status that fits its schedule', function (float $stability, float $difficulty, LearningStatus $expected) {
     /** @var TestCase $this */
     $word = Word::factory()->practised($stability, $difficulty)->create();
 
-    expect($word->learningStatus())->toBe($expected)
-        ->and(Flashcard::query()->withLearningStatus($expected)->count())->toBe(1);
+    expect($word->flashcard->learning_status)->toBe($expected)
+        ->and(Flashcard::query()->where('learning_status', $expected)->count())->toBe(1);
 })->with([
     'remembered for three weeks: mastered' => [21, 3, LearningStatus::Mastered],
     'remembered for three weeks, even if hard: still mastered' => [21, 9, LearningStatus::Mastered],
@@ -33,5 +33,5 @@ test('grading a flashcard updates its status straight away', function () {
 
     $flashcard->grade(Rating::Good);
 
-    expect($flashcard->learningStatus())->not->toBe(LearningStatus::New);
+    expect($flashcard->learning_status)->not->toBe(LearningStatus::New);
 });

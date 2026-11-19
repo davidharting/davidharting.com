@@ -3,11 +3,10 @@
 namespace App\Enum;
 
 /**
- * How well David knows a word, read off its flashcard's FSRS schedule. Every
- * flashcard has exactly one, in its `learning_status` column, which Postgres
- * generates from the schedule. The rule and its thresholds live in that
- * column's migration (add_learning_status_to_flashcards_table), and nowhere
- * else.
+ * How well David knows a word, read off its flashcard's FSRS schedule.
+ * `flashcards.learning_status` is a generated column, and its definition is
+ * the source of truth for which status a schedule gets. This enum only names
+ * the values it can hold.
  */
 enum LearningStatus: string
 {

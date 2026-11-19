@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enum\LearningStatus;
 use Database\Factories\WordFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -62,14 +61,6 @@ class Word extends Model
     {
         return $this->hasManyThrough(Review::class, Flashcard::class, 'quizzable_id', 'flashcard_id')
             ->where('flashcards.quizzable_type', $this->getMorphClass());
-    }
-
-    /**
-     * How well David knows this word, from its flashcard.
-     */
-    public function learningStatus(): LearningStatus
-    {
-        return $this->flashcard->learningStatus();
     }
 
     /**

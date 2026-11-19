@@ -27,7 +27,7 @@ return new class extends Migration
     public function up(): void
     {
         DB::statement(<<<'SQL'
-            ALTER TABLE flashcards ADD COLUMN learning_status varchar(16) NOT NULL
+            ALTER TABLE flashcards ADD COLUMN learning_status text NOT NULL
             GENERATED ALWAYS AS (
                 CASE
                     WHEN last_review IS NULL THEN 'new'
