@@ -197,9 +197,9 @@ test('does not turn the page when moving within the list', function () {
  */
 function assertChip(TestResponse $response, string $label, int $count, string $url): void
 {
-    expect(preg_replace('/\s+/', ' ', $response->getContent()))
-        ->toContain(sprintf('href="%s"', e($url)))
-        ->toMatch(sprintf('#href="%s"[^>]*> %s <span class="badge badge-sm">%d</span>#', preg_quote(e($url), '#'), $label, $count));
+    $chip = sprintf('#<a\s[^>]*href="%s"[^>]*>\s*%s\s*<span[^>]*>%d</span>#', preg_quote(e($url), '#'), $label, $count);
+
+    expect($response->getContent())->toMatch($chip);
 }
 
 describe('learning status chips', function () {
@@ -256,9 +256,9 @@ describe('learning status chips', function () {
 
         $this->get('/words?status=mastered')->assertSeeText('No mastered words yet.');
     });
+});
 
-    test('refuse a status they do not know', function () {
-        /** @var TestCase $this */
-        $this->get('/words?status=forgotten')->assertSessionHasErrors('status');
-    });
+test('refuses a learning status it does not know', function () {
+    /** @var TestCase $this */
+    $this->get('/words?status=forgotten')->assertSessionHasErrors('status');
 });
