@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Actions\GoodreadsImport\Importer as GoodreadsImporter;
 use App\Actions\SofaImport\Importer as SofaImporter;
+use App\Fsrs\Rating;
 use App\Models\Creator;
 use App\Models\Media;
 use App\Models\MediaEvent;
@@ -64,7 +65,15 @@ class DatabaseSeeder extends Seeder
         Note::factory(15)->noLead()->create();
         Note::factory(5)->contentOnly()->create();
 
-        Word::factory(10)->create();
+        // A word with each learning status, and one with a practice history.
+        Word::factory(4)->create();
+        Word::factory(3)->learning()->create();
+        Word::factory(2)->troublesome()->create();
+        Word::factory(2)->mastered()->create();
+        $practised = Word::factory()->create(['word' => 'liminal', 'short_definition' => 'at a threshold; in between']);
+        foreach ([Rating::Again, Rating::Good, Rating::Again, Rating::Good] as $index => $rating) {
+            $practised->flashcard->grade($rating, Carbon::now()->subDays(8 - $index * 2));
+        }
 
         // Pages for development
         Page::create([

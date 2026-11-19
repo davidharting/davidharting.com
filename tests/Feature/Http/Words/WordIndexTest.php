@@ -3,6 +3,7 @@
 use App\Fsrs\Rating;
 use App\Models\User;
 use App\Models\Word;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 beforeEach(function () {
@@ -206,4 +207,76 @@ test('does not turn the page when moving within the list', function () {
     $this->get('/words');
 
     $this->get('/words?sort=a_to_z')->assertDontSee('data-transition-direction', false);
+});
+
+/**
+ * Assert the page has a status chip linking to $url, labelled $label with
+ * $count beside it.
+ */
+function assertChip(TestResponse $response, string $label, int $count, string $url): void
+{
+    $chip = sprintf('#<a\s[^>]*href="%s"[^>]*>\s*%s\s*<span[^>]*>%d</span>#', preg_quote(e($url), '#'), $label, $count);
+
+    expect($response->getContent())->toMatch($chip);
+}
+
+describe('learning status chips', function () {
+    test('show how many words have each status, and a total', function () {
+        /** @var TestCase $this */
+        Word::factory()->count(2)->create();
+        Word::factory()->troublesome()->create();
+        Word::factory()->count(3)->mastered()->create();
+
+        $response = $this->get('/words')->assertSuccessful();
+
+        assertChip($response, 'All', 6, route('words.index'));
+        assertChip($response, 'New', 2, route('words.index', ['status' => 'new']));
+        assertChip($response, 'Mastered', 3, route('words.index', ['status' => 'mastered']));
+        assertChip($response, 'Troublesome', 1, route('words.index', ['status' => 'troublesome']));
+        assertChip($response, 'Learning', 0, route('words.index', ['status' => 'learning']));
+    });
+
+    test('narrow the list to one status when tapped', function () {
+        /** @var TestCase $this */
+        Word::factory()->create(['word' => 'apricity']);
+        Word::factory()->troublesome()->create(['word' => 'liminal']);
+
+        $this->get(route('words.index'))->assertSee(route('words.index', ['status' => 'troublesome']));
+
+        $this->get(route('words.index', ['status' => 'troublesome']))
+            ->assertSuccessful()
+            ->assertSeeText('liminal')
+            ->assertDontSeeText('apricity');
+    });
+
+    test('count only the words a search finds, and keep the search when tapped', function () {
+        /** @var TestCase $this */
+        Word::factory()->troublesome()->create(['word' => 'liminal']);
+        Word::factory()->troublesome()->create(['word' => 'zephyr']);
+
+        $response = $this->get(route('words.index', ['q' => 'liminal']));
+
+        assertChip($response, 'All', 1, route('words.index', ['q' => 'liminal']));
+        assertChip($response, 'Troublesome', 1, route('words.index', ['q' => 'liminal', 'status' => 'troublesome']));
+    });
+
+    test('are kept by the search box and the sort links', function () {
+        /** @var TestCase $this */
+        $response = $this->get(route('words.index', ['status' => 'mastered']));
+
+        $response->assertSee('name="status" value="mastered"', false);
+        $response->assertSee(route('words.index', ['status' => 'mastered', 'sort' => 'a_to_z']));
+    });
+
+    test('say so when no word has the chosen status', function () {
+        /** @var TestCase $this */
+        Word::factory()->create();
+
+        $this->get('/words?status=mastered')->assertSeeText('No mastered words yet.');
+    });
+});
+
+test('refuses a learning status it does not know', function () {
+    /** @var TestCase $this */
+    $this->get('/words?status=forgotten')->assertSessionHasErrors('status');
 });

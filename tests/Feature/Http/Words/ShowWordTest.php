@@ -1,7 +1,9 @@
 <?php
 
+use App\Fsrs\Rating;
 use App\Models\User;
 use App\Models\Word;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 beforeEach(function () {
@@ -83,4 +85,34 @@ test('turns the page forward when opened', function () {
     Word::factory()->create(['word' => 'ephemeral']);
 
     $this->get('/words/ephemeral')->assertSee('data-transition-direction="forward"', false);
+});
+
+test('shows the word\'s learning status', function () {
+    /** @var TestCase $this */
+    Word::factory()->troublesome()->create(['word' => 'liminal']);
+
+    $this->get('/words/liminal')->assertSeeText('Troublesome');
+});
+
+test('says so when the word has not been practised yet', function () {
+    /** @var TestCase $this */
+    Word::factory()->create(['word' => 'liminal']);
+
+    $this->get('/words/liminal')->assertSeeText('Not practised yet.');
+});
+
+test('lists each time the word was practised, newest first, with how often it was missed', function () {
+    /** @var TestCase $this */
+    $flashcard = Word::factory()->create(['word' => 'liminal'])->flashcard;
+    $flashcard->grade(Rating::Again, Carbon::parse('2026-11-01 12:00'));
+    $flashcard->grade(Rating::Good, Carbon::parse('2026-11-02 12:00'));
+    $flashcard->grade(Rating::Again, Carbon::parse('2026-11-05 12:00'));
+
+    $this->get('/words/liminal')
+        ->assertSeeText('Practised 3 times, missed 2 times.')
+        ->assertSeeTextInOrder([
+            '5 November 2026', 'Missed it',
+            '2 November 2026', 'Got it',
+            '1 November 2026', 'Missed it',
+        ]);
 });
