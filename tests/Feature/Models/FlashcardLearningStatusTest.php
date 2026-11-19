@@ -33,5 +33,5 @@ test('grading a flashcard updates its status straight away', function () {
 
     $flashcard->grade(Rating::Good);
 
-    expect($flashcard->learning_status)->not->toBe(LearningStatus::New);
+    expect($flashcard->learning_status)->toBe(LearningStatus::Learning);
 });
