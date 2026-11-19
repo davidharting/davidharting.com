@@ -83,7 +83,7 @@ class WordController extends Controller
 
         return view('words.show', [
             'word' => $word,
-            'status' => $word->learningStatus(),
+            'status' => $word->flashcard->learning_status,
             'reviews' => $word->reviews()->orderBy('reviewed_at', 'desc')->orderBy('reviews.id', 'desc')->get(),
             'backUrl' => $this->backUrl($request),
         ]);
