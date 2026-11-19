@@ -146,16 +146,6 @@ TIA is opt-in: pass `--tia`. Use it in your dev loop. After each change, run `ve
 - Don't cascade deletes by default. Declare foreign keys without `cascadeOnDelete()` (or `nullOnDelete()`), so deleting a parent that still has children fails loudly instead of silently taking data with it. When deleting the children really is part of the operation, do it explicitly in application code, and only reach for a cascade when there's a clear reason, noted in the migration.
 - Write sort directions explicitly, `orderBy('due', 'asc')` rather than relying on the default.
 - Use `text` for string columns, not `varchar(n)`. The Postgres wiki advises against `varchar(n)` by default; add a `CHECK` only when the limit is a real rule.
-- A value derived only from its own row (no `now()`, no other rows) belongs in a stored generated column, so the rule is written once, in SQL, and can be filtered, counted and indexed. Don't also write it in PHP. Postgres fills it on save, so `refresh()` a model before reading it after changing its inputs. Example: `flashcards.learning_status`.
-- Reach other tables through Eloquent relationships (`whereRelation`, `whereHas`, `whereHasMorph`, `withCount`) instead of hand-written joins, above all for polymorphic relations.
-- Compute aggregates such as `withCount` only where a caller needs them, not on every listing.
-
-### Laravel style
-
-- Read a cast column as a plain attribute (`$flashcard->learning_status`). Don't wrap it in a method or scope that only returns or filters it.
-- Prefer plain statements to `tap()` for calling your own helpers mid-chain; it hides what runs.
-- Name a helper that adds constraints to a builder `where…` (e.g. `whereMatchesSearch(Builder $words): void`).
-- Factory states describe realistic data: draw values at random from the range the state means, and keep exact values for the tests that probe boundaries.
 
 ### Pull request reviews
 
