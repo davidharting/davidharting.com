@@ -6,6 +6,7 @@ use Illuminate\Container\Attributes\Config;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use InvalidArgumentException;
 
 /**
  * Looks words up in Merriam-Webster's Learner's Dictionary API.
@@ -25,10 +26,17 @@ class MerriamWebster
     ) {}
 
     /**
+     * @throws InvalidArgumentException when the term is blank
      * @throws MerriamWebsterFailed when the key is missing or rejected, or the request fails
      */
     public function lookUp(string $term): Lookup
     {
+        $term = trim($term);
+
+        if ($term === '') {
+            throw new InvalidArgumentException('A dictionary lookup needs a term.');
+        }
+
         if (blank($this->key)) {
             throw new MerriamWebsterFailed('No Merriam-Webster key is configured. Set MERRIAM_WEBSTER_LEARNERS_KEY.');
         }

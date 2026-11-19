@@ -10,6 +10,7 @@ use Tests\TestCase;
 const LEARNERS_URL = 'https://www.dictionaryapi.com/api/v3/references/learners/json/*';
 
 beforeEach(function () {
+    /** @var TestCase $this */
     Http::preventStrayRequests();
     config(['services.merriam_webster.learners_key' => 'test-key']);
 });
@@ -18,13 +19,16 @@ beforeEach(function () {
  * A trimmed entry in the shape Merriam-Webster returns: meta, headword,
  * functional label and short definitions. Real entries carry much more.
  *
+ * @param  list<string>  $shortDefinitions
  * @return array<string, mixed>
  */
 function learnersEntry(string $id, string $partOfSpeech, array $shortDefinitions): array
 {
+    $headword = explode(':', $id)[0];
+
     return [
-        'meta' => ['id' => $id, 'stems' => [explode(':', $id)[0]], 'offensive' => false],
-        'hwi' => ['hw' => explode(':', $id)[0]],
+        'meta' => ['id' => $id, 'stems' => [$headword], 'offensive' => false],
+        'hwi' => ['hw' => $headword],
         'fl' => $partOfSpeech,
         'shortdef' => $shortDefinitions,
     ];
@@ -37,6 +41,7 @@ function merriamWebster(): MerriamWebster
 
 describe('lookUp()', function () {
     test('returns every entry for a word the dictionary knows', function () {
+        /** @var TestCase $this */
         $response = [
             learnersEntry('limn:1', 'verb', ['to draw or paint']),
             learnersEntry('limn:2', 'verb', ['to describe in words']),
@@ -53,6 +58,7 @@ describe('lookUp()', function () {
     });
 
     test('returns spelling suggestions for a word the dictionary does not know', function () {
+        /** @var TestCase $this */
         Http::fake([LEARNERS_URL => Http::response(['limb', 'limn', 'lime'])]);
 
         $lookup = merriamWebster()->lookUp('limm');
@@ -63,6 +69,7 @@ describe('lookUp()', function () {
     });
 
     test('treats an empty answer as not found with no suggestions', function () {
+        /** @var TestCase $this */
         Http::fake([LEARNERS_URL => Http::response([])]);
 
         $lookup = merriamWebster()->lookUp('qwxzv');
@@ -71,16 +78,28 @@ describe('lookUp()', function () {
             ->and($lookup->suggestions())->toBe([]);
     });
 
-    test('sends the key and puts the term in the path, encoded', function () {
+    test('sends the key and puts the trimmed term in the path, encoded', function () {
+        /** @var TestCase $this */
         Http::fake([LEARNERS_URL => Http::response([])]);
 
-        merriamWebster()->lookUp('ad hoc');
+        merriamWebster()->lookUp(' ad hoc ');
 
         Http::assertSent(fn (Request $request) => $request->url()
             === 'https://www.dictionaryapi.com/api/v3/references/learners/json/ad%20hoc?key=test-key');
     });
 
+    test('refuses a blank term without calling the API', function () {
+        /** @var TestCase $this */
+        Http::fake();
+
+        expect(fn () => merriamWebster()->lookUp('   '))
+            ->toThrow(InvalidArgumentException::class);
+
+        Http::assertNothingSent();
+    });
+
     test('fails without calling the API when no key is configured', function () {
+        /** @var TestCase $this */
         config(['services.merriam_webster.learners_key' => null]);
         Http::fake();
 
@@ -91,6 +110,7 @@ describe('lookUp()', function () {
     });
 
     test('fails when the key is rejected, which the API reports as a 200 with plain text', function () {
+        /** @var TestCase $this */
         Http::fake([LEARNERS_URL => Http::response(
             'Invalid API key. Not subscribed for this reference.',
             200,
@@ -102,6 +122,7 @@ describe('lookUp()', function () {
     });
 
     test('fails when the API answers with an error status', function () {
+        /** @var TestCase $this */
         Http::fake([LEARNERS_URL => Http::response('Service Unavailable', 503)]);
 
         expect(fn () => merriamWebster()->lookUp('limn'))
@@ -114,12 +135,10 @@ describe('lookUp()', function () {
             'cURL error 28: timed out for https://www.dictionaryapi.com/api/v3/references/learners/json/limn?key=test-key',
         )]);
 
-        try {
-            merriamWebster()->lookUp('limn');
-            $this->fail('Expected the lookup to fail.');
-        } catch (MerriamWebsterFailed $failure) {
-            expect($failure->getMessage())->not->toContain('test-key')
-                ->and($failure->getPrevious())->toBeNull();
-        }
+        expect(fn () => merriamWebster()->lookUp('limn'))
+            ->toThrow(function (MerriamWebsterFailed $failure) {
+                expect($failure->getMessage())->not->toContain('test-key')
+                    ->and($failure->getPrevious())->toBeNull();
+            });
     });
 });
