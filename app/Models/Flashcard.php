@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\CardScheduleCast;
+use App\Enum\LearningStatus;
 use App\Fsrs\CardSchedule;
 use App\Fsrs\Rating;
 use App\Fsrs\Scheduler;
@@ -20,6 +21,10 @@ use Illuminate\Support\Facades\DB;
  * each Word has exactly one. Reviews are its append-only log.
  *
  * @property CardSchedule $schedule
+ * @property-read LearningStatus $learning_status How well David knows what this
+ *     flashcard quizzes. A column Postgres generates from the schedule on every
+ *     write, so it is only as fresh as the last read: grade() reloads it, and
+ *     other code that changes the schedule must refresh() before reading it.
  */
 class Flashcard extends Model
 {
@@ -30,6 +35,7 @@ class Flashcard extends Model
     {
         return [
             'schedule' => CardScheduleCast::class,
+            'learning_status' => LearningStatus::class,
         ];
     }
 
@@ -103,6 +109,8 @@ class Flashcard extends Model
 
             $locked->schedule = app(Scheduler::class)->review($before, $rating, $reviewedAt);
             $locked->save();
+            // Read back the learning status Postgres generated from the new schedule.
+            $locked->refresh();
 
             $review = $locked->reviews()->create([
                 'rating' => $rating,

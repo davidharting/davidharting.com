@@ -108,6 +108,14 @@ _Avoid_: Card, item, quiz
 One grading of a flashcard, kept in an append-only log with the schedule before and after. David grades with "Got it" or "Missed it", which the engine records as the FSRS ratings Good and Again.
 _Avoid_: Attempt, answer, quiz result
 
+**Learning status**:
+How well David knows a word, read off its flashcard's FSRS schedule: exactly one of New (never practised), Mastered (stability of 21 days or more), Troublesome (not mastered, and difficulty 7 or higher) or Learning (anything else), checked in that order. The thresholds are starting guesses, to tune once real reviews exist.
+_Avoid_: Progress, level, state (FSRS's own card state is something else)
+
+**Times missed**:
+How many reviews of a word's flashcard were graded "Missed it" (FSRS Again). The "most missed" sort lists the words with the most first. Unrelated to a missed month of memories.
+_Avoid_: Failures, lapses (FSRS counts lapses differently)
+
 ## Notes on this glossary
 
 **Note, remark and comment are three different things**, and the distinction is load-bearing: a note is public writing, a remark belongs to a piece of media, a comment belongs to a moment.
