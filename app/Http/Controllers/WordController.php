@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enum\LearningStatus;
 use App\Enum\WordSort;
+use App\Models\Flashcard;
 use App\Models\Word;
 use App\Queries\ListWordsQuery;
 use Illuminate\Http\Request;
@@ -49,6 +50,7 @@ class WordController extends Controller
 
         return view('words.index', [
             'words' => $words,
+            'dueCount' => Flashcard::query()->dueNow()->count(),
             'search' => $search,
             'sort' => $sort,
             'status' => $status,

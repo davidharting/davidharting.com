@@ -1,5 +1,6 @@
 <?php
 
+use App\Fsrs\Rating;
 use App\Models\User;
 use App\Models\Word;
 use Illuminate\Testing\TestResponse;
@@ -173,6 +174,23 @@ test('refuses a page number too large to count to', function () {
     Word::factory()->create(['word' => 'ephemeral']);
 
     $this->get('/words?page=99999999999999999999999')->assertSessionHasErrors('page');
+});
+
+test('links to practice with how many words are due', function () {
+    /** @var TestCase $this */
+    Word::factory()->count(2)->create();
+    Word::factory()->create()->flashcard->grade(Rating::Good);
+
+    $this->get('/words')
+        ->assertSee(route('words.practice'))
+        ->assertSeeText('2 due');
+});
+
+test('says practice is caught up when nothing is due', function () {
+    /** @var TestCase $this */
+    Word::factory()->create()->flashcard->grade(Rating::Good);
+
+    $this->get('/words')->assertSeeText('caught up')->assertDontSeeText('due');
 });
 
 test('turns the page back when coming back from a word', function () {
