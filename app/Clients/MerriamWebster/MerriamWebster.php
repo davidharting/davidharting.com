@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\MerriamWebster;
+namespace App\Clients\MerriamWebster;
 
 use Illuminate\Container\Attributes\Config;
 use Illuminate\Http\Client\ConnectionException;
@@ -9,19 +9,19 @@ use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
 
 /**
- * Looks words up in Merriam-Webster's Learner's Dictionary API.
+ * Looks words up in Merriam-Webster's Collegiate Dictionary API.
  *
  * The free non-commercial key allows 1,000 queries a day, so callers should
  * keep the response they get rather than look the same word up again.
  *
- * @see https://dictionaryapi.com/products/api-learners-dictionary
+ * @see https://dictionaryapi.com/products/api-collegiate-dictionary
  */
 class MerriamWebster
 {
-    private const string BASE_URL = 'https://www.dictionaryapi.com/api/v3/references/learners/json';
+    private const string BASE_URL = 'https://www.dictionaryapi.com/api/v3/references/collegiate/json';
 
     public function __construct(
-        #[Config('services.merriam_webster.learners_key')]
+        #[Config('services.merriam_webster.collegiate_key')]
         private ?string $key,
     ) {}
 
@@ -38,7 +38,7 @@ class MerriamWebster
         }
 
         if (blank($this->key)) {
-            throw new MerriamWebsterFailed('No Merriam-Webster key is configured. Set MERRIAM_WEBSTER_LEARNERS_KEY.');
+            throw new MerriamWebsterFailed('No Merriam-Webster key is configured. Set MERRIAM_WEBSTER_COLLEGIATE_KEY.');
         }
 
         try {

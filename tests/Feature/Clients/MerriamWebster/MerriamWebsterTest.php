@@ -1,18 +1,18 @@
 <?php
 
-use App\Support\MerriamWebster\MerriamWebster;
-use App\Support\MerriamWebster\MerriamWebsterFailed;
+use App\Clients\MerriamWebster\MerriamWebster;
+use App\Clients\MerriamWebster\MerriamWebsterFailed;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
-const LEARNERS_URL = 'https://www.dictionaryapi.com/api/v3/references/learners/json/*';
+const COLLEGIATE_URL = 'https://www.dictionaryapi.com/api/v3/references/collegiate/json/*';
 
 beforeEach(function () {
     /** @var TestCase $this */
     Http::preventStrayRequests();
-    config(['services.merriam_webster.learners_key' => 'test-key']);
+    config(['services.merriam_webster.collegiate_key' => 'test-key']);
 });
 
 /**
@@ -22,7 +22,7 @@ beforeEach(function () {
  * @param  list<string>  $shortDefinitions
  * @return array<string, mixed>
  */
-function learnersEntry(string $id, string $partOfSpeech, array $shortDefinitions): array
+function collegiateEntry(string $id, string $partOfSpeech, array $shortDefinitions): array
 {
     $headword = explode(':', $id)[0];
 
@@ -43,10 +43,10 @@ describe('lookUp()', function () {
     test('returns every entry for a word the dictionary knows', function () {
         /** @var TestCase $this */
         $response = [
-            learnersEntry('limn:1', 'verb', ['to draw or paint']),
-            learnersEntry('limn:2', 'verb', ['to describe in words']),
+            collegiateEntry('limn:1', 'verb', ['to draw or paint']),
+            collegiateEntry('limn:2', 'verb', ['to describe in words']),
         ];
-        Http::fake([LEARNERS_URL => Http::response($response)]);
+        Http::fake([COLLEGIATE_URL => Http::response($response)]);
 
         $lookup = merriamWebster()->lookUp('limn');
 
@@ -59,7 +59,7 @@ describe('lookUp()', function () {
 
     test('returns spelling suggestions for a word the dictionary does not know', function () {
         /** @var TestCase $this */
-        Http::fake([LEARNERS_URL => Http::response(['limb', 'limn', 'lime'])]);
+        Http::fake([COLLEGIATE_URL => Http::response(['limb', 'limn', 'lime'])]);
 
         $lookup = merriamWebster()->lookUp('limm');
 
@@ -70,7 +70,7 @@ describe('lookUp()', function () {
 
     test('treats an empty answer as not found with no suggestions', function () {
         /** @var TestCase $this */
-        Http::fake([LEARNERS_URL => Http::response([])]);
+        Http::fake([COLLEGIATE_URL => Http::response([])]);
 
         $lookup = merriamWebster()->lookUp('qwxzv');
 
@@ -80,12 +80,12 @@ describe('lookUp()', function () {
 
     test('sends the key and puts the trimmed term in the path, encoded', function () {
         /** @var TestCase $this */
-        Http::fake([LEARNERS_URL => Http::response([])]);
+        Http::fake([COLLEGIATE_URL => Http::response([])]);
 
         merriamWebster()->lookUp(' ad hoc ');
 
         Http::assertSent(fn (Request $request) => $request->url()
-            === 'https://www.dictionaryapi.com/api/v3/references/learners/json/ad%20hoc?key=test-key');
+            === 'https://www.dictionaryapi.com/api/v3/references/collegiate/json/ad%20hoc?key=test-key');
     });
 
     test('refuses a blank term without calling the API', function () {
@@ -100,18 +100,18 @@ describe('lookUp()', function () {
 
     test('fails without calling the API when no key is configured', function () {
         /** @var TestCase $this */
-        config(['services.merriam_webster.learners_key' => null]);
+        config(['services.merriam_webster.collegiate_key' => null]);
         Http::fake();
 
         expect(fn () => merriamWebster()->lookUp('limn'))
-            ->toThrow(MerriamWebsterFailed::class, 'MERRIAM_WEBSTER_LEARNERS_KEY');
+            ->toThrow(MerriamWebsterFailed::class, 'MERRIAM_WEBSTER_COLLEGIATE_KEY');
 
         Http::assertNothingSent();
     });
 
     test('fails when the key is rejected, which the API reports as a 200 with plain text', function () {
         /** @var TestCase $this */
-        Http::fake([LEARNERS_URL => Http::response(
+        Http::fake([COLLEGIATE_URL => Http::response(
             'Invalid API key. Not subscribed for this reference.',
             200,
             ['Content-Type' => 'text/plain'],
@@ -123,7 +123,7 @@ describe('lookUp()', function () {
 
     test('fails when the API answers with an error status', function () {
         /** @var TestCase $this */
-        Http::fake([LEARNERS_URL => Http::response('Service Unavailable', 503)]);
+        Http::fake([COLLEGIATE_URL => Http::response('Service Unavailable', 503)]);
 
         expect(fn () => merriamWebster()->lookUp('limn'))
             ->toThrow(MerriamWebsterFailed::class, 'Looking up "limn" failed');
@@ -131,8 +131,8 @@ describe('lookUp()', function () {
 
     test('keeps the key out of the error when the connection fails', function () {
         /** @var TestCase $this */
-        Http::fake([LEARNERS_URL => fn () => throw new ConnectionException(
-            'cURL error 28: timed out for https://www.dictionaryapi.com/api/v3/references/learners/json/limn?key=test-key',
+        Http::fake([COLLEGIATE_URL => fn () => throw new ConnectionException(
+            'cURL error 28: timed out for https://www.dictionaryapi.com/api/v3/references/collegiate/json/limn?key=test-key',
         )]);
 
         expect(fn () => merriamWebster()->lookUp('limn'))

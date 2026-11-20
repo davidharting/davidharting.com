@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\MerriamWebster;
+namespace App\Clients\MerriamWebster;
 
 use RuntimeException;
 

@@ -32,7 +32,7 @@ return [
     ],
 
     'merriam_webster' => [
-        'learners_key' => env('MERRIAM_WEBSTER_LEARNERS_KEY'),
+        'collegiate_key' => env('MERRIAM_WEBSTER_COLLEGIATE_KEY'),
     ],
 
 ];

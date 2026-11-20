@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\MerriamWebster;
+namespace App\Clients\MerriamWebster;
 
 /**
  * Merriam-Webster's answer to one lookup, kept as the decoded JSON it sent.
