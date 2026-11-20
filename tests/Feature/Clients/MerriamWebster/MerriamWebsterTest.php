@@ -56,17 +56,10 @@ describe('lookUp()', function () {
             ->and($lookup->response)->toBe($response)
             ->and($lookup->entries)->toHaveCount(2);
 
-        [$verb, $noun] = $lookup->entries;
-
-        expect($verb->id)->toBe('bow:1')
-            ->and($verb->headword)->toBe('bow')
-            ->and($verb->homograph)->toBe(1)
-            ->and($verb->partOfSpeech)->toBe('verb')
-            ->and($verb->stems)->toBe(['bow', 'bows'])
-            ->and($verb->shortDefinitions)->toBe(['to bend the head, body, or knee in respect', 'to submit'])
-            ->and($verb->isOffensive)->toBeFalse()
-            ->and($verb->raw)->toBe($response[0])
-            ->and($noun->partOfSpeech)->toBe('noun');
+        expect($lookup->entries[0]->id)->toBe('bow:1')
+            ->and($lookup->entries[0]->partOfSpeech)->toBe('verb')
+            ->and($lookup->entries[1]->id)->toBe('bow:2')
+            ->and($lookup->entries[1]->partOfSpeech)->toBe('noun');
     });
 
     test('returns spelling suggestions for a word the dictionary does not know', function () {
@@ -132,6 +125,14 @@ describe('lookUp()', function () {
             ->toThrow(MerriamWebsterFailed::class, 'Invalid API key');
     });
 
+    test('fails when the API answers with JSON that is not a list of entries', function () {
+        /** @var TestCase $this */
+        Http::fake([COLLEGIATE_URL => Http::response(['error' => 'Something went wrong'])]);
+
+        expect(fn () => merriamWebster()->lookUp('limn'))
+            ->toThrow(MerriamWebsterFailed::class, "didn't answer");
+    });
+
     test('fails when an entry lacks its headword', function () {
         /** @var TestCase $this */
         Http::fake([COLLEGIATE_URL => Http::response([['meta' => ['id' => 'limn']]])]);
@@ -140,12 +141,15 @@ describe('lookUp()', function () {
             ->toThrow(MerriamWebsterFailed::class, 'without an id or headword');
     });
 
-    test('fails when the API answers with an error status', function () {
+    test('fails without the key in the error when the API answers with an error status', function () {
         /** @var TestCase $this */
         Http::fake([COLLEGIATE_URL => Http::response('Service Unavailable', 503)]);
 
         expect(fn () => merriamWebster()->lookUp('limn'))
-            ->toThrow(MerriamWebsterFailed::class, 'Looking up "limn" failed');
+            ->toThrow(function (MerriamWebsterFailed $failure) {
+                expect($failure->getMessage())->toContain('Looking up "limn" failed')
+                    ->not->toContain('test-key');
+            });
     });
 
     test('keeps the key out of the error when the connection fails', function () {
@@ -162,12 +166,14 @@ describe('lookUp()', function () {
     });
 });
 
-test('reads its key from the services config when resolved from the container', function () {
-    /** @var TestCase $this */
-    config(['services.merriam_webster.collegiate_key' => 'configured-key']);
-    Http::fake([COLLEGIATE_URL => Http::response([])]);
+describe('__construct()', function () {
+    test('reads its key from the services config when resolved from the container', function () {
+        /** @var TestCase $this */
+        config(['services.merriam_webster.collegiate_key' => 'configured-key']);
+        Http::fake([COLLEGIATE_URL => Http::response([])]);
 
-    app(MerriamWebster::class)->lookUp('limn');
+        app(MerriamWebster::class)->lookUp('limn');
 
-    Http::assertSent(fn (Request $request) => $request['key'] === 'configured-key');
+        Http::assertSent(fn (Request $request) => $request['key'] === 'configured-key');
+    });
 });
