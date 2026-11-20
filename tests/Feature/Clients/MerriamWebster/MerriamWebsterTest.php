@@ -12,49 +12,61 @@ const COLLEGIATE_URL = 'https://www.dictionaryapi.com/api/v3/references/collegia
 beforeEach(function () {
     /** @var TestCase $this */
     Http::preventStrayRequests();
-    config(['services.merriam_webster.collegiate_key' => 'test-key']);
 });
 
 /**
- * A trimmed entry in the shape Merriam-Webster returns: meta, headword,
- * functional label and short definitions. Real entries carry much more.
+ * A trimmed entry in the shape Merriam-Webster returns. Real entries carry
+ * much more, such as pronunciations and the full nested definition.
  *
  * @param  list<string>  $shortDefinitions
  * @return array<string, mixed>
  */
-function collegiateEntry(string $id, string $partOfSpeech, array $shortDefinitions): array
+function collegiateEntry(string $id, int $homograph, string $partOfSpeech, array $shortDefinitions): array
 {
     $headword = explode(':', $id)[0];
 
     return [
-        'meta' => ['id' => $id, 'stems' => [$headword], 'offensive' => false],
+        'meta' => ['id' => $id, 'stems' => [$headword, "{$headword}s"], 'offensive' => false],
+        'hom' => $homograph,
         'hwi' => ['hw' => $headword],
         'fl' => $partOfSpeech,
         'shortdef' => $shortDefinitions,
     ];
 }
 
-function merriamWebster(): MerriamWebster
+function merriamWebster(?string $key = 'test-key'): MerriamWebster
 {
-    return app(MerriamWebster::class);
+    return new MerriamWebster($key);
 }
 
 describe('lookUp()', function () {
-    test('returns every entry for a word the dictionary knows', function () {
+    test('returns one typed entry per headword for a word the dictionary knows', function () {
         /** @var TestCase $this */
         $response = [
-            collegiateEntry('limn:1', 'verb', ['to draw or paint']),
-            collegiateEntry('limn:2', 'verb', ['to describe in words']),
+            collegiateEntry('bow:1', 1, 'verb', ['to bend the head, body, or knee in respect', 'to submit']),
+            collegiateEntry('bow:2', 2, 'noun', ['a weapon for shooting arrows']),
         ];
         Http::fake([COLLEGIATE_URL => Http::response($response)]);
 
-        $lookup = merriamWebster()->lookUp('limn');
+        $lookup = merriamWebster()->lookUp('bow');
 
-        expect($lookup->term)->toBe('limn')
+        expect($lookup->term)->toBe('bow')
             ->and($lookup->isFound())->toBeTrue()
-            ->and($lookup->entries())->toBe($response)
-            ->and($lookup->suggestions())->toBe([])
-            ->and($lookup->response)->toBe($response);
+            ->and($lookup->suggestions)->toBe([])
+            ->and($lookup->response)->toBe($response)
+            ->and($lookup->entries)->toHaveCount(2);
+
+        [$verb, $noun] = $lookup->entries;
+
+        expect($verb->id)->toBe('bow:1')
+            ->and($verb->headword)->toBe('bow')
+            ->and($verb->homograph)->toBe(1)
+            ->and($verb->partOfSpeech)->toBe('verb')
+            ->and($verb->stems)->toBe(['bow', 'bows'])
+            ->and($verb->shortDefinitions)->toBe(['to bend the head, body, or knee in respect', 'to submit'])
+            ->and($verb->isOffensive)->toBeFalse()
+            ->and($verb->raw)->toBe($response[0])
+            ->and($noun->partOfSpeech)->toBe('noun');
     });
 
     test('returns spelling suggestions for a word the dictionary does not know', function () {
@@ -64,8 +76,8 @@ describe('lookUp()', function () {
         $lookup = merriamWebster()->lookUp('limm');
 
         expect($lookup->isFound())->toBeFalse()
-            ->and($lookup->entries())->toBe([])
-            ->and($lookup->suggestions())->toBe(['limb', 'limn', 'lime']);
+            ->and($lookup->entries)->toBe([])
+            ->and($lookup->suggestions)->toBe(['limb', 'limn', 'lime']);
     });
 
     test('treats an empty answer as not found with no suggestions', function () {
@@ -75,7 +87,7 @@ describe('lookUp()', function () {
         $lookup = merriamWebster()->lookUp('qwxzv');
 
         expect($lookup->isFound())->toBeFalse()
-            ->and($lookup->suggestions())->toBe([]);
+            ->and($lookup->suggestions)->toBe([]);
     });
 
     test('sends the key and puts the trimmed term in the path, encoded', function () {
@@ -100,10 +112,9 @@ describe('lookUp()', function () {
 
     test('fails without calling the API when no key is configured', function () {
         /** @var TestCase $this */
-        config(['services.merriam_webster.collegiate_key' => null]);
         Http::fake();
 
-        expect(fn () => merriamWebster()->lookUp('limn'))
+        expect(fn () => merriamWebster(key: null)->lookUp('limn'))
             ->toThrow(MerriamWebsterFailed::class, 'MERRIAM_WEBSTER_COLLEGIATE_KEY');
 
         Http::assertNothingSent();
@@ -119,6 +130,14 @@ describe('lookUp()', function () {
 
         expect(fn () => merriamWebster()->lookUp('limn'))
             ->toThrow(MerriamWebsterFailed::class, 'Invalid API key');
+    });
+
+    test('fails when an entry lacks its headword', function () {
+        /** @var TestCase $this */
+        Http::fake([COLLEGIATE_URL => Http::response([['meta' => ['id' => 'limn']]])]);
+
+        expect(fn () => merriamWebster()->lookUp('limn'))
+            ->toThrow(MerriamWebsterFailed::class, 'without an id or headword');
     });
 
     test('fails when the API answers with an error status', function () {
@@ -141,4 +160,14 @@ describe('lookUp()', function () {
                     ->and($failure->getPrevious())->toBeNull();
             });
     });
+});
+
+test('reads its key from the services config when resolved from the container', function () {
+    /** @var TestCase $this */
+    config(['services.merriam_webster.collegiate_key' => 'configured-key']);
+    Http::fake([COLLEGIATE_URL => Http::response([])]);
+
+    app(MerriamWebster::class)->lookUp('limn');
+
+    Http::assertSent(fn (Request $request) => $request['key'] === 'configured-key');
 });

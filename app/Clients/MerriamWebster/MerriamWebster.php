@@ -64,6 +64,6 @@ class MerriamWebster
             throw new MerriamWebsterFailed("Merriam-Webster didn't answer \"{$term}\" with dictionary JSON: ".str($response->body())->limit(200));
         }
 
-        return new Lookup($term, $decoded);
+        return Lookup::fromResponse($term, $decoded);
     }
 }
