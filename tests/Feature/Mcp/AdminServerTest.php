@@ -84,6 +84,7 @@ test('an admin can list the tools', function () {
         'add-word',
         'edit-word',
         'list-words',
+        'look-up-word',
     ]);
 });
 
