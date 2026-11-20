@@ -5,34 +5,15 @@ use App\Clients\MerriamWebster\MerriamWebsterFailed;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
+use Tests\Support\MerriamWebsterFixtures;
 use Tests\TestCase;
-
-const COLLEGIATE_URL = 'https://www.dictionaryapi.com/api/v3/references/collegiate/json/*';
 
 beforeEach(function () {
     /** @var TestCase $this */
     Http::preventStrayRequests();
+    Sleep::fake();
 });
-
-/**
- * A trimmed entry in the shape Merriam-Webster returns. Real entries carry
- * much more, such as pronunciations and the full nested definition.
- *
- * @param  list<string>  $shortDefinitions
- * @return array<string, mixed>
- */
-function collegiateEntry(string $id, int $homograph, string $partOfSpeech, array $shortDefinitions): array
-{
-    $headword = explode(':', $id)[0];
-
-    return [
-        'meta' => ['id' => $id, 'stems' => [$headword, "{$headword}s"], 'offensive' => false],
-        'hom' => $homograph,
-        'hwi' => ['hw' => $headword],
-        'fl' => $partOfSpeech,
-        'shortdef' => $shortDefinitions,
-    ];
-}
 
 function merriamWebster(?string $key = 'test-key'): MerriamWebster
 {
@@ -43,10 +24,10 @@ describe('lookUp()', function () {
     test('returns one typed entry per headword for a word the dictionary knows', function () {
         /** @var TestCase $this */
         $response = [
-            collegiateEntry('bow:1', 1, 'verb', ['to bend the head, body, or knee in respect', 'to submit']),
-            collegiateEntry('bow:2', 2, 'noun', ['a weapon for shooting arrows']),
+            MerriamWebsterFixtures::entry('bow', 1, 'verb', ['to bend the head, body, or knee in respect', 'to submit']),
+            MerriamWebsterFixtures::entry('bow', 2, 'noun', ['a weapon for shooting arrows']),
         ];
-        Http::fake([COLLEGIATE_URL => Http::response($response)]);
+        Http::fake([MerriamWebsterFixtures::URL => Http::response($response)]);
 
         $lookup = merriamWebster()->lookUp('bow');
 
@@ -64,7 +45,7 @@ describe('lookUp()', function () {
 
     test('returns spelling suggestions for a word the dictionary does not know', function () {
         /** @var TestCase $this */
-        Http::fake([COLLEGIATE_URL => Http::response(['limb', 'limn', 'lime'])]);
+        Http::fake([MerriamWebsterFixtures::URL => Http::response(['limb', 'limn', 'lime'])]);
 
         $lookup = merriamWebster()->lookUp('limm');
 
@@ -75,7 +56,7 @@ describe('lookUp()', function () {
 
     test('treats an empty answer as not found with no suggestions', function () {
         /** @var TestCase $this */
-        Http::fake([COLLEGIATE_URL => Http::response([])]);
+        Http::fake([MerriamWebsterFixtures::URL => Http::response([])]);
 
         $lookup = merriamWebster()->lookUp('qwxzv');
 
@@ -85,7 +66,7 @@ describe('lookUp()', function () {
 
     test('sends the key and puts the trimmed term in the path, encoded', function () {
         /** @var TestCase $this */
-        Http::fake([COLLEGIATE_URL => Http::response([])]);
+        Http::fake([MerriamWebsterFixtures::URL => Http::response([])]);
 
         merriamWebster()->lookUp(' ad hoc ');
 
@@ -115,7 +96,7 @@ describe('lookUp()', function () {
 
     test('fails when the key is rejected, which the API reports as a 200 with plain text', function () {
         /** @var TestCase $this */
-        Http::fake([COLLEGIATE_URL => Http::response(
+        Http::fake([MerriamWebsterFixtures::URL => Http::response(
             'Invalid API key. Not subscribed for this reference.',
             200,
             ['Content-Type' => 'text/plain'],
@@ -127,7 +108,7 @@ describe('lookUp()', function () {
 
     test('fails when the API answers with JSON that is not a list of entries', function () {
         /** @var TestCase $this */
-        Http::fake([COLLEGIATE_URL => Http::response(['error' => 'Something went wrong'])]);
+        Http::fake([MerriamWebsterFixtures::URL => Http::response(['error' => 'Something went wrong'])]);
 
         expect(fn () => merriamWebster()->lookUp('limn'))
             ->toThrow(MerriamWebsterFailed::class, "didn't answer");
@@ -135,15 +116,15 @@ describe('lookUp()', function () {
 
     test('fails when an entry lacks its headword', function () {
         /** @var TestCase $this */
-        Http::fake([COLLEGIATE_URL => Http::response([['meta' => ['id' => 'limn']]])]);
+        Http::fake([MerriamWebsterFixtures::URL => Http::response([['meta' => ['id' => 'limn']]])]);
 
         expect(fn () => merriamWebster()->lookUp('limn'))
             ->toThrow(MerriamWebsterFailed::class, 'without an id or headword');
     });
 
-    test('fails without the key in the error when the API answers with an error status', function () {
+    test('fails without the key in the error when the API keeps answering with an error status', function () {
         /** @var TestCase $this */
-        Http::fake([COLLEGIATE_URL => Http::response('Service Unavailable', 503)]);
+        Http::fake([MerriamWebsterFixtures::URL => Http::response('Service Unavailable', 503)]);
 
         expect(fn () => merriamWebster()->lookUp('limn'))
             ->toThrow(function (MerriamWebsterFailed $failure) {
@@ -154,7 +135,7 @@ describe('lookUp()', function () {
 
     test('keeps the key out of the error when the connection fails', function () {
         /** @var TestCase $this */
-        Http::fake([COLLEGIATE_URL => fn () => throw new ConnectionException(
+        Http::fake([MerriamWebsterFixtures::URL => fn () => throw new ConnectionException(
             'cURL error 28: timed out for https://www.dictionaryapi.com/api/v3/references/collegiate/json/limn?key=test-key',
         )]);
 
@@ -164,13 +145,92 @@ describe('lookUp()', function () {
                     ->and($failure->getPrevious())->toBeNull();
             });
     });
+
+    test('answers a repeat lookup from the cache without calling the API', function () {
+        /** @var TestCase $this */
+        Http::fake([MerriamWebsterFixtures::URL => Http::response([MerriamWebsterFixtures::entry('bow', 1, 'verb', ['to bend'])])]);
+
+        merriamWebster()->lookUp('bow');
+        $repeat = merriamWebster()->lookUp(' bow ');
+
+        Http::assertSentCount(1);
+        expect($repeat->entries[0]->id)->toBe('bow:1');
+    });
+
+    test('caches a word the dictionary does not know, since that costs a query too', function () {
+        /** @var TestCase $this */
+        Http::fake([MerriamWebsterFixtures::URL => Http::response(['limb'])]);
+
+        merriamWebster()->lookUp('limm');
+        merriamWebster()->lookUp('limm');
+
+        Http::assertSentCount(1);
+    });
+
+    test('does not cache a failed lookup', function () {
+        /** @var TestCase $this */
+        Http::fake([MerriamWebsterFixtures::URL => Http::sequence()
+            ->push('Invalid API key. Not subscribed for this reference.', 200, ['Content-Type' => 'text/plain'])
+            ->push([MerriamWebsterFixtures::entry('bow', 1, 'verb', ['to bend'])]),
+        ]);
+
+        expect(fn () => merriamWebster()->lookUp('bow'))->toThrow(MerriamWebsterFailed::class);
+
+        expect(merriamWebster()->lookUp('bow')->isFound())->toBeTrue();
+    });
+
+    test('retries a server error and returns the answer that follows', function () {
+        /** @var TestCase $this */
+        Http::fake([MerriamWebsterFixtures::URL => Http::sequence()
+            ->push('Service Unavailable', 503)
+            ->push('Too Many Requests', 429)
+            ->push([MerriamWebsterFixtures::entry('bow', 1, 'verb', ['to bend'])]),
+        ]);
+
+        $lookup = merriamWebster()->lookUp('bow');
+
+        expect($lookup->isFound())->toBeTrue();
+        Http::assertSentCount(3);
+    });
+
+    test('does not cache an answer it could not read', function () {
+        /** @var TestCase $this */
+        Http::fake([MerriamWebsterFixtures::URL => Http::sequence()
+            ->push([['meta' => ['id' => 'bow']]])
+            ->push([MerriamWebsterFixtures::entry('bow', 1, 'verb', ['to bend'])]),
+        ]);
+
+        expect(fn () => merriamWebster()->lookUp('bow'))->toThrow(MerriamWebsterFailed::class);
+
+        expect(merriamWebster()->lookUp('bow')->isFound())->toBeTrue();
+    });
+
+    test('retries a dropped connection', function () {
+        /** @var TestCase $this */
+        Http::fake([MerriamWebsterFixtures::URL => Http::sequence()
+            ->pushFailedConnection()
+            ->push([MerriamWebsterFixtures::entry('bow', 1, 'verb', ['to bend'])]),
+        ]);
+
+        expect(merriamWebster()->lookUp('bow')->isFound())->toBeTrue();
+        Http::assertSentCount(2);
+    });
+
+    test('does not retry an error that will not get better', function () {
+        /** @var TestCase $this */
+        Http::fake([MerriamWebsterFixtures::URL => Http::response('Forbidden', 403)]);
+
+        expect(fn () => merriamWebster()->lookUp('bow'))->toThrow(MerriamWebsterFailed::class);
+
+        Http::assertSentCount(1);
+    });
 });
 
 describe('__construct()', function () {
     test('reads its key from the services config when resolved from the container', function () {
         /** @var TestCase $this */
         config(['services.merriam_webster.collegiate_key' => 'configured-key']);
-        Http::fake([COLLEGIATE_URL => Http::response([])]);
+        Http::fake([MerriamWebsterFixtures::URL => Http::response([])]);
 
         app(MerriamWebster::class)->lookUp('limn');
 
