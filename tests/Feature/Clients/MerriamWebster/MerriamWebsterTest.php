@@ -5,6 +5,7 @@ use App\Clients\MerriamWebster\MerriamWebsterFailed;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Sleep;
 use Tests\TestCase;
 
 const COLLEGIATE_URL = 'https://www.dictionaryapi.com/api/v3/references/collegiate/json/*';
@@ -12,6 +13,7 @@ const COLLEGIATE_URL = 'https://www.dictionaryapi.com/api/v3/references/collegia
 beforeEach(function () {
     /** @var TestCase $this */
     Http::preventStrayRequests();
+    Sleep::fake();
 });
 
 /**
@@ -141,7 +143,7 @@ describe('lookUp()', function () {
             ->toThrow(MerriamWebsterFailed::class, 'without an id or headword');
     });
 
-    test('fails without the key in the error when the API answers with an error status', function () {
+    test('fails without the key in the error when the API keeps answering with an error status', function () {
         /** @var TestCase $this */
         Http::fake([COLLEGIATE_URL => Http::response('Service Unavailable', 503)]);
 
@@ -163,6 +165,62 @@ describe('lookUp()', function () {
                 expect($failure->getMessage())->not->toContain('test-key')
                     ->and($failure->getPrevious())->toBeNull();
             });
+    });
+
+    test('answers a repeat lookup from the cache without calling the API', function () {
+        /** @var TestCase $this */
+        Http::fake([COLLEGIATE_URL => Http::response([collegiateEntry('bow:1', 1, 'verb', ['to bend'])])]);
+
+        merriamWebster()->lookUp('bow');
+        $repeat = merriamWebster()->lookUp(' bow ');
+
+        Http::assertSentCount(1);
+        expect($repeat->entries[0]->id)->toBe('bow:1');
+    });
+
+    test('caches a word the dictionary does not know, since that costs a query too', function () {
+        /** @var TestCase $this */
+        Http::fake([COLLEGIATE_URL => Http::response(['limb'])]);
+
+        merriamWebster()->lookUp('limm');
+        merriamWebster()->lookUp('limm');
+
+        Http::assertSentCount(1);
+    });
+
+    test('does not cache a failed lookup', function () {
+        /** @var TestCase $this */
+        Http::fake([COLLEGIATE_URL => Http::sequence()
+            ->push('Invalid API key. Not subscribed for this reference.', 200, ['Content-Type' => 'text/plain'])
+            ->push([collegiateEntry('bow:1', 1, 'verb', ['to bend'])]),
+        ]);
+
+        expect(fn () => merriamWebster()->lookUp('bow'))->toThrow(MerriamWebsterFailed::class);
+
+        expect(merriamWebster()->lookUp('bow')->isFound())->toBeTrue();
+    });
+
+    test('retries a server error and returns the answer that follows', function () {
+        /** @var TestCase $this */
+        Http::fake([COLLEGIATE_URL => Http::sequence()
+            ->push('Service Unavailable', 503)
+            ->push('Too Many Requests', 429)
+            ->push([collegiateEntry('bow:1', 1, 'verb', ['to bend'])]),
+        ]);
+
+        $lookup = merriamWebster()->lookUp('bow');
+
+        expect($lookup->isFound())->toBeTrue();
+        Http::assertSentCount(3);
+    });
+
+    test('does not retry an error that will not get better', function () {
+        /** @var TestCase $this */
+        Http::fake([COLLEGIATE_URL => Http::response('Forbidden', 403)]);
+
+        expect(fn () => merriamWebster()->lookUp('bow'))->toThrow(MerriamWebsterFailed::class);
+
+        Http::assertSentCount(1);
     });
 });
 
