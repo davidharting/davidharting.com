@@ -1,15 +1,16 @@
 <?php
 
 use App\Clients\MerriamWebster\MerriamWebster;
+use App\Clients\MerriamWebster\MerriamWebsterFailed;
 use App\Mcp\Servers\AdminServer;
 use App\Mcp\Tools\Admin\LookUpWord;
 use App\Models\User;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
 use Laravel\Mcp\Request;
+use Tests\Support\MerriamWebsterFixtures;
 use Tests\TestCase;
-
-const LOOK_UP_URL = 'https://www.dictionaryapi.com/api/v3/references/collegiate/json/*';
 
 beforeEach(function () {
     /** @var TestCase $this */
@@ -17,24 +18,6 @@ beforeEach(function () {
     Sleep::fake();
     config(['services.merriam_webster.collegiate_key' => 'test-key']);
 });
-
-/**
- * A trimmed Collegiate entry, in the shape Merriam-Webster sends.
- *
- * @param  list<string>  $shortDefinitions
- * @return array<string, mixed>
- */
-function dictionaryEntry(string $headword, ?int $homograph, string $partOfSpeech, array $shortDefinitions, bool $offensive = false): array
-{
-    return [
-        'meta' => ['id' => $homograph ? "{$headword}:{$homograph}" : $headword, 'stems' => [$headword], 'offensive' => $offensive],
-        ...($homograph ? ['hom' => $homograph] : []),
-        'hwi' => ['hw' => $headword],
-        'fl' => $partOfSpeech,
-        'shortdef' => $shortDefinitions,
-        'def' => [['sseq' => []]],
-    ];
-}
 
 describe('shouldRegister()', function () {
     test('an anonymous caller cannot reach the tool at all', function () {
@@ -72,10 +55,10 @@ describe('handle()', function () {
 
     test('returns each entry\'s headword, part of speech and short definitions', function () {
         /** @var TestCase $this */
-        Http::fake([LOOK_UP_URL => Http::response([
-            dictionaryEntry('bow', 1, 'verb', ['to bend the head or body in respect']),
-            dictionaryEntry('bow', 2, 'noun', ['a weapon for shooting arrows']),
-            dictionaryEntry('rainbow', null, 'noun', ['an arc of colors in the sky']),
+        Http::fake([MerriamWebsterFixtures::URL => Http::response([
+            MerriamWebsterFixtures::entry('bow', 1, 'verb', ['to bend the head or body in respect']),
+            MerriamWebsterFixtures::entry('bow', 2, 'noun', ['a weapon for shooting arrows']),
+            MerriamWebsterFixtures::entry('rainbow', null, 'noun', ['an arc of colors in the sky']),
         ])]);
 
         $response = AdminServer::actingAs(User::factory()->admin()->create())
@@ -97,7 +80,7 @@ describe('handle()', function () {
 
     test('returns spelling suggestions when the dictionary does not know the word', function () {
         /** @var TestCase $this */
-        Http::fake([LOOK_UP_URL => Http::response(['limb', 'limn'])]);
+        Http::fake([MerriamWebsterFixtures::URL => Http::response(['limb', 'limn'])]);
 
         $response = AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(LookUpWord::class, ['word' => 'limm']);
@@ -112,7 +95,7 @@ describe('handle()', function () {
 
     test('answers a repeat lookup without calling the dictionary again', function () {
         /** @var TestCase $this */
-        Http::fake([LOOK_UP_URL => Http::response([dictionaryEntry('bow', 1, 'verb', ['to bend'])])]);
+        Http::fake([MerriamWebsterFixtures::URL => Http::response([MerriamWebsterFixtures::entry('bow', 1, 'verb', ['to bend'])])]);
         $admin = User::factory()->admin()->create();
 
         AdminServer::actingAs($admin)->tool(LookUpWord::class, ['word' => 'bow'])->assertOk();
@@ -123,12 +106,14 @@ describe('handle()', function () {
 
     test('says the lookup failed, without details, when the dictionary keeps failing', function () {
         /** @var TestCase $this */
-        Http::fake([LOOK_UP_URL => Http::response('Service Unavailable', 503)]);
+        Exceptions::fake();
+        Http::fake([MerriamWebsterFixtures::URL => Http::response('Service Unavailable', 503)]);
 
         $response = AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(LookUpWord::class, ['word' => 'bow']);
 
         $response->assertHasErrors(['The dictionary lookup failed. Try again later.']);
+        Exceptions::assertReported(MerriamWebsterFailed::class);
     });
 
     test('refuses a blank word without calling the dictionary', function () {
@@ -138,7 +123,7 @@ describe('handle()', function () {
         $response = AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(LookUpWord::class, ['word' => '   ']);
 
-        $response->assertHasErrors();
+        $response->assertHasErrors(['The word field is required.']);
         Http::assertNothingSent();
     });
 });

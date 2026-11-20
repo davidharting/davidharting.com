@@ -21,6 +21,9 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
  * Returns each entry's typed fields, not M-W's raw JSON: the nested
  * definition structure is large and full of inline markup an agent doesn't
  * need to write a short definition.
+ *
+ * handle() checks the administrate gate itself rather than a policy, since
+ * a lookup reads no model.
  */
 #[IsReadOnly]
 #[IsIdempotent]

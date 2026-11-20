@@ -59,9 +59,12 @@ class MerriamWebster
         return Lookup::fromResponse($term, $response);
     }
 
+    /**
+     * Hashed, so a long term can't overflow the database cache's key column.
+     */
     private static function cacheKey(string $term): string
     {
-        return "merriam-webster:collegiate:{$term}";
+        return 'merriam-webster:collegiate:'.hash('xxh128', $term);
     }
 
     /**
@@ -94,6 +97,9 @@ class MerriamWebster
         if (! is_array($decoded) || ! array_is_list($decoded)) {
             throw new MerriamWebsterFailed("Merriam-Webster didn't answer \"{$term}\" with dictionary JSON: ".str($response->body())->limit(200));
         }
+
+        // Read it once here, so an answer we can't read throws before it is cached.
+        Lookup::fromResponse($term, $decoded);
 
         return $decoded;
     }
