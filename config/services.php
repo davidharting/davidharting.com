@@ -31,4 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'merriam_webster' => [
+        'collegiate_key' => env('MERRIAM_WEBSTER_COLLEGIATE_KEY'),
+    ],
+
 ];
