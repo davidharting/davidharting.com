@@ -1,7 +1,7 @@
 # Debian trixie, not bookworm: bookworm's libvips (8.14) ignores `strip` when
 # saving WebP, so pasted images kept their EXIF. Trixie ships libvips 8.16.
 # The PGDG repo line below names the same release (trixie-pgdg); keep them in step.
-FROM dunglas/frankenphp:1.13.6-php8.5.13-trixie
+FROM dunglas/frankenphp:1.14.0-php8.5.13-trixie
 
 
 RUN apt-get update \
