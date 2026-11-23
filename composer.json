@@ -15,7 +15,7 @@
         "guzzlehttp/guzzle": "^7.9.2",
         "laravel/breeze": "^2.3.5",
         "laravel/framework": "^13.14",
-        "laravel/head": "^0.2.1",
+        "laravel/head": "^0.3.0",
         "laravel/mcp": "^1.0",
         "laravel/octane": "^2.8.1",
         "laravel/passport": "^13.0",
