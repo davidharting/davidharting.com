@@ -201,6 +201,7 @@ describe('social cards', function () {
             'og:locale' => 'en_US',
             'og:title' => 'A cool post',
             'og:description' => "You should read this\n\nBy David Harting.\nPublished on 2000 February 1",
+            'og:url' => 'https://davidharting-dot-com.test/notes/a-cool-post',
             'og:image' => 'http://davidharting-dot-com.test/headshot.jpg',
             'og:image:alt' => 'David Harting',
             'twitter:card' => 'summary',
