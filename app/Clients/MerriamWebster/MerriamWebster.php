@@ -48,15 +48,19 @@ class MerriamWebster
             throw new MerriamWebsterFailed('No Merriam-Webster key is configured. Set MERRIAM_WEBSTER_COLLEGIATE_KEY.');
         }
 
-        // The decoded response is cached rather than the Lookup, so a change to
-        // Entry never leaves stale objects in the cache.
-        $response = Cache::remember(
-            self::cacheKey($term),
-            now()->addYear(),
-            fn (): array => $this->fetch($term),
-        );
+        // The cache holds M-W's decoded JSON, not the Lookup built from it, so
+        // a change to Entry never leaves stale objects behind.
+        $cached = Cache::get(self::cacheKey($term));
 
-        return Lookup::fromResponse($term, $response);
+        if (is_array($cached)) {
+            return Lookup::fromResponse($term, $cached);
+        }
+
+        // fetch() throws on anything it can't read, so only good answers are cached.
+        $lookup = $this->fetch($term);
+        Cache::put(self::cacheKey($term), $lookup->response, now()->addYear());
+
+        return $lookup;
     }
 
     /**
@@ -68,11 +72,9 @@ class MerriamWebster
     }
 
     /**
-     * @return list<array<string, mixed>|string>
-     *
      * @throws MerriamWebsterFailed
      */
-    private function fetch(string $term): array
+    private function fetch(string $term): Lookup
     {
         try {
             $response = Http::baseUrl(self::BASE_URL)
@@ -98,10 +100,7 @@ class MerriamWebster
             throw new MerriamWebsterFailed("Merriam-Webster didn't answer \"{$term}\" with dictionary JSON: ".str($response->body())->limit(200));
         }
 
-        // Read it once here, so an answer we can't read throws before it is cached.
-        Lookup::fromResponse($term, $decoded);
-
-        return $decoded;
+        return Lookup::fromResponse($term, $decoded);
     }
 
     private static function isWorthRetrying(Throwable $exception): bool
