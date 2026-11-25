@@ -35,6 +35,8 @@ final readonly class Entry
     ) {}
 
     /**
+     * Type one entry object from a Merriam-Webster response.
+     *
      * @param  array<string, mixed>  $entry
      *
      * @throws MerriamWebsterFailed when the entry lacks its id or headword

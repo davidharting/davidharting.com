@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
 use Laravel\Mcp\Request;
-use Tests\Support\MerriamWebsterFixtures;
+use Tests\Support\FakeMerriamWebster;
 use Tests\TestCase;
 
 beforeEach(function () {
@@ -55,11 +55,11 @@ describe('handle()', function () {
 
     test('returns each entry\'s headword, part of speech and short definitions', function () {
         /** @var TestCase $this */
-        Http::fake([MerriamWebsterFixtures::URL => Http::response([
-            MerriamWebsterFixtures::entry('bow', 1, 'verb', ['to bend the head or body in respect']),
-            MerriamWebsterFixtures::entry('bow', 2, 'noun', ['a weapon for shooting arrows']),
-            MerriamWebsterFixtures::entry('rainbow', null, 'noun', ['an arc of colors in the sky']),
-        ])]);
+        FakeMerriamWebster::answering(['bow' => [
+            FakeMerriamWebster::entry('bow', 1, 'verb', ['to bend the head or body in respect']),
+            FakeMerriamWebster::entry('bow', 2, 'noun', ['a weapon for shooting arrows']),
+            FakeMerriamWebster::entry('rainbow', null, 'noun', ['an arc of colors in the sky']),
+        ]]);
 
         $response = AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(LookUpWord::class, ['word' => ' bow ']);
@@ -80,7 +80,7 @@ describe('handle()', function () {
 
     test('returns spelling suggestions when the dictionary does not know the word', function () {
         /** @var TestCase $this */
-        Http::fake([MerriamWebsterFixtures::URL => Http::response(['limb', 'limn'])]);
+        FakeMerriamWebster::answering(['limm' => ['limb', 'limn']]);
 
         $response = AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(LookUpWord::class, ['word' => 'limm']);
@@ -95,7 +95,7 @@ describe('handle()', function () {
 
     test('answers a repeat lookup without calling the dictionary again', function () {
         /** @var TestCase $this */
-        Http::fake([MerriamWebsterFixtures::URL => Http::response([MerriamWebsterFixtures::entry('bow', 1, 'verb', ['to bend'])])]);
+        FakeMerriamWebster::answering(['bow' => [FakeMerriamWebster::entry('bow', 1, 'verb', ['to bend'])]]);
         $admin = User::factory()->admin()->create();
 
         AdminServer::actingAs($admin)->tool(LookUpWord::class, ['word' => 'bow'])->assertOk();
@@ -107,7 +107,7 @@ describe('handle()', function () {
     test('says the lookup failed, without details, when the dictionary keeps failing', function () {
         /** @var TestCase $this */
         Exceptions::fake();
-        Http::fake([MerriamWebsterFixtures::URL => Http::response('Service Unavailable', 503)]);
+        Http::fake([FakeMerriamWebster::URL => Http::response('Service Unavailable', 503)]);
 
         $response = AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(LookUpWord::class, ['word' => 'bow']);

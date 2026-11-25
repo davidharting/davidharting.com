@@ -33,6 +33,9 @@ class MerriamWebster
     ) {}
 
     /**
+     * Look a word or phrase up, from the cache when it has been looked up
+     * in the last year, otherwise from Merriam-Webster.
+     *
      * @throws InvalidArgumentException when the term is blank
      * @throws MerriamWebsterFailed when the key is missing or rejected, or the request fails
      */
