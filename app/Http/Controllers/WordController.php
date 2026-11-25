@@ -30,7 +30,9 @@ class WordController extends Controller
         ]);
 
         $search = trim($validated['q'] ?? '');
-        $sort = WordSort::tryFrom($validated['sort'] ?? '') ?? WordSort::Recent;
+        // A search is a lookup, so it ranks by best match unless told otherwise.
+        $defaultSort = $search === '' ? WordSort::Recent : WordSort::BestMatch;
+        $sort = WordSort::tryFrom($validated['sort'] ?? '') ?? $defaultSort;
         $status = LearningStatus::tryFrom($validated['status'] ?? '');
         $perPage = (int) ($validated['per_page'] ?? self::DEFAULT_PER_PAGE);
 
@@ -44,7 +46,7 @@ class WordController extends Controller
         $listState = array_filter([
             'q' => $search,
             'status' => $status?->value,
-            'sort' => $sort === WordSort::Recent ? null : $sort->value,
+            'sort' => $sort === $defaultSort ? null : $sort->value,
             'per_page' => $perPage === self::DEFAULT_PER_PAGE ? null : $perPage,
         ]);
 
@@ -65,16 +67,21 @@ class WordController extends Controller
                     'url' => $this->listUrl($listState, ['status' => $option->value]),
                 ], LearningStatus::cases()),
             ],
-            // The search box replaces q, and keeps the rest of the list's state.
-            'searchHiddenFields' => Arr::except($listState, 'q'),
-            'sortLinks' => [
-                ['label' => 'Recent', 'sort' => WordSort::Recent, 'url' => $this->listUrl($listState, ['sort' => null])],
-                ['label' => 'A to Z', 'sort' => WordSort::AToZ, 'url' => $this->listUrl($listState, ['sort' => WordSort::AToZ->value])],
-            ],
+            // The search box replaces q and keeps the status and page size. A new
+            // search starts at its best matches, so it drops the sort.
+            'searchHiddenFields' => Arr::except($listState, ['q', 'sort']),
+            // Best match is only offered for a search, since it ranks one.
+            'sortLinks' => array_map(fn (WordSort $option): array => [
+                'label' => $option->label(),
+                'sort' => $option,
+                'url' => $this->listUrl($listState, ['sort' => $option === $defaultSort ? null : $option->value]),
+            ], $search === '' ? [WordSort::Recent, WordSort::AToZ] : [WordSort::BestMatch, WordSort::Recent, WordSort::AToZ]),
             'clearSearchUrl' => $this->listUrl($listState, ['q' => null]),
             'firstPageUrl' => $this->listUrl($listState, []),
             // Headings like a dictionary's only make sense in an A to Z list.
-            'showsLetterHeadings' => $sort === WordSort::AToZ,
+            // A search has its own headings, for its two kinds of match.
+            'showsLetterHeadings' => $sort === WordSort::AToZ && ! $query->isSearching(),
+            'showsMatchHeadings' => $query->isSearching(),
             'transitionDirection' => $this->cameFromAWord($request) ? 'back' : null,
         ]);
     }

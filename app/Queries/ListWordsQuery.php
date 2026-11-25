@@ -18,7 +18,9 @@ class ListWordsQuery
      * checking the viewer may see David's words at all.
      *
      * @param  string|null  $search  Matched case-insensitively against the word
-     *                               and both of its definitions.
+     *                               and both of its definitions. Whatever the
+     *                               sort, words whose spelling matches come
+     *                               before words found only in a definition.
      * @param  LearningStatus|null  $status  Keep only words with this status.
      * @param  bool  $includeFullDefinition  Whether to load `full_definition`.
      * @param  bool  $includeTimesMissed  Whether to count each word's misses,
@@ -34,8 +36,18 @@ class ListWordsQuery
     ) {}
 
     /**
+     * Whether this listing is a search, so its words come in two groups:
+     * spelling matches, then definition-only matches.
+     */
+    public function isSearching(): bool
+    {
+        return ! blank($this->search);
+    }
+
+    /**
      * Each listed word comes with its flashcard loaded, for its learning
-     * status.
+     * status. When searching, each also has `matches_word`: whether its
+     * spelling contains the search, rather than only a definition.
      *
      * @return LengthAwarePaginator<int, Word>
      */
@@ -44,6 +56,10 @@ class ListWordsQuery
         $words = Word::query()->select($this->columns())->with('flashcard');
 
         $this->whereMatchesSearch($words);
+
+        if ($this->isSearching()) {
+            $words->selectRaw('words.word ilike ? as matches_word', [$this->containsPattern()]);
+        }
 
         if ($this->status !== null) {
             $words->whereRelation('flashcard', 'learning_status', $this->status);
@@ -103,11 +119,11 @@ class ListWordsQuery
      */
     private function whereMatchesSearch(Builder $words): void
     {
-        if (blank($this->search)) {
+        if (! $this->isSearching()) {
             return;
         }
 
-        $pattern = '%'.LikePattern::escape(trim($this->search)).'%';
+        $pattern = $this->containsPattern();
 
         $words->where(function (Builder $query) use ($pattern): void {
             $query->whereLike('words.word', $pattern)
@@ -117,16 +133,54 @@ class ListWordsQuery
     }
 
     /**
+     * The search as a LIKE pattern matching text that contains it anywhere.
+     */
+    private function containsPattern(): string
+    {
+        return '%'.LikePattern::escape(trim($this->search)).'%';
+    }
+
+    /**
      * @param  Builder<Word>  $query
      */
     private function applySort(Builder $query): void
     {
-        match ($this->sort) {
+        if ($this->isSearching()) {
+            $this->orderByMatch($query);
+        }
+
+        // Best match ranks a search, so with nothing to rank it lists as Recent.
+        $sort = $this->sort === WordSort::BestMatch && ! $this->isSearching() ? WordSort::Recent : $this->sort;
+
+        match ($sort) {
             WordSort::Recent => $query->orderBy('words.created_at', 'desc')->orderBy('words.id', 'desc'),
-            WordSort::AToZ => $query->orderByRaw('lower(words.word) asc')->orderBy('words.id', 'asc'),
+            WordSort::AToZ, WordSort::BestMatch => $query->orderByRaw('lower(words.word) asc')->orderBy('words.id', 'asc'),
             WordSort::MostMissed => $query->orderBy('times_missed', 'desc')
                 ->orderByRaw('lower(words.word) asc')
                 ->orderBy('words.id', 'asc'),
         };
+    }
+
+    /**
+     * Put spelling matches before definition-only matches. For Best match,
+     * also rank the spelling matches: the word itself, then words starting
+     * with the search, then words containing it.
+     *
+     * @param  Builder<Word>  $query
+     */
+    private function orderByMatch(Builder $query): void
+    {
+        if ($this->sort !== WordSort::BestMatch) {
+            $query->orderBy('matches_word', 'desc');
+
+            return;
+        }
+
+        $search = trim($this->search);
+
+        $query->orderByRaw(
+            'case when lower(words.word) = lower(?) then 0 when words.word ilike ? then 1 when words.word ilike ? then 2 else 3 end asc',
+            [$search, LikePattern::escape($search).'%', $this->containsPattern()],
+        );
     }
 }

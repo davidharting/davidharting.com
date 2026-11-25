@@ -77,6 +77,40 @@ test('searches the word and both definitions, ignoring case', function () {
         ->assertDontSeeText('laconic');
 });
 
+test('lists a search\'s spelling matches under Words, then definition matches under Found in definitions', function () {
+    /** @var TestCase $this */
+    Word::factory()->create(['word' => 'astute', 'short_definition' => 'canny; sharp']);
+    Word::factory()->create(['word' => 'uncanny', 'short_definition' => 'eerie']);
+    Word::factory()->create(['word' => 'canny', 'short_definition' => 'shrewd']);
+
+    $html = $this->get('/words?q=canny')->assertSuccessful()->getContent();
+
+    expect(preg_replace('/\s+/', ' ', $html))
+        ->toMatch('#<h2[^>]*> Words </h2>.*>canny<.*>uncanny<.*<h2[^>]*> Found in definitions </h2>.*>astute<#');
+});
+
+test('shows no letter headings in an A to Z search', function () {
+    /** @var TestCase $this */
+    Word::factory()->create(['word' => 'canny']);
+
+    $this->get('/words?q=canny&sort=a_to_z')
+        ->assertSeeText('Words')
+        ->assertDontSee('>C</h2>', false);
+});
+
+test('offers a Best match sort only for a search, chosen until another sort is', function () {
+    /** @var TestCase $this */
+    Word::factory()->create(['word' => 'canny']);
+
+    $this->get('/words')->assertDontSeeText('Best match');
+
+    $response = $this->get('/words?q=canny');
+
+    expect($response->getContent())->toMatch('#aria-current="true"\s*>\s*Best match#');
+    // Recent is no longer the default, so its link names it.
+    $response->assertSee(route('words.index', ['q' => 'canny', 'sort' => 'recent']));
+});
+
 test('matches a percent sign in a search literally', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'percentile', 'short_definition' => 'a value below which 50% fall']);
@@ -125,7 +159,7 @@ test('pages by a chosen page size', function () {
         ->assertDontSeeText('word2');
 });
 
-test('keeps the search, sort and page size in the page, sort and search links', function () {
+test('keeps the search, sort and page size in the page and sort links', function () {
     /** @var TestCase $this */
     Word::factory()
         ->count(3)
@@ -137,11 +171,15 @@ test('keeps the search, sort and page size in the page, sort and search links', 
 
     // The Next page link.
     $response->assertSee(route('words.index', [...$state, 'page' => 2]));
-    // The Recent sort link, which drops only the sort.
+    // The Best match sort link, which drops only the sort.
     $response->assertSee(route('words.index', ['q' => 'word', 'per_page' => 2]));
-    // The search box, which carries the sort and page size as hidden fields.
-    $response->assertSee('name="sort" value="a_to_z"', false);
+    // The search box, which carries the page size as a hidden field.
     $response->assertSee('name="per_page" value="2"', false);
+});
+
+test('starts a new search at its best matches, whatever the sort before', function () {
+    /** @var TestCase $this */
+    $this->get('/words?sort=a_to_z')->assertDontSee('name="sort"', false);
 });
 
 test('refuses a sort it does not know', function (string $query) {

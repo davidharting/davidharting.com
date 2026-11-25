@@ -94,7 +94,11 @@
                 @endif
             </p>
         @else
-            <x-words.list :words="$words" :shows-letter-headings="$showsLetterHeadings" />
+            <x-words.list
+                :words="$words"
+                :shows-letter-headings="$showsLetterHeadings"
+                :shows-match-headings="$showsMatchHeadings"
+            />
 
             @if ($words->hasPages())
                 <nav aria-label="Pages" class="my-8 flex items-center justify-between gap-2">

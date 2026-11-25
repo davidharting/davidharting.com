@@ -23,11 +23,17 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 #[IsIdempotent]
 #[Description(<<<'TEXT'
     List the words on David Harting's private vocabulary list, most recently
-    added first. Returns each word's id, the word, its short definition, when
+    added first by default. Returns each word's id, the word, its short definition, when
     it was added, its learning status and how many times David has missed it
-    in practice. Pass search to keep only words whose spelling or either
-    definition contains that text, ignoring case. Pass sort as a_to_z for
-    alphabetical order, or most_missed for the words he misses most first.
+    in practice. Pass sort as a_to_z for alphabetical order, or most_missed
+    for the words he misses most first.
+
+    Pass search to keep only words whose spelling or either definition
+    contains that text, ignoring case. A search lists words whose spelling
+    matches before words found only in a definition, whatever the sort, and
+    says which each one is in matched_on. Its default sort is best_match:
+    the word itself first, then words starting with the search, then words
+    containing it, then definition matches, each group alphabetical.
 
     A word's learning status is exactly one of: new (never practised),
     mastered (he is expected to remember it three weeks or more out),
@@ -97,6 +103,7 @@ class ListWords extends Tool
                 'added_at' => $word->created_at->toIso8601String(),
                 'status' => $word->flashcard->learning_status->value,
                 'times_missed' => $word->times_missed,
+                ...($options['search'] !== null ? ['matched_on' => $word->matches_word ? 'word' : 'definition'] : []),
                 ...($options['includeFullDefinition'] ? ['full_definition' => $word->full_definition] : []),
             ])->all(),
             'total' => $paginator->total(),
@@ -116,9 +123,11 @@ class ListWords extends Tool
      */
     private function options(array $validated): array
     {
+        $search = blank($validated['search'] ?? null) ? null : $validated['search'];
+
         return [
-            'search' => $validated['search'] ?? null,
-            'sort' => isset($validated['sort']) ? WordSort::from($validated['sort']) : WordSort::Recent,
+            'search' => $search,
+            'sort' => isset($validated['sort']) ? WordSort::from($validated['sort']) : ($search === null ? WordSort::Recent : WordSort::BestMatch),
             'status' => isset($validated['status']) ? LearningStatus::from($validated['status']) : null,
             'includeFullDefinition' => (bool) ($validated['include_full_definition'] ?? false),
             'page' => $validated['page'] ?? 1,
@@ -138,7 +147,7 @@ class ListWords extends Tool
                 ->description('Text to look for in each word and its short and full definitions, ignoring case.'),
             'sort' => $schema->string()
                 ->enum(array_column(WordSort::cases(), 'value'))
-                ->description('recent (the default) for most recently added first, a_to_z for alphabetical, or most_missed for the words missed most often in practice first.'),
+                ->description('recent for most recently added first (the default without a search), best_match to rank a search by how well each word\'s spelling matches (the default with a search), a_to_z for alphabetical, or most_missed for the words missed most often in practice first.'),
             'status' => $schema->string()
                 ->enum(array_column(LearningStatus::cases(), 'value'))
                 ->description('Keep only words with this learning status: new, mastered, troublesome or learning. Leave it out for every word.'),
@@ -176,6 +185,9 @@ class ListWords extends Tool
                         ->enum(array_column(LearningStatus::cases(), 'value'))
                         ->description('How well David knows the word: new, mastered, troublesome or learning.'),
                     'times_missed' => $schema->integer()->description('How many times David has missed the word in practice.'),
+                    'matched_on' => $schema->string()
+                        ->enum(['word', 'definition'])
+                        ->description('Whether the search matched the word\'s spelling, or only one of its definitions. Present only when searching.'),
                     'full_definition' => $schema->string()->nullable()->description('The markdown full definition, if any. Present only when include_full_definition is true.'),
                 ]))
                 ->description('The words on this page, in the requested order.'),

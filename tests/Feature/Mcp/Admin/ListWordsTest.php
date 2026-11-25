@@ -197,6 +197,22 @@ describe('handle()', function () {
         expect(listedWords(['search' => 'ephemeral', 'sort' => 'a_to_z']))->toBe(['Ephemeral', 'evanescent', 'transient']);
     });
 
+    test('ranks a search by best match by default, and says whether each word matched on its spelling or a definition', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->admin()->create();
+        Word::factory()->create(['word' => 'astute', 'short_definition' => 'canny; sharp', 'full_definition' => null]);
+        Word::factory()->create(['word' => 'uncanny', 'short_definition' => 'eerie', 'full_definition' => null]);
+        Word::factory()->create(['word' => 'canny', 'short_definition' => 'shrewd', 'full_definition' => null]);
+
+        AdminServer::actingAs($admin)->tool(ListWords::class, ['search' => 'canny'])
+            ->assertOk()
+            ->assertStructuredContent(function ($json) {
+                expect(array_map(fn (array $word): array => [$word['word'], $word['matched_on']], $json->toArray()['words']))
+                    ->toBe([['canny', 'word'], ['uncanny', 'word'], ['astute', 'definition']]);
+                $json->etc();
+            });
+    });
+
     test('lists every word when the search is blank', function () {
         /** @var TestCase $this */
         Word::factory()->create(['word' => 'apricity']);
