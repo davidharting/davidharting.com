@@ -47,44 +47,45 @@
             <button type="submit" class="btn">Search</button>
         </form>
 
-        <nav aria-label="Filter by learning status" class="mb-4 flex flex-wrap gap-3">
-            @foreach ($statusLinks as $link)
-                <a
-                    href="{{ $link["url"] }}"
-                    class="btn btn-sm tap-target {{ $link["active"] ? "btn-primary" : "btn-outline" }}"
-                    @if ($link['active']) aria-current="true" @endif
-                >
-                    {{ $link["label"] }}
-                    <span class="badge badge-sm">{{ number_format($link["count"]) }}</span>
-                </a>
-            @endforeach
-        </nav>
-
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
-            <div class="join" role="group" aria-label="Sort">
-                @foreach ($sortLinks as $link)
+        @if ($search !== '')
+            {{-- A search is its own mode, so the browsing filters and sorts step aside. --}}
+            <div class="mb-6 flex justify-end">
+                <a href="{{ $clearSearchUrl }}" class="link link-hover tap-target text-sm">Clear search</a>
+            </div>
+        @else
+            <nav aria-label="Filter by learning status" class="mb-4 flex flex-wrap gap-3">
+                @foreach ($statusLinks as $link)
                     <a
                         href="{{ $link["url"] }}"
-                        class="btn btn-sm join-item tap-target {{ $sort === $link["sort"] ? "btn-active" : "" }}"
-                        @if ($sort === $link['sort']) aria-current="true" @endif
+                        class="btn btn-sm tap-target {{ $link["active"] ? "btn-primary" : "btn-outline" }}"
+                        @if ($link['active']) aria-current="true" @endif
                     >
                         {{ $link["label"] }}
+                        <span class="badge badge-sm">{{ number_format($link["count"]) }}</span>
                     </a>
                 @endforeach
-            </div>
+            </nav>
 
-            @if ($search !== '')
-                <a href="{{ $clearSearchUrl }}" class="link link-hover tap-target text-sm">Clear search</a>
-            @endif
-        </div>
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
+                <div class="join" role="group" aria-label="Sort">
+                    @foreach ($sortLinks as $link)
+                        <a
+                            href="{{ $link["url"] }}"
+                            class="btn btn-sm join-item tap-target {{ $sort === $link["sort"] ? "btn-active" : "" }}"
+                            @if ($sort === $link['sort']) aria-current="true" @endif
+                        >
+                            {{ $link["label"] }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         @if ($words->isEmpty())
             <p class="text-base-content/70 py-8 text-center">
                 @if ($words->total() > 0)
                     No words on this page.
                     <a href="{{ $firstPageUrl }}" class="link">Back to the first page</a>
-                @elseif ($search !== '' && $status)
-                    No {{ Str::lower($status->label()) }} words match “{{ $search }}”.
                 @elseif ($search !== '')
                     No words match “{{ $search }}”.
                 @elseif ($status)

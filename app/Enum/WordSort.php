@@ -58,15 +58,4 @@ enum WordSort: string
 
         return $sort === self::BestMatch && ! $searching ? self::Recent : $sort;
     }
-
-    /**
-     * The sorts the words page offers as buttons, in order. Best match is
-     * only offered for a search, since it ranks one.
-     *
-     * @return list<self>
-     */
-    public static function offeredOnPage(bool $searching): array
-    {
-        return $searching ? [self::BestMatch, self::Recent, self::AToZ] : [self::Recent, self::AToZ];
-    }
 }

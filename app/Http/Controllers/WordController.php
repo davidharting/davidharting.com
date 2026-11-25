@@ -8,7 +8,6 @@ use App\Models\Flashcard;
 use App\Models\Word;
 use App\Queries\ListWordsQuery;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Laravel\Head\Facades\Head;
@@ -30,54 +29,48 @@ class WordController extends Controller
         ]);
 
         $search = trim($validated['q'] ?? '');
-        $status = LearningStatus::tryFrom($validated['status'] ?? '');
         $perPage = (int) ($validated['per_page'] ?? self::DEFAULT_PER_PAGE);
+        $pageSize = $perPage === self::DEFAULT_PER_PAGE ? null : $perPage;
 
-        $query = new ListWordsQuery($search, WordSort::tryFrom($validated['sort'] ?? ''), $status);
-        $sort = $query->sort;
+        // A search is its own mode: a lookup ranked by best match. The status
+        // filters and sorts are for browsing, so a search leaves them out.
+        $query = $search !== ''
+            ? new ListWordsQuery($search)
+            : new ListWordsQuery(
+                sort: WordSort::tryFrom($validated['sort'] ?? ''),
+                status: LearningStatus::tryFrom($validated['status'] ?? ''),
+            );
         $words = $query
             ->paginate(perPage: $perPage, page: (int) ($validated['page'] ?? 1))
             ->withQueryString();
-        $countsByStatus = $query->countsByStatus();
 
-        // The list's search, status, sort and page size, without defaults so URLs stay short.
+        // The list's search or browsing state and page size, without defaults so URLs stay short.
         $listState = array_filter([
             'q' => $search,
-            'status' => $status?->value,
-            'sort' => $this->sortParameter($sort, $query->isSearching()),
-            'per_page' => $perPage === self::DEFAULT_PER_PAGE ? null : $perPage,
+            'status' => $query->status?->value,
+            'sort' => $query->sort === WordSort::defaultFor($query->isSearching()) ? null : $query->sort->value,
+            'per_page' => $pageSize,
         ]);
 
         return view('words.index', [
             'words' => $words,
             'dueCount' => Flashcard::query()->dueNow()->count(),
             'search' => $search,
-            'sort' => $sort,
-            'status' => $status,
-            // Every word the search finds, then each status, so a tap narrows
-            // the list without losing the search.
-            'statusLinks' => [
-                ['label' => 'All', 'count' => array_sum($countsByStatus), 'active' => $status === null, 'url' => $this->listUrl($listState, ['status' => null])],
-                ...array_map(fn (LearningStatus $option): array => [
-                    'label' => $option->label(),
-                    'count' => $countsByStatus[$option->value],
-                    'active' => $status === $option,
-                    'url' => $this->listUrl($listState, ['status' => $option->value]),
-                ], LearningStatus::cases()),
-            ],
-            // The search box replaces q and keeps the status and page size. A new
-            // search starts at its best matches, so it drops the sort.
-            'searchHiddenFields' => Arr::except($listState, ['q', 'sort']),
-            'sortLinks' => array_map(fn (WordSort $option): array => [
+            'sort' => $query->sort,
+            'status' => $query->status,
+            'statusLinks' => $query->isSearching() ? [] : $this->statusLinks($query, $listState),
+            'sortLinks' => $query->isSearching() ? [] : array_map(fn (WordSort $option): array => [
                 'label' => $option->label(),
                 'sort' => $option,
-                'url' => $this->listUrl($listState, ['sort' => $this->sortParameter($option, $query->isSearching())]),
-            ], WordSort::offeredOnPage($query->isSearching())),
-            'clearSearchUrl' => $this->listUrl($listState, ['q' => null, 'sort' => $this->sortParameter(WordSort::resolve($sort, searching: false), searching: false)]),
+                'url' => $this->listUrl($listState, ['sort' => $option === WordSort::Recent ? null : $option->value]),
+            ], [WordSort::Recent, WordSort::AToZ]),
+            // The search box and Clear search start afresh, keeping only the page size.
+            'searchHiddenFields' => array_filter(['per_page' => $pageSize]),
+            'clearSearchUrl' => $this->listUrl(['per_page' => $pageSize], []),
             'firstPageUrl' => $this->listUrl($listState, []),
             // Headings like a dictionary's only make sense in an A to Z list.
             // A search has its own headings, for its two kinds of match.
-            'showsLetterHeadings' => $sort === WordSort::AToZ && ! $query->isSearching(),
+            'showsLetterHeadings' => $query->sort === WordSort::AToZ,
             'showsMatchHeadings' => $query->isSearching(),
             'transitionDirection' => $this->cameFromAWord($request) ? 'back' : null,
         ]);
@@ -116,11 +109,24 @@ class WordController extends Controller
     }
 
     /**
-     * The sort as a URL parameter, left out when it is the default, so URLs stay short.
+     * Every word, then each status, with counts, so a tap narrows the list.
+     *
+     * @param  array<string, string|int>  $listState
+     * @return list<array{label: string, count: int, active: bool, url: string}>
      */
-    private function sortParameter(WordSort $sort, bool $searching): ?string
+    private function statusLinks(ListWordsQuery $query, array $listState): array
     {
-        return $sort === WordSort::defaultFor($searching) ? null : $sort->value;
+        $countsByStatus = $query->countsByStatus();
+
+        return [
+            ['label' => 'All', 'count' => array_sum($countsByStatus), 'active' => $query->status === null, 'url' => $this->listUrl($listState, ['status' => null])],
+            ...array_map(fn (LearningStatus $option): array => [
+                'label' => $option->label(),
+                'count' => $countsByStatus[$option->value],
+                'active' => $query->status === $option,
+                'url' => $this->listUrl($listState, ['status' => $option->value]),
+            ], LearningStatus::cases()),
+        ];
     }
 
     /**
