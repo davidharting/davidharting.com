@@ -11,6 +11,7 @@ use App\Mcp\Tools\Admin\EditWord;
 use App\Mcp\Tools\Admin\GetNote as AdminGetNote;
 use App\Mcp\Tools\Admin\ListNotes as AdminListNotes;
 use App\Mcp\Tools\Admin\ListWords;
+use App\Mcp\Tools\Admin\LookUpWord;
 use App\Mcp\Tools\Admin\QueryMedia as AdminQueryMedia;
 use App\Mcp\Tools\Admin\SearchNotes as AdminSearchNotes;
 use App\Mcp\Tools\Admin\UpdateCreator;
@@ -63,8 +64,9 @@ class AdminServer extends Server
 
         **Words** are David's private vocabulary list: words he wants to
         remember, often ones he came across while reading, each with a short
-        definition. Use list-words to browse them, and add-word and
-        edit-word to record them. Each tool's description gives the rules for using it.
+        definition. Use list-words to browse them, look-up-word to check a
+        real dictionary, and add-word and edit-word to record them. Each
+        tool's description gives the rules for using it.
 
         Drafts, remarks on media items and comments on their events are
         private writing, not on the public website. Never quote or attribute
@@ -84,6 +86,7 @@ class AdminServer extends Server
         AddWord::class,
         EditWord::class,
         ListWords::class,
+        LookUpWord::class,
     ];
 
     protected array $resources = [

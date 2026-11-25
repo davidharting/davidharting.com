@@ -25,6 +25,9 @@ final readonly class Lookup
     ) {}
 
     /**
+     * Split a decoded Merriam-Webster response into typed entries and
+     * suggestions, keeping the response itself alongside them.
+     *
      * @param  list<array<string, mixed>|string>  $response
      *
      * @throws MerriamWebsterFailed when an entry lacks its id or headword
@@ -44,6 +47,9 @@ final readonly class Lookup
         );
     }
 
+    /**
+     * Whether the dictionary has at least one entry for the term.
+     */
     public function isFound(): bool
     {
         return $this->entries !== [];

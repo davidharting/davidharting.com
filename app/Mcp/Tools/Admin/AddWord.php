@@ -31,7 +31,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
     When David cares about more than one sense of the word, give a brief
     definition of each, separated by semicolons, e.g. "lasting a very short
     time; a plant that lives only a short time". Base it on a real
-    dictionary rather than guessing.
+    dictionary rather than guessing: look-up-word checks Merriam-Webster.
 
     full_definition is optional markdown holding the whole dictionary entry:
     every sense with its part of speech and example uses. David sees it when
