@@ -118,8 +118,6 @@ describe('handle()', function () {
 
     test('refuses a blank word without calling the dictionary', function () {
         /** @var TestCase $this */
-        Http::fake();
-
         $response = AdminServer::actingAs(User::factory()->admin()->create())
             ->tool(LookUpWord::class, ['word' => '   ']);
 

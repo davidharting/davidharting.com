@@ -74,7 +74,7 @@ test('every public method in app/Clients has a summary line', function () {
         ->and($undocumented)->toBe([]);
 });
 
-test('a docblock holding only tags has no summary line', function () {
+test('reads the summary line and ignores tags', function () {
     expect(docblockSummary("/**\n * @throws RuntimeException\n */"))->toBeNull()
         ->and(docblockSummary(false))->toBeNull()
         ->and(docblockSummary("/**\n * Looks a word up.\n *\n * @throws RuntimeException\n */"))->toBe('Looks a word up.');
