@@ -38,4 +38,35 @@ enum WordSort: string
             self::BestMatch => 'Best match',
         };
     }
+
+    /**
+     * The sort a listing uses when none is asked for: a search is a lookup,
+     * so it ranks by best match.
+     */
+    public static function defaultFor(bool $searching): self
+    {
+        return $searching ? self::BestMatch : self::Recent;
+    }
+
+    /**
+     * The sort a listing actually uses: the one asked for, or the default.
+     * Best match ranks a search, so with nothing to rank it lists as Recent.
+     */
+    public static function resolve(?self $requested, bool $searching): self
+    {
+        $sort = $requested ?? self::defaultFor($searching);
+
+        return $sort === self::BestMatch && ! $searching ? self::Recent : $sort;
+    }
+
+    /**
+     * The sorts the words page offers as buttons, in order. Best match is
+     * only offered for a search, since it ranks one.
+     *
+     * @return list<self>
+     */
+    public static function offeredOnPage(bool $searching): array
+    {
+        return $searching ? [self::BestMatch, self::Recent, self::AToZ] : [self::Recent, self::AToZ];
+    }
 }

@@ -83,22 +83,22 @@ test('lists a search\'s spelling matches under Words, then definition matches un
     Word::factory()->create(['word' => 'uncanny', 'short_definition' => 'eerie']);
     Word::factory()->create(['word' => 'canny', 'short_definition' => 'shrewd']);
 
-    $html = $this->get('/words?q=canny')->assertSuccessful()->getContent();
-
-    expect(preg_replace('/\s+/', ' ', $html))
-        ->toMatch('#<h2[^>]*> Words </h2>.*>canny<.*>uncanny<.*<h2[^>]*> Found in definitions </h2>.*>astute<#');
+    $this->get('/words?q=canny')
+        ->assertSuccessful()
+        // Starting after the page's own title and Practise button, and
+        // checking definitions, since the words appear in the header too.
+        ->assertSeeTextInOrder(['Practise', 'Words', 'shrewd', 'eerie', 'Found in definitions', 'canny; sharp']);
 });
 
 test('shows no letter headings in an A to Z search', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'canny']);
 
-    $this->get('/words?q=canny&sort=a_to_z')
-        ->assertSeeText('Words')
-        ->assertDontSee('>C</h2>', false);
+    $this->get('/words?sort=a_to_z')->assertSee('>C</h2>', false);
+    $this->get('/words?q=canny&sort=a_to_z')->assertDontSee('>C</h2>', false);
 });
 
-test('offers a Best match sort only for a search, chosen until another sort is', function () {
+test('offers Best match only while searching, and chooses it by default', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'canny']);
 
@@ -106,9 +106,15 @@ test('offers a Best match sort only for a search, chosen until another sort is',
 
     $response = $this->get('/words?q=canny');
 
-    expect($response->getContent())->toMatch('#aria-current="true"\s*>\s*Best match#');
+    // The current sort's button is marked as current.
+    expect($response->getContent())->toMatch('#aria-current="true"[^<]*Best match#');
     // Recent is no longer the default, so its link names it.
     $response->assertSee(route('words.index', ['q' => 'canny', 'sort' => 'recent']));
+});
+
+test('clears a search back to the plain list', function () {
+    /** @var TestCase $this */
+    $this->get('/words?q=canny&sort=recent')->assertSee('href="'.route('words.index').'"', false);
 });
 
 test('matches a percent sign in a search literally', function () {
@@ -179,7 +185,10 @@ test('keeps the search, sort and page size in the page and sort links', function
 
 test('starts a new search at its best matches, whatever the sort before', function () {
     /** @var TestCase $this */
-    $this->get('/words?sort=a_to_z')->assertDontSee('name="sort"', false);
+    // The search box keeps the page size but not the sort.
+    $this->get('/words?sort=a_to_z&per_page=2')
+        ->assertSee('name="per_page" value="2"', false)
+        ->assertDontSee('name="sort"', false);
 });
 
 test('refuses a sort it does not know', function (string $query) {

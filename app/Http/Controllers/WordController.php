@@ -30,13 +30,11 @@ class WordController extends Controller
         ]);
 
         $search = trim($validated['q'] ?? '');
-        // A search is a lookup, so it ranks by best match unless told otherwise.
-        $defaultSort = $search === '' ? WordSort::Recent : WordSort::BestMatch;
-        $sort = WordSort::tryFrom($validated['sort'] ?? '') ?? $defaultSort;
         $status = LearningStatus::tryFrom($validated['status'] ?? '');
         $perPage = (int) ($validated['per_page'] ?? self::DEFAULT_PER_PAGE);
 
-        $query = new ListWordsQuery($search, $sort, $status);
+        $query = new ListWordsQuery($search, WordSort::tryFrom($validated['sort'] ?? ''), $status);
+        $sort = $query->sort;
         $words = $query
             ->paginate(perPage: $perPage, page: (int) ($validated['page'] ?? 1))
             ->withQueryString();
@@ -46,7 +44,7 @@ class WordController extends Controller
         $listState = array_filter([
             'q' => $search,
             'status' => $status?->value,
-            'sort' => $sort === $defaultSort ? null : $sort->value,
+            'sort' => $this->sortParameter($sort, $query->isSearching()),
             'per_page' => $perPage === self::DEFAULT_PER_PAGE ? null : $perPage,
         ]);
 
@@ -70,13 +68,12 @@ class WordController extends Controller
             // The search box replaces q and keeps the status and page size. A new
             // search starts at its best matches, so it drops the sort.
             'searchHiddenFields' => Arr::except($listState, ['q', 'sort']),
-            // Best match is only offered for a search, since it ranks one.
             'sortLinks' => array_map(fn (WordSort $option): array => [
                 'label' => $option->label(),
                 'sort' => $option,
-                'url' => $this->listUrl($listState, ['sort' => $option === $defaultSort ? null : $option->value]),
-            ], $search === '' ? [WordSort::Recent, WordSort::AToZ] : [WordSort::BestMatch, WordSort::Recent, WordSort::AToZ]),
-            'clearSearchUrl' => $this->listUrl($listState, ['q' => null]),
+                'url' => $this->listUrl($listState, ['sort' => $this->sortParameter($option, $query->isSearching())]),
+            ], WordSort::offeredOnPage($query->isSearching())),
+            'clearSearchUrl' => $this->listUrl($listState, ['q' => null, 'sort' => $this->sortParameter(WordSort::resolve($sort, searching: false), searching: false)]),
             'firstPageUrl' => $this->listUrl($listState, []),
             // Headings like a dictionary's only make sense in an A to Z list.
             // A search has its own headings, for its two kinds of match.
@@ -116,6 +113,14 @@ class WordController extends Controller
         $session = $request->session();
 
         return $session->previousRoute() === 'words.index' ? $session->previousUrl() : route('words.index');
+    }
+
+    /**
+     * The sort as a URL parameter, left out when it is the default, so URLs stay short.
+     */
+    private function sortParameter(WordSort $sort, bool $searching): ?string
+    {
+        return $sort === WordSort::defaultFor($searching) ? null : $sort->value;
     }
 
     /**

@@ -14,6 +14,16 @@ use Illuminate\Database\Eloquent\Builder;
 class ListWordsQuery
 {
     /**
+     * The `match_rank` of a search result found only in a definition.
+     */
+    private const int DEFINITION_ONLY_RANK = 3;
+
+    /**
+     * The sort the listing uses, with the default filled in.
+     */
+    public readonly WordSort $sort;
+
+    /**
      * This query performs no authorization. The caller is responsible for
      * checking the viewer may see David's words at all.
      *
@@ -21,6 +31,8 @@ class ListWordsQuery
      *                               and both of its definitions. Whatever the
      *                               sort, words whose spelling matches come
      *                               before words found only in a definition.
+     * @param  WordSort|null  $sort  Leave out for the default: best match for
+     *                               a search, otherwise most recent first.
      * @param  LearningStatus|null  $status  Keep only words with this status.
      * @param  bool  $includeFullDefinition  Whether to load `full_definition`.
      * @param  bool  $includeTimesMissed  Whether to count each word's misses,
@@ -29,11 +41,13 @@ class ListWordsQuery
      */
     public function __construct(
         public ?string $search = null,
-        public WordSort $sort = WordSort::Recent,
+        ?WordSort $sort = null,
         public ?LearningStatus $status = null,
         public bool $includeFullDefinition = false,
         public bool $includeTimesMissed = false,
-    ) {}
+    ) {
+        $this->sort = WordSort::resolve($sort, $this->isSearching());
+    }
 
     /**
      * Whether this listing is a search, so its words come in two groups:
@@ -58,7 +72,7 @@ class ListWordsQuery
         $this->whereMatchesSearch($words);
 
         if ($this->isSearching()) {
-            $words->selectRaw('words.word ilike ? as matches_word', [$this->containsPattern()]);
+            $this->selectMatchRank($words);
         }
 
         if ($this->status !== null) {
@@ -71,7 +85,10 @@ class ListWordsQuery
 
         $this->applySort($words);
 
-        return $words->paginate(perPage: $perPage, page: $page);
+        return $words->paginate(perPage: $perPage, page: $page)
+            ->through(fn (Word $word): Word => $this->isSearching()
+                ? $word->setAttribute('matches_word', $word->match_rank < self::DEFINITION_ONLY_RANK)
+                : $word);
     }
 
     /**
@@ -146,13 +163,10 @@ class ListWordsQuery
     private function applySort(Builder $query): void
     {
         if ($this->isSearching()) {
-            $this->orderByMatch($query);
+            $query->orderBy('match_rank', 'asc');
         }
 
-        // Best match ranks a search, so with nothing to rank it lists as Recent.
-        $sort = $this->sort === WordSort::BestMatch && ! $this->isSearching() ? WordSort::Recent : $this->sort;
-
-        match ($sort) {
+        match ($this->sort) {
             WordSort::Recent => $query->orderBy('words.created_at', 'desc')->orderBy('words.id', 'desc'),
             WordSort::AToZ, WordSort::BestMatch => $query->orderByRaw('lower(words.word) asc')->orderBy('words.id', 'asc'),
             WordSort::MostMissed => $query->orderBy('times_missed', 'desc')
@@ -162,25 +176,30 @@ class ListWordsQuery
     }
 
     /**
-     * Put spelling matches before definition-only matches. For Best match,
-     * also rank the spelling matches: the word itself, then words starting
-     * with the search, then words containing it.
+     * Rank each search result as `match_rank`, lowest first, so spelling
+     * matches come before definition-only matches. Best match also ranks
+     * the spelling matches: the word itself, then words starting with the
+     * search, then words containing it.
      *
-     * @param  Builder<Word>  $query
+     * @param  Builder<Word>  $words
      */
-    private function orderByMatch(Builder $query): void
+    private function selectMatchRank(Builder $words): void
     {
-        if ($this->sort !== WordSort::BestMatch) {
-            $query->orderBy('matches_word', 'desc');
+        $search = trim($this->search);
+        $definitionOnly = self::DEFINITION_ONLY_RANK;
+
+        if ($this->sort === WordSort::BestMatch) {
+            $words->selectRaw(
+                "case when lower(words.word) = lower(?) then 0 when words.word ilike ? then 1 when words.word ilike ? then 2 else {$definitionOnly} end as match_rank",
+                [$search, LikePattern::escape($search).'%', $this->containsPattern()],
+            );
 
             return;
         }
 
-        $search = trim($this->search);
-
-        $query->orderByRaw(
-            'case when lower(words.word) = lower(?) then 0 when words.word ilike ? then 1 when words.word ilike ? then 2 else 3 end asc',
-            [$search, LikePattern::escape($search).'%', $this->containsPattern()],
+        $words->selectRaw(
+            "case when words.word ilike ? then 0 else {$definitionOnly} end as match_rank",
+            [$this->containsPattern()],
         );
     }
 }

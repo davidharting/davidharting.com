@@ -84,13 +84,14 @@ class ListWords extends Tool
 
         $options = $this->options($validated);
 
-        $paginator = (new ListWordsQuery(
+        $query = new ListWordsQuery(
             search: $options['search'],
             sort: $options['sort'],
             status: $options['status'],
             includeFullDefinition: $options['includeFullDefinition'],
             includeTimesMissed: true,
-        ))->paginate(
+        );
+        $paginator = $query->paginate(
             perPage: $options['perPage'],
             page: $options['page'],
         );
@@ -103,7 +104,7 @@ class ListWords extends Tool
                 'added_at' => $word->created_at->toIso8601String(),
                 'status' => $word->flashcard->learning_status->value,
                 'times_missed' => $word->times_missed,
-                ...($options['search'] !== null ? ['matched_on' => $word->matches_word ? 'word' : 'definition'] : []),
+                ...($query->isSearching() ? ['matched_on' => $word->matches_word ? 'word' : 'definition'] : []),
                 ...($options['includeFullDefinition'] ? ['full_definition' => $word->full_definition] : []),
             ])->all(),
             'total' => $paginator->total(),
@@ -119,15 +120,13 @@ class ListWords extends Tool
      * the response use it.
      *
      * @param  array<string, mixed>  $validated
-     * @return array{search: ?string, sort: WordSort, status: ?LearningStatus, includeFullDefinition: bool, page: int, perPage: int}
+     * @return array{search: ?string, sort: ?WordSort, status: ?LearningStatus, includeFullDefinition: bool, page: int, perPage: int}
      */
     private function options(array $validated): array
     {
-        $search = blank($validated['search'] ?? null) ? null : $validated['search'];
-
         return [
-            'search' => $search,
-            'sort' => isset($validated['sort']) ? WordSort::from($validated['sort']) : ($search === null ? WordSort::Recent : WordSort::BestMatch),
+            'search' => $validated['search'] ?? null,
+            'sort' => isset($validated['sort']) ? WordSort::from($validated['sort']) : null,
             'status' => isset($validated['status']) ? LearningStatus::from($validated['status']) : null,
             'includeFullDefinition' => (bool) ($validated['include_full_definition'] ?? false),
             'page' => $validated['page'] ?? 1,

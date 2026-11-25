@@ -10,20 +10,24 @@ use Laravel\Mcp\Request;
 use Tests\TestCase;
 
 /**
- * The words the response lists, in order.
+ * The words the response lists, in order. Pass a field to get each word's
+ * value of it instead, keyed by word (null where the word has none).
  *
  * @param  array<string, mixed>  $arguments
- * @return list<string>
+ * @return list<string>|array<string, mixed>
  */
-function listedWords(array $arguments = []): array
+function listedWords(array $arguments = [], ?string $field = null): array
 {
     $admin = User::factory()->admin()->create();
 
     $words = [];
     AdminServer::actingAs($admin)->tool(ListWords::class, $arguments)
         ->assertOk()
-        ->assertStructuredContent(function ($json) use (&$words) {
-            $words = array_column($json->toArray()['words'], 'word');
+        ->assertStructuredContent(function ($json) use (&$words, $field) {
+            $listed = $json->toArray()['words'];
+            $words = $field === null
+                ? array_column($listed, 'word')
+                : array_combine(array_column($listed, 'word'), array_map(fn (array $word): mixed => $word[$field] ?? null, $listed));
             $json->etc();
         });
 
@@ -199,18 +203,19 @@ describe('handle()', function () {
 
     test('ranks a search by best match by default, and says whether each word matched on its spelling or a definition', function () {
         /** @var TestCase $this */
-        $admin = User::factory()->admin()->create();
         Word::factory()->create(['word' => 'astute', 'short_definition' => 'canny; sharp', 'full_definition' => null]);
         Word::factory()->create(['word' => 'uncanny', 'short_definition' => 'eerie', 'full_definition' => null]);
         Word::factory()->create(['word' => 'canny', 'short_definition' => 'shrewd', 'full_definition' => null]);
 
-        AdminServer::actingAs($admin)->tool(ListWords::class, ['search' => 'canny'])
-            ->assertOk()
-            ->assertStructuredContent(function ($json) {
-                expect(array_map(fn (array $word): array => [$word['word'], $word['matched_on']], $json->toArray()['words']))
-                    ->toBe([['canny', 'word'], ['uncanny', 'word'], ['astute', 'definition']]);
-                $json->etc();
-            });
+        expect(listedWords(['search' => 'canny'], 'matched_on'))
+            ->toBe(['canny' => 'word', 'uncanny' => 'word', 'astute' => 'definition']);
+    });
+
+    test('says nothing about matches when not searching', function () {
+        /** @var TestCase $this */
+        Word::factory()->create(['word' => 'canny']);
+
+        expect(listedWords([], 'matched_on'))->toBe(['canny' => null]);
     });
 
     test('lists every word when the search is blank', function () {
