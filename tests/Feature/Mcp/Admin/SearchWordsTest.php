@@ -87,10 +87,10 @@ describe('handle()', function () {
         expect(array_keys(searchedWords(['query' => 'per_'])))->toBe(['per_cent']);
     });
 
-    test('requires a query', function () {
+    test('requires a query that is not blank', function (array $arguments) {
         /** @var TestCase $this */
         $admin = User::factory()->admin()->create();
 
-        AdminServer::actingAs($admin)->tool(SearchWords::class, [])->assertHasErrors();
-    });
+        AdminServer::actingAs($admin)->tool(SearchWords::class, $arguments)->assertHasErrors();
+    })->with(['no query' => [[]], 'a blank query' => [['query' => '   ']]]);
 });

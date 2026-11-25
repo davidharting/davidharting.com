@@ -46,6 +46,11 @@ class ListWords extends Tool
     use PresentsWords;
 
     /**
+     * The sorts for browsing. Best match ranks a search, so it is search-words'.
+     */
+    private const array SORTS = [WordSort::Recent, WordSort::AToZ, WordSort::MostMissed];
+
+    /**
      * Whether the caller is entitled to the admin surface at all. Failing this
      * hides the tool from tools/list and makes tools/call answer "Tool not
      * found": both resolve through the same filtered collection.
@@ -68,9 +73,14 @@ class ListWords extends Tool
         }
 
         $validated = $request->validate([
-            'sort' => ['sometimes', 'string', Rule::enum(WordSort::class)->only(self::sorts())],
+            // An agent used to the old search option would otherwise get the
+            // whole list back and might think a word is missing.
+            'search' => ['prohibited'],
+            'sort' => ['sometimes', 'string', Rule::enum(WordSort::class)->only(self::SORTS)],
             'status' => ['sometimes', 'string', Rule::enum(LearningStatus::class)],
             ...$this->pageOptionsRules(),
+        ], [
+            'search.prohibited' => 'list-words only browses. Use search-words to find words.',
         ]);
 
         $includeFullDefinition = (bool) ($validated['include_full_definition'] ?? false);
@@ -92,16 +102,6 @@ class ListWords extends Tool
     }
 
     /**
-     * The sorts for browsing. Best match ranks a search, so it is search-words'.
-     *
-     * @return list<WordSort>
-     */
-    private static function sorts(): array
-    {
-        return [WordSort::Recent, WordSort::AToZ, WordSort::MostMissed];
-    }
-
-    /**
      * Get the tool's input schema.
      *
      * @return array<string, JsonSchema>
@@ -110,7 +110,7 @@ class ListWords extends Tool
     {
         return [
             'sort' => $schema->string()
-                ->enum(array_column(self::sorts(), 'value'))
+                ->enum(array_column(self::SORTS, 'value'))
                 ->description('recent (the default) for most recently added first, a_to_z for alphabetical, or most_missed for the words missed most often in practice first.'),
             'status' => $schema->string()
                 ->enum(array_column(LearningStatus::cases(), 'value'))

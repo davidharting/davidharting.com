@@ -90,14 +90,6 @@ test('lists a search\'s spelling matches under Words, then definition matches un
         ->assertSeeTextInOrder(['Practise', 'Words', 'shrewd', 'eerie', 'Found in definitions', 'canny; sharp']);
 });
 
-test('shows no letter headings in an A to Z search', function () {
-    /** @var TestCase $this */
-    Word::factory()->create(['word' => 'canny']);
-
-    $this->get('/words?sort=a_to_z')->assertSee('>C</h2>', false);
-    $this->get('/words?q=canny&sort=a_to_z')->assertDontSee('>C</h2>', false);
-});
-
 test('makes a search its own mode, without the status filters or sorts', function () {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'canny']);
@@ -114,8 +106,9 @@ test('makes a search its own mode, without the status filters or sorts', functio
 
 test('ignores a status filter and sort while searching', function () {
     /** @var TestCase $this */
-    Word::factory()->create(['word' => 'cantankerous', 'short_definition' => 'grumpy']);
+    // Made in this order so that Recent, if it were honoured, would list cantankerous first.
     Word::factory()->troublesome()->create(['word' => 'cant', 'short_definition' => 'hypocritical talk']);
+    Word::factory()->create(['word' => 'cantankerous', 'short_definition' => 'grumpy']);
 
     // Best match order, with the word that isn't troublesome still listed.
     $this->get('/words?q=cant&status=troublesome&sort=recent')
@@ -123,9 +116,18 @@ test('ignores a status filter and sort while searching', function () {
         ->assertSeeTextInOrder(['hypocritical talk', 'grumpy']);
 });
 
-test('clears a search back to the plain list', function () {
+test('clears a search back to the plain list, keeping the page size', function () {
     /** @var TestCase $this */
-    $this->get('/words?q=canny&sort=recent')->assertSee('href="'.route('words.index').'"', false);
+    $this->get('/words?q=canny&per_page=2')->assertSee('href="'.route('words.index', ['per_page' => 2]).'"', false);
+});
+
+test('leaves an ignored status or sort out of a search\'s page links', function () {
+    /** @var TestCase $this */
+    Word::factory()->count(2)->sequence(['word' => 'canny'], ['word' => 'uncanny'])->create();
+
+    $this->get('/words?q=can&per_page=1&status=mastered')
+        ->assertSee(route('words.index', ['q' => 'can', 'per_page' => 1, 'page' => 2]))
+        ->assertDontSee('status=mastered', false);
 });
 
 test('matches a percent sign in a search literally', function () {

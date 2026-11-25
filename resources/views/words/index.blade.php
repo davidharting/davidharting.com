@@ -15,7 +15,8 @@
             <p class="text-base-content/70 mt-2 text-sm">
                 @if ($search !== '')
                     {{ trans_choice(':count match|:count matches', $words->total(), ['count' => number_format($words->total())]) }}
-                    for “{{ $search }}”
+                    for “{{ $search }}” ·
+                    <a href="{{ $clearSearchUrl }}" class="link tap-target">Clear search</a>
                 @else
                     {{ trans_choice(':count word|:count words', $words->total(), ['count' => number_format($words->total())]) }}
                 @endif
@@ -47,12 +48,8 @@
             <button type="submit" class="btn">Search</button>
         </form>
 
-        @if ($search !== '')
-            {{-- A search is its own mode, so the browsing filters and sorts step aside. --}}
-            <div class="mb-6 flex justify-end">
-                <a href="{{ $clearSearchUrl }}" class="link link-hover tap-target text-sm">Clear search</a>
-            </div>
-        @else
+        {{-- A search is its own mode, so the browsing filters and sorts step aside. --}}
+        @if ($search === '')
             <nav aria-label="Filter by learning status" class="mb-4 flex flex-wrap gap-3">
                 @foreach ($statusLinks as $link)
                     <a
@@ -66,18 +63,16 @@
                 @endforeach
             </nav>
 
-            <div class="mb-6 flex flex-wrap items-center justify-between gap-2">
-                <div class="join" role="group" aria-label="Sort">
-                    @foreach ($sortLinks as $link)
-                        <a
-                            href="{{ $link["url"] }}"
-                            class="btn btn-sm join-item tap-target {{ $sort === $link["sort"] ? "btn-active" : "" }}"
-                            @if ($sort === $link['sort']) aria-current="true" @endif
-                        >
-                            {{ $link["label"] }}
-                        </a>
-                    @endforeach
-                </div>
+            <div class="join mb-6" role="group" aria-label="Sort">
+                @foreach ($sortLinks as $link)
+                    <a
+                        href="{{ $link["url"] }}"
+                        class="btn btn-sm join-item tap-target {{ $sort === $link["sort"] ? "btn-active" : "" }}"
+                        @if ($sort === $link['sort']) aria-current="true" @endif
+                    >
+                        {{ $link["label"] }}
+                    </a>
+                @endforeach
             </div>
         @endif
 

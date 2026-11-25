@@ -230,6 +230,14 @@ describe('handle()', function () {
         AdminServer::actingAs($admin)->tool(ListWords::class, ['per_page' => 201])->assertHasErrors();
     });
 
+    test('refuses a search and points to search-words', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->admin()->create();
+
+        AdminServer::actingAs($admin)->tool(ListWords::class, ['search' => 'canny'])
+            ->assertHasErrors(['list-words only browses. Use search-words to find words.']);
+    });
+
     test('rejects the best match sort, which is for search-words', function () {
         /** @var TestCase $this */
         $admin = User::factory()->admin()->create();

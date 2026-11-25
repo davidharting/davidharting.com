@@ -41,8 +41,7 @@ class WordController extends Controller
                 status: LearningStatus::tryFrom($validated['status'] ?? ''),
             );
         $words = $query
-            ->paginate(perPage: $perPage, page: (int) ($validated['page'] ?? 1))
-            ->withQueryString();
+            ->paginate(perPage: $perPage, page: (int) ($validated['page'] ?? 1));
 
         // The list's search or browsing state and page size, without defaults so URLs stay short.
         $listState = array_filter([
@@ -53,7 +52,8 @@ class WordController extends Controller
         ]);
 
         return view('words.index', [
-            'words' => $words,
+            // Page links carry the list's real state, not a status or sort a search ignores.
+            'words' => $words->appends($listState),
             'dueCount' => Flashcard::query()->dueNow()->count(),
             'search' => $search,
             'sort' => $query->sort,
