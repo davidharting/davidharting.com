@@ -98,12 +98,9 @@ class Word extends Model
     }
 
     /**
-     * Match a word case-insensitively, so "ephemeral" finds "Ephemeral".
+     * Count each word's misses in practice, as `times_missed`.
      *
      * @param  Builder<Word>  $query
-     */
-    /**
-     * Count each word's misses in practice, as `times_missed`.
      */
     #[Scope]
     protected function withTimesMissed(Builder $query): void
@@ -111,6 +108,11 @@ class Word extends Model
         $query->withCount(['reviews as times_missed' => fn (Builder $reviews) => $reviews->where('rating', Rating::Again)]);
     }
 
+    /**
+     * Match a word case-insensitively, so "ephemeral" finds "Ephemeral".
+     *
+     * @param  Builder<Word>  $query
+     */
     #[Scope]
     protected function named(Builder $query, string $word): void
     {
