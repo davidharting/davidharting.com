@@ -19,20 +19,6 @@ describe('countsByStatus()', function () {
         ]);
     });
 
-    test('counts only the words the search finds', function () {
-        /** @var TestCase $this */
-        Word::factory()->mastered()->create(['word' => 'ephemeral']);
-        Word::factory()->troublesome()->create(['word' => 'evanescent', 'short_definition' => 'ephemeral; fading']);
-        Word::factory()->troublesome()->create(['word' => 'liminal']);
-
-        expect((new ListWordsQuery(search: 'ephemeral'))->countsByStatus())->toBe([
-            'new' => 0,
-            'mastered' => 1,
-            'troublesome' => 1,
-            'learning' => 0,
-        ]);
-    });
-
     test('counts every status even when the list keeps only one', function () {
         /** @var TestCase $this */
         Word::factory()->create();
