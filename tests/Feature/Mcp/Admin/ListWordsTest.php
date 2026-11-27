@@ -238,13 +238,6 @@ describe('handle()', function () {
             ->assertHasErrors(['list-words only browses. Use search-words to find words.']);
     });
 
-    test('rejects the best match sort, which is for search-words', function () {
-        /** @var TestCase $this */
-        $admin = User::factory()->admin()->create();
-
-        AdminServer::actingAs($admin)->tool(ListWords::class, ['sort' => 'best_match'])->assertHasErrors();
-    });
-
     test('rejects an unknown sort', function () {
         /** @var TestCase $this */
         $admin = User::factory()->admin()->create();

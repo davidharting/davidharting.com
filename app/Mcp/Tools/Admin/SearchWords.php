@@ -4,7 +4,7 @@ namespace App\Mcp\Tools\Admin;
 
 use App\Mcp\Tools\Admin\Concerns\PresentsWords;
 use App\Models\Word;
-use App\Queries\ListWordsQuery;
+use App\Queries\SearchWordsQuery;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -69,7 +69,7 @@ class SearchWords extends Tool
 
         $includeFullDefinition = (bool) ($validated['include_full_definition'] ?? false);
 
-        $paginator = (new ListWordsQuery(
+        $paginator = (new SearchWordsQuery(
             search: $validated['query'],
             includeFullDefinition: $includeFullDefinition,
             includeTimesMissed: true,

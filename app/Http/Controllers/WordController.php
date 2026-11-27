@@ -7,6 +7,7 @@ use App\Enum\WordSort;
 use App\Models\Flashcard;
 use App\Models\Word;
 use App\Queries\ListWordsQuery;
+use App\Queries\SearchWordsQuery;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -32,22 +33,30 @@ class WordController extends Controller
         $perPage = (int) ($validated['per_page'] ?? self::DEFAULT_PER_PAGE);
         $pageSize = $perPage === self::DEFAULT_PER_PAGE ? null : $perPage;
 
+        $page = (int) ($validated['page'] ?? 1);
+
         // A search is its own mode: a lookup ranked by best match. The status
         // filters and sorts are for browsing, so a search leaves them out.
-        $query = $search !== ''
-            ? new ListWordsQuery($search)
-            : new ListWordsQuery(
-                sort: WordSort::tryFrom($validated['sort'] ?? ''),
+        if ($search !== '') {
+            $sort = null;
+            $status = null;
+            $words = (new SearchWordsQuery($search))->paginate(perPage: $perPage, page: $page);
+            $query = null;
+        } else {
+            $query = new ListWordsQuery(
+                sort: WordSort::tryFrom($validated['sort'] ?? '') ?? WordSort::Recent,
                 status: LearningStatus::tryFrom($validated['status'] ?? ''),
             );
-        $words = $query
-            ->paginate(perPage: $perPage, page: (int) ($validated['page'] ?? 1));
+            $sort = $query->sort;
+            $status = $query->status;
+            $words = $query->paginate(perPage: $perPage, page: $page);
+        }
 
         // The list's search or browsing state and page size, without defaults so URLs stay short.
         $listState = array_filter([
             'q' => $search,
-            'status' => $query->status?->value,
-            'sort' => $query->sort === WordSort::defaultFor($query->isSearching()) ? null : $query->sort->value,
+            'status' => $status?->value,
+            'sort' => $sort === WordSort::Recent ? null : $sort?->value,
             'per_page' => $pageSize,
         ]);
 
@@ -56,22 +65,21 @@ class WordController extends Controller
             'words' => $words->appends($listState),
             'dueCount' => Flashcard::query()->dueNow()->count(),
             'search' => $search,
-            'sort' => $query->sort,
-            'status' => $query->status,
-            'statusLinks' => $query->isSearching() ? [] : $this->statusLinks($query, $listState),
-            'sortLinks' => $query->isSearching() ? [] : array_map(fn (WordSort $option): array => [
-                'label' => $option->label(),
-                'sort' => $option,
-                'url' => $this->listUrl($listState, ['sort' => $option === WordSort::Recent ? null : $option->value]),
-            ], [WordSort::Recent, WordSort::AToZ]),
+            'sort' => $sort,
+            'status' => $status,
+            'statusLinks' => $query === null ? [] : $this->statusLinks($query, $listState),
+            'sortLinks' => $query === null ? [] : [
+                ['label' => 'Recent', 'sort' => WordSort::Recent, 'url' => $this->listUrl($listState, ['sort' => null])],
+                ['label' => 'A to Z', 'sort' => WordSort::AToZ, 'url' => $this->listUrl($listState, ['sort' => WordSort::AToZ->value])],
+            ],
             // The search box and Clear search start afresh, keeping only the page size.
             'searchHiddenFields' => array_filter(['per_page' => $pageSize]),
             'clearSearchUrl' => $this->listUrl(['per_page' => $pageSize], []),
             'firstPageUrl' => $this->listUrl($listState, []),
             // Headings like a dictionary's only make sense in an A to Z list.
             // A search has its own headings, for its two kinds of match.
-            'showsLetterHeadings' => $query->sort === WordSort::AToZ,
-            'showsMatchHeadings' => $query->isSearching(),
+            'showsLetterHeadings' => $sort === WordSort::AToZ,
+            'showsMatchHeadings' => $search !== '',
             'transitionDirection' => $this->cameFromAWord($request) ? 'back' : null,
         ]);
     }
