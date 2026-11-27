@@ -67,9 +67,9 @@ class Practice extends Component
     /**
      * Save how well David recalled a card and reschedule it. The browser
      * sends the rating's number: Missed it is Again, Kind of got it is Hard,
-     * and Got it is Good. Returns true,
-     * because Livewire resolves a failed call with null rather than
-     * rejecting it, so the browser can tell a saved grade from a lost one.
+     * and Got it is Good. Returns true, because Livewire resolves a failed
+     * call with null rather than rejecting it, so the browser can tell a
+     * saved grade from a lost one.
      */
     #[Renderless]
     public function grade(int $flashcardId, Rating $rating): bool

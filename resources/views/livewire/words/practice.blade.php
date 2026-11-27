@@ -138,7 +138,7 @@
                 <template x-if="! revealed">
                     <button type="button" class="btn btn-lg btn-neutral" x-on:click="reveal()">
                         Show definition
-                        <kbd class="kbd kbd-sm hidden pointer-fine:inline-flex">Space</kbd>
+                        <kbd class="kbd kbd-sm hidden pointer-fine:inline-flex" aria-hidden="true">Space</kbd>
                     </button>
                 </template>
                 <template x-if="revealed">
@@ -154,7 +154,7 @@
                                 <kbd
                                     class="kbd kbd-sm hidden pointer-fine:inline-flex"
                                     aria-hidden="true"
-                                    x-text="choice.keyHint"
+                                    x-text="choice.keys[0]"
                                 ></kbd>
                             </button>
                         </template>

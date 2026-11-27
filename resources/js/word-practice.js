@@ -1,8 +1,9 @@
 /**
  * The practice page's swipe stack. Tap the card to reveal the definition,
  * then grade it with the buttons or their keys: Missed it, Kind of got it,
- * or Got it. Swiping left or right is a shortcut for Missed it and Got it. The card flies off and the next one shows straight away;
- * the grade is saved in the background. A grade that fails to save puts the
+ * or Got it. Swiping left or right is a shortcut for Missed it and Got it.
+ * The card flies off and the next one shows straight away; the grade is
+ * saved in the background. A grade that fails to save puts the
  * card back at the bottom of the stack.
  *
  * A round is five cards (Practice::ROUND_SIZE). When it runs out, the
@@ -22,32 +23,30 @@ const GOOD = 3;
 
 /**
  * The grades offered once the definition shows, left to right, with the
- * keys that give them and the way the card flies off. Kind of got it counts
- * as remembered. Swipes stay left for Missed it and right for Got it, since
+ * keys that give them (the first is shown on the button) and the way the
+ * card flies off. Kind of got it counts as remembered. The arrow keys match
+ * the swipes; Kind of got it has no arrow because ↓ would steal scrolling. Swipes stay left for Missed it and right for Got it, since
  * vertical drags scroll a long definition.
  */
 const GRADES = [
     {
         rating: AGAIN,
         label: "Missed it",
-        keys: ["ArrowLeft", "1"],
-        keyHint: "←",
+        keys: ["1", "ArrowLeft"],
         flyOut: -1,
         buttonClass: "btn-error btn-outline",
     },
     {
         rating: HARD,
         label: "Kind of got it",
-        keys: ["ArrowDown", "2"],
-        keyHint: "↓",
+        keys: ["2"],
         flyOut: 1,
         buttonClass: "btn-warning btn-outline",
     },
     {
         rating: GOOD,
         label: "Got it",
-        keys: ["ArrowRight", "3"],
-        keyHint: "→",
+        keys: ["3", "ArrowRight"],
         flyOut: 1,
         buttonClass: "btn-success",
     },
@@ -297,6 +296,10 @@ document.addEventListener("alpine:init", () => {
             },
 
             handleKey(event) {
+                // Leave browser shortcuts such as Alt+← (Back) alone.
+                if (event.altKey || event.ctrlKey || event.metaKey) {
+                    return;
+                }
                 if (this.done() || event.target.closest("a, button, input")) {
                     return;
                 }
