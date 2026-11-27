@@ -35,8 +35,8 @@ class WordController extends Controller
     public function index(Request $request): View|RedirectResponse
     {
         // Older links searched here.
-        if ($request->filled('q')) {
-            return redirect()->route('words.search', $request->only(['q', 'per_page']));
+        if (is_string($request->query('q')) && filled($request->query('q'))) {
+            return redirect()->route('words.search', $request->only(['q', 'per_page']), 301);
         }
 
         $validated = $request->validate([

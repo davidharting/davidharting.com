@@ -54,4 +54,9 @@ describe('paginate()', function () {
 
         expect(wordsFoundFor('  canny '))->toBe(['canny' => true]);
     });
+
+    test('refuses a blank search, which would match every word', function () {
+        /** @var TestCase $this */
+        expect(fn () => new SearchWordsQuery('   '))->toThrow(InvalidArgumentException::class);
+    });
 });

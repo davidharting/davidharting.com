@@ -64,7 +64,8 @@ test('shows no letter headings when listing the newest first', function () {
 test('sends an old search link to the search page', function () {
     /** @var TestCase $this */
     $this->get('/words?q=canny&per_page=2&sort=a_to_z')
-        ->assertRedirect(route('words.search', ['q' => 'canny', 'per_page' => 2]));
+        ->assertRedirect(route('words.search', ['q' => 'canny', 'per_page' => 2]))
+        ->assertStatus(301);
 });
 
 test('shows 250 words a page by default', function () {

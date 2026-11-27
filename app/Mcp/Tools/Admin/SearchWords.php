@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 /**
  * Look words up on David's vocabulary list, registered only on AdminServer.
- * Browsing is list-words, the same split as the words page's search mode.
+ * Browsing is list-words, the same split as /words and /words/search.
  */
 #[IsReadOnly]
 #[IsIdempotent]

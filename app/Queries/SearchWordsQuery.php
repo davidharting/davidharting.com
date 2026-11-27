@@ -2,11 +2,11 @@
 
 namespace App\Queries;
 
-use App\Fsrs\Rating;
 use App\Models\Word;
 use App\Support\LikePattern;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use InvalidArgumentException;
 
 /**
  * Look words up on David's vocabulary list. A search is a lookup, so it is
@@ -35,7 +35,12 @@ class SearchWordsQuery
         public string $search,
         public bool $includeFullDefinition = false,
         public bool $includeTimesMissed = false,
-    ) {}
+    ) {
+        // A blank search would match every word, which is browsing, not a lookup.
+        if (blank($search)) {
+            throw new InvalidArgumentException('A word search needs some text to look for.');
+        }
+    }
 
     /**
      * Each word found comes with its flashcard loaded, for its learning
@@ -71,7 +76,7 @@ class SearchWordsQuery
         }
 
         if ($this->includeTimesMissed) {
-            $words->withCount(['reviews as times_missed' => fn (Builder $reviews) => $reviews->where('rating', Rating::Again)]);
+            $words->withTimesMissed();
         }
 
         return $words->paginate(perPage: $perPage, page: $page)

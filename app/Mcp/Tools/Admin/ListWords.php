@@ -19,7 +19,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 /**
  * Browse David's vocabulary list, registered only on AdminServer. Looking
- * a word up is search-words, the same split as the words page's search mode.
+ * a word up is search-words, the same split as /words and /words/search.
  */
 #[IsReadOnly]
 #[IsIdempotent]

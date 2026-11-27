@@ -4,7 +4,6 @@ namespace App\Queries;
 
 use App\Enum\LearningStatus;
 use App\Enum\WordSort;
-use App\Fsrs\Rating;
 use App\Models\Flashcard;
 use App\Models\Word;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -47,7 +46,7 @@ class ListWordsQuery
         }
 
         if ($this->includeTimesMissed || $this->sort === WordSort::MostMissed) {
-            $words->withCount(['reviews as times_missed' => fn (Builder $reviews) => $reviews->where('rating', Rating::Again)]);
+            $words->withTimesMissed();
         }
 
         $this->applySort($words);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Fsrs\Rating;
 use Database\Factories\WordFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -101,6 +102,15 @@ class Word extends Model
      *
      * @param  Builder<Word>  $query
      */
+    /**
+     * Count each word's misses in practice, as `times_missed`.
+     */
+    #[Scope]
+    protected function withTimesMissed(Builder $query): void
+    {
+        $query->withCount(['reviews as times_missed' => fn (Builder $reviews) => $reviews->where('rating', Rating::Again)]);
+    }
+
     #[Scope]
     protected function named(Builder $query, string $word): void
     {

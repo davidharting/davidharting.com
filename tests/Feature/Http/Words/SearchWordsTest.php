@@ -102,9 +102,11 @@ test('refuses a search longer than 255 characters', function () {
     $this->get('/words/search?q='.str_repeat('a', 256))->assertSessionHasErrors('q');
 });
 
-test('keeps /words/search for searching, even for a word spelled "search"', function () {
+test('takes /words/search for searching, so a word spelled "search" has no page of its own', function () {
     /** @var TestCase $this */
+    // A known limit, like "practice": the word is still listed and searchable.
     Word::factory()->create(['word' => 'search']);
 
     $this->get('/words/search')->assertRedirect(route('words.index'));
+    $this->get('/words/search?q=search')->assertSeeText('1 match');
 });
