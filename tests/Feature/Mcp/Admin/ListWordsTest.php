@@ -187,32 +187,6 @@ describe('handle()', function () {
         $response->assertHasErrors();
     });
 
-    test('finds words whose spelling or either definition contains the search text, ignoring case', function () {
-        /** @var TestCase $this */
-        Word::factory()->create(['word' => 'Ephemeral', 'short_definition' => 'short-lived', 'full_definition' => null]);
-        Word::factory()->create(['word' => 'evanescent', 'short_definition' => 'soon passing out of sight, EPHEMERAL', 'full_definition' => null]);
-        Word::factory()->create(['word' => 'transient', 'short_definition' => 'brief', 'full_definition' => 'Synonyms: ephemeral, fleeting']);
-        Word::factory()->create(['word' => 'liminal', 'short_definition' => 'at a threshold', 'full_definition' => 'between two states']);
-
-        expect(listedWords(['search' => 'ephemeral', 'sort' => 'a_to_z']))->toBe(['Ephemeral', 'evanescent', 'transient']);
-    });
-
-    test('lists every word when the search is blank', function () {
-        /** @var TestCase $this */
-        Word::factory()->create(['word' => 'apricity']);
-        Word::factory()->create(['word' => 'zephyr']);
-
-        expect(listedWords(['search' => '   ', 'sort' => 'a_to_z']))->toBe(['apricity', 'zephyr']);
-    });
-
-    test('matches percent signs and underscores in the search text literally', function () {
-        /** @var TestCase $this */
-        Word::factory()->create(['word' => 'per_cent', 'short_definition' => 'a hundredth', 'full_definition' => null]);
-        Word::factory()->create(['word' => 'percent', 'short_definition' => 'a hundredth', 'full_definition' => null]);
-
-        expect(listedWords(['search' => 'per_']))->toBe(['per_cent']);
-    });
-
     test('pages through words without repeating or skipping any', function () {
         /** @var TestCase $this */
         // Same timestamp for all, so the order rests on the id tiebreaker.
@@ -254,6 +228,14 @@ describe('handle()', function () {
 
         AdminServer::actingAs($admin)->tool(ListWords::class, ['per_page' => 200])->assertOk();
         AdminServer::actingAs($admin)->tool(ListWords::class, ['per_page' => 201])->assertHasErrors();
+    });
+
+    test('refuses a search and points to search-words', function () {
+        /** @var TestCase $this */
+        $admin = User::factory()->admin()->create();
+
+        AdminServer::actingAs($admin)->tool(ListWords::class, ['search' => 'canny'])
+            ->assertHasErrors(['list-words only browses. Use search-words to find words.']);
     });
 
     test('rejects an unknown sort', function () {
