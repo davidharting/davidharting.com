@@ -61,15 +61,18 @@ test('finds words with spaces and slashes in them', function (string $spelling) 
     $this->get(route('words.show', $word))->assertSuccessful()->assertSeeText($spelling);
 })->with(['a priori', 'and/or']);
 
-test('links back to the list David came from, keeping its search and page', function () {
+test('links back to the list or search David came from, keeping its state', function (string $routeName, array $state) {
     /** @var TestCase $this */
     Word::factory()->create(['word' => 'ephemeral']);
-    $list = route('words.index', ['page' => 2, 'q' => 'eph']);
+    $cameFrom = route($routeName, $state);
 
-    $this->get($list);
+    $this->get($cameFrom);
 
-    $this->get('/words/ephemeral')->assertSee('href="'.e($list).'"', false);
-});
+    $this->get('/words/ephemeral')->assertSee('href="'.e($cameFrom).'"', false);
+})->with([
+    'the list' => ['words.index', ['page' => 2, 'sort' => 'a_to_z']],
+    'a search' => ['words.search', ['page' => 2, 'q' => 'eph']],
+]);
 
 test('links back to the plain list when David arrived from elsewhere', function () {
     /** @var TestCase $this */

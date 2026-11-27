@@ -61,91 +61,10 @@ test('shows no letter headings when listing the newest first', function () {
     $this->get('/words')->assertDontSee('>E</h2>', false);
 });
 
-test('searches the word and both definitions, ignoring case', function () {
+test('sends an old search link to the search page', function () {
     /** @var TestCase $this */
-    Word::factory()->create(['word' => 'Fleetwood', 'short_definition' => 'a band']);
-    Word::factory()->create(['word' => 'ephemeral', 'short_definition' => 'FLEETING']);
-    Word::factory()->create(['word' => 'evanescent', 'short_definition' => 'vanishing', 'full_definition' => 'soon gone; fleeting']);
-    Word::factory()->create(['word' => 'laconic', 'short_definition' => 'using few words', 'full_definition' => null]);
-
-    $this->get('/words?q=fleet')
-        ->assertSuccessful()
-        ->assertSeeText('3 matches for “fleet”', false)
-        ->assertSeeText('Fleetwood')
-        ->assertSeeText('ephemeral')
-        ->assertSeeText('evanescent')
-        ->assertDontSeeText('laconic');
-});
-
-test('lists a search\'s spelling matches under Words, then definition matches under Found in definitions', function () {
-    /** @var TestCase $this */
-    Word::factory()->create(['word' => 'astute', 'short_definition' => 'canny; sharp']);
-    Word::factory()->create(['word' => 'uncanny', 'short_definition' => 'eerie']);
-    Word::factory()->create(['word' => 'canny', 'short_definition' => 'shrewd']);
-
-    $this->get('/words?q=canny')
-        ->assertSuccessful()
-        // Starting after the page's own title and Practise button, and
-        // checking definitions, since the words appear in the header too.
-        ->assertSeeTextInOrder(['Practise', 'Words', 'shrewd', 'eerie', 'Found in definitions', 'canny; sharp']);
-});
-
-test('makes a search its own mode, without the status filters or sorts', function () {
-    /** @var TestCase $this */
-    Word::factory()->create(['word' => 'canny']);
-
-    $this->get('/words')
-        ->assertSee('aria-label="Filter by learning status"', false)
-        ->assertSee('aria-label="Sort"', false);
-
-    $this->get('/words?q=canny')
-        ->assertSeeText('canny')
-        ->assertDontSee('aria-label="Filter by learning status"', false)
-        ->assertDontSee('aria-label="Sort"', false);
-});
-
-test('ignores a status filter and sort while searching', function () {
-    /** @var TestCase $this */
-    // Made in this order so that Recent, if it were honoured, would list cantankerous first.
-    Word::factory()->troublesome()->create(['word' => 'cant', 'short_definition' => 'hypocritical talk']);
-    Word::factory()->create(['word' => 'cantankerous', 'short_definition' => 'grumpy']);
-
-    // Best match order, with the word that isn't troublesome still listed.
-    $this->get('/words?q=cant&status=troublesome&sort=recent')
-        ->assertSeeText('2 matches')
-        ->assertSeeTextInOrder(['hypocritical talk', 'grumpy']);
-});
-
-test('clears a search back to the plain list, keeping the page size', function () {
-    /** @var TestCase $this */
-    $this->get('/words?q=canny&per_page=2')->assertSee('href="'.route('words.index', ['per_page' => 2]).'"', false);
-});
-
-test('leaves an ignored status or sort out of a search\'s page links', function () {
-    /** @var TestCase $this */
-    Word::factory()->count(2)->sequence(['word' => 'canny'], ['word' => 'uncanny'])->create();
-
-    $this->get('/words?q=can&per_page=1&status=mastered')
-        ->assertSee(route('words.index', ['q' => 'can', 'per_page' => 1, 'page' => 2]))
-        ->assertDontSee('status=mastered', false);
-});
-
-test('matches a percent sign in a search literally', function () {
-    /** @var TestCase $this */
-    Word::factory()->create(['word' => 'percentile', 'short_definition' => 'a value below which 50% fall']);
-    Word::factory()->create(['word' => 'laconic', 'short_definition' => 'using few words']);
-
-    $this->get('/words?q='.urlencode('%'))
-        ->assertSeeText('1 match for')
-        ->assertSeeText('percentile')
-        ->assertDontSeeText('laconic');
-});
-
-test('says so when nothing matches a search', function () {
-    /** @var TestCase $this */
-    Word::factory()->create(['word' => 'ephemeral']);
-
-    $this->get('/words?q=zzz')->assertSeeText('No words match “zzz”.', false);
+    $this->get('/words?q=canny&per_page=2&sort=a_to_z')
+        ->assertRedirect(route('words.search', ['q' => 'canny', 'per_page' => 2]));
 });
 
 test('shows 250 words a page by default', function () {
@@ -178,17 +97,6 @@ test('pages by a chosen page size', function () {
         ->assertDontSeeText('word2');
 });
 
-test('keeps the search and page size in the page links', function () {
-    /** @var TestCase $this */
-    Word::factory()
-        ->count(3)
-        ->sequence(fn ($sequence) => ['word' => 'word'.($sequence->index + 1)])
-        ->create();
-
-    $this->get(route('words.index', ['q' => 'word', 'per_page' => 2]))
-        ->assertSee(route('words.index', ['q' => 'word', 'per_page' => 2, 'page' => 2]));
-});
-
 test('keeps the sort and page size in the page and sort links', function () {
     /** @var TestCase $this */
     Word::factory()
@@ -205,10 +113,10 @@ test('keeps the sort and page size in the page and sort links', function () {
     $response->assertSee(route('words.index', ['per_page' => 2]));
 });
 
-test('starts a new search at its best matches, whatever the sort before', function () {
+test('searches from the search box on the search page, keeping only the page size', function () {
     /** @var TestCase $this */
-    // The search box keeps the page size but not the sort.
     $this->get('/words?sort=a_to_z&per_page=2')
+        ->assertSee('action="'.route('words.search').'"', false)
         ->assertSee('name="per_page" value="2"', false)
         ->assertDontSee('name="sort"', false);
 });
