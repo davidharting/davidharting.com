@@ -87,7 +87,8 @@ Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function
 
 Route::withHead(robots: 'noindex, nofollow')->middleware('auth')->group(function () {
     Route::get('/words', [WordController::class, 'index'])->name('words.index')->withHead(title: 'Words')->can('viewAny', Word::class);
-    // Above any /words/{word} route, which would otherwise take "practice" for a word.
+    // These two are above any /words/{word} route, which would otherwise take "search" or "practice" for a word.
+    Route::get('/words/search', [WordController::class, 'search'])->name('words.search')->withHead(title: 'Search words')->can('viewAny', Word::class);
     Route::view('/words/practice', 'words.practice')->name('words.practice')->withHead(title: 'Practice')->can('viewAny', Flashcard::class);
     Route::get('/words/{word:word}', [WordController::class, 'show'])->name('words.show')->where('word', '.+')->can('view', 'word');
 });

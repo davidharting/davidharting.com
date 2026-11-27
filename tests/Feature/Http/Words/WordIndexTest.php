@@ -61,38 +61,11 @@ test('shows no letter headings when listing the newest first', function () {
     $this->get('/words')->assertDontSee('>E</h2>', false);
 });
 
-test('searches the word and both definitions, ignoring case', function () {
+test('sends an old search link to the search page', function () {
     /** @var TestCase $this */
-    Word::factory()->create(['word' => 'Fleetwood', 'short_definition' => 'a band']);
-    Word::factory()->create(['word' => 'ephemeral', 'short_definition' => 'FLEETING']);
-    Word::factory()->create(['word' => 'evanescent', 'short_definition' => 'vanishing', 'full_definition' => 'soon gone; fleeting']);
-    Word::factory()->create(['word' => 'laconic', 'short_definition' => 'using few words', 'full_definition' => null]);
-
-    $this->get('/words?q=fleet')
-        ->assertSuccessful()
-        ->assertSeeText('3 matches for “fleet”', false)
-        ->assertSeeText('Fleetwood')
-        ->assertSeeText('ephemeral')
-        ->assertSeeText('evanescent')
-        ->assertDontSeeText('laconic');
-});
-
-test('matches a percent sign in a search literally', function () {
-    /** @var TestCase $this */
-    Word::factory()->create(['word' => 'percentile', 'short_definition' => 'a value below which 50% fall']);
-    Word::factory()->create(['word' => 'laconic', 'short_definition' => 'using few words']);
-
-    $this->get('/words?q='.urlencode('%'))
-        ->assertSeeText('1 match for')
-        ->assertSeeText('percentile')
-        ->assertDontSeeText('laconic');
-});
-
-test('says so when nothing matches a search', function () {
-    /** @var TestCase $this */
-    Word::factory()->create(['word' => 'ephemeral']);
-
-    $this->get('/words?q=zzz')->assertSeeText('No words match “zzz”.', false);
+    $this->get('/words?q=canny&per_page=2&sort=a_to_z')
+        ->assertRedirect(route('words.search', ['q' => 'canny', 'per_page' => 2]))
+        ->assertStatus(301);
 });
 
 test('shows 250 words a page by default', function () {
@@ -125,23 +98,28 @@ test('pages by a chosen page size', function () {
         ->assertDontSeeText('word2');
 });
 
-test('keeps the search, sort and page size in the page, sort and search links', function () {
+test('keeps the sort and page size in the page and sort links', function () {
     /** @var TestCase $this */
     Word::factory()
         ->count(3)
         ->sequence(fn ($sequence) => ['word' => 'word'.($sequence->index + 1)])
         ->create();
-    $state = ['q' => 'word', 'sort' => 'a_to_z', 'per_page' => 2];
+    $state = ['sort' => 'a_to_z', 'per_page' => 2];
 
     $response = $this->get(route('words.index', $state));
 
     // The Next page link.
     $response->assertSee(route('words.index', [...$state, 'page' => 2]));
     // The Recent sort link, which drops only the sort.
-    $response->assertSee(route('words.index', ['q' => 'word', 'per_page' => 2]));
-    // The search box, which carries the sort and page size as hidden fields.
-    $response->assertSee('name="sort" value="a_to_z"', false);
-    $response->assertSee('name="per_page" value="2"', false);
+    $response->assertSee(route('words.index', ['per_page' => 2]));
+});
+
+test('searches from the search box on the search page, keeping only the page size', function () {
+    /** @var TestCase $this */
+    $this->get('/words?sort=a_to_z&per_page=2')
+        ->assertSee('action="'.route('words.search').'"', false)
+        ->assertSee('name="per_page" value="2"', false)
+        ->assertDontSee('name="sort"', false);
 });
 
 test('refuses a sort it does not know', function (string $query) {
@@ -249,23 +227,10 @@ describe('learning status chips', function () {
             ->assertDontSeeText('apricity');
     });
 
-    test('count only the words a search finds, and keep the search when tapped', function () {
+    test('are kept by the sort links', function () {
         /** @var TestCase $this */
-        Word::factory()->troublesome()->create(['word' => 'liminal']);
-        Word::factory()->troublesome()->create(['word' => 'zephyr']);
-
-        $response = $this->get(route('words.index', ['q' => 'liminal']));
-
-        assertChip($response, 'All', 1, route('words.index', ['q' => 'liminal']));
-        assertChip($response, 'Troublesome', 1, route('words.index', ['q' => 'liminal', 'status' => 'troublesome']));
-    });
-
-    test('are kept by the search box and the sort links', function () {
-        /** @var TestCase $this */
-        $response = $this->get(route('words.index', ['status' => 'mastered']));
-
-        $response->assertSee('name="status" value="mastered"', false);
-        $response->assertSee(route('words.index', ['status' => 'mastered', 'sort' => 'a_to_z']));
+        $this->get(route('words.index', ['status' => 'mastered']))
+            ->assertSee(route('words.index', ['status' => 'mastered', 'sort' => 'a_to_z']));
     });
 
     test('say so when no word has the chosen status', function () {
