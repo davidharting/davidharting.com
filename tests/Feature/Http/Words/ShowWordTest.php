@@ -107,10 +107,12 @@ test('lists each time the word was practised, newest first, with how often it wa
     $flashcard->grade(Rating::Again, Carbon::parse('2026-11-01 12:00'));
     $flashcard->grade(Rating::Good, Carbon::parse('2026-11-02 12:00'));
     $flashcard->grade(Rating::Again, Carbon::parse('2026-11-05 12:00'));
+    $flashcard->grade(Rating::Hard, Carbon::parse('2026-11-06 12:00'));
 
     $this->get('/words/liminal')
-        ->assertSeeText('Practised 3 times, missed 2 times.')
+        ->assertSeeText('Practised 4 times, missed 2 times.')
         ->assertSeeTextInOrder([
+            '6 November 2026', 'Kind of got it',
             '5 November 2026', 'Missed it',
             '2 November 2026', 'Got it',
             '1 November 2026', 'Missed it',

@@ -1,8 +1,12 @@
 {{--
     A full-screen swipe stack. Tap the card to reveal the definition, then
-    swipe right for Got it or left for Missed it. The swipe hints sit where
-    the thumb starts, pointing the way it goes. The button row always takes
-    its space, so the card is the same size before and after the reveal.
+    grade it with a button: Missed it, Kind of got it, or Got it. On a touch
+    screen, swiping left or right is a shortcut for Missed it and Got it; the
+    swipe hints sit where the thumb starts, pointing the way it goes. With a
+    mouse (a fine pointer) there is nothing to swipe, so the hints give way
+    to each button's key. The button row always takes its space, so the card
+    is the same size before and after the reveal. On wide screens the stack
+    is capped, so the card stays card sized instead of filling the window.
 --}}
 <div
     x-data="wordPractice(@js($firstRound))"
@@ -74,8 +78,8 @@
     </template>
 
     <template x-if="! done()">
-        <div class="flex flex-1 flex-col pt-4">
-            <div class="relative flex-1">
+        <div class="mx-auto flex w-full max-w-xl flex-1 flex-col pt-4 md:justify-center">
+            <div class="relative flex-1 md:max-h-[32rem]">
                 {{-- The next cards peek out from behind the top one. --}}
                 <template x-if="cards[index + 2]">
                     <div class="card bg-base-100 absolute inset-x-6 top-6 bottom-0 shadow-sm"></div>
@@ -114,7 +118,7 @@
 
                         {{-- Each hint lights up once the drag is far enough to grade that way. --}}
                         <div
-                            class="flex justify-between px-4 pb-4"
+                            class="flex justify-between px-4 pb-4 pointer-fine:hidden"
                             x-bind:class="revealed || 'invisible'"
                             aria-hidden="true"
                         >
@@ -130,28 +134,30 @@
             </div>
 
             {{-- Always the same height, so the card never changes size. --}}
-            <div class="flex h-20 items-center justify-center gap-8">
+            <div class="flex h-20 items-center justify-center">
                 <template x-if="! revealed">
-                    <button type="button" class="btn btn-lg btn-neutral" x-on:click="reveal()">Show definition</button>
+                    <button type="button" class="btn btn-lg btn-neutral" x-on:click="reveal()">
+                        Show definition
+                        <kbd class="kbd kbd-sm hidden pointer-fine:inline-flex">Space</kbd>
+                    </button>
                 </template>
                 <template x-if="revealed">
-                    <div class="flex gap-8">
-                        <button
-                            type="button"
-                            class="btn btn-circle btn-lg btn-error btn-outline"
-                            x-on:click="grade(false)"
-                            aria-label="Missed it"
-                        >
-                            ✕
-                        </button>
-                        <button
-                            type="button"
-                            class="btn btn-circle btn-lg btn-success"
-                            x-on:click="grade(true)"
-                            aria-label="Got it"
-                        >
-                            ✓
-                        </button>
+                    <div class="grid w-full grid-cols-3 gap-2">
+                        <template x-for="choice in grades" x-bind:key="choice.rating">
+                            <button
+                                type="button"
+                                class="btn h-14 leading-tight"
+                                x-bind:class="choice.buttonClass"
+                                x-on:click="grade(choice.rating)"
+                            >
+                                <span x-text="choice.label"></span>
+                                <kbd
+                                    class="kbd kbd-sm hidden pointer-fine:inline-flex"
+                                    aria-hidden="true"
+                                    x-text="choice.keyHint"
+                                ></kbd>
+                            </button>
+                        </template>
                     </div>
                 </template>
             </div>
