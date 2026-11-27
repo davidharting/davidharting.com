@@ -1,8 +1,9 @@
 /**
  * The practice page's swipe stack. Tap the card to reveal the definition,
- * then swipe right for Got it or left for Missed it, or use the buttons or
- * the arrow keys. The card flies off and the next one shows straight away;
- * the grade is saved in the background. A grade that fails to save puts the
+ * then grade it with the buttons or their keys: Missed it, Kind of got it,
+ * or Got it. Swiping left or right is a shortcut for Missed it and Got it.
+ * The card flies off and the next one shows straight away; the grade is
+ * saved in the background. A grade that fails to save puts the
  * card back at the bottom of the stack.
  *
  * A round is five cards (Practice::ROUND_SIZE). When it runs out, the
@@ -12,6 +13,44 @@
 const SWIPE_THRESHOLD_PIXELS = 100;
 const FLY_OUT_MILLISECONDS = 200;
 const NOTICE_LASTS_MILLISECONDS = 4000;
+
+/**
+ * App\Fsrs\Rating values, as the server takes them.
+ */
+const AGAIN = 1;
+const HARD = 2;
+const GOOD = 3;
+
+/**
+ * The grades offered once the definition shows, left to right, with the
+ * keys that give them (the first is shown on the button) and the way the
+ * card flies off. Kind of got it counts as remembered. The arrow keys match
+ * the swipes; Kind of got it has no arrow because ↓ would steal scrolling. Swipes stay left for Missed it and right for Got it, since
+ * vertical drags scroll a long definition.
+ */
+const GRADES = [
+    {
+        rating: AGAIN,
+        label: "Missed it",
+        keys: ["1", "ArrowLeft"],
+        flyOut: -1,
+        buttonClass: "btn-error btn-outline",
+    },
+    {
+        rating: HARD,
+        label: "Kind of got it",
+        keys: ["2"],
+        flyOut: 1,
+        buttonClass: "btn-warning btn-outline",
+    },
+    {
+        rating: GOOD,
+        label: "Got it",
+        keys: ["3", "ArrowRight"],
+        flyOut: 1,
+        buttonClass: "btn-success",
+    },
+];
 
 const RELATIVE_UNITS = [
     ["day", 86400],
@@ -49,6 +88,7 @@ document.addEventListener("alpine:init", () => {
                 wire = this.$wire;
             },
 
+            grades: GRADES,
             cards: firstRound.cards,
             // The round after this one, fetched when this one ends. With
             // nothing due, the first round is empty and is its own "next".
@@ -98,12 +138,13 @@ document.addEventListener("alpine:init", () => {
             },
 
             gotCount() {
-                return this.results.filter((result) => result.gotIt).length;
+                return this.results.filter((result) => result.rating !== AGAIN)
+                    .length;
             },
 
             missedWords() {
                 return this.results
-                    .filter((result) => !result.gotIt)
+                    .filter((result) => result.rating === AGAIN)
                     .map((result) => result.card.word);
             },
 
@@ -133,7 +174,7 @@ document.addEventListener("alpine:init", () => {
                 }
                 this.pointerId = null;
                 if (Math.abs(this.dx) > SWIPE_THRESHOLD_PIXELS) {
-                    this.grade(this.dx > 0);
+                    this.grade(this.dx > 0 ? GOOD : AGAIN);
                 } else {
                     this.dx = 0;
                 }
@@ -146,18 +187,20 @@ document.addEventListener("alpine:init", () => {
                 }
             },
 
-            grade(gotIt) {
+            grade(rating) {
                 if (!this.revealed || this.flyingOut || this.done()) {
                     return;
                 }
                 const card = this.current();
-                const result = { card, gotIt };
-                this.flyingOut = gotIt ? 1 : -1;
+                const result = { card, rating };
+                this.flyingOut = GRADES.find(
+                    (choice) => choice.rating === rating,
+                ).flyOut;
                 this.results.push(result);
                 saving.push(
                     // Livewire rejects when the network fails but resolves
                     // other failures with null, so anything but true is lost.
-                    wire.grade(card.id, gotIt).then(
+                    wire.grade(card.id, rating).then(
                         (saved) => saved === true || this.unsaved(result),
                         () => this.unsaved(result),
                     ),
@@ -253,6 +296,10 @@ document.addEventListener("alpine:init", () => {
             },
 
             handleKey(event) {
+                // Leave browser shortcuts such as Alt+← (Back) alone.
+                if (event.altKey || event.ctrlKey || event.metaKey) {
+                    return;
+                }
                 if (this.done() || event.target.closest("a, button, input")) {
                     return;
                 }
@@ -262,10 +309,14 @@ document.addEventListener("alpine:init", () => {
                 ) {
                     event.preventDefault();
                     this.reveal();
-                } else if (event.key === "ArrowRight") {
-                    this.grade(true);
-                } else if (event.key === "ArrowLeft") {
-                    this.grade(false);
+                    return;
+                }
+                const choice = GRADES.find(({ keys }) =>
+                    keys.includes(event.key),
+                );
+                if (choice) {
+                    event.preventDefault();
+                    this.grade(choice.rating);
                 }
             },
 

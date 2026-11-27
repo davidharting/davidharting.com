@@ -126,20 +126,21 @@ describe('dueRound()', function () {
 });
 
 describe('grade()', function () {
-    test('saves Got it as Good and Missed it as Again', function () {
+    test('saves the rating the browser sends', function (Rating $rating) {
         /** @var TestCase $this */
-        $gotIt = Word::factory()->create()->flashcard;
-        $missedIt = Word::factory()->create()->flashcard;
+        $flashcard = Word::factory()->create()->flashcard;
 
         Livewire::actingAs($this->admin)
             ->test(Practice::class)
-            ->call('grade', $gotIt->id, true)
-            ->assertReturned(true)
-            ->call('grade', $missedIt->id, false);
+            ->call('grade', $flashcard->id, $rating->value)
+            ->assertReturned(true);
 
-        expect($gotIt->reviews()->sole()->rating)->toBe(Rating::Good)
-            ->and($missedIt->reviews()->sole()->rating)->toBe(Rating::Again);
-    });
+        expect($flashcard->reviews()->sole()->rating)->toBe($rating);
+    })->with([
+        'Missed it' => Rating::Again,
+        'Kind of got it' => Rating::Hard,
+        'Got it' => Rating::Good,
+    ]);
 });
 
 describe('practiseAhead()', function () {
