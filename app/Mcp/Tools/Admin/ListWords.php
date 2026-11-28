@@ -4,6 +4,7 @@ namespace App\Mcp\Tools\Admin;
 
 use App\Enum\LearningStatus;
 use App\Enum\WordSort;
+use App\Mcp\Tools\Admin\Concerns\PresentsWords;
 use App\Models\Word;
 use App\Queries\ListWordsQuery;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -17,17 +18,18 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 /**
- * Browse David's vocabulary list, registered only on AdminServer.
+ * Browse David's vocabulary list, registered only on AdminServer. Looking
+ * a word up is search-words, the same split as /words and /words/search.
  */
 #[IsReadOnly]
 #[IsIdempotent]
 #[Description(<<<'TEXT'
-    List the words on David Harting's private vocabulary list, most recently
-    added first. Returns each word's id, the word, its short definition, when
-    it was added, its learning status and how many times David has missed it
-    in practice. Pass search to keep only words whose spelling or either
-    definition contains that text, ignoring case. Pass sort as a_to_z for
+    Browse the words on David Harting's private vocabulary list, most
+    recently added first by default. Returns each word's id, the word, its
+    short definition, when it was added, its learning status and how many
+    times David has missed it in practice. Pass sort as a_to_z for
     alphabetical order, or most_missed for the words he misses most first.
+    To find particular words, use search-words instead.
 
     A word's learning status is exactly one of: new (never practised),
     mastered (he is expected to remember it three weeks or more out),
@@ -41,9 +43,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
     TEXT)]
 class ListWords extends Tool
 {
-    private const DEFAULT_PER_PAGE = 25;
-
-    private const MAX_PER_PAGE = 200;
+    use PresentsWords;
 
     /**
      * Whether the caller is entitled to the admin surface at all. Failing this
@@ -68,62 +68,32 @@ class ListWords extends Tool
         }
 
         $validated = $request->validate([
-            'search' => ['sometimes', 'nullable', 'string', 'max:255'],
+            // An agent used to the old search option would otherwise get the
+            // whole list back and might think a word is missing.
+            'search' => ['prohibited'],
             'sort' => ['sometimes', 'string', Rule::enum(WordSort::class)],
             'status' => ['sometimes', 'string', Rule::enum(LearningStatus::class)],
-            'include_full_definition' => ['sometimes', 'boolean'],
-            'page' => ['sometimes', 'integer', 'min:1'],
-            'per_page' => ['sometimes', 'integer', 'min:1', 'max:'.self::MAX_PER_PAGE],
+            ...$this->pageOptionsRules(),
+        ], [
+            'search.prohibited' => 'list-words only browses. Use search-words to find words.',
         ]);
 
-        $options = $this->options($validated);
+        $includeFullDefinition = (bool) ($validated['include_full_definition'] ?? false);
 
         $paginator = (new ListWordsQuery(
-            search: $options['search'],
-            sort: $options['sort'],
-            status: $options['status'],
-            includeFullDefinition: $options['includeFullDefinition'],
+            sort: isset($validated['sort']) ? WordSort::from($validated['sort']) : WordSort::Recent,
+            status: isset($validated['status']) ? LearningStatus::from($validated['status']) : null,
+            includeFullDefinition: $includeFullDefinition,
             includeTimesMissed: true,
         ))->paginate(
-            perPage: $options['perPage'],
-            page: $options['page'],
+            perPage: $validated['per_page'] ?? self::DEFAULT_PER_PAGE,
+            page: $validated['page'] ?? 1,
         );
 
-        return Response::structured([
-            'words' => collect($paginator->items())->map(fn (Word $word): array => [
-                'word_id' => $word->id,
-                'word' => $word->word,
-                'short_definition' => $word->short_definition,
-                'added_at' => $word->created_at->toIso8601String(),
-                'status' => $word->flashcard->learning_status->value,
-                'times_missed' => $word->times_missed,
-                ...($options['includeFullDefinition'] ? ['full_definition' => $word->full_definition] : []),
-            ])->all(),
-            'total' => $paginator->total(),
-            'total_pages' => $paginator->lastPage(),
-            'page' => $paginator->currentPage(),
-            'per_page' => $paginator->perPage(),
-            'has_more_pages' => $paginator->hasMorePages(),
-        ]);
-    }
-
-    /**
-     * Every listing option with its default filled in, as the query and
-     * the response use it.
-     *
-     * @param  array<string, mixed>  $validated
-     * @return array{search: ?string, sort: WordSort, status: ?LearningStatus, includeFullDefinition: bool, page: int, perPage: int}
-     */
-    private function options(array $validated): array
-    {
-        return [
-            'search' => $validated['search'] ?? null,
-            'sort' => isset($validated['sort']) ? WordSort::from($validated['sort']) : WordSort::Recent,
-            'status' => isset($validated['status']) ? LearningStatus::from($validated['status']) : null,
-            'includeFullDefinition' => (bool) ($validated['include_full_definition'] ?? false),
-            'page' => $validated['page'] ?? 1,
-            'perPage' => $validated['per_page'] ?? self::DEFAULT_PER_PAGE,
-        ];
+        return Response::structured($this->presentPage(
+            $paginator,
+            fn (Word $word): array => $this->presentWord($word, $includeFullDefinition),
+        ));
     }
 
     /**
@@ -134,27 +104,13 @@ class ListWords extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'search' => $schema->string()
-                ->description('Text to look for in each word and its short and full definitions, ignoring case.'),
             'sort' => $schema->string()
                 ->enum(array_column(WordSort::cases(), 'value'))
                 ->description('recent (the default) for most recently added first, a_to_z for alphabetical, or most_missed for the words missed most often in practice first.'),
             'status' => $schema->string()
                 ->enum(array_column(LearningStatus::cases(), 'value'))
                 ->description('Keep only words with this learning status: new, mastered, troublesome or learning. Leave it out for every word.'),
-            'include_full_definition' => $schema->boolean()
-                ->description('Whether to include each word\'s markdown full definition. Defaults to false.'),
-            'page' => $schema->integer()
-                ->min(1)
-                ->description('The page of results to return. Defaults to 1.'),
-            'per_page' => $schema->integer()
-                ->min(1)
-                ->max(self::MAX_PER_PAGE)
-                ->description(sprintf(
-                    'How many words to return per page. Defaults to %d, maximum %d.',
-                    self::DEFAULT_PER_PAGE,
-                    self::MAX_PER_PAGE,
-                )),
+            ...$this->pageOptionsSchema($schema),
         ];
     }
 
@@ -165,25 +121,6 @@ class ListWords extends Tool
      */
     public function outputSchema(JsonSchema $schema): array
     {
-        return [
-            'words' => $schema->array()
-                ->items($schema->object([
-                    'word_id' => $schema->integer()->description('The id of the word, for edit-word.'),
-                    'word' => $schema->string()->description('The word.'),
-                    'short_definition' => $schema->string()->description('The short definition: plain-words senses separated by semicolons.'),
-                    'added_at' => $schema->string()->description('When the word was added, in ISO 8601 format.'),
-                    'status' => $schema->string()
-                        ->enum(array_column(LearningStatus::cases(), 'value'))
-                        ->description('How well David knows the word: new, mastered, troublesome or learning.'),
-                    'times_missed' => $schema->integer()->description('How many times David has missed the word in practice.'),
-                    'full_definition' => $schema->string()->nullable()->description('The markdown full definition, if any. Present only when include_full_definition is true.'),
-                ]))
-                ->description('The words on this page, in the requested order.'),
-            'total' => $schema->integer()->description('The total number of matching words across all pages.'),
-            'total_pages' => $schema->integer()->description('The number of pages of matching words at this per_page.'),
-            'page' => $schema->integer()->description('The current page number.'),
-            'per_page' => $schema->integer()->description('The number of words per page.'),
-            'has_more_pages' => $schema->boolean()->description('Whether more pages of words are available.'),
-        ];
+        return $this->pageOutputSchema($schema);
     }
 }
