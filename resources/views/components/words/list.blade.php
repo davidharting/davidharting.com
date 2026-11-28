@@ -1,10 +1,12 @@
 {{--
     In an A to Z list, a letter heading starts each run of words filed under the same letter, like a dictionary's.
+    In a search, a heading starts the words whose spelling matches, and another the words found only in a definition.
 --}}
-@props(['words', 'showsLetterHeadings' => false])
+@props(['words', 'showsLetterHeadings' => false, 'showsMatchHeadings' => false])
 
 @php
     $currentLetter = null;
+    $currentMatch = null;
 @endphp
 
 <ul class="list">
@@ -16,6 +18,18 @@
 
             <li class="border-base-300 bg-base-100 sticky top-0 z-10 border-b pt-4 pb-1">
                 <h2 class="text-3xl font-bold">{{ $currentLetter }}</h2>
+            </li>
+        @endif
+
+        @if ($showsMatchHeadings && $word->matches_word !== $currentMatch)
+            @php
+                $currentMatch = $word->matches_word;
+            @endphp
+
+            <li class="border-base-300 bg-base-100 sticky top-0 z-10 border-b pt-4 pb-1">
+                <h2 class="text-base-content/70 text-sm font-semibold tracking-wide uppercase">
+                    {{ $currentMatch ? "Words" : "Found in definitions" }}
+                </h2>
             </li>
         @endif
 
