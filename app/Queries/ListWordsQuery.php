@@ -4,21 +4,20 @@ namespace App\Queries;
 
 use App\Enum\LearningStatus;
 use App\Enum\WordSort;
-use App\Fsrs\Rating;
 use App\Models\Flashcard;
 use App\Models\Word;
-use App\Support\LikePattern;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Browse David's vocabulary list. Looking words up is SearchWordsQuery.
+ */
 class ListWordsQuery
 {
     /**
      * This query performs no authorization. The caller is responsible for
      * checking the viewer may see David's words at all.
      *
-     * @param  string|null  $search  Matched case-insensitively against the word
-     *                               and both of its definitions.
      * @param  LearningStatus|null  $status  Keep only words with this status.
      * @param  bool  $includeFullDefinition  Whether to load `full_definition`.
      * @param  bool  $includeTimesMissed  Whether to count each word's misses,
@@ -26,7 +25,6 @@ class ListWordsQuery
      *                                    when sorting by most missed.
      */
     public function __construct(
-        public ?string $search = null,
         public WordSort $sort = WordSort::Recent,
         public ?LearningStatus $status = null,
         public bool $includeFullDefinition = false,
@@ -43,14 +41,12 @@ class ListWordsQuery
     {
         $words = Word::query()->select($this->columns())->with('flashcard');
 
-        $this->whereMatchesSearch($words);
-
         if ($this->status !== null) {
             $words->whereRelation('flashcard', 'learning_status', $this->status);
         }
 
         if ($this->includeTimesMissed || $this->sort === WordSort::MostMissed) {
-            $words->withCount(['reviews as times_missed' => fn (Builder $reviews) => $reviews->where('rating', Rating::Again)]);
+            $words->withTimesMissed();
         }
 
         $this->applySort($words);
@@ -59,8 +55,8 @@ class ListWordsQuery
     }
 
     /**
-     * How many words the search finds with each learning status, whatever
-     * status this query keeps, so each one can be offered as a filter.
+     * How many words have each learning status, whatever status this query
+     * keeps, so each one can be offered as a filter.
      * Counts flashcards, since every word has exactly one.
      *
      * @return array<value-of<LearningStatus>, int> Every status, in the enum's order.
@@ -68,7 +64,7 @@ class ListWordsQuery
     public function countsByStatus(): array
     {
         $counts = Flashcard::query()
-            ->whereHasMorph('quizzable', Word::class, fn (Builder $words) => $this->whereMatchesSearch($words))
+            ->whereMorphedTo('quizzable', Word::class)
             ->toBase()
             ->selectRaw('learning_status, count(*) as total')
             ->groupBy('learning_status')
@@ -94,26 +90,6 @@ class ListWordsQuery
         }
 
         return $columns;
-    }
-
-    /**
-     * Keep only the words that match the search, if there is one.
-     *
-     * @param  Builder<Word>  $words
-     */
-    private function whereMatchesSearch(Builder $words): void
-    {
-        if (blank($this->search)) {
-            return;
-        }
-
-        $pattern = '%'.LikePattern::escape(trim($this->search)).'%';
-
-        $words->where(function (Builder $query) use ($pattern): void {
-            $query->whereLike('words.word', $pattern)
-                ->orWhereLike('words.short_definition', $pattern)
-                ->orWhereLike('words.full_definition', $pattern);
-        });
     }
 
     /**
